@@ -39,8 +39,9 @@ targets:
         ITSAppUsesNonExemptEncryption: false
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.duokeyboard.app
+        PRODUCT_BUNDLE_IDENTIFIER: com.yilongju.duokeyboard
         PRODUCT_NAME: DuoKeyboard
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
     dependencies:
       - target: DuoKeyboardExtension
   DuoKeyboardExtension:
@@ -65,7 +66,7 @@ targets:
             RequestsOpenAccess: false
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.duokeyboard.app.keyboard
+        PRODUCT_BUNDLE_IDENTIFIER: com.yilongju.duokeyboard.keyboard
         PRODUCT_NAME: DuoKeyboardExtension
 schemes:
   DuoKeyboard:

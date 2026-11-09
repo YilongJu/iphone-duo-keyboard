@@ -1,50 +1,79 @@
-# Installation of Duo Keyboard on an iPhone Duo from Windows
+# Installation of Duo Keyboard on an iPhone Duo through TestFlight
 
 ## Summary
 
-Duo Keyboard installs on an iPhone Duo from Windows 11 with Sideloadly and a free Apple ID.
-GitHub Actions builds the app on a hosted Mac, and Sideloadly signs the build on the PC.
+Duo Keyboard reaches an iPhone Duo through TestFlight, with an Apple Developer Program
+membership. A GitHub Actions workflow signs the build on a hosted Mac and uploads it. The
+Apple ID password stays on Apple's own websites.
 
-1. Get the build: `gh run download -R YilongJu/iphone-duo-keyboard -n DuoKeyboard-unsigned-ipa -D build/latest`
-2. Install Sideloadly, plus iTunes and iCloud from Apple's website.
-3. Sign and install `build/latest/DuoKeyboard-unsigned.ipa` with Sideloadly over USB.
-4. On the phone, trust the developer profile and turn on Developer Mode.
-5. Add Duo Keyboard under Settings, General, Keyboard, Keyboards.
-6. Unfold the phone, open any text field, and choose Duo Keyboard with the globe key.
+1. Enroll in the Apple Developer Program at <https://developer.apple.com/programs/enroll>.
+2. Register the two app identifiers and create the app record in App Store Connect.
+3. Create an App Store Connect API key and store four GitHub secrets.
+4. Start the upload: `gh workflow run TestFlight -R YilongJu/iphone-duo-keyboard`
+5. Install the build from the TestFlight app on the phone.
+6. Add Duo Keyboard under Settings, General, Keyboard, Keyboards.
 
-This guide does not settle one question: public sources do not confirm that Sideloadly signs a
-keyboard extension for iOS 27 on an iPhone Duo. The first install answers the question.
+This guide does not settle one question: the TestFlight workflow has not run with real
+credentials yet, so its signing step is untested.
 
-## Setup of Sideloadly on the Windows PC
+## Terms in this guide
 
-1. Download Sideloadly from <https://sideloadly.io> and install it.
-2. Install iTunes and iCloud with the installers from Apple's website. Sideloadly does not
-   work with the Microsoft Store versions.
-3. Connect the iPhone Duo with a USB cable, unlock it, and tap Trust.
-4. Open iTunes once and confirm that iTunes shows the phone.
+| Term | Meaning |
+| --- | --- |
+| App identifier | The unique name Apple uses for an app, such as `com.yilongju.duokeyboard` |
+| App record | The entry for the app in App Store Connect, which TestFlight builds attach to |
+| API key | A file that lets the build machine act for your team, in place of a password |
+| GitHub secret | A value GitHub stores encrypted and shows only to the workflow |
 
-Sideloadly sends the Apple ID and password to Apple to request a signing certificate. A
-second Apple ID made for this purpose keeps your main account's password out of the tool.
+## Enrollment in the Apple Developer Program
 
-## Signing and installation with Sideloadly
+1. Open <https://developer.apple.com/programs/enroll> and sign in with your Apple ID.
+2. Choose Individual. A personal bank account is enough if you later sell the app.
+3. Pay the $99 yearly fee and wait for Apple's approval email.
 
-1. Open Sideloadly. Select the iPhone Duo in the device list.
-2. Drag `DuoKeyboard-unsigned.ipa` onto the IPA box.
-3. Type the Apple ID in the Apple ID box.
-4. Open Advanced Options and confirm that "Remove app extensions" is off. The keyboard is an
-   app extension, so that option would delete the keyboard.
-5. Click Start, then type the password and the two-factor code when Sideloadly asks.
-6. Wait for the word "Done".
+Apple states 48 hours for approval. Forum reports in 2026 range from days to 9 weeks.
 
-## Settings on the iPhone Duo
+## App identifiers and app record
 
-1. Open Settings, General, VPN & Device Management. Tap the Apple ID and tap Trust.
-2. Open Settings, Privacy & Security, Developer Mode. Turn Developer Mode on and restart.
-3. Open Settings, General, Keyboard, Keyboards, Add New Keyboard. Choose Duo Keyboard.
-4. In any text field, hold the globe key and choose Duo Keyboard.
+1. Open <https://developer.apple.com/account/resources/identifiers/list> and click the plus button.
+2. Register an App ID with the identifier `com.yilongju.duokeyboard`.
+3. Register a second App ID with the identifier `com.yilongju.duokeyboard.keyboard`.
+4. Open <https://appstoreconnect.apple.com/apps>, click the plus button, and choose New App.
+5. Choose iOS, the name "Duo Keyboard", and the identifier `com.yilongju.duokeyboard`.
+
+App names are unique across the App Store. Choose another name if Apple rejects this one.
+
+## API key and GitHub secrets
+
+1. Open <https://appstoreconnect.apple.com/access/integrations/api>.
+2. Create a team key with the Admin role. The Admin role lets the build create certificates.
+3. Download the `.p8` file. Apple offers the download once.
+4. Copy the Key ID and the Issuer ID from the same page.
+5. Copy the Team ID from <https://developer.apple.com/account>, under Membership details.
+6. Store the four values with these commands in a terminal:
+
+```
+gh secret set APPLE_TEAM_ID -R YilongJu/iphone-duo-keyboard
+gh secret set ASC_KEY_ID -R YilongJu/iphone-duo-keyboard
+gh secret set ASC_ISSUER_ID -R YilongJu/iphone-duo-keyboard
+gh secret set ASC_KEY_P8 -R YilongJu/iphone-duo-keyboard < path\to\AuthKey_XXXXXXXXXX.p8
+```
+
+The first three commands ask you to paste the value. The repository is public, and GitHub
+secrets stay hidden from visitors and from build logs.
+
+## Upload and installation
+
+1. Run `gh workflow run TestFlight -R YilongJu/iphone-duo-keyboard`.
+2. Wait for the workflow to finish, then wait for Apple's processing email.
+3. In App Store Connect, open the app's TestFlight tab and add yourself to an internal group.
+4. Install the TestFlight app on the iPhone Duo and accept the invitation.
+5. Install Duo Keyboard from TestFlight.
+6. Open Settings, General, Keyboard, Keyboards, Add New Keyboard. Choose Duo Keyboard.
+7. In any text field, hold the globe key and choose Duo Keyboard.
 
 The app named Duo Keyboard also has a field that always shows the keyboard. That field works
-before step 3, so the field tells you at once whether the layout looks right.
+before step 6, so the field tells you at once whether the layout looks right.
 
 ## Layouts by keyboard width
 
@@ -66,16 +95,6 @@ lock, brackets, a second shift key and two arrow keys.
 The space bar shows the keyboard's own measurements, for example `669x250 hR vR safe 0/0/0 globe 0`.
 The widths in the table above come from the simulator, so the real values matter. Send a
 screenshot of the keyboard in each of the four phone positions.
-
-## Limits of a free Apple ID
-
-| Limit | Value |
-| --- | --- |
-| Lifetime of one install | 7 days, then Sideloadly must sign the app again |
-| Apps installed this way at one time | 3 |
-| New app identifiers per week | 10, and this app uses 2 |
-
-A paid Apple Developer Program account ($99 a year) removes the 7-day limit through TestFlight.
 
 ## Features outside this version
 
