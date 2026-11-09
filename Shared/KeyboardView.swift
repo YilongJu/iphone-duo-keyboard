@@ -68,6 +68,10 @@ final class KeyboardView: UIView {
         var cursorAnchorX: CGFloat = 0
         var latestX: CGFloat = 0
         var cursorTimer: Timer?
+        var startPoint: CGPoint = .zero
+        /// True while the key will type its shifted character, after a long press or a slide up.
+        var alternateActive = false
+        var alternateFromHold = false
 
         init(keyView: KeyView) {
             self.keyView = keyView
@@ -111,10 +115,14 @@ final class KeyboardView: UIView {
                 rowHeight = 46
             }
         }
-        return rowHeight * 5 + verticalPadding * 2
+        return rowHeight * 5 + topPadding + bottomPadding
     }
 
-    private static let verticalPadding: CGFloat = 4
+    private static let topPadding: CGFloat = 4
+    private static let bottomPadding: CGFloat = 8
+    /// Extra space left and right of the bottom row. The display's rounded corners cover the
+    /// keyboard's bottom corners, and this space keeps the two corner keys fully visible.
+    private static let bottomRowCornerInset: CGFloat = 16
     private static let horizontalPadding: CGFloat = 3
 
     // MARK: Building
@@ -153,7 +161,9 @@ final class KeyboardView: UIView {
         case .dual(let base, let shifted):
             return KeyDisplay(primary: base, secondary: shifted, primaryFontSize: 19)
         case .space:
-            if let spaceCaption {
+            // The measurement caption appears on the symbols layer only, so the letters layer
+            // keeps a clean space bar.
+            if let spaceCaption, currentLayer == .symbols {
                 return KeyDisplay(primary: spaceCaption, primaryFontSize: 11)
             }
             return KeyDisplay(primary: style == .compact ? "space" : nil, primaryFontSize: wordSize)
@@ -199,7 +209,7 @@ final class KeyboardView: UIView {
     private struct Metrics {
         let originX: CGFloat
         let originY: CGFloat
-        let unit: CGFloat
+        let width: CGFloat
         let rowHeight: CGFloat
     }
 
@@ -208,12 +218,12 @@ final class KeyboardView: UIView {
         let left = safeAreaInsets.left + Self.horizontalPadding
         let right = safeAreaInsets.right + Self.horizontalPadding
         let width = bounds.width - left - right
-        let height = bounds.height - Self.verticalPadding * 2
+        let height = bounds.height - Self.topPadding - Self.bottomPadding
         guard width > 0, height > 0 else { return nil }
         return Metrics(
             originX: left,
-            originY: Self.verticalPadding,
-            unit: width / layout.units,
+            originY: Self.topPadding,
+            width: width,
             rowHeight: height / CGFloat(rows.count))
     }
 
@@ -230,10 +240,12 @@ final class KeyboardView: UIView {
         globeButton.isHidden = true
         for (rowIndex, row) in rows.enumerated() {
             let rowWeight = row.reduce(0) { $0 + $1.key.weight }
-            var x = metrics.originX + (layout.units - rowWeight) / 2 * metrics.unit
+            let rowInset = rowIndex == rows.count - 1 ? Self.bottomRowCornerInset : 0
+            let unit = (metrics.width - rowInset * 2) / layout.units
+            var x = metrics.originX + rowInset + (layout.units - rowWeight) / 2 * unit
             let y = metrics.originY + CGFloat(rowIndex) * metrics.rowHeight
             for keyView in row {
-                let width = keyView.key.weight * metrics.unit
+                let width = keyView.key.weight * unit
                 let cell = CGRect(x: x, y: y, width: width, height: metrics.rowHeight)
                 keyView.hitFrame = cell
                 keyView.frame = cell.insetBy(dx: gapX, dy: gapY)
@@ -277,6 +289,7 @@ final class KeyboardView: UIView {
             let point = touch.location(in: self)
             guard let keyView = keyView(at: point) else { continue }
             let state = TouchState(keyView: keyView)
+            state.startPoint = point
             activeTouches[touch] = state
             keyView.isHighlighted = true
             delegate?.keyboardViewDidPressKey(self)
@@ -294,6 +307,10 @@ final class KeyboardView: UIView {
                 state.committed = true
                 shiftIsAutomatic = false
                 shiftState = shiftState == .locked ? .off : .locked
+            case .dual:
+                state.cursorTimer = Timer.scheduledTimer(
+                    timeInterval: 0.4, target: self, selector: #selector(cursorTimerFired(_:)),
+                    userInfo: state, repeats: false)
             case .space:
                 state.latestX = point.x
                 state.cursorTimer = Timer.scheduledTimer(
@@ -320,6 +337,10 @@ final class KeyboardView: UIView {
                 continue
             }
             guard !state.committed, state.keyView.key.kind.isTextKey else { continue }
+            if case .dual = state.keyView.key.kind {
+                updateAlternate(state, at: point)
+                if state.alternateActive { continue }
+            }
             guard let target = keyView(at: point), target !== state.keyView, target.key.kind.isTextKey else {
                 continue
             }
@@ -327,6 +348,7 @@ final class KeyboardView: UIView {
             state.cursorTimer = nil
             state.keyView.isHighlighted = false
             state.keyView = target
+            state.startPoint = point
             target.isHighlighted = true
         }
     }
@@ -356,10 +378,56 @@ final class KeyboardView: UIView {
             stopRepeating()
         }
         state.keyView.isHighlighted = false
+        let useAlternate = state.alternateActive
+        if useAlternate {
+            setAlternate(state, active: false)
+        }
         if commit && !state.committed {
             state.committed = true
-            perform(kind)
+            if useAlternate {
+                performAlternate(kind)
+            } else {
+                perform(kind)
+            }
         }
+    }
+
+    /// A slide up on a key with two characters selects the shifted character.
+    /// A slide back down returns to the base character.
+    private func updateAlternate(_ state: TouchState, at point: CGPoint) {
+        guard let metrics = metrics() else { return }
+        let dx = point.x - state.startPoint.x
+        let dy = point.y - state.startPoint.y
+        let threshold = max(14, metrics.rowHeight * 0.35)
+        if !state.alternateActive {
+            let leftKeyUpward = point.y < state.keyView.hitFrame.minY && dy < -8
+            if abs(dx) < abs(dy), dy < -threshold || leftKeyUpward {
+                setAlternate(state, active: true)
+            }
+        } else if !state.alternateFromHold, dy > -threshold / 2 {
+            setAlternate(state, active: false)
+        }
+    }
+
+    private func setAlternate(_ state: TouchState, active: Bool) {
+        state.alternateActive = active
+        if !active {
+            state.alternateFromHold = false
+        }
+        guard case .dual(_, let shifted) = state.keyView.key.kind else { return }
+        if active {
+            state.cursorTimer?.invalidate()
+            state.cursorTimer = nil
+            state.keyView.apply(KeyDisplay(primary: shifted, primaryFontSize: 26))
+        } else {
+            state.keyView.apply(display(for: state.keyView.key.kind))
+        }
+    }
+
+    private func performAlternate(_ kind: KeyKind) {
+        guard case .dual(_, let shifted) = kind else { return }
+        lastShiftTapTime = 0
+        delegate?.keyboardView(self, insert: shifted)
     }
 
     private func commitPendingTextTouches() {
@@ -368,7 +436,13 @@ final class KeyboardView: UIView {
             state.cursorTimer?.invalidate()
             state.cursorTimer = nil
             state.keyView.isHighlighted = false
-            perform(state.keyView.key.kind)
+            let kind = state.keyView.key.kind
+            if state.alternateActive {
+                setAlternate(state, active: false)
+                performAlternate(kind)
+            } else {
+                perform(kind)
+            }
         }
     }
 
@@ -466,6 +540,13 @@ final class KeyboardView: UIView {
     /// A finger held on the space bar for 0.4 seconds turns the keyboard into a cursor trackpad.
     @objc private func cursorTimerFired(_ timer: Timer) {
         guard let state = timer.userInfo as? TouchState, !state.committed else { return }
+        if case .dual = state.keyView.key.kind {
+            // A long press on a key with two characters selects the shifted character.
+            state.alternateFromHold = true
+            setAlternate(state, active: true)
+            return
+        }
+        guard state.keyView.key.kind == .space else { return }
         state.committed = true
         state.cursorMode = true
         state.cursorAnchorX = state.latestX
