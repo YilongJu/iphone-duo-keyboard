@@ -1,0 +1,79 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ipa:
+    name: Unsigned .ipa for the device
+    runs-on: xcode-27
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - name: Show Xcode version
+        run: xcodebuild -version
+      - name: Install XcodeGen
+        run: brew install xcodegen
+      - name: Generate the Xcode project
+        run: xcodegen generate
+      - name: Build for the device with signing off
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project DuoKeyboard.xcodeproj \
+            -scheme DuoKeyboard \
+            -configuration Release \
+            -sdk iphoneos \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
+            build | xcbeautify
+      - name: Package the .ipa
+        run: |
+          set -euo pipefail
+          app=build/Build/Products/Release-iphoneos/DuoKeyboard.app
+          test -d "$app/PlugIns/DuoKeyboardExtension.appex"
+          mkdir Payload
+          cp -R "$app" Payload/
+          zip -qry DuoKeyboard-unsigned.ipa Payload
+          ls -l DuoKeyboard-unsigned.ipa
+      - uses: actions/upload-artifact@v7
+        with:
+          name: DuoKeyboard-unsigned-ipa
+          path: DuoKeyboard-unsigned.ipa
+          if-no-files-found: error
+
+  screenshots:
+    name: Simulator screenshots of the keyboard
+    runs-on: xcode-27
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install XcodeGen
+        run: brew install xcodegen
+      - name: Generate the Xcode project
+        run: xcodegen generate
+      - name: Build for the simulator
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project DuoKeyboard.xcodeproj \
+            -scheme DuoKeyboard \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -derivedDataPath build-sim \
+            CODE_SIGNING_ALLOWED=NO \
+            build | xcbeautify
+      - name: Capture screenshots
+        run: bash scripts/ci/capture_screenshots.sh build-sim/Build/Products/Debug-iphonesimulator/DuoKeyboard.app screenshots
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: screenshots
+          path: screenshots
+          if-no-files-found: error
