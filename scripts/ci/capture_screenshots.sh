@@ -14,6 +14,24 @@ xcrun simctl list devices available > "$output_dir/available-devices.txt"
 
 # Each line is a device name prefix. The first available simulator whose name starts with the
 # prefix is used. The script stops when a prefix does not match any simulator.
+# Saves one screenshot per display. The iPhone Duo simulator has two displays (inner and outer),
+# and simctl then asks for a --display value and lists the valid ones in its error text.
+capture() {
+  local udid="$1" base="$2" message
+  if message=$(xcrun simctl io "$udid" screenshot "$base.png" 2>&1); then
+    return 0
+  fi
+  local ids
+  ids=$(echo "$message" | sed -n 's/.*--display=\([0-9][0-9]*\).*//p')
+  if [ -z "$ids" ]; then
+    echo "$message" >&2
+    return 1
+  fi
+  for id in $ids; do
+    xcrun simctl io "$udid" screenshot --display="$id" "$base-display$id.png"
+  done
+}
+
 prefixes=("iPhone Duo" "iPhone 17" "iPad Pro 13")
 
 for prefix in "${prefixes[@]}"; do
@@ -33,12 +51,13 @@ sys.exit("simulator not found: " + prefix)
   xcrun simctl boot "$udid"
   xcrun simctl bootstatus "$udid" -b
   xcrun simctl install "$udid" "$app_path"
+  xcrun simctl ui "$udid" appearance light
   xcrun simctl launch "$udid" "$bundle_id" -focusPreviewField
   sleep 12
-  xcrun simctl io "$udid" screenshot "$output_dir/$slug-light.png"
+  capture "$udid" "$output_dir/$slug-light"
   xcrun simctl ui "$udid" appearance dark
   sleep 4
-  xcrun simctl io "$udid" screenshot "$output_dir/$slug-dark.png"
+  capture "$udid" "$output_dir/$slug-dark"
   xcrun simctl shutdown "$udid"
 done
 

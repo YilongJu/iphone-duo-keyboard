@@ -12,6 +12,7 @@ final class KeyboardViewController: UIInputViewController, KeyboardViewDelegate 
     private let keyboardView = KeyboardView()
     private var heightConstraint: NSLayoutConstraint?
     private var previousInsertWasSpace = false
+    private var lastSpaceTime: TimeInterval = 0
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -96,11 +97,10 @@ final class KeyboardViewController: UIInputViewController, KeyboardViewDelegate 
     }
 
     private func updateAutoShift() {
-        guard keyboardView.shiftState != .locked else { return }
         let type = textDocumentProxy.autocapitalizationType ?? .sentences
         let capitalize = KeyboardTextLogic.shouldAutoCapitalize(
             before: textDocumentProxy.documentContextBeforeInput, type: type)
-        keyboardView.shiftState = capitalize ? .on : .off
+        keyboardView.setAutomaticShift(capitalize)
     }
 
     // MARK: KeyboardViewDelegate
@@ -108,6 +108,7 @@ final class KeyboardViewController: UIInputViewController, KeyboardViewDelegate 
     func keyboardView(_ keyboardView: KeyboardView, insert text: String) {
         let proxy = textDocumentProxy
         if text == " ", previousInsertWasSpace,
+            ProcessInfo.processInfo.systemUptime - lastSpaceTime < 1.5,
             KeyboardTextLogic.shouldReplaceDoubleSpace(before: proxy.documentContextBeforeInput) {
             proxy.deleteBackward()
             proxy.insertText(". ")
@@ -115,6 +116,7 @@ final class KeyboardViewController: UIInputViewController, KeyboardViewDelegate 
         } else {
             proxy.insertText(text)
             previousInsertWasSpace = text == " "
+            lastSpaceTime = ProcessInfo.processInfo.systemUptime
         }
         updateAutoShift()
     }

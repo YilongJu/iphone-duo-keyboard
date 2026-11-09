@@ -39,6 +39,17 @@ final class KeyboardView: UIView {
         didSet { if oldValue != shiftState { refreshLabels() } }
     }
 
+    /// True while shift is on because of automatic capitalization. Automatic shift makes the
+    /// next letter upper case and leaves number and punctuation keys on their base character.
+    private(set) var shiftIsAutomatic = false
+
+    /// The owner calls this after each text change with the capitalization rule's result.
+    func setAutomaticShift(_ capitalize: Bool) {
+        guard shiftState != .locked else { return }
+        shiftIsAutomatic = capitalize
+        shiftState = capitalize ? .on : .off
+    }
+
     private(set) var style: LayoutStyle = .compact
     private(set) var currentLayer: KeyboardLayer = .letters
 
@@ -55,6 +66,7 @@ final class KeyboardView: UIView {
         var committed = false
         var cursorMode = false
         var cursorAnchorX: CGFloat = 0
+        var latestX: CGFloat = 0
         var cursorTimer: Timer?
 
         init(keyView: KeyView) {
@@ -249,8 +261,17 @@ final class KeyboardView: UIView {
 
     // MARK: Touches
 
+    override func willMove(toWindow newWindow: UIWindow?) {
+        super.willMove(toWindow: newWindow)
+        if newWindow == nil {
+            // Timers hold the view, so every timer stops when the keyboard leaves the screen.
+            cancelAllTouches()
+            stopRepeating()
+        }
+    }
+
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-        for touch in touches {
+        for touch in touches.sorted(by: { $0.timestamp < $1.timestamp }) {
             // A second finger down commits the first finger's key, so fast typing keeps its order.
             commitPendingTextTouches()
             let point = touch.location(in: self)
@@ -271,9 +292,10 @@ final class KeyboardView: UIView {
                 handleShiftTap(at: touch.timestamp)
             case .capsLock:
                 state.committed = true
+                shiftIsAutomatic = false
                 shiftState = shiftState == .locked ? .off : .locked
             case .space:
-                state.cursorAnchorX = point.x
+                state.latestX = point.x
                 state.cursorTimer = Timer.scheduledTimer(
                     timeInterval: 0.4, target: self, selector: #selector(cursorTimerFired(_:)),
                     userInfo: state, repeats: false)
@@ -287,6 +309,7 @@ final class KeyboardView: UIView {
         for touch in touches {
             guard let state = activeTouches[touch] else { continue }
             let point = touch.location(in: self)
+            state.latestX = point.x
             if state.cursorMode {
                 let pointsPerCharacter: CGFloat = 10
                 let offset = Int((point.x - state.cursorAnchorX) / pointsPerCharacter)
@@ -329,7 +352,7 @@ final class KeyboardView: UIView {
             setCursorModeAppearance(false)
         }
         let kind = state.keyView.key.kind
-        if kind.repeats {
+        if kind.repeats && kind == repeatingKind {
             stopRepeating()
         }
         state.keyView.isHighlighted = false
@@ -360,7 +383,11 @@ final class KeyboardView: UIView {
     private func handleShiftTap(at timestamp: TimeInterval) {
         let isDoubleTap = timestamp - lastShiftTapTime < 0.35
         lastShiftTapTime = timestamp
-        if isDoubleTap {
+        shiftIsAutomatic = false
+        if shiftState == .locked {
+            shiftState = .off
+            lastShiftTapTime = 0
+        } else if isDoubleTap {
             shiftState = .locked
         } else {
             shiftState = shiftState == .off ? .on : .off
@@ -376,6 +403,8 @@ final class KeyboardView: UIView {
     // MARK: Actions
 
     private func perform(_ kind: KeyKind) {
+        // Any other key between two shift taps ends the double-tap window for caps lock.
+        lastShiftTapTime = 0
         switch kind {
         case .character(let character):
             let text = isLetter(character) && shiftState != .off ? character.uppercased() : character
@@ -383,7 +412,7 @@ final class KeyboardView: UIView {
             if shiftState == .on { shiftState = .off }
             delegate?.keyboardView(self, insert: text)
         case .dual(let base, let shifted):
-            let text = shiftState == .on ? shifted : base
+            let text = shiftState == .on && !shiftIsAutomatic ? shifted : base
             if shiftState == .on { shiftState = .off }
             delegate?.keyboardView(self, insert: text)
         case .space:
@@ -439,6 +468,7 @@ final class KeyboardView: UIView {
         guard let state = timer.userInfo as? TouchState, !state.committed else { return }
         state.committed = true
         state.cursorMode = true
+        state.cursorAnchorX = state.latestX
         setCursorModeAppearance(true)
     }
 }

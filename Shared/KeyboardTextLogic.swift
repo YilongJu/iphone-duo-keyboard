@@ -17,7 +17,7 @@ enum KeyboardTextLogic {
             guard let last = before.last else { return true }
             if last.isNewline { return true }
             guard last.isWhitespace else { return false }
-            let trimmed = before.reversed().drop(while: { $0 == " " })
+            let trimmed = before.reversed().drop(while: { $0 == " " || $0 == "\t" })
             guard let sentenceEnd = trimmed.first else { return true }
             return sentenceEnd == "." || sentenceEnd == "!" || sentenceEnd == "?" || sentenceEnd.isNewline
         @unknown default:
