@@ -140,10 +140,15 @@ struct KeyboardLayout {
 
     // MARK: Compact layout, 10 units per row
 
+    private static let compactNumberRow = duals([
+        ("1", "!"), ("2", "@"), ("3", "#"), ("4", "$"), ("5", "%"),
+        ("6", "^"), ("7", "&"), ("8", "*"), ("9", "("), ("0", ")"),
+    ])
+
     private static func compactLetters(showsGlobe: Bool) -> [[Key]] {
         let bottomRow = [Key(.shift, 1.5)] + chars("zxcvbnm") + [Key(.backspace, 1.5)]
         return [
-            chars("1234567890"),
+            compactNumberRow,
             chars("qwertyuiop"),
             chars("asdfghjkl"),
             bottomRow,
@@ -154,7 +159,7 @@ struct KeyboardLayout {
     private static func compactSymbols(showsGlobe: Bool) -> [[Key]] {
         let bottomRow = chars("_\\|~<>.,?!", weight: 0.85) + [Key(.backspace, 1.5)]
         return [
-            chars("1234567890"),
+            compactNumberRow,
             chars("-/:;()$&@\""),
             chars("[]{}#%^*+="),
             bottomRow,
