@@ -7,7 +7,7 @@ set -euo pipefail
 
 app_path="$1"
 output_dir="$2"
-bundle_id="com.duokeyboard.app"
+bundle_id="com.yilongju.duokeyboard"
 mkdir -p "$output_dir"
 
 xcrun simctl list devices available > "$output_dir/available-devices.txt"
