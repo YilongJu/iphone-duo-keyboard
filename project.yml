@@ -1,0 +1,79 @@
+# XcodeGen spec. `xcodegen generate` turns this file into DuoKeyboard.xcodeproj on the build Mac.
+name: DuoKeyboard
+options:
+  deploymentTarget:
+    iOS: "17.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    TARGETED_DEVICE_FAMILY: "1,2"
+    GENERATE_INFOPLIST_FILE: "NO"
+targets:
+  DuoKeyboard:
+    type: application
+    platform: iOS
+    sources:
+      - App
+      - Shared
+    info:
+      path: App/Info.plist
+      properties:
+        CFBundleDisplayName: Duo Keyboard
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        UILaunchScreen: {}
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: false
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        UISupportedInterfaceOrientations~ipad:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        ITSAppUsesNonExemptEncryption: false
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.duokeyboard.app
+        PRODUCT_NAME: DuoKeyboard
+    dependencies:
+      - target: DuoKeyboardExtension
+  DuoKeyboardExtension:
+    type: app-extension
+    platform: iOS
+    sources:
+      - Keyboard
+      - Shared
+    info:
+      path: Keyboard/Info.plist
+      properties:
+        CFBundleDisplayName: Duo Keyboard
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.keyboard-service
+          NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).KeyboardViewController
+          NSExtensionAttributes:
+            IsASCIICapable: true
+            PrefersRightToLeft: false
+            PrimaryLanguage: en-US
+            RequestsOpenAccess: false
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.duokeyboard.app.keyboard
+        PRODUCT_NAME: DuoKeyboardExtension
+schemes:
+  DuoKeyboard:
+    build:
+      targets:
+        DuoKeyboard: all
+        DuoKeyboardExtension: all
+    run:
+      config: Debug
+    archive:
+      config: Release
