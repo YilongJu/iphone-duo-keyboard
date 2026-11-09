@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Duo Keyboard preview</title>
+<style>
+  :root {
+    --page: #f2f2f7; --ink: #1c1c1e; --muted: #6b6b70; --panel: #ffffff; --line: #d1d1d6;
+    --board: #d3d6dc; --key: #ffffff; --fn: #adb2bd; --key-ink: #000000; --accent: #0a84ff;
+  }
+  :root[data-theme="dark"] {
+    --page: #111113; --ink: #f2f2f7; --muted: #9a9aa0; --panel: #1c1c1e; --line: #3a3a3c;
+    --board: #2b2b2d; --key: #6b6b6b; --fn: #454547; --key-ink: #ffffff; --accent: #0a84ff;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 20px 16px 48px; background: var(--page); color: var(--ink);
+    font: 15px/1.45 -apple-system, "Segoe UI", system-ui, sans-serif; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  p.lead { margin: 0 0 16px; color: var(--muted); max-width: 70ch; }
+  .controls { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; margin-bottom: 14px; }
+  .controls label { color: var(--muted); font-size: 13px; }
+  button.chip { border: 1px solid var(--line); background: var(--panel); color: var(--ink);
+    border-radius: 999px; padding: 6px 12px; font: inherit; cursor: pointer; }
+  button.chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+  input[type="range"] { vertical-align: middle; }
+  .readout { font: 13px/1.5 ui-monospace, Consolas, monospace; color: var(--muted); margin: 0 0 12px; }
+  .stage { overflow-x: auto; padding-bottom: 8px; }
+  .device { background: var(--panel); border: 1px solid var(--line); overflow: hidden; position: relative; }
+  .typed { min-height: 110px; padding: 14px 16px; white-space: pre-wrap; word-break: break-word;
+    font-size: 17px; }
+  .caret { display: inline-block; width: 2px; height: 1.1em; background: var(--accent);
+    vertical-align: text-bottom; margin: 0 -1px; }
+  .board { position: relative; background: var(--board); touch-action: none; user-select: none; }
+  .key { position: absolute; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; border-radius: 5px; background: var(--key); color: var(--key-ink);
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.3); overflow: hidden; }
+  .key.fn { background: var(--fn); }
+  .key.pressed, .key.fn.on { background: var(--fn); }
+  .key.fn.pressed, .key.fn.on { background: var(--key); }
+  .key .top { font-size: 14px; line-height: 1; margin-bottom: 3px; }
+  .key .main { line-height: 1; }
+  .key.alt .top { display: none; }
+  table { border-collapse: collapse; margin-top: 18px; font-size: 14px; }
+  caption { text-align: left; color: var(--muted); padding-bottom: 6px; }
+  th, td { text-align: left; padding: 4px 14px 4px 0; border-bottom: 1px solid var(--line); }
+</style>
+</head>
+<body>
+<h1>Duo Keyboard preview</h1>
+<p class="lead">This page draws the keyboard from <code>Shared/keyboard-layout.json</code>, the same
+file the iPhone app reads. Click a key to type. Hold a two-character key, or drag up on it, for the
+upper character.</p>
+
+<div class="controls">
+  <span id="presets"></span>
+  <label>Width <input id="width" type="range" min="320" max="1100" step="1"> <span id="widthValue"></span> pt</label>
+  <label>Corner radius <input id="radius" type="range" min="0" max="80" step="1" value="55"> <span id="radiusValue"></span> pt</label>
+  <button class="chip" id="theme" aria-pressed="false">Dark</button>
+</div>
+<p class="readout" id="readout"></p>
+
+<div class="stage">
+  <div class="device" id="device">
+    <div class="typed" id="typed"></div>
+    <div class="board" id="board"></div>
+  </div>
+</div>
+
+<table>
+  <caption>Differences between this preview and the phone</caption>
+  <tr><th>Topic</th><th>Preview</th><th>Phone</th></tr>
+  <tr><td>Icons</td><td>Text symbols</td><td>Apple's SF Symbols</td></tr>
+  <tr><td>Corner radius</td><td>The slider's value</td><td>The display's real radius</td></tr>
+  <tr><td>Cut, copy, paste</td><td>A notice on the space bar</td><td>The system clipboard, with Full Access on</td></tr>
+  <tr><td>Space bar hold</td><td>Not simulated</td><td>Moves the cursor</td></tr>
+</table>
+
+<script>
+const SPEC = {"metrics": {"wideMinimumWidth": 600, "topPadding": 4, "bottomPadding": 8, "horizontalPadding": 3, "bottomRowCornerInset": 16, "gapX": 3, "gapYWide": 3.5, "gapYCompact": 5, "wideRowHeightPerUnit": 1.05, "wideRowHeightMin": 46, "wideRowHeightMax": 60, "compactRowHeight": 46, "landscapePhoneRowHeight": 38}, "wide": {"units": 14.5, "letters": [{"height": 0.72, "keys": [{"f": "cut", "w": 2.9}, {"f": "copy", "w": 2.9}, {"f": "paste", "w": 2.9}, {"f": "home", "w": 2.9}, {"f": "end", "w": 2.9}]}, {"height": 1, "keys": [["`", "~"], ["1", "!"], ["2", "@"], ["3", "#"], ["4", "$"], ["5", "%"], ["6", "^"], ["7", "&"], ["8", "*"], ["9", "("], ["0", ")"], ["-", "_"], ["=", "+"], {"f": "backspace", "w": 1.5}]}, {"height": 1, "keys": [{"f": "tab", "w": 1.5}, "q", "w", "e", "r", "t", "y", "u", "i", "o", "p", ["[", "{"], ["]", "}"], ["\\", "|"]]}, {"height": 1, "keys": [{"f": "capsLock", "w": 1.75}, "a", "s", "d", "f", "g", "h", "j", "k", "l", [";", ":"], ["'", "\""], {"f": "return", "w": 1.75}]}, {"height": 1, "keys": [{"f": "shift", "w": 2.25}, "z", "x", "c", "v", "b", "n", "m", [",", "<"], [".", ">"], ["/", "?"], {"f": "shift", "w": 2.25}]}, {"height": 1, "keys": [{"f": "globe", "w": 1.25}, {"f": "symbols", "w": 1.25}, {"f": "space", "w": 6.75}, {"f": "left", "w": 1}, {"f": "up", "w": 1}, {"f": "down", "w": 1}, {"f": "right", "w": 1}, {"f": "dismiss", "w": 1.25}]}], "symbols": [{"height": 0.72, "keys": [{"f": "cut", "w": 2.9}, {"f": "copy", "w": 2.9}, {"f": "paste", "w": 2.9}, {"f": "home", "w": 2.9}, {"f": "end", "w": 2.9}]}, {"height": 1, "keys": ["€", "£", "¥", "₩", "₹", "¢", "§", "°", "•", "…", "–", "×", "÷", {"f": "backspace", "w": 1.5}]}, {"height": 1, "keys": [{"f": "tab", "w": 1.5}, "!", "@", "#", "$", "%", "^", "&", "*", "(", ")", "{", "}", "|"]}, {"height": 1, "keys": [{"f": "letters", "w": 1.75}, "-", "_", "=", "+", "/", "\\", ":", ";", "'", "\"", "~", {"f": "return", "w": 1.75}]}, {"height": 1, "keys": [{"f": "letters", "w": 2.25}, "<", ">", "[", "]", "?", ",", ".", "`", "¿", "¡", {"f": "letters", "w": 2.25}]}, {"height": 1, "keys": [{"f": "globe", "w": 1.25}, {"f": "letters", "w": 1.25}, {"f": "space", "w": 6.75}, {"f": "left", "w": 1}, {"f": "up", "w": 1}, {"f": "down", "w": 1}, {"f": "right", "w": 1}, {"f": "dismiss", "w": 1.25}]}]}, "compact": {"units": 10, "letters": [{"height": 0.72, "keys": [{"f": "cut", "w": 2}, {"f": "copy", "w": 2}, {"f": "paste", "w": 2}, {"f": "home", "w": 2}, {"f": "end", "w": 2}]}, {"height": 1, "keys": [["1", "!"], ["2", "@"], ["3", "#"], ["4", "$"], ["5", "%"], ["6", "^"], ["7", "&"], ["8", "*"], ["9", "("], ["0", ")"]]}, {"height": 1, "keys": ["q", "w", "e", "r", "t", "y", "u", "i", "o", "p"]}, {"height": 1, "keys": ["a", "s", "d", "f", "g", "h", "j", "k", "l"]}, {"height": 1, "keys": [{"f": "shift", "w": 1.5}, "z", "x", "c", "v", "b", "n", "m", {"f": "backspace", "w": 1.5}]}, {"height": 1, "keys": [{"f": "symbols", "w": 1.25}, {"f": "globe", "w": 1.25}, {"f": "space", "w": 4}, ".", {"f": "return", "w": 2.5}]}], "symbols": [{"height": 0.72, "keys": [{"f": "cut", "w": 2}, {"f": "copy", "w": 2}, {"f": "paste", "w": 2}, {"f": "home", "w": 2}, {"f": "end", "w": 2}]}, {"height": 1, "keys": [["1", "!"], ["2", "@"], ["3", "#"], ["4", "$"], ["5", "%"], ["6", "^"], ["7", "&"], ["8", "*"], ["9", "("], ["0", ")"]]}, {"height": 1, "keys": ["-", "/", ":", ";", "(", ")", "$", "&", "@", "\""]}, {"height": 1, "keys": ["[", "]", "{", "}", "#", "%", "^", "*", "+", "="]}, {"height": 1, "keys": [{"c": "_", "w": 0.85}, {"c": "\\", "w": 0.85}, {"c": "|", "w": 0.85}, {"c": "~", "w": 0.85}, {"c": "<", "w": 0.85}, {"c": ">", "w": 0.85}, {"c": ".", "w": 0.85}, {"c": ",", "w": 0.85}, {"c": "?", "w": 0.85}, {"c": "!", "w": 0.85}, {"f": "backspace", "w": 1.5}]}, {"height": 1, "keys": [{"f": "letters", "w": 1.25}, {"f": "globe", "w": 1.25}, {"f": "space", "w": 4}, "'", {"f": "return", "w": 2.5}]}]}};
+const M = SPEC.metrics;
+const PRESETS = [
+  { name: "Closed, portrait", width: 466, compactHeight: false },
+  { name: "Open, portrait", width: 669, compactHeight: false },
+  { name: "Closed, landscape", width: 678, compactHeight: true },
+  { name: "Open, landscape", width: 951, compactHeight: false },
+];
+const FN_LABEL = {
+  backspace: "⌫", shift: "⇧", capsLock: "⇪", tab: "⇥", globe: "🌐", dismiss: "⌨↓",
+  left: "←", right: "→", up: "↑", down: "↓", home: "home", end: "end",
+  cut: "✂", copy: "⧉", paste: "📋", symbols: ".?123", letters: "ABC", space: "",
+};
+const state = {
+  width: 669, compactHeight: false, layer: "letters", shift: "off", autoShift: false,
+  text: "", cursor: 0, notice: null, noticeTimer: null,
+};
+
+function normalize(key) {
+  if (typeof key === "string") return { type: "char", base: key, w: 1 };
+  if (Array.isArray(key)) return { type: "dual", base: key[0], alt: key[1], w: 1 };
+  if (key.c !== undefined) return { type: "char", base: key.c, w: key.w ?? 1 };
+  if (FN_LABEL[key.f] === undefined && key.f !== "return") throw new Error("Unknown key: " + key.f);
+  return { type: "fn", name: key.f, w: key.w ?? 1 };
+}
+function styleName() { return state.width >= M.wideMinimumWidth ? "wide" : "compact"; }
+function rowsNow() { return SPEC[styleName()][state.layer].map(r => ({ height: r.height, keys: r.keys.map(normalize) })); }
+function preferredHeight() {
+  const style = styleName();
+  let rowHeight;
+  if (state.compactHeight) rowHeight = M.landscapePhoneRowHeight;
+  else if (style === "wide") {
+    const unit = state.width / SPEC.wide.units;
+    rowHeight = Math.min(Math.max(unit * M.wideRowHeightPerUnit, M.wideRowHeightMin), M.wideRowHeightMax);
+  } else rowHeight = M.compactRowHeight;
+  const total = SPEC[style].letters.reduce((sum, r) => sum + r.height, 0);
+  return rowHeight * total + M.topPadding + M.bottomPadding;
+}
+function isLetter(s) { return s.toLowerCase() !== s.toUpperCase(); }
+
+function render() {
+  const board = document.getElementById("board");
+  const device = document.getElementById("device");
+  const style = styleName();
+  const rows = rowsNow();
+  const height = preferredHeight();
+  const radius = Number(document.getElementById("radius").value);
+  device.style.width = state.width + "px";
+  device.style.borderRadius = `0 0 ${radius}px ${radius}px`;
+  board.style.height = height + "px";
+  board.replaceChildren();
+
+  const usableWidth = state.width - 2 * M.horizontalPadding;
+  const totalFraction = rows.reduce((sum, r) => sum + r.height, 0);
+  const rowHeight = (height - M.topPadding - M.bottomPadding) / totalFraction;
+  const gapY = style === "wide" ? M.gapYWide : M.gapYCompact;
+  const units = SPEC[style].units;
+  let y = M.topPadding;
+  let letterKeyWidth = 0;
+  rows.forEach((row, rowIndex) => {
+    const rowWeight = row.keys.reduce((sum, k) => sum + k.w, 0);
+    const inset = rowIndex === rows.length - 1 ? M.bottomRowCornerInset : 0;
+    const unit = (usableWidth - 2 * inset) / units;
+    if (rowIndex === 2) letterKeyWidth = unit;
+    let x = M.horizontalPadding + inset + (units - rowWeight) / 2 * unit;
+    const h = row.height * rowHeight;
+    for (const key of row.keys) {
+      const el = document.createElement("div");
+      el.className = "key" + (key.type === "fn" && key.name !== "space" ? " fn" : "");
+      el.style.left = (x + M.gapX) + "px";
+      el.style.top = (y + gapY) + "px";
+      el.style.width = (key.w * unit - 2 * M.gapX) + "px";
+      el.style.height = (h - 2 * gapY) + "px";
+      paint(el, key, style);
+      attach(el, key, rowHeight);
+      board.appendChild(el);
+      x += key.w * unit;
+    }
+    y += h;
+  });
+
+  document.getElementById("widthValue").textContent = state.width;
+  document.getElementById("radiusValue").textContent = radius;
+  document.getElementById("width").value = state.width;
+  document.getElementById("readout").textContent =
+    `layout ${style}   keyboard ${state.width} x ${height.toFixed(0)} pt   letter key ${letterKeyWidth.toFixed(1)} pt wide   ` +
+    `row ${rowHeight.toFixed(1)} pt high   wide layout starts at ${M.wideMinimumWidth} pt`;
+  for (const chip of document.querySelectorAll("#presets .chip")) {
+    chip.setAttribute("aria-pressed", String(Number(chip.dataset.width) === state.width));
+  }
+  const typed = document.getElementById("typed");
+  typed.replaceChildren(document.createTextNode(state.text.slice(0, state.cursor)));
+  const caret = document.createElement("span");
+  caret.className = "caret";
+  typed.appendChild(caret);
+  typed.appendChild(document.createTextNode(state.text.slice(state.cursor)));
+}
+
+function paint(el, key, style) {
+  el.replaceChildren();
+  const main = document.createElement("span");
+  main.className = "main";
+  if (key.type === "dual") {
+    const top = document.createElement("span");
+    top.className = "top";
+    top.textContent = key.alt;
+    el.appendChild(top);
+    main.textContent = key.base;
+    main.style.fontSize = "19px";
+  } else if (key.type === "char") {
+    main.textContent = isLetter(key.base) && state.shift !== "off" ? key.base.toUpperCase() : key.base;
+    main.style.fontSize = style === "wide" ? "24px" : "23px";
+  } else {
+    let label = key.name === "return" ? "return" : FN_LABEL[key.name];
+    if (key.name === "space") label = state.notice ?? (style === "compact" ? "space" : "");
+    if (key.name === "symbols" && style === "compact") label = "123";
+    if (key.name === "shift" && state.shift === "locked") label = "⇪";
+    main.textContent = label;
+    main.style.fontSize = key.name === "space" && state.notice ? "13px" : label.length > 2 ? "16px" : "20px";
+    const on = (key.name === "shift" && state.shift !== "off") || (key.name === "capsLock" && state.shift === "locked");
+    el.classList.toggle("on", on);
+  }
+  el.appendChild(main);
+}
+
+function attach(el, key, rowHeight) {
+  let startY = 0, alt = false, held = false, holdTimer = null, repeatTimer = null, down = false;
+  const repeats = key.type === "fn" && ["backspace", "left", "right", "up", "down"].includes(key.name);
+  const setAlt = value => {
+    alt = value;
+    el.classList.toggle("alt", value);
+    el.querySelector(".main").textContent = value ? key.alt : key.base;
+    el.querySelector(".main").style.fontSize = value ? "26px" : "19px";
+  };
+  el.addEventListener("pointerdown", event => {
+    el.setPointerCapture(event.pointerId);
+    down = true; startY = event.clientY; alt = false; held = false;
+    el.classList.add("pressed");
+    if (repeats) {
+      act(key, false);
+      holdTimer = setTimeout(() => { repeatTimer = setInterval(() => act(key, false), 80); }, 450);
+    } else if (key.type === "dual") {
+      holdTimer = setTimeout(() => { held = true; setAlt(true); }, 400);
+    }
+  });
+  el.addEventListener("pointermove", event => {
+    if (!down || key.type !== "dual" || held) return;
+    const dy = event.clientY - startY;
+    const threshold = Math.max(14, rowHeight * 0.35);
+    if (!alt && dy < -threshold) { clearTimeout(holdTimer); setAlt(true); }
+    else if (alt && dy > -threshold / 2) setAlt(false);
+  });
+  const up = commit => {
+    if (!down) return;
+    down = false;
+    clearTimeout(holdTimer); clearInterval(repeatTimer);
+    el.classList.remove("pressed");
+    if (commit && !repeats) act(key, alt);
+    else render();
+  };
+  el.addEventListener("pointerup", () => up(true));
+  el.addEventListener("pointercancel", () => up(false));
+}
+
+function insert(text) {
+  state.text = state.text.slice(0, state.cursor) + text + state.text.slice(state.cursor);
+  state.cursor += text.length;
+}
+function notice(text) {
+  state.notice = text;
+  clearTimeout(state.noticeTimer);
+  state.noticeTimer = setTimeout(() => { state.notice = null; render(); }, 2500);
+}
+function lineMove(command) {
+  const before = state.text.slice(0, state.cursor), after = state.text.slice(state.cursor);
+  const lineStart = before.lastIndexOf("\n") + 1;
+  const column = before.length - lineStart;
+  const newline = after.indexOf("\n");
+  const rest = newline === -1 ? after.length : newline;
+  if (command === "home") return -column;
+  if (command === "end") return rest;
+  if (command === "up") {
+    if (lineStart === 0) return -column;
+    const head = before.slice(0, lineStart - 1);
+    const previousLength = head.length - (head.lastIndexOf("\n") + 1);
+    return -(column + 1 + Math.max(previousLength - column, 0));
+  }
+  if (newline === -1) return rest;
+  const tail = after.slice(newline + 1);
+  const nextNewline = tail.indexOf("\n");
+  const nextLength = nextNewline === -1 ? tail.length : nextNewline;
+  return rest + 1 + Math.min(column, nextLength);
+}
+function autoShift() {
+  if (state.shift === "locked") return;
+  const before = state.text.slice(0, state.cursor);
+  const capitalize = before === "" || /\n$/.test(before) || /[.!?][ \t]+$/.test(before);
+  state.autoShift = capitalize;
+  state.shift = capitalize ? "on" : "off";
+}
+function act(key, alt) {
+  if (key.type === "char") {
+    insert(isLetter(key.base) && state.shift !== "off" ? key.base.toUpperCase() : key.base);
+    if (state.shift === "on") state.shift = "off";
+    autoShift();
+  } else if (key.type === "dual") {
+    const shifted = alt || (state.shift === "on" && !state.autoShift);
+    insert(shifted ? key.alt : key.base);
+    if (state.shift === "on") state.shift = "off";
+    autoShift();
+  } else {
+    switch (key.name) {
+      case "space": insert(" "); autoShift(); break;
+      case "tab": insert("\t"); autoShift(); break;
+      case "return": insert("\n"); autoShift(); break;
+      case "backspace":
+        if (state.cursor > 0) {
+          state.text = state.text.slice(0, state.cursor - 1) + state.text.slice(state.cursor);
+          state.cursor -= 1;
+        }
+        autoShift(); break;
+      case "left": state.cursor = Math.max(0, state.cursor - 1); autoShift(); break;
+      case "right": state.cursor = Math.min(state.text.length, state.cursor + 1); autoShift(); break;
+      case "up": case "down": case "home": case "end":
+        state.cursor += lineMove(key.name); autoShift(); break;
+      case "shift":
+        state.autoShift = false;
+        state.shift = state.shift === "off" ? "on" : "off"; break;
+      case "capsLock":
+        state.autoShift = false;
+        state.shift = state.shift === "locked" ? "off" : "locked"; break;
+      case "symbols": state.layer = "symbols"; break;
+      case "letters": state.layer = "letters"; break;
+      case "cut": notice("Cut"); break;
+      case "copy": notice("Copied"); break;
+      case "paste": notice("Paste"); break;
+      case "globe": notice("Next keyboard"); break;
+      case "dismiss": notice("Hide keyboard"); break;
+    }
+  }
+  render();
+}
+
+const presets = document.getElementById("presets");
+for (const preset of PRESETS) {
+  const chip = document.createElement("button");
+  chip.className = "chip";
+  chip.textContent = `${preset.name} · ${preset.width}`;
+  chip.dataset.width = preset.width;
+  chip.addEventListener("click", () => {
+    state.width = preset.width; state.compactHeight = preset.compactHeight; render();
+  });
+  presets.appendChild(chip);
+  presets.appendChild(document.createTextNode(" "));
+}
+document.getElementById("width").addEventListener("input", event => {
+  state.width = Number(event.target.value); state.compactHeight = false; render();
+});
+document.getElementById("radius").addEventListener("input", render);
+document.getElementById("theme").addEventListener("click", event => {
+  const dark = document.documentElement.dataset.theme !== "dark";
+  document.documentElement.dataset.theme = dark ? "dark" : "light";
+  event.target.setAttribute("aria-pressed", String(dark));
+});
+autoShift();
+render();
+</script>
+</body>
+</html>

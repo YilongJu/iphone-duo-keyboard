@@ -40,11 +40,6 @@ final class KeyboardViewController: UIInputViewController, KeyboardViewDelegate 
         updateHeight()
     }
 
-    override func viewDidLayoutSubviews() {
-        super.viewDidLayoutSubviews()
-        updateMeasurementCaption()
-    }
-
     override func textDidChange(_ textInput: UITextInput?) {
         super.textDidChange(textInput)
         refreshFromDocument()
@@ -73,23 +68,6 @@ final class KeyboardViewController: UIInputViewController, KeyboardViewDelegate 
         }
     }
 
-    /// Shows the keyboard's own measurements on the space bar. The wide layout's threshold
-    /// rests on published simulator numbers, and this caption gives the numbers from a real device.
-    private func updateMeasurementCaption() {
-        func name(_ sizeClass: UIUserInterfaceSizeClass) -> String {
-            switch sizeClass {
-            case .regular: return "R"
-            case .compact: return "C"
-            default: return "?"
-            }
-        }
-        let insets = view.safeAreaInsets
-        keyboardView.spaceCaption = "\(Int(view.bounds.width))x\(Int(view.bounds.height))"
-            + " h\(name(traitCollection.horizontalSizeClass)) v\(name(traitCollection.verticalSizeClass))"
-            + " safe \(Int(insets.left))/\(Int(insets.right))/\(Int(insets.bottom))"
-            + " globe \(needsInputModeSwitchKey ? 1 : 0)"
-    }
-
     private func refreshFromDocument() {
         let returnKeyType = textDocumentProxy.returnKeyType ?? .default
         keyboardView.returnKeyTitle = KeyboardTextLogic.returnKeyTitle(for: returnKeyType)
@@ -101,6 +79,17 @@ final class KeyboardViewController: UIInputViewController, KeyboardViewDelegate 
         let capitalize = KeyboardTextLogic.shouldAutoCapitalize(
             before: textDocumentProxy.documentContextBeforeInput, type: type)
         keyboardView.setAutomaticShift(capitalize)
+    }
+
+    /// Shows a short message on the space bar for 2.5 seconds.
+    private func showNotice(_ text: String) {
+        keyboardView.spaceCaption = text
+        NSObject.cancelPreviousPerformRequests(withTarget: self, selector: #selector(clearNotice), object: nil)
+        perform(#selector(clearNotice), with: nil, afterDelay: 2.5)
+    }
+
+    @objc private func clearNotice() {
+        keyboardView.spaceCaption = nil
     }
 
     // MARK: KeyboardViewDelegate
@@ -136,6 +125,49 @@ final class KeyboardViewController: UIInputViewController, KeyboardViewDelegate 
     func keyboardView(_ keyboardView: KeyboardView, moveCursorBy offset: Int) {
         textDocumentProxy.adjustTextPosition(byCharacterOffset: offset)
         previousInsertWasSpace = false
+    }
+
+    func keyboardView(_ keyboardView: KeyboardView, edit command: EditCommand) {
+        previousInsertWasSpace = false
+        let proxy = textDocumentProxy
+        switch command {
+        case .lineStart, .lineEnd, .lineUp, .lineDown:
+            let offset = KeyboardTextLogic.cursorOffset(
+                for: command,
+                before: proxy.documentContextBeforeInput ?? "",
+                after: proxy.documentContextAfterInput ?? "")
+            if offset != 0 {
+                proxy.adjustTextPosition(byCharacterOffset: offset)
+            }
+        case .cut, .copy:
+            // iOS gives a keyboard the clipboard only when the user turns on Full Access.
+            guard hasFullAccess else {
+                showNotice("Turn on Full Access in Settings")
+                return
+            }
+            guard let selected = proxy.selectedText, !selected.isEmpty else {
+                showNotice("Select text first")
+                return
+            }
+            UIPasteboard.general.string = selected
+            if command == .cut {
+                proxy.deleteBackward()
+                showNotice("Cut")
+            } else {
+                showNotice("Copied")
+            }
+        case .paste:
+            guard hasFullAccess else {
+                showNotice("Turn on Full Access in Settings")
+                return
+            }
+            guard let text = UIPasteboard.general.string, !text.isEmpty else {
+                showNotice("Clipboard is empty")
+                return
+            }
+            proxy.insertText(text)
+        }
+        updateAutoShift()
     }
 
     func keyboardViewDismiss(_ keyboardView: KeyboardView) {

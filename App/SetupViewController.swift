@@ -163,6 +163,13 @@ final class SetupViewController: UIViewController, KeyboardViewDelegate {
         return previewField.text(in: beforeRange)
     }
 
+    private func textAfterCursor() -> String? {
+        guard let range = previewField.selectedTextRange,
+            let afterRange = previewField.textRange(from: range.end, to: previewField.endOfDocument)
+        else { return nil }
+        return previewField.text(in: afterRange)
+    }
+
     // MARK: KeyboardViewDelegate
 
     func keyboardView(_ keyboardView: KeyboardView, insert text: String) {
@@ -198,6 +205,23 @@ final class SetupViewController: UIViewController, KeyboardViewDelegate {
             let position = previewField.position(from: range.start, offset: offset)
         else { return }
         previewField.selectedTextRange = previewField.textRange(from: position, to: position)
+    }
+
+    func keyboardView(_ keyboardView: KeyboardView, edit command: EditCommand) {
+        previousInsertWasSpace = false
+        switch command {
+        case .lineStart, .lineEnd, .lineUp, .lineDown:
+            let offset = KeyboardTextLogic.cursorOffset(
+                for: command, before: textBeforeCursor() ?? "", after: textAfterCursor() ?? "")
+            self.keyboardView(keyboardView, moveCursorBy: offset)
+        case .cut:
+            previewField.cut(nil)
+        case .copy:
+            previewField.copy(nil)
+        case .paste:
+            previewField.paste(nil)
+        }
+        updatePreviewAutoShift()
     }
 
     func keyboardViewDismiss(_ keyboardView: KeyboardView) {
