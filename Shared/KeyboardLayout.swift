@@ -19,6 +19,17 @@ enum ShiftState {
     case locked
 }
 
+/// An editing action that the owner of the keyboard carries out on the text field.
+enum EditCommand {
+    case cut
+    case copy
+    case paste
+    case lineStart
+    case lineEnd
+    case lineUp
+    case lineDown
+}
+
 enum KeyKind: Equatable {
     /// One character. Letters are stored in lower case and the shift state decides the case.
     case character(String)
@@ -34,6 +45,13 @@ enum KeyKind: Equatable {
     case dismiss
     case cursorLeft
     case cursorRight
+    case cursorUp
+    case cursorDown
+    case home
+    case end
+    case cut
+    case copy
+    case paste
     case switchLayer(KeyboardLayer)
 
     /// Text keys commit on finger lift, and a finger can slide between them before lifting.
@@ -47,7 +65,7 @@ enum KeyKind: Equatable {
     /// Repeating keys act on finger down and repeat while the finger stays down.
     var repeats: Bool {
         switch self {
-        case .backspace, .cursorLeft, .cursorRight: return true
+        case .backspace, .cursorLeft, .cursorRight, .cursorUp, .cursorDown: return true
         default: return false
         }
     }
@@ -59,9 +77,38 @@ enum KeyKind: Equatable {
         default: return true
         }
     }
+
+    /// The names that `keyboard-layout.json` uses in a key's "f" field.
+    static func function(named name: String) -> KeyKind? {
+        switch name {
+        case "space": return .space
+        case "backspace": return .backspace
+        case "shift": return .shift
+        case "capsLock": return .capsLock
+        case "tab": return .tab
+        case "return": return .returnKey
+        case "globe": return .globe
+        case "dismiss": return .dismiss
+        case "left": return .cursorLeft
+        case "right": return .cursorRight
+        case "up": return .cursorUp
+        case "down": return .cursorDown
+        case "home": return .home
+        case "end": return .end
+        case "cut": return .cut
+        case "copy": return .copy
+        case "paste": return .paste
+        case "symbols": return .switchLayer(.symbols)
+        case "letters": return .switchLayer(.letters)
+        default: return nil
+        }
+    }
 }
 
-struct Key {
+/// One key. In `keyboard-layout.json` a key takes one of four forms:
+/// `"a"` for a character, `["1", "!"]` for a base and a shifted character,
+/// `{"c": "_", "w": 0.85}` for a character with a width, and `{"f": "shift", "w": 2.25}` for a function key.
+struct Key: Decodable {
     let kind: KeyKind
     /// Width in key units. A letter key is 1 unit.
     let weight: CGFloat
@@ -70,111 +117,125 @@ struct Key {
         self.kind = kind
         self.weight = weight
     }
+
+    private struct ObjectForm: Decodable {
+        let c: String?
+        let f: String?
+        let w: CGFloat?
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        if let character = try? container.decode(String.self) {
+            self.init(.character(character))
+            return
+        }
+        if let pair = try? container.decode([String].self) {
+            guard pair.count == 2 else {
+                throw DecodingError.dataCorruptedError(
+                    in: container, debugDescription: "A two-character key needs exactly two strings")
+            }
+            self.init(.dual(pair[0], pair[1]))
+            return
+        }
+        let object = try container.decode(ObjectForm.self)
+        if let character = object.c {
+            self.init(.character(character), object.w ?? 1)
+        } else if let name = object.f, let kind = KeyKind.function(named: name) {
+            self.init(kind, object.w ?? 1)
+        } else {
+            throw DecodingError.dataCorruptedError(
+                in: container, debugDescription: "Unknown key: \(object.f ?? "missing f and c")")
+        }
+    }
+}
+
+/// The content of `keyboard-layout.json`. The Swift keyboard and the HTML preview in
+/// `docs/keyboard-preview.html` both read this one file.
+struct KeyboardSpec: Decodable {
+    struct Metrics: Decodable {
+        let wideMinimumWidth: CGFloat
+        let topPadding: CGFloat
+        let bottomPadding: CGFloat
+        let horizontalPadding: CGFloat
+        /// Extra space left and right of the bottom row. The display's rounded corners cover the
+        /// keyboard's bottom corners, and this space keeps the two corner keys fully visible.
+        let bottomRowCornerInset: CGFloat
+        let gapX: CGFloat
+        let gapYWide: CGFloat
+        let gapYCompact: CGFloat
+        let wideRowHeightPerUnit: CGFloat
+        let wideRowHeightMin: CGFloat
+        let wideRowHeightMax: CGFloat
+        let compactRowHeight: CGFloat
+        let landscapePhoneRowHeight: CGFloat
+    }
+
+    struct Row: Decodable {
+        /// Row height as a fraction of a letter row.
+        let height: CGFloat
+        let keys: [Key]
+    }
+
+    struct Style: Decodable {
+        let units: CGFloat
+        let letters: [Row]
+        let symbols: [Row]
+    }
+
+    let metrics: Metrics
+    let wide: Style
+    let compact: Style
+
+    /// The keyboard cannot work without its layout file, so a missing or invalid file stops the process.
+    static let shared: KeyboardSpec = {
+        guard let url = Bundle(for: KeyboardView.self).url(forResource: "keyboard-layout", withExtension: "json")
+        else {
+            fatalError("keyboard-layout.json is missing from the bundle")
+        }
+        do {
+            return try JSONDecoder().decode(KeyboardSpec.self, from: Data(contentsOf: url))
+        } catch {
+            fatalError("keyboard-layout.json is invalid: \(error)")
+        }
+    }()
+
+    func style(_ style: LayoutStyle) -> Style {
+        switch style {
+        case .wide: return wide
+        case .compact: return compact
+        }
+    }
 }
 
 struct KeyboardLayout {
     let rows: [[Key]]
+    /// Height of each row as a fraction of a letter row.
+    let rowHeights: [CGFloat]
     /// Width of the widest row in key units. Narrower rows are centered.
     let units: CGFloat
 
-    static let compactUnits: CGFloat = 10
-    static let wideUnits: CGFloat = 14.5
-
     static func make(style: LayoutStyle, layer: KeyboardLayer, showsGlobe: Bool) -> KeyboardLayout {
-        switch (style, layer) {
-        case (.wide, .letters):
-            return KeyboardLayout(rows: wideLetters(showsGlobe: showsGlobe), units: wideUnits)
-        case (.wide, .symbols):
-            return KeyboardLayout(rows: wideSymbols(showsGlobe: showsGlobe), units: wideUnits)
-        case (.compact, .letters):
-            return KeyboardLayout(rows: compactLetters(showsGlobe: showsGlobe), units: compactUnits)
-        case (.compact, .symbols):
-            return KeyboardLayout(rows: compactSymbols(showsGlobe: showsGlobe), units: compactUnits)
+        let styleSpec = KeyboardSpec.shared.style(style)
+        let rowSpecs = layer == .letters ? styleSpec.letters : styleSpec.symbols
+        let rows = rowSpecs.map { row in showsGlobe ? row.keys : withoutGlobe(row.keys) }
+        return KeyboardLayout(rows: rows, rowHeights: rowSpecs.map { $0.height }, units: styleSpec.units)
+    }
+
+    /// Sum of the row heights of a style, in letter rows.
+    static func totalRowHeight(style: LayoutStyle) -> CGFloat {
+        KeyboardSpec.shared.style(style).letters.reduce(0) { $0 + $1.height }
+    }
+
+    /// Removes the globe key and gives its width to the space bar in the same row.
+    private static func withoutGlobe(_ keys: [Key]) -> [Key] {
+        guard let globe = keys.first(where: { $0.kind == .globe }) else { return keys }
+        return keys.compactMap { key in
+            switch key.kind {
+            case .globe: return nil
+            case .space: return Key(.space, key.weight + globe.weight)
+            default: return key
+            }
         }
-    }
-
-    private static func chars(_ text: String, weight: CGFloat = 1) -> [Key] {
-        text.map { Key(.character(String($0)), weight) }
-    }
-
-    private static func duals(_ pairs: [(String, String)]) -> [Key] {
-        pairs.map { Key(.dual($0.0, $0.1)) }
-    }
-
-    // MARK: Wide layout, 14.5 units per row
-
-    private static func wideLetters(showsGlobe: Bool) -> [[Key]] {
-        let numberRow = duals([
-            ("`", "~"), ("1", "!"), ("2", "@"), ("3", "#"), ("4", "$"), ("5", "%"), ("6", "^"),
-            ("7", "&"), ("8", "*"), ("9", "("), ("0", ")"), ("-", "_"), ("=", "+"),
-        ]) + [Key(.backspace, 1.5)]
-        let topRow = [Key(.tab, 1.5)] + chars("qwertyuiop") + duals([("[", "{"), ("]", "}"), ("\\", "|")])
-        let homeRow = [Key(.capsLock, 1.75)] + chars("asdfghjkl") + duals([(";", ":"), ("'", "\"")])
-            + [Key(.returnKey, 1.75)]
-        let bottomRow = [Key(.shift, 2.25)] + chars("zxcvbnm") + duals([(",", "<"), (".", ">"), ("/", "?")])
-            + [Key(.shift, 2.25)]
-        return [numberRow, topRow, homeRow, bottomRow, wideControlRow(showsGlobe: showsGlobe, layerKey: .symbols)]
-    }
-
-    private static func wideSymbols(showsGlobe: Bool) -> [[Key]] {
-        let currencyRow = chars("€£¥₩₹¢§°•…–×÷") + [Key(.backspace, 1.5)]
-        let topRow = [Key(.tab, 1.5)] + chars("!@#$%^&*(){}|")
-        let homeRow = [Key(.switchLayer(.letters), 1.75)] + chars("-_=+/\\:;'\"~") + [Key(.returnKey, 1.75)]
-        let bottomRow = [Key(.switchLayer(.letters), 2.25)] + chars("<>[]?,.`¿¡") + [Key(.switchLayer(.letters), 2.25)]
-        return [currencyRow, topRow, homeRow, bottomRow, wideControlRow(showsGlobe: showsGlobe, layerKey: .letters)]
-    }
-
-    private static func wideControlRow(showsGlobe: Bool, layerKey: KeyboardLayer) -> [Key] {
-        var row: [Key] = []
-        if showsGlobe {
-            row.append(Key(.globe, 1.25))
-        }
-        row.append(Key(.switchLayer(layerKey), 1.25))
-        row.append(Key(.cursorLeft, 1))
-        row.append(Key(.space, showsGlobe ? 7.5 : 8.75))
-        row.append(Key(.cursorRight, 1))
-        row.append(Key(.switchLayer(layerKey), 1.25))
-        row.append(Key(.dismiss, 1.25))
-        return row
-    }
-
-    // MARK: Compact layout, 10 units per row
-
-    private static let compactNumberRow = duals([
-        ("1", "!"), ("2", "@"), ("3", "#"), ("4", "$"), ("5", "%"),
-        ("6", "^"), ("7", "&"), ("8", "*"), ("9", "("), ("0", ")"),
-    ])
-
-    private static func compactLetters(showsGlobe: Bool) -> [[Key]] {
-        let bottomRow = [Key(.shift, 1.5)] + chars("zxcvbnm") + [Key(.backspace, 1.5)]
-        return [
-            compactNumberRow,
-            chars("qwertyuiop"),
-            chars("asdfghjkl"),
-            bottomRow,
-            compactControlRow(showsGlobe: showsGlobe, layerKey: .symbols, extra: "."),
-        ]
-    }
-
-    private static func compactSymbols(showsGlobe: Bool) -> [[Key]] {
-        let bottomRow = chars("_\\|~<>.,?!", weight: 0.85) + [Key(.backspace, 1.5)]
-        return [
-            compactNumberRow,
-            chars("-/:;()$&@\""),
-            chars("[]{}#%^*+="),
-            bottomRow,
-            compactControlRow(showsGlobe: showsGlobe, layerKey: .letters, extra: "'"),
-        ]
-    }
-
-    private static func compactControlRow(showsGlobe: Bool, layerKey: KeyboardLayer, extra: String) -> [Key] {
-        var row: [Key] = [Key(.switchLayer(layerKey), 1.25)]
-        if showsGlobe {
-            row.append(Key(.globe, 1.25))
-        }
-        row.append(Key(.space, showsGlobe ? 4 : 5.25))
-        row.append(Key(.character(extra), 1))
-        row.append(Key(.returnKey, 2.5))
-        return row
     }
 }
