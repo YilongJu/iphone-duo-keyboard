@@ -12,6 +12,7 @@ final class SetupViewController: UIViewController, KeyboardViewDelegate {
     private let previewKeyboard = KeyboardView()
     private let previewContainer = UIInputView(frame: .zero, inputViewStyle: .keyboard)
     private var previousInsertWasSpace = false
+    private var lastSpaceTime: TimeInterval = 0
     private var didAutoFocus = false
 
     override func viewDidLoad() {
@@ -85,6 +86,7 @@ final class SetupViewController: UIViewController, KeyboardViewDelegate {
         if !didAutoFocus, ProcessInfo.processInfo.arguments.contains("-focusPreviewField") {
             didAutoFocus = true
             previewField.becomeFirstResponder()
+            updatePreviewAutoShift()
         }
     }
 
@@ -149,10 +151,9 @@ final class SetupViewController: UIViewController, KeyboardViewDelegate {
     }
 
     private func updatePreviewAutoShift() {
-        guard previewKeyboard.shiftState != .locked else { return }
         let before = textBeforeCursor()
         let capitalize = KeyboardTextLogic.shouldAutoCapitalize(before: before, type: .sentences)
-        previewKeyboard.shiftState = capitalize ? .on : .off
+        previewKeyboard.setAutomaticShift(capitalize)
     }
 
     private func textBeforeCursor() -> String? {
@@ -166,6 +167,7 @@ final class SetupViewController: UIViewController, KeyboardViewDelegate {
 
     func keyboardView(_ keyboardView: KeyboardView, insert text: String) {
         if text == " ", previousInsertWasSpace,
+            ProcessInfo.processInfo.systemUptime - lastSpaceTime < 1.5,
             KeyboardTextLogic.shouldReplaceDoubleSpace(before: textBeforeCursor()) {
             previewField.deleteBackward()
             previewField.insertText(". ")
@@ -173,6 +175,7 @@ final class SetupViewController: UIViewController, KeyboardViewDelegate {
         } else {
             previewField.insertText(text)
             previousInsertWasSpace = text == " "
+            lastSpaceTime = ProcessInfo.processInfo.systemUptime
         }
         updatePreviewAutoShift()
     }
