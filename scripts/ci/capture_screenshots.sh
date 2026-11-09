@@ -22,7 +22,7 @@ capture() {
     return 0
   fi
   local ids
-  ids=$(echo "$message" | sed -n 's/.*--display=\([0-9][0-9]*\).*//p')
+  ids=$(echo "$message" | sed -n 's/.*--display=\([0-9][0-9]*\).*/\1/p')
   if [ -z "$ids" ]; then
     echo "$message" >&2
     return 1
