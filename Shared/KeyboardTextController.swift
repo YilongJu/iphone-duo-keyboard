@@ -104,6 +104,11 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
     /// The Pinyin letters typed so far that are not Chinese text yet.
     private(set) var pinyinBuffer = ""
     private var pinyinCandidates: [PinyinCandidate] = []
+    /// The candidates picked since the buffer was last empty.
+    private var sessionPicks: [PinyinCandidate] = []
+    /// True after an opening quotation mark, so the next one closes.
+    private var doubleQuoteIsOpen = false
+    private var singleQuoteIsOpen = false
     private let makePinyinEngine: @MainActor () -> PinyinEngine
     /// The dictionary loads on the first switch to Chinese, so English typing does not pay for the load.
     private lazy var pinyinEngine: PinyinEngine = makePinyinEngine()
@@ -111,7 +116,7 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
     /// Chinese forms of the punctuation keys.
     private static let chinesePunctuation: [String: String] = [
         ",": "\u{FF0C}", ".": "\u{3002}", "?": "\u{FF1F}", "!": "\u{FF01}", ":": "\u{FF1A}",
-        ";": "\u{FF1B}", "(": "\u{FF08}", ")": "\u{FF09}", "\\": "\u{3001}",
+        ";": "\u{FF1B}", "(": "\u{FF08}", ")": "\u{FF09}", "<": "\u{300A}", ">": "\u{300B}", "\\": "\u{3001}",
     ]
 
     init(
@@ -258,12 +263,25 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
         guard pinyinCandidates.indices.contains(index) else { return }
         let candidate = pinyinCandidates[index]
         document.insertText(candidate.word)
+        pinyinEngine.learn(spelling: candidate.spelling, word: candidate.word)
+        sessionPicks.append(candidate)
         pinyinBuffer.removeFirst(candidate.consumedLetters)
+        if pinyinBuffer.isEmpty {
+            // Several picks in a row made one phrase. The engine learns the phrase as a whole,
+            // so the same letters give that phrase as the first candidate next time.
+            if sessionPicks.count > 1 {
+                pinyinEngine.learn(
+                    spelling: sessionPicks.map { $0.spelling }.joined(separator: " "),
+                    word: sessionPicks.map { $0.word }.joined())
+            }
+            sessionPicks = []
+        }
         refreshCandidates()
     }
 
     /// Types the buffered letters as plain letters and empties the buffer.
     private func commitPinyinLetters() {
+        sessionPicks = []
         guard !pinyinBuffer.isEmpty else { return }
         document.insertText(pinyinBuffer)
         pinyinBuffer = ""
@@ -273,6 +291,14 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
     /// Handles a typed character while the keyboard types Chinese.
     /// Returns false when the character should go through the normal typing path.
     private func handleChineseInput(_ text: String) -> Bool {
+        if text == "'", !pinyinBuffer.isEmpty {
+            // An apostrophe between Pinyin letters forces a syllable break, as in "xi'an".
+            if !pinyinBuffer.hasSuffix("'") {
+                pinyinBuffer.append("'")
+                refreshCandidates()
+            }
+            return true
+        }
         if text.count == 1, let letter = text.lowercased().first, letter.isASCII, letter.isLetter {
             // A buffer of 30 letters covers any phrase in the dictionary.
             guard pinyinBuffer.count < 30 else { return true }
@@ -301,6 +327,16 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
         }
         if let chinese = Self.chinesePunctuation[text] {
             document.insertText(chinese)
+            return true
+        }
+        if text == "\"" {
+            document.insertText(doubleQuoteIsOpen ? "\u{201D}" : "\u{201C}")
+            doubleQuoteIsOpen.toggle()
+            return true
+        }
+        if text == "'" {
+            document.insertText(singleQuoteIsOpen ? "\u{2019}" : "\u{2018}")
+            singleQuoteIsOpen.toggle()
             return true
         }
         return false
