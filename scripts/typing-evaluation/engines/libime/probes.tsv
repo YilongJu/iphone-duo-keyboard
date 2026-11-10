@@ -1,0 +1,15 @@
+probe-nihao	nihao
+probe-zhongguo	zhongguo
+probe-inner-xian	xian
+probe-swap-gn	zhognguo
+probe-swap-oa	nihoa
+probe-neighbour-key	nihso
+probe-missing-letter	niha
+probe-double-letter	nihaoo
+probe-extra-neighbour	nihaop
+probe-fuzzy-sound	lihao
+probe-long-clean	womenmingtianqubeijing
+probe-long-swap	womenmingtainqubeijing
+probe-long-neighbour	womenmingtianqubeijimg
+probe-long-missing	womenmngtianqubeijing
+probe-long-double	womenmingtianqubeijjing

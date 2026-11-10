@@ -1,0 +1,123 @@
+name: Typing evaluation of librime
+
+# Scores librime (the Rime input method engine) on the Pinyin typing test cases, on a Linux runner.
+# The engine and its data come from the Ubuntu 24.04 packages. The adapter is in
+# scripts/typing-evaluation/engines/librime/.
+on:
+  push:
+    branches: ['eval/librime']
+  workflow_dispatch:
+
+env:
+  ENGINES: rime-default rime-correction rime-fuzzy rime-pinyin-simp-default rime-pinyin-simp-correction
+
+jobs:
+  librime:
+    name: librime on the Pinyin typing test cases
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install librime and its stock data from the Ubuntu packages
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            librime-dev rime-prelude rime-essay rime-data-luna-pinyin rime-data-pinyin-simp rime-data-stroke g++
+      - name: Print the installed versions and the stock data
+        run: |
+          set -euo pipefail
+          mkdir -p build/typing-evaluation
+          {
+            echo "runner image: ${ImageOS:-unknown} ${ImageVersion:-unknown}"
+            (. /etc/os-release && echo "$PRETTY_NAME")
+            dpkg-query -W -f='${Package} ${Version} ${Architecture}\n' \
+              | grep -E '^(librime|rime-|libopencc|libmarisa|libleveldb|libyaml-cpp|libgoogle-glog|g\+\+ |python3 )'
+            g++ --version | head -n 1
+            python3 --version
+            echo "files in /usr/share/rime-data, with size in bytes and sha256:"
+            (cd /usr/share/rime-data && for file in *.yaml *.txt build/*; do
+              echo "$(stat -c %s "$file") $(sha256sum "$file")"; done)
+          } | tee build/typing-evaluation/librime-versions.txt
+          echo "::group::Folders of the stock data"
+          ls -la /usr/share/rime-data /usr/share/rime-data/build
+          ls -la /usr/share/opencc || true
+          ls -la /usr/lib/x86_64-linux-gnu/rime-plugins || true
+          wc -l /usr/share/rime-data/essay.txt /usr/share/rime-data/luna_pinyin.dict.yaml /usr/share/rime-data/pinyin_simp.dict.yaml
+          echo "::endgroup::"
+          for file in default.yaml luna_pinyin_simp.schema.yaml luna_pinyin.schema.yaml pinyin.yaml pinyin_simp.schema.yaml; do
+            echo "::group::Stock file $file"
+            cat "/usr/share/rime-data/$file"
+            echo "::endgroup::"
+          done
+          for package in librime1t64 rime-essay rime-prelude rime-data-luna-pinyin rime-data-pinyin-simp libopencc-data; do
+            echo "::group::Copyright file of $package"
+            cat "/usr/share/doc/$package/copyright" || true
+            echo "::endgroup::"
+          done
+      - name: Build the adapter
+        run: |
+          set -euo pipefail
+          mkdir -p build/librime
+          g++ -std=c++17 -O2 -Wall -Wextra scripts/typing-evaluation/engines/librime/rime_cli.cc \
+            -o build/librime/rime_cli -lrime
+          echo "librime reports version $(build/librime/rime_cli version)" | tee -a build/typing-evaluation/librime-versions.txt
+      - name: Run each engine name on the dev half and the test half
+        run: |
+          set -uo pipefail
+          mkdir -p build/librime/logs
+          for engine in $ENGINES; do
+            python3 -u scripts/typing-evaluation/engines/librime/run_librime.py --engine "$engine" \
+              --cli build/librime/rime_cli --halves dev test > "build/librime/logs/$engine.log" 2>&1 &
+            echo "$!" > "build/librime/logs/$engine.pid"
+          done
+          # Print one progress line per engine name each minute, so a slow run shows in the log.
+          while true; do
+            alive=0
+            for engine in $ENGINES; do
+              if kill -0 "$(cat "build/librime/logs/$engine.pid")" 2>/dev/null; then alive=1; fi
+            done
+            if [ "$alive" = 0 ]; then break; fi
+            sleep 60
+            for engine in $ENGINES; do
+              echo "$(date +%H:%M:%S) $engine: $(tail -n 1 "build/librime/logs/$engine.log" | cut -c 1-200)"
+            done
+          done
+          failed=0
+          for engine in $ENGINES; do
+            if wait "$(cat "build/librime/logs/$engine.pid")"; then status=0; else status=$?; fi
+            echo "::group::Log of $engine, exit status $status"
+            cat "build/librime/logs/$engine.log"
+            echo "::endgroup::"
+            if [ "$status" != 0 ]; then
+              echo "::error::$engine ended with exit status $status"
+              tail -n 40 "build/librime/logs/$engine.log"
+              failed=1
+            fi
+          done
+          exit "$failed"
+      - name: Score each engine name on each half
+        run: |
+          set -euo pipefail
+          for engine in $ENGINES; do
+            for half in dev test; do
+              python3 scripts/typing-evaluation/score.py --task pinyin --engine "$engine" \
+                --cases "scripts/typing-evaluation/cases/pinyin.$half.jsonl" \
+                --predictions "build/typing-evaluation/$engine/pinyin.$half.jsonl" \
+                --json "build/typing-evaluation/$engine/pinyin.$half.summary.json"
+            done
+          done
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: typing-evaluation-librime
+          path: build/typing-evaluation/
+          if-no-files-found: warn
+      - name: Check the runs and compare the patched engines with the default engines
+        run: |
+          set -euo pipefail
+          for engine in $ENGINES; do
+            echo "probes of $engine:"
+            cat "build/typing-evaluation/$engine/probes.tsv"
+          done
+          python3 scripts/typing-evaluation/engines/librime/summarize_runs.py --halves dev test

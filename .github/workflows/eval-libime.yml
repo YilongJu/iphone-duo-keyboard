@@ -1,0 +1,268 @@
+name: Typing evaluation of libime
+
+# Scores libime, the Pinyin engine of fcitx5, on the Pinyin typing test cases.
+# Part 1 installs libime from the Ubuntu 24.04 packages.
+# Part 2 builds the libime release named in LIBIME_TAG from source, with the fcitx5 utility
+# library named in FCITX5_TAG, to reach the Correction flag that the packaged version lacks.
+# The scored runs start the adapter with a fixed address layout, so two runs give the same
+# outputs. scripts/typing-evaluation/engines/libime/README.md describes every engine name.
+on:
+  push:
+    branches: ['eval/libime']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  libime:
+    name: libime on the Pinyin typing test cases
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    env:
+      ADAPTER_DIR: scripts/typing-evaluation/engines/libime
+      FCITX5_TAG: '5.1.23'
+      LIBIME_TAG: '1.1.17'
+    steps:
+      - uses: actions/checkout@v7
+
+      # ---------------------------------------------------------------- Part 1: Ubuntu packages
+      - name: Install libime from the Ubuntu packages
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          echo "::group::Package names that hold libime or the fcitx5 utility library"
+          apt-cache search --names-only 'libime|fcitx5-?utils' | sort
+          echo "::endgroup::"
+          sudo apt-get install -y --no-install-recommends \
+            libimepinyin-dev libimecore-dev libime-bin libime-data libime-data-language-model \
+            libfcitx5utils-dev libboost-dev cmake ninja-build g++ pkg-config
+
+      - name: Print the installed versions and the stock data files
+        run: |
+          set -euo pipefail
+          dpkg-query -W -f='${binary:Package}\t${Version}\n' \
+            | grep -E '^(libime|libfcitx5|fcitx5|libboost[0-9.]*-dev|libzstd|extra-cmake)'
+          g++ --version | sed -n 1p
+          cmake --version | sed -n 1p
+          dict="$(dpkg -L libime-data | grep '/sc\.dict$')"
+          lm="$(dpkg -L libime-data-language-model | grep '/zh_CN\.lm$')"
+          ls -l "$dict" "$lm"
+          sha256sum "$dict" "$lm"
+          echo "APT_DICT=$dict" >> "$GITHUB_ENV"
+          echo "APT_LM=$lm" >> "$GITHUB_ENV"
+          echo "N-gram order of the packaged language model, read from the KenLM header:"
+          python3 "$ADAPTER_DIR/kenlm_header.py" "$lm"
+
+      # A print for the license table of the adapter README.
+      - name: Print the license fields of the packaged libime data
+        run: |
+          set -euo pipefail
+          ls -l /usr/share/doc/libime-data/ /usr/share/doc/libime-data-language-model/
+          grep -n -E '^(Files|Copyright|License|Source|Upstream-Name):' /usr/share/doc/libime-data/copyright
+
+      - name: Build the adapter against the packaged libime
+        run: |
+          set -euo pipefail
+          cmake -S "$ADAPTER_DIR" -B build/libime-apt/adapter -G Ninja -DCMAKE_BUILD_TYPE=Release \
+            -DADAPTER_CXX_STANDARD=17
+          cmake --build build/libime-apt/adapter -v
+          ldd build/libime-apt/adapter/libime_adapter | grep -E 'IME|Fcitx5'
+          build/libime-apt/adapter/libime_adapter --list-modes
+
+      - name: Type the probe strings into the packaged libime
+        run: |
+          set -euo pipefail
+          for mode in none commontypo advancedtypo; do
+            echo "mode $mode"
+            build/libime-apt/adapter/libime_adapter --dict "$APT_DICT" --lm "$APT_LM" --mode "$mode" \
+              < "$ADAPTER_DIR/probes.tsv" | tee "build/libime-apt/probes.$mode.tsv"
+          done
+          # Clean input must convert: nihao gives 你好.
+          grep -qxF $'probe-nihao\t你好' build/libime-apt/probes.none.tsv
+
+      - name: Run and score the packaged libime on the dev half and the test half
+        run: |
+          set -euo pipefail
+          python3 "$ADAPTER_DIR/run_libime.py" --adapter build/libime-apt/adapter/libime_adapter \
+            --dict "$APT_DICT" --lm "$APT_LM" --halves dev test --jobs 4 --address-layout fixed \
+            --engine libime-none=none --engine libime-commontypo=commontypo \
+            --engine libime-advancedtypo=advancedtypo
+          for name in libime-none libime-commontypo libime-advancedtypo; do
+            for half in dev test; do
+              python3 scripts/typing-evaluation/score.py --task pinyin --engine "$name" \
+                --cases "scripts/typing-evaluation/cases/pinyin.$half.jsonl" \
+                --predictions "build/typing-evaluation/$name/pinyin.$half.jsonl" \
+                --json "build/typing-evaluation/$name/pinyin.$half.summary.json"
+            done
+          done
+
+      # ---------------------------------------------------------------- Part 2: source build
+      - name: Build the fcitx5 utility library and libime from source
+        id: source_build
+        if: ${{ !cancelled() }}
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            extra-cmake-modules gettext libzstd-dev zstd libboost-dev libboost-iostreams-dev \
+            cmake ninja-build gcc-14 g++-14 pkg-config git ca-certificates
+          # fcitx5 and libime are C++20 code, so the source build uses the newest GCC in Ubuntu 24.04.
+          export CC=gcc-14 CXX=g++-14
+          "$CXX" --version | sed -n 1p
+          prefix="$PWD/build/libime-source/prefix"
+          mkdir -p build/libime-source
+
+          echo "::group::fcitx5 utility library $FCITX5_TAG"
+          git clone --depth 1 --branch "$FCITX5_TAG" https://github.com/fcitx/fcitx5.git build/libime-source/fcitx5
+          git -C build/libime-source/fcitx5 log -1 --format='fcitx5 commit %H of %cd'
+          cmake -S build/libime-source/fcitx5 -B build/libime-source/fcitx5-build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="$prefix" -DCMAKE_INSTALL_LIBDIR=lib \
+            -DENABLE_TESTING_ADDONS=Off -DENABLE_TEST=Off -DENABLE_ENCHANT=Off -DENABLE_X11=Off \
+            -DENABLE_WAYLAND=Off -DENABLE_DBUS=Off -DENABLE_SERVER=Off -DENABLE_KEYBOARD=Off \
+            -DUSE_SYSTEMD=Off -DENABLE_XDGAUTOSTART=Off -DENABLE_EMOJI=Off -DENABLE_LIBUUID=Off \
+            -DBUILD_SPELL_DICT=Off -DEVENT_LOOP_BACKEND=none
+          # libime needs only the utility library, so build and install that one folder.
+          cmake --build build/libime-source/fcitx5-build --target Fcitx5Utils
+          cmake -P build/libime-source/fcitx5-build/src/lib/fcitx-utils/cmake_install.cmake
+          echo "::endgroup::"
+
+          echo "::group::libime $LIBIME_TAG"
+          git clone --depth 1 --branch "$LIBIME_TAG" --recurse-submodules https://github.com/fcitx/libime.git build/libime-source/libime
+          git -C build/libime-source/libime log -1 --format='libime commit %H of %cd'
+          git -C build/libime-source/libime submodule status
+          cmake -S build/libime-source/libime -B build/libime-source/libime-build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="$prefix" -DCMAKE_INSTALL_LIBDIR=lib \
+            -DCMAKE_PREFIX_PATH="$prefix" -DENABLE_TEST=Off
+          cmake --build build/libime-source/libime-build
+          cmake --install build/libime-source/libime-build
+          echo "::endgroup::"
+
+          find "$prefix" \( -name '*.dict' -o -name '*.lm' -o -name '*.predict' -o -name 'lib*.so*' \) | sort
+          test -f "$prefix/share/libime/sc.dict"
+          test -f "$prefix/lib/libime/zh_CN.lm"
+          echo "SRC_PREFIX=$prefix" >> "$GITHUB_ENV"
+          echo "SRC_DICT=$prefix/share/libime/sc.dict" >> "$GITHUB_ENV"
+          echo "SRC_LM=$prefix/lib/libime/zh_CN.lm" >> "$GITHUB_ENV"
+
+      - name: Print the versions and the data files of the source build
+        id: source_data
+        if: ${{ !cancelled() && steps.source_build.outcome == 'success' }}
+        run: |
+          set -euo pipefail
+          dpkg-query -W -f='${binary:Package}\t${Version}\n' \
+            extra-cmake-modules gettext libzstd-dev zstd libboost-dev libboost-iostreams-dev gcc-14 g++-14 ninja-build
+          grep -H 'set(PACKAGE_VERSION ' \
+            "$SRC_PREFIX/lib/cmake/Fcitx5Utils/Fcitx5UtilsConfigVersion.cmake" \
+            "$SRC_PREFIX/lib/cmake/LibIMECore/LibIMECoreConfigVersion.cmake" \
+            "$SRC_PREFIX/lib/cmake/LibIMEPinyin/LibIMEPinyinConfigVersion.cmake"
+          data=build/libime-source/libime-build/data
+          echo "Archives that the libime build downloaded and checked against its pinned SHA-256 values:"
+          ls -l build/libime-source/libime/data/*.tar.zst
+          sha256sum build/libime-source/libime/data/*.tar.zst
+          echo "Text sources and built files:"
+          ls -l "$data/lm_sc.arpa" "$data/dict_sc.txt" "$data/sc.lm" "$data/sc.dict" "$SRC_DICT" "$SRC_LM"
+          sha256sum "$SRC_DICT" "$SRC_LM"
+          echo "First 8 lines of lm_sc.arpa, the text form of the language model:"
+          head -n 8 "$data/lm_sc.arpa"
+          echo "N-gram order of the built language model, read from the KenLM header:"
+          python3 "$ADAPTER_DIR/kenlm_header.py" "$SRC_LM"
+          echo "Lines of dict_sc.txt, one word with one Pinyin reading each:"
+          wc -l < "$data/dict_sc.txt"
+
+      - name: Build the adapter against libime from source
+        id: source_adapter
+        if: ${{ !cancelled() && steps.source_build.outcome == 'success' }}
+        run: |
+          set -euo pipefail
+          export CC=gcc-14 CXX=g++-14
+          cmake -S "$ADAPTER_DIR" -B build/libime-source/adapter -G Ninja -DCMAKE_BUILD_TYPE=Release \
+            -DADAPTER_CXX_STANDARD=20 -DCMAKE_PREFIX_PATH="$SRC_PREFIX"
+          cmake --build build/libime-source/adapter -v
+          # The packaged libraries have the same file names, so the source build must come first.
+          export LD_LIBRARY_PATH="$SRC_PREFIX/lib"
+          ldd build/libime-source/adapter/libime_adapter | grep -E 'IME|Fcitx5'
+          if ldd build/libime-source/adapter/libime_adapter | grep -E 'IME|Fcitx5' | grep -v "$SRC_PREFIX/lib"; then
+            echo "The adapter loads a libime or fcitx5 library from outside the source build." >&2
+            exit 1
+          fi
+          build/libime-source/adapter/libime_adapter --list-modes
+
+      - name: Type the probe strings into libime from source
+        id: source_probes
+        if: ${{ !cancelled() && steps.source_adapter.outcome == 'success' }}
+        run: |
+          set -euo pipefail
+          export LD_LIBRARY_PATH="$SRC_PREFIX/lib"
+          for mode in none commontypo advancedtypo correction fcitx5-desktop fcitx5-mobile allflags; do
+            echo "mode $mode"
+            build/libime-source/adapter/libime_adapter --dict "$SRC_DICT" --lm "$SRC_LM" --mode "$mode" \
+              < "$ADAPTER_DIR/probes.tsv" | tee "build/libime-source/probes.$mode.tsv"
+          done
+          grep -qxF $'probe-nihao\t你好' build/libime-source/probes.none.tsv
+
+      - name: Run and score libime from source on the dev half and the test half
+        if: ${{ !cancelled() && steps.source_adapter.outcome == 'success' }}
+        run: |
+          set -euo pipefail
+          export LD_LIBRARY_PATH="$SRC_PREFIX/lib"
+          python3 "$ADAPTER_DIR/run_libime.py" --adapter build/libime-source/adapter/libime_adapter \
+            --dict "$SRC_DICT" --lm "$SRC_LM" --halves dev test --jobs 4 --address-layout fixed \
+            --engine libime-src-none=none --engine libime-src-commontypo=commontypo \
+            --engine libime-src-advancedtypo=advancedtypo --engine libime-correction=correction \
+            --engine libime-fcitx5-desktop=fcitx5-desktop --engine libime-fcitx5-mobile=fcitx5-mobile \
+            --engine libime-allflags=allflags
+          for name in libime-src-none libime-src-commontypo libime-src-advancedtypo libime-correction \
+                      libime-fcitx5-desktop libime-fcitx5-mobile libime-allflags; do
+            for half in dev test; do
+              python3 scripts/typing-evaluation/score.py --task pinyin --engine "$name" \
+                --cases "scripts/typing-evaluation/cases/pinyin.$half.jsonl" \
+                --predictions "build/typing-evaluation/$name/pinyin.$half.jsonl" \
+                --json "build/typing-evaluation/$name/pinyin.$half.summary.json"
+            done
+          done
+
+      # A control that separates the libime code from the libime data: the code of the source
+      # build with the dictionary and the language model of the Ubuntu packages, every flag off.
+      - name: Run and score libime from source with the packaged data
+        if: ${{ !cancelled() && steps.source_adapter.outcome == 'success' }}
+        run: |
+          set -euo pipefail
+          export LD_LIBRARY_PATH="$SRC_PREFIX/lib"
+          name=libime-src-none-packaged-data
+          python3 "$ADAPTER_DIR/run_libime.py" --adapter build/libime-source/adapter/libime_adapter \
+            --dict "$APT_DICT" --lm "$APT_LM" --halves dev test --jobs 4 --address-layout fixed \
+            --engine "$name=none"
+          for half in dev test; do
+            python3 scripts/typing-evaluation/score.py --task pinyin --engine "$name" \
+              --cases "scripts/typing-evaluation/cases/pinyin.$half.jsonl" \
+              --predictions "build/typing-evaluation/$name/pinyin.$half.jsonl" \
+              --json "build/typing-evaluation/$name/pinyin.$half.summary.json"
+          done
+
+      # libime 1.1.17 with its 2026 language model gives a different first sentence for a few cases
+      # when the memory addresses of the process change. This step counts those cases on the dev
+      # half, with the normal random address layout and with the fixed layout of the scored runs.
+      - name: Count the outputs that differ between two adapter processes
+        if: ${{ !cancelled() && steps.source_adapter.outcome == 'success' }}
+        run: |
+          set -euo pipefail
+          echo "libime 1.1.5 from the Ubuntu packages"
+          python3 "$ADAPTER_DIR/check_repeatability.py" --adapter build/libime-apt/adapter/libime_adapter \
+            --dict "$APT_DICT" --lm "$APT_LM" --mode none --half dev --jobs 4
+          echo "libime 1.1.17 from source"
+          export LD_LIBRARY_PATH="$SRC_PREFIX/lib"
+          python3 "$ADAPTER_DIR/check_repeatability.py" --adapter build/libime-source/adapter/libime_adapter \
+            --dict "$SRC_DICT" --lm "$SRC_LM" --mode none --mode fcitx5-mobile --half dev --jobs 4
+
+      # ---------------------------------------------------------------- Results
+      - name: Print the score tables
+        if: ${{ !cancelled() }}
+        run: python3 "$ADAPTER_DIR/summarize.py"
+
+      - uses: actions/upload-artifact@v7
+        if: ${{ !cancelled() }}
+        with:
+          name: typing-evaluation-libime
+          path: build/typing-evaluation/
+          if-no-files-found: error

@@ -1,0 +1,45 @@
+name: Evaluation of googlepinyin and libpinyin
+
+# Scores two open-source Pinyin engines on the Pinyin typing test cases, on a Linux runner:
+# the Google Pinyin engine (libgooglepinyin) and libpinyin, both from the Ubuntu 24.04 archive
+# with their packaged data. scripts/typing-evaluation/engines/googlepinyin-libpinyin/README.md
+# describes the engine names and the adapter programs.
+on:
+  push:
+    branches: ['eval/googlepinyin-libpinyin']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  evaluate:
+    name: googlepinyin and libpinyin on the Pinyin test cases
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    env:
+      PYTHONUTF8: '1'
+      EVALUATE: scripts/typing-evaluation/engines/googlepinyin-libpinyin/evaluate.sh
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install the engines from the Ubuntu archive
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends g++ pkg-config libglib2.0-dev \
+            libgooglepinyin0 libgooglepinyin0-dev \
+            libpinyin15 libpinyin15-dev libpinyin-common-dev libpinyin-data
+      - name: Print the installed versions, the data files and the licenses
+        run: bash "$EVALUATE" versions
+      - name: Build the two adapter programs
+        run: bash "$EVALUATE" build
+      - name: Run every engine name on the dev half and the test half
+        run: bash "$EVALUATE" run dev test
+      - name: Score every engine name on each half
+        run: bash "$EVALUATE" score dev test
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: typing-evaluation-googlepinyin-libpinyin
+          path: build/typing-evaluation/
+          if-no-files-found: error

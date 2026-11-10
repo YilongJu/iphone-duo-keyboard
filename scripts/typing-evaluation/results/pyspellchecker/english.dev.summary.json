@@ -1,0 +1,179 @@
+{
+  "categories": {
+    "clean_common": {
+      "cases": 300,
+      "right": 300,
+      "missing": 0,
+      "accuracy": 1.0
+    },
+    "clean_rare": {
+      "cases": 300,
+      "right": 241,
+      "missing": 0,
+      "accuracy": 0.8033333333333333
+    },
+    "clean_names_and_terms": {
+      "cases": 73,
+      "right": 37,
+      "missing": 0,
+      "accuracy": 0.5068493150684932
+    },
+    "clean_two_words": {
+      "cases": 300,
+      "right": 300,
+      "missing": 0,
+      "accuracy": 1.0
+    },
+    "substitution_adjacent": {
+      "cases": 300,
+      "right": 263,
+      "missing": 0,
+      "accuracy": 0.8766666666666667
+    },
+    "deletion": {
+      "cases": 300,
+      "right": 201,
+      "missing": 0,
+      "accuracy": 0.67
+    },
+    "double_letter": {
+      "cases": 300,
+      "right": 293,
+      "missing": 0,
+      "accuracy": 0.9766666666666667
+    },
+    "extra_adjacent": {
+      "cases": 300,
+      "right": 292,
+      "missing": 0,
+      "accuracy": 0.9733333333333334
+    },
+    "transposition": {
+      "cases": 300,
+      "right": 266,
+      "missing": 0,
+      "accuracy": 0.8866666666666667
+    },
+    "two_errors": {
+      "cases": 300,
+      "right": 255,
+      "missing": 0,
+      "accuracy": 0.85
+    },
+    "short_word_slip": {
+      "cases": 300,
+      "right": 253,
+      "missing": 0,
+      "accuracy": 0.8433333333333334
+    },
+    "space_missing": {
+      "cases": 300,
+      "right": 0,
+      "missing": 0,
+      "accuracy": 0.0
+    },
+    "space_to_letter": {
+      "cases": 300,
+      "right": 0,
+      "missing": 0,
+      "accuracy": 0.0
+    },
+    "space_transposed": {
+      "cases": 300,
+      "right": 44,
+      "missing": 0,
+      "accuracy": 0.14666666666666667
+    },
+    "space_extra": {
+      "cases": 300,
+      "right": 0,
+      "missing": 0,
+      "accuracy": 0.0
+    },
+    "letter_to_space": {
+      "cases": 300,
+      "right": 0,
+      "missing": 0,
+      "accuracy": 0.0
+    },
+    "apostrophe_missing": {
+      "cases": 300,
+      "right": 131,
+      "missing": 0,
+      "accuracy": 0.43666666666666665
+    },
+    "real_word_slip": {
+      "cases": 300,
+      "right": 4,
+      "missing": 0,
+      "accuracy": 0.013333333333333334
+    },
+    "real_misspelling_birkbeck": {
+      "cases": 300,
+      "right": 196,
+      "missing": 0,
+      "accuracy": 0.6533333333333333
+    },
+    "real_misspelling_holbrook": {
+      "cases": 300,
+      "right": 155,
+      "missing": 0,
+      "accuracy": 0.5166666666666667
+    },
+    "real_misspelling_aspell": {
+      "cases": 151,
+      "right": 101,
+      "missing": 0,
+      "accuracy": 0.6688741721854304
+    }
+  },
+  "groups": {
+    "clean": {
+      "cases": 973,
+      "right": 878,
+      "missing": 0,
+      "accuracy": 0.9023638232271326,
+      "categories": [
+        "clean_common",
+        "clean_rare",
+        "clean_names_and_terms",
+        "clean_two_words"
+      ]
+    },
+    "letter_slips": {
+      "cases": 2100,
+      "right": 1823,
+      "missing": 0,
+      "accuracy": 0.8680952380952381,
+      "categories": [
+        "substitution_adjacent",
+        "deletion",
+        "double_letter",
+        "extra_adjacent",
+        "transposition",
+        "two_errors",
+        "short_word_slip"
+      ]
+    },
+    "space_slips": {
+      "cases": 1500,
+      "right": 44,
+      "missing": 0,
+      "accuracy": 0.029333333333333333,
+      "categories": [
+        "space_missing",
+        "space_to_letter",
+        "space_transposed",
+        "space_extra",
+        "letter_to_space"
+      ]
+    }
+  },
+  "strata": {},
+  "engine": "pyspellchecker",
+  "task": "english",
+  "cases_files": [
+    "english.dev.jsonl",
+    "english.dev.jsonl"
+  ]
+}
