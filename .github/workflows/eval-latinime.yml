@@ -21,11 +21,10 @@ jobs:
         run: |
           set -euo pipefail
           grep PRETTY_NAME /etc/os-release
-          g++ --version | head -n 1
-          ld --version | head -n 1
-          ldd --version | head -n 1
+          g++ --version | sed -n 1p
+          ld --version | sed -n 1p
           python3 --version
-          curl --version | head -n 1
+          curl --version | sed -n 1p
           echo "JAVA_HOME=$JAVA_HOME"
           "$JAVA_HOME/bin/java" -version 2>&1
       - name: Fetch the AOSP LatinIME sources and the stock English dictionary
@@ -40,6 +39,8 @@ jobs:
           for half in dev test; do
             python3 "$ENGINE/run_latinime.py" --half "$half"
           done
+      - name: Print the two controls on the dev half
+        run: python3 "$ENGINE/run_latinime.py" --controls
       - name: Score each engine name on each half
         run: |
           set -euo pipefail
