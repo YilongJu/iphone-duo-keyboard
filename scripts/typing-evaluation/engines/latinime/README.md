@@ -61,16 +61,15 @@ Three of the four thresholds stand in `java/res/values/config-auto-correction-th
 The adapter turns typed letters into touches, asks the engine, and applies the commit rule of the Java keyboard.
 
 ```mermaid
+%%{init: {"flowchart": {"wrappingWidth": 560}}}%%
 flowchart TD
-    A["Case en-dev-space_missing-0000<br/>context: he said he<br/>typed: wantedto<br/>intended: wanted to"]
-    B["run_latinime.py<br/>writes 26 letter keys and the space bar,<br/>each letter key 108 by 108 pixels"]
-    C["latinime_driver<br/>8 touches at the key centers of w a n t e d t o<br/>previous words: he, said, he"]
-    D["Engine core<br/>Dictionary::getSuggestions on main_en.dict<br/>165,544 entries"]
-    E["First suggestion: wanted to<br/>normalized score 0.3662"]
-    F["Commit rule ported from Suggest.java<br/>0.3662 is above the threshold 0.185"]
-    G["Output of latinime-token: wanted to"]
-    H["score.py<br/>output equals intended"]
-    A --> B --> C --> D --> E --> F --> G --> H
+    A["Case en-dev-space_missing-0000<br/>context: he said he, typed: wantedto, intended: wanted to"]
+    B["run_latinime.py writes the layout<br/>26 letter keys and the space bar, each letter key 108 by 108 pixels"]
+    C["latinime_driver sends 8 touches at the key centers of w a n t e d t o<br/>previous words: he, said, he"]
+    D["Engine core: Dictionary::getSuggestions on main_en.dict, 165,544 entries<br/>first suggestion: wanted to, normalized score 0.3662"]
+    E["Commit rule ported from Suggest.java<br/>0.3662 is above the threshold 0.185, so latinime-token outputs: wanted to"]
+    F["score.py: the output equals the intended text"]
+    A --> B --> C --> D --> E --> F
 ```
 
 Figure 1. One dev case from typed text to scored output. The engine proposes `wanted to` with a normalized score of 0.3662. The commit rule accepts the proposal at the threshold 0.185.
@@ -95,17 +94,18 @@ Table 3. Share of cases whose output equals the target as `score.py` compares th
 The lower the threshold, the higher the share of slips repaired and the lower the share of clean cases kept. The two tuned names keep 0.9807 of the clean dev cases and 0.9733 of the clean test cases.
 
 ```mermaid
-%%{init: {"xyChart": {"showDataLabel": true}}}%%
+%%{init: {"themeVariables": {"xyChart": {"plotColorPalette": "#252525, #08519c, #6baed6, #d62728"}}}}%%
 xychart-beta
-    title "Dev shares of the eight engine names"
-    x-axis ["token-tuned", "span-tuned", "token", "span", "token-aggressive", "span-aggressive", "token-very-aggressive", "span-very-aggressive"]
+    title "Dev shares at the four thresholds of the engine names"
+    x-axis "Threshold" ["0.27", "0.185", "0.067", "negative infinity"]
     y-axis "Share of dev cases" 0 --> 1
-    bar [0.4017, 0.5017, 0.5414, 0.6883, 0.6114, 0.7778, 0.6247, 0.8133]
-    line [0.9807, 0.9807, 0.9569, 0.9569, 0.8975, 0.8975, 0.8618, 0.8618]
-    line [0.98, 0.98, 0.98, 0.98, 0.98, 0.98, 0.98, 0.98]
+    line [0.9807, 0.9569, 0.8975, 0.8618]
+    line [0.5017, 0.6883, 0.7778, 0.8133]
+    line [0.4017, 0.5414, 0.6114, 0.6247]
+    line [0.98, 0.98, 0.98, 0.98]
 ```
 
-Figure 2. Dev shares from Table 3. Bars show the share of slips repaired. The falling line shows the share of clean cases kept, and the flat line marks the floor of 0.98. The x axis drops the prefix `latinime-`.
+Figure 2. Dev shares from Table 3. The black line is the share of clean cases kept, and the red line marks the floor of 0.98. The dark blue line is the share of slips repaired in span mode. The light blue line is that share in token mode.
 
 Span mode repairs 529 more dev slips than token mode at the threshold 0.185. Of these 529 cases, 521 are in the categories `space_extra` and `letter_to_space`.
 
@@ -134,6 +134,7 @@ Table 4. Dev shares at 12 of the 46 grid thresholds. Token mode and span mode ke
 The higher the threshold, the higher the share of clean cases kept and the lower the share of slips repaired. The grid holds 0.185, then 0.19 to 0.60 in steps of 0.01, then 0.8, 1 and infinity.
 
 ```mermaid
+%%{init: {"themeVariables": {"xyChart": {"plotColorPalette": "#252525, #08519c, #6baed6, #d62728"}}}}%%
 xychart-beta
     title "Dev shares by auto-correction threshold"
     x-axis "Threshold" ["0.185", "0.20", "0.22", "0.24", "0.26", "0.27", "0.28", "0.30", "0.34", "0.40", "0.50"]
@@ -141,9 +142,10 @@ xychart-beta
     line [0.9569, 0.9599, 0.9688, 0.9733, 0.9762, 0.9807, 0.9851, 0.9881, 0.9941, 0.9970, 0.9970]
     line [0.6883, 0.6667, 0.6289, 0.5822, 0.5281, 0.5017, 0.4661, 0.4028, 0.2936, 0.1753, 0.0725]
     line [0.5414, 0.5261, 0.4983, 0.4625, 0.4217, 0.4017, 0.3747, 0.3247, 0.2303, 0.1392, 0.0664]
+    line [0.98, 0.98, 0.98, 0.98, 0.98, 0.98, 0.98, 0.98, 0.98, 0.98, 0.98]
 ```
 
-Figure 3. Dev shares from Table 4. The top line is the share of clean cases kept. The middle line is the share of slips repaired in span mode. The bottom line is that share in token mode. The clean share first reaches 0.98 at the threshold 0.27, where token mode repairs 0.4017 of the slips.
+Figure 3. Dev shares from Table 4, in the colors of Figure 2. The black line is the share of clean cases kept, and the red line marks the floor of 0.98. The dark blue line is the share of slips repaired in span mode. The light blue line is that share in token mode. The clean share first reaches 0.98 at the threshold 0.27, where token mode repairs 0.4017 of the slips.
 
 The tuned threshold is 0.27, the lowest grid value at which token mode keeps 0.98 of the clean dev cases. The choice does not use the test half.
 
