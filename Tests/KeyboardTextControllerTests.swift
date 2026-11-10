@@ -759,6 +759,45 @@ final class KeyboardLayoutTests: XCTestCase {
         XCTAssertEqual(KeyboardView.style(forWidth: 951), .split)
     }
 
+    func testAnIPadGetsTheWideLayoutInPortraitAndTheSplitLayoutInLandscape() {
+        // 820 and 1180 points are the two widths of an 11-inch iPad, 1032 and 1376 of a 13-inch one.
+        for width in [744, 820, 1032] as [CGFloat] {
+            XCTAssertEqual(KeyboardView.style(forWidth: width, device: .pad, landscape: false), .wide)
+        }
+        for width in [1024, 1180, 1376] as [CGFloat] {
+            XCTAssertEqual(KeyboardView.style(forWidth: width, device: .pad, landscape: true), .split)
+        }
+        // A floating or very narrow keyboard keeps the compact layout.
+        XCTAssertEqual(KeyboardView.style(forWidth: 320, device: .pad, landscape: true), .compact)
+    }
+
+    func testTheIPadRulesDoNotChangeTheIPhoneLayouts() {
+        // The iPhone rules read the width only, so the screen's orientation changes nothing.
+        for landscape in [false, true] {
+            XCTAssertEqual(KeyboardView.style(forWidth: 466, device: .phone, landscape: landscape), .compact)
+            XCTAssertEqual(KeyboardView.style(forWidth: 669, device: .phone, landscape: landscape), .wide)
+            XCTAssertEqual(KeyboardView.style(forWidth: 678, device: .phone, landscape: landscape), .wide)
+            XCTAssertEqual(KeyboardView.style(forWidth: 951, device: .phone, landscape: landscape), .split)
+        }
+        XCTAssertNil(KeyboardView.splitGap(forWidth: 951, device: .phone))
+        // The heights of the four iPhone Duo keyboards, as they were before the iPad rules.
+        XCTAssertEqual(KeyboardView.preferredHeight(forWidth: 669, compactHeight: false, device: .phone, landscape: false), 289.1, accuracy: 0.1)
+        XCTAssertEqual(KeyboardView.preferredHeight(forWidth: 951, compactHeight: false, device: .phone, landscape: true), 290.6, accuracy: 0.1)
+    }
+
+    func testTheSplitKeysOfAnIPadStayWithinReachOfAThumb() {
+        // On a 13-inch iPad in landscape the keys stop at 52 points and the middle takes the rest.
+        let gap = KeyboardLayout.padSplitGap(forWidth: 1376)
+        XCTAssertEqual(1376 / (14.5 + gap), 52, accuracy: 0.001)
+        let layout = KeyboardLayout.make(style: .split, layer: .letters, showsGlobe: true, splitGap: gap)
+        XCTAssertEqual(layout.units, 14.5 + gap, accuracy: 0.001)
+        for row in layout.rows {
+            XCTAssertEqual(row.reduce(0) { $0 + $1.weight }, 14.5 + gap, accuracy: 0.001)
+        }
+        // A narrow split keyboard keeps the middle of the layout file.
+        XCTAssertEqual(KeyboardLayout.padSplitGap(forWidth: 951), 6)
+    }
+
     func testEverySplitRowHasOneEmptyMiddleAndTheSameWidth() {
         for layer in [KeyboardLayer.letters, .symbols, .more] {
             let layout = KeyboardLayout.make(style: .split, layer: layer, showsGlobe: true)

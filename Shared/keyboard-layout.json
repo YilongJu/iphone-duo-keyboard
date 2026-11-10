@@ -14,7 +14,9 @@
     "wideRowHeightMin": 46,
     "wideRowHeightMax": 54,
     "compactRowHeight": 46,
-    "landscapePhoneRowHeight": 34
+    "landscapePhoneRowHeight": 34,
+    "padWideRowHeightMax": 58,
+    "padSplitMaxKeyWidth": 52
   },
   "wide": {
     "units": 14.5,

@@ -101,6 +101,8 @@ final class KeyboardView: UIView {
     private(set) var currentLayer: KeyboardLayer = .letters
 
     private var layout = KeyboardLayout.make(style: .compact, layer: .letters, showsGlobe: true)
+    /// The width of the empty middle that the current keys were built with, in key units.
+    private var builtSplitGap: CGFloat?
     private var rows: [[KeyView]] = []
     private var activeTouches: [UITouch: TouchState] = [:]
     private var repeatTimer: Timer?
@@ -150,25 +152,47 @@ final class KeyboardView: UIView {
 
     // MARK: Sizing
 
-    static func style(forWidth width: CGFloat) -> LayoutStyle {
+    /// The layout for a keyboard width.
+    ///
+    /// An iPhone, the iPhone Duo included, chooses by width alone: compact, then wide, then split.
+    /// An iPad gets the two layouts of the open iPhone Duo: wide in portrait and split in
+    /// landscape. A keyboard narrower than the wide layout's minimum is compact on both.
+    static func style(
+        forWidth width: CGFloat, device: KeyboardDevice = .current,
+        landscape: Bool = KeyboardDevice.screenIsLandscape
+    ) -> LayoutStyle {
+        if device == .pad {
+            guard width >= wideMinimumWidth else { return .compact }
+            return landscape ? .split : .wide
+        }
         if width >= spec.splitMinimumWidth { return .split }
         return width >= wideMinimumWidth ? .wide : .compact
+    }
+
+    /// Width of the split layout's empty middle in key units, or nil for the layout file's width.
+    static func splitGap(forWidth width: CGFloat, device: KeyboardDevice = .current) -> CGFloat? {
+        device == .pad ? KeyboardLayout.padSplitGap(forWidth: width) : nil
     }
 
     /// Keyboard height for a given keyboard width.
     /// `compactHeight` is true when the vertical size class is compact, as on a phone in landscape.
     /// The function does not read the screen size, because `UIScreen.main` reports the outer
     /// display on an iPhone Duo even while the keyboard is on the inner display.
-    static func preferredHeight(forWidth width: CGFloat, compactHeight: Bool) -> CGFloat {
-        let style = style(forWidth: width)
+    static func preferredHeight(
+        forWidth width: CGFloat, compactHeight: Bool, device: KeyboardDevice = .current,
+        landscape: Bool = KeyboardDevice.screenIsLandscape
+    ) -> CGFloat {
+        let style = style(forWidth: width, device: device, landscape: landscape)
         let rowHeight: CGFloat
         if compactHeight {
             rowHeight = spec.landscapePhoneRowHeight
         } else {
             switch style {
             case .wide, .split:
-                let unit = width / KeyboardLayout.units(style: style)
-                rowHeight = min(max(unit * spec.wideRowHeightPerUnit, spec.wideRowHeightMin), spec.wideRowHeightMax)
+                let units = KeyboardLayout.units(style: style, splitGap: splitGap(forWidth: width, device: device))
+                let unit = width / units
+                let tallest = device == .pad ? spec.padWideRowHeightMax : spec.wideRowHeightMax
+                rowHeight = min(max(unit * spec.wideRowHeightPerUnit, spec.wideRowHeightMin), tallest)
             case .compact:
                 rowHeight = spec.compactRowHeight
             }
@@ -190,7 +214,9 @@ final class KeyboardView: UIView {
         for keyView in rows.joined() {
             keyView.removeFromSuperview()
         }
-        layout = KeyboardLayout.make(style: style, layer: currentLayer, showsGlobe: showsGlobe)
+        builtSplitGap = style == .split ? Self.splitGap(forWidth: bounds.width) : nil
+        layout = KeyboardLayout.make(
+            style: style, layer: currentLayer, showsGlobe: showsGlobe, splitGap: builtSplitGap)
         rows = layout.rows.map { row in
             row.map { key in
                 let keyView = KeyView(key: key)
@@ -318,7 +344,10 @@ final class KeyboardView: UIView {
     override func layoutSubviews() {
         super.layoutSubviews()
         let wantedStyle = Self.style(forWidth: bounds.width)
-        if wantedStyle != style {
+        // On an iPad the empty middle of the split layout depends on the width, so a new width
+        // can need new keys although the style stays. On an iPhone the middle is always nil.
+        let wantedGap = wantedStyle == .split ? Self.splitGap(forWidth: bounds.width) : nil
+        if wantedStyle != style || wantedGap != builtSplitGap {
             style = wantedStyle
             rebuild()
         }

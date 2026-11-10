@@ -10,6 +10,25 @@ enum KeyboardLayer {
 
 /// `compact` is the phone-width layout (10 key units per row).
 /// `wide` is the iPad-style layout (14.5 key units per row) for the unfolded display.
+/// The devices whose keyboards differ. An iPhone, the iPhone Duo included, chooses its layout
+/// from the keyboard's width alone. An iPad chooses by width and by the screen's orientation.
+enum KeyboardDevice {
+    case phone
+    case pad
+
+    /// The device this process runs on.
+    static var current: KeyboardDevice {
+        UIDevice.current.userInterfaceIdiom == .pad ? .pad : .phone
+    }
+
+    /// True when the screen is wider than it is high. Only the iPad rules read this value. On an
+    /// iPhone Duo `UIScreen.main` reports the outer display, so the iPhone rules never use it.
+    static var screenIsLandscape: Bool {
+        let size = UIScreen.main.bounds.size
+        return size.width > size.height
+    }
+}
+
 /// `split` is the wide layout cut into a left half and a right half, with an empty middle.
 /// The open phone in landscape uses the split layout, so each thumb reaches its half.
 enum LayoutStyle {
@@ -191,6 +210,11 @@ struct KeyboardSpec: Decodable {
         let wideRowHeightMax: CGFloat
         let compactRowHeight: CGFloat
         let landscapePhoneRowHeight: CGFloat
+        /// The tallest letter row of the wide and split layouts on an iPad, in points.
+        let padWideRowHeightMax: CGFloat
+        /// The widest letter key of the split layout on an iPad, in points. On a wide iPad the
+        /// empty middle grows, so the keys of each half stay within reach of a thumb.
+        let padSplitMaxKeyWidth: CGFloat
     }
 
     struct Row: Decodable {
@@ -249,10 +273,14 @@ struct KeyboardLayout {
     /// Width of the widest row in key units. Narrower rows are centered.
     let units: CGFloat
 
-    static func make(style: LayoutStyle, layer: KeyboardLayer, showsGlobe: Bool) -> KeyboardLayout {
+    /// `splitGap` is the width of the split layout's empty middle in key units. Without a
+    /// value the layout file's width applies, as on the iPhone.
+    static func make(
+        style: LayoutStyle, layer: KeyboardLayer, showsGlobe: Bool, splitGap: CGFloat? = nil
+    ) -> KeyboardLayout {
         let styleSpec = KeyboardSpec.shared.style(style)
         let rowSpecs = styleSpec.rows(for: layer)
-        let gap = KeyboardSpec.shared.metrics.splitGapUnits
+        let gap = splitGap ?? KeyboardSpec.shared.metrics.splitGapUnits
         let rows = rowSpecs.map { row -> [Key] in
             let keys = style == .split ? splitRow(row, gap: gap) : row.keys
             return showsGlobe ? keys : withoutGlobe(keys)
@@ -262,9 +290,18 @@ struct KeyboardLayout {
     }
 
     /// Width of a style's widest row in key units.
-    static func units(style: LayoutStyle) -> CGFloat {
+    static func units(style: LayoutStyle, splitGap: CGFloat? = nil) -> CGFloat {
         let spec = KeyboardSpec.shared
-        return style == .split ? spec.wide.units + spec.metrics.splitGapUnits : spec.style(style).units
+        return style == .split
+            ? spec.wide.units + (splitGap ?? spec.metrics.splitGapUnits) : spec.style(style).units
+    }
+
+    /// Width of the split layout's empty middle on an iPad of the given keyboard width, in key
+    /// units. The middle takes the width that the keys do not need at their widest allowed
+    /// size, and it is never narrower than the middle of the layout file.
+    static func padSplitGap(forWidth width: CGFloat) -> CGFloat {
+        let spec = KeyboardSpec.shared
+        return max(spec.metrics.splitGapUnits, width / spec.metrics.padSplitMaxKeyWidth - spec.wide.units)
     }
 
     /// Puts the empty middle into a row at the row's split point.
