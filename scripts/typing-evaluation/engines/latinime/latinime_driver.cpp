@@ -22,6 +22,7 @@
  * space bar). THRESHOLD is the auto-correction threshold on the normalized score.
  */
 #include <algorithm>
+#include <chrono>
 #include <cmath>
 #include <csignal>
 #include <cstdio>
@@ -648,11 +649,19 @@ class Engine {
         if (cached != mCache.end()) {
             return cached->second;
         }
-        return mCache[cacheKey] = lookUp(previousWords, typedCodePoints);
+        const std::chrono::steady_clock::time_point start = std::chrono::steady_clock::now();
+        const std::vector<Suggestion> results = lookUp(previousWords, typedCodePoints);
+        mLookUpSeconds += std::chrono::duration<double>(
+                std::chrono::steady_clock::now() - start).count();
+        return mCache[cacheKey] = results;
     }
 
     long lookUpCount() const {
         return mLookUpCount;
+    }
+
+    double lookUpSeconds() const {
+        return mLookUpSeconds;
     }
 
  private:
@@ -778,6 +787,7 @@ class Engine {
     std::vector<int> mProximityChars;
     std::map<std::string, std::vector<Suggestion>> mCache;
     long mLookUpCount = 0;
+    double mLookUpSeconds = 0.0;
 };
 
 // ---------------------------------------------------------------------------------------------
@@ -1020,25 +1030,41 @@ std::string describePreviousWords(const PreviousWords &previousWords) {
     return text;
 }
 
-void explainCommit(const std::string &composing, const CommitResult &result) {
-    std::printf("    composing [%s]  previous words, nearest first: %s\n", composing.c_str(),
-            describePreviousWords(result.previousWords).c_str());
-    int rank = 0;
-    for (const Suggestion &suggestion : result.results) {
-        if (++rank > 8) break;
-        std::printf("      %d. [%s] score %d kind %d%s normalized %.4f\n", rank,
-                encodeUtf8(suggestion.word).c_str(), suggestion.score, suggestion.kind(),
-                suggestion.isAppropriateForAutoCorrection() ? "" : " (not for auto-correction)",
-                static_cast<double>(normalizedScoreOf(suggestion, result.consideredWord)));
+std::string describeKind(const Suggestion &suggestion) {
+    if (suggestion.kind() == kKindWhitelist) return "whitelist";
+    if (suggestion.kind() == kKindShortcut) return "shortcut";
+    if (suggestion.kind() == 1) { // SuggestedWordInfo.KIND_CORRECTION
+        return suggestion.isAppropriateForAutoCorrection()
+                ? "correction" : "correction, flagged as unfit for auto-correction";
     }
-    std::printf("      %zu suggestions, typed word among them: %s, auto-correction: %s,"
-            " committed [%s]\n", result.results.size(), result.foundInDictionary ? "yes" : "no",
-            result.hasAutoCorrection ? "yes" : "no", encodeUtf8(result.committed).c_str());
+    return "kind " + std::to_string(suggestion.kind());
+}
+
+// Prints one commit decision. The suggestion list of one lookup is printed once for a case.
+void explainCommit(const std::string &engineName, const std::string &composing,
+        const CommitResult &result, std::set<std::string> *const explainedLookUps) {
+    const std::string previousWords = describePreviousWords(result.previousWords);
+    if (explainedLookUps->insert(composing + "|" + previousWords).second) {
+        std::printf("  lookup [%s]  previous words, nearest first: %s  (%zu suggestions)\n",
+                composing.c_str(), previousWords.c_str(), result.results.size());
+        int rank = 0;
+        for (const Suggestion &suggestion : result.results) {
+            if (++rank > 6) break;
+            std::printf("      %d. [%s] score %d, normalized %.4f, %s\n", rank,
+                    encodeUtf8(suggestion.word).c_str(), suggestion.score,
+                    static_cast<double>(normalizedScoreOf(suggestion, result.consideredWord)),
+                    describeKind(suggestion).c_str());
+        }
+    }
+    std::printf("  %s: [%s] is %s the suggestions, %s, commits [%s]\n", engineName.c_str(),
+            composing.c_str(), result.foundInDictionary ? "among" : "not among",
+            result.hasAutoCorrection ? "auto-correction" : "no auto-correction",
+            encodeUtf8(result.committed).c_str());
 }
 
 // The text the engine leaves in the field for one case and one engine configuration.
 std::string runCase(Engine *const engine, const EngineConfig &config, const std::string &context,
-        const std::string &typed, const bool explain) {
+        const std::string &typed, std::set<std::string> *const explainedLookUps) {
     // The text field before the typed text: the context and one space.
     CodePoints textBefore = decodeUtf8(context);
     if (!textBefore.empty()) {
@@ -1053,7 +1079,7 @@ std::string runCase(Engine *const engine, const EngineConfig &config, const std:
                 static_cast<int>('a'));
         const CommitResult result =
                 commitComposingWord(engine, textBefore, spanForContext, span, config.threshold);
-        if (explain) explainCommit(typed, result);
+        if (explainedLookUps) explainCommit(config.name, typed, result, explainedLookUps);
         return encodeUtf8(result.committed);
     }
     // Each space-separated token is one composing word. A space press commits the word and
@@ -1070,12 +1096,27 @@ std::string runCase(Engine *const engine, const EngineConfig &config, const std:
         const CodePoints token = decodeUtf8(tokens[i]);
         const CommitResult result =
                 commitComposingWord(engine, textBefore, token, token, config.threshold);
-        if (explain) explainCommit(tokens[i], result);
+        if (explainedLookUps) explainCommit(config.name, tokens[i], result, explainedLookUps);
         output += encodeUtf8(result.committed);
         textBefore.insert(textBefore.end(), result.committed.begin(), result.committed.end());
         textBefore.push_back(' ');
     }
     return output;
+}
+
+// The VmHWM line of /proc/self/status: the peak resident set of this process. The figure
+// holds the dictionary pages the run touched, the search state, and the driver's lookup cache.
+std::string peakResidentMemory() {
+    std::ifstream status("/proc/self/status");
+    std::string line;
+    while (std::getline(status, line)) {
+        if (line.compare(0, 6, "VmHWM:") == 0) {
+            const size_t first = line.find_first_not_of(" \t", 6);
+            return first == std::string::npos ? std::string("(empty VmHWM line)")
+                    : line.substr(first);
+        }
+    }
+    fail("/proc/self/status holds no VmHWM line");
 }
 
 void dumpLayout(const Engine &engine) {
@@ -1161,21 +1202,25 @@ int run(int argc, char **argv) {
             std::printf("case %s  context [%s]  typed [%s]\n", id.c_str(), context.c_str(),
                     typed.c_str());
         }
+        std::set<std::string> explainedLookUps;
         for (const EngineConfig &config : configs) {
+            const std::string output = runCase(&engine, config, context, typed,
+                    explain ? &explainedLookUps : nullptr);
             if (explain) {
-                std::printf("  %s (%s, threshold %g)\n", config.name.c_str(),
-                        config.spanMode ? "span" : "token", static_cast<double>(config.threshold));
-            }
-            const std::string output = runCase(&engine, config, context, typed, explain);
-            if (explain) {
-                std::printf("  %s output: [%s]\n", config.name.c_str(), output.c_str());
+                std::printf("  %s (%s, threshold %g) leaves [%s]\n", config.name.c_str(),
+                        config.spanMode ? "span" : "token",
+                        static_cast<double>(config.threshold), output.c_str());
             } else {
                 std::printf("%s\t%s\t%s\n", id.c_str(), config.name.c_str(), output.c_str());
             }
         }
     }
-    std::fprintf(stderr, "latinime_driver: %ld cases, %zu engine names, %ld engine lookups\n",
-            caseCount, configs.size(), engine.lookUpCount());
+    const long lookUps = engine.lookUpCount();
+    std::fprintf(stderr, "latinime_driver: %ld cases, %zu engine names, %ld engine lookups in"
+            " %.2f s (%.2f ms for one lookup), peak resident memory %s\n", caseCount,
+            configs.size(), lookUps, engine.lookUpSeconds(),
+            lookUps > 0 ? 1000.0 * engine.lookUpSeconds() / static_cast<double>(lookUps) : 0.0,
+            peakResidentMemory().c_str());
     return 0;
 }
 

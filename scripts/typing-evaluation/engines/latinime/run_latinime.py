@@ -2,11 +2,13 @@
 
 Usage, from the repository root, after fetch_sources.sh and build.sh in this folder:
     python3 scripts/typing-evaluation/engines/latinime/run_latinime.py --half dev
+    python3 scripts/typing-evaluation/engines/latinime/run_latinime.py --controls
     python3 scripts/typing-evaluation/engines/latinime/run_latinime.py --explain-samples
     python3 scripts/typing-evaluation/engines/latinime/run_latinime.py --list-engines
 
-For each engine name the script writes build/typing-evaluation/NAME/english.HALF.jsonl with one
-JSON object per case: the case `id` and the engine's `output`.
+--half writes build/typing-evaluation/NAME/english.HALF.jsonl for each engine name, with one JSON
+object per case: the case `id` and the engine's `output`.
+--controls prints two checks on the dev half that score.py does not make.
 
 The script builds the keyboard layout from scripts/typing-evaluation/keyboard_noise.py and hands
 the cases to latinime_driver, which calls the engine. README.md in this folder describes both.
@@ -71,6 +73,7 @@ SAMPLES = [
     ("that's not my", "l aptop"),
     ("the notorious dictator abused his privileges to his heart's", "conte t"),
     ("", "youd"),
+    ("where's tom going", "to be"),
 ]
 
 
@@ -119,26 +122,37 @@ def driver_command(arguments: argparse.Namespace, layout: Path) -> list[str]:
     return command
 
 
-def run_half(arguments: argparse.Namespace, layout: Path) -> None:
-    cases_file = CASES / f"english.{arguments.half}.jsonl"
-    cases = [json.loads(line) for line in cases_file.read_text(encoding="utf-8").split("\n") if line]
-    lines = [f"{case['id']}\t{case['context']}\t{case['typed']}" for case in cases]
+def run_driver(arguments: argparse.Namespace, layout: Path,
+               inputs: list[tuple[str, str, str]]) -> dict[str, dict[str, str]]:
+    """Runs (id, context, typed) triples through the driver. Returns output by engine name and id."""
+    lines = [f"{case_id}\t{context}\t{typed}" for case_id, context, typed in inputs]
     completed = subprocess.run(
         driver_command(arguments, layout), input="\n".join(lines) + "\n",
         capture_output=True, text=True, encoding="utf-8")
     sys.stderr.write(completed.stderr)
     if completed.returncode != 0:
         raise SystemExit(f"latinime_driver stopped with exit code {completed.returncode}")
-
     outputs: dict[str, dict[str, str]] = {name: {} for name, _, _ in ENGINES}
     for line in completed.stdout.split("\n"):
         if line:
             case_id, name, output = line.split("\t", 2)
             outputs[name][case_id] = output
     for name, _, _ in ENGINES:
-        missing = [case["id"] for case in cases if case["id"] not in outputs[name]]
+        missing = [case_id for case_id, _, _ in inputs if case_id not in outputs[name]]
         if missing:
             raise SystemExit(f"{name}: the driver gave no output for {len(missing)} cases, first {missing[0]}")
+    return outputs
+
+
+def load_cases(half: str) -> list[dict]:
+    cases_file = CASES / f"english.{half}.jsonl"
+    return [json.loads(line) for line in cases_file.read_text(encoding="utf-8").split("\n") if line]
+
+
+def run_half(arguments: argparse.Namespace, layout: Path) -> None:
+    cases = load_cases(arguments.half)
+    outputs = run_driver(arguments, layout, [(case["id"], case["context"], case["typed"]) for case in cases])
+    for name, _, _ in ENGINES:
         target = OUTPUT / name / f"english.{arguments.half}.jsonl"
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(
@@ -146,6 +160,36 @@ def run_half(arguments: argparse.Namespace, layout: Path) -> None:
                     for case in cases),
             encoding="utf-8", newline="\n")
         print(f"{name}: wrote {len(cases)} outputs to {target.relative_to(ROOT)}")
+
+
+def run_controls(arguments: argparse.Namespace, layout: Path) -> None:
+    """Two checks on the dev half that score.py does not make."""
+    cases = load_cases("dev")
+
+    # Control 1: the same cases with the context removed. The stock dictionary does not hold
+    # word pairs, so the previous words should not change an output.
+    with_context = run_driver(arguments, layout, [(case["id"], case["context"], case["typed"]) for case in cases])
+    without_context = run_driver(arguments, layout, [(case["id"], "", case["typed"]) for case in cases])
+    print("Control 1: dev outputs that change when the context is removed")
+    for name, _, _ in ENGINES:
+        changed = sum(with_context[name][case["id"]] != without_context[name][case["id"]] for case in cases)
+        print(f"  {name:32s} {changed:4d} / {len(cases):4d}")
+
+    # Control 2: correct two-word text. The clean categories hold one word each, so they do not
+    # show how often an engine changes two correct words typed with their space. This control
+    # types the intended text of each dev case that holds two words.
+    two_words = [case for case in cases if " " in case["intended"]]
+    typed_right = run_driver(arguments, layout, [(case["id"], case["context"], case["intended"]) for case in two_words])
+    print("Control 2: dev two-word targets typed without a slip, share left unchanged (letter case ignored)")
+    for name, _, _ in ENGINES:
+        kept = sum(typed_right[name][case["id"]].lower() == case["intended"].lower() for case in two_words)
+        print(f"  {name:32s} {kept:4d} / {len(two_words):4d} = {kept / len(two_words):.4f}")
+        shown = 0
+        for case in two_words:
+            output = typed_right[name][case["id"]]
+            if output.lower() != case["intended"].lower() and shown < 5:
+                shown += 1
+                print(f"      changed: {case['intended']!r} to {output!r}")
 
 
 def explain_samples(arguments: argparse.Namespace, layout: Path) -> None:
@@ -163,6 +207,8 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     action = parser.add_mutually_exclusive_group(required=True)
     action.add_argument("--half", choices=["dev", "test"], help="run the cases of this half")
+    action.add_argument("--controls", action="store_true",
+                        help="print the context control and the two-word control on the dev half")
     action.add_argument("--explain-samples", action="store_true",
                         help="print the layout and the engine's suggestions for a few dev examples")
     action.add_argument("--list-engines", action="store_true", help="print the engine names")
@@ -170,6 +216,8 @@ def main() -> None:
     parser.add_argument("--dictionary", type=Path,
                         default=BUILD / "source" / "java" / "res" / "raw" / "main_en.dict")
     arguments = parser.parse_args()
+    # Whole lines at once, so that the driver's messages keep their place in a log.
+    sys.stdout.reconfigure(line_buffering=True)
 
     if arguments.list_engines:
         print("\n".join(name for name, _, _ in ENGINES))
@@ -178,6 +226,8 @@ def main() -> None:
     write_layout(layout)
     if arguments.explain_samples:
         explain_samples(arguments, layout)
+    elif arguments.controls:
+        run_controls(arguments, layout)
     else:
         run_half(arguments, layout)
 

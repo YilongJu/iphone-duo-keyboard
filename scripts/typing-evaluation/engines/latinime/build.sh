@@ -34,56 +34,32 @@ output_directory="$(cd "$output_directory" && pwd)"
 objects="$output_directory/objects"
 rm -rf "$objects"
 mkdir -p "$objects"
+failed_list="$objects/failed.txt"
+: > "$failed_list"
 
-# Compiles one core file. With `prelude` set, host_prelude.h goes in front of the file.
-# -DHOST_TOOL is the flag that Android.bp gives to a host build. -w hides the warnings of the
-# AOSP sources, which Android compiles with clang.
+# Compiles one core file, unchanged. -DHOST_TOOL is the flag that Android.bp gives to a host
+# build. -w hides the warnings of the AOSP sources, which Android compiles with clang.
 compile_core_file() {
     local source="$1"
     local object="$objects/${source//\//__}.o"
-    local flags=(-std=gnu++17 -O2 -DHOST_TOOL -w
-        -I"$jni_directory/src" -I"$JAVA_HOME/include" -I"$JAVA_HOME/include/linux")
-    if [ -n "${prelude:-}" ]; then
-        flags+=(-include "$prelude")
-    fi
-    if ! g++ "${flags[@]}" -c "$jni_directory/$source" -o "$object" 2> "$object.log"; then
+    if ! g++ -std=gnu++17 -O2 -DHOST_TOOL -w \
+            -I"$jni_directory/src" -I"$JAVA_HOME/include" -I"$JAVA_HOME/include/linux" \
+            -c "$jni_directory/$source" -o "$object" 2> "$object.log"; then
         echo "$source" >> "$failed_list"
     fi
 }
 export -f compile_core_file
-export jni_directory objects JAVA_HOME
+export jni_directory objects failed_list JAVA_HOME
 
-compile_all() {
-    printf '%s\n' "$@" | xargs -P "$(nproc)" -I{} bash -c 'compile_core_file "$1"' _ {}
-}
-
-# First pass: every file as it is.
-export failed_list="$objects/failed-as-is.txt"
-export prelude=""
-: > "$failed_list"
-compile_all "${sources[@]}"
-mapfile -t failed_as_is < <(LC_ALL=C sort "$failed_list")
-
-# Second pass: the files of the first list again, with host_prelude.h in front.
-failed_with_prelude=()
-if [ "${#failed_as_is[@]}" -gt 0 ]; then
-    echo "build.sh: ${#failed_as_is[@]} core files do not compile as they are with g++:"
-    for source in "${failed_as_is[@]}"; do
-        echo "--- $source"
-        grep -m 3 'error' "$objects/${source//\//__}.o.log" || head -n 3 "$objects/${source//\//__}.o.log"
-    done
-    export failed_list="$objects/failed-with-prelude.txt"
-    export prelude="$here/host_prelude.h"
-    : > "$failed_list"
-    compile_all "${failed_as_is[@]}"
-    mapfile -t failed_with_prelude < <(LC_ALL=C sort "$failed_list")
-fi
+# Every file is compiled, also after an error, so that one run shows all errors.
+printf '%s\n' "${sources[@]}" | xargs -P "$(nproc)" -I{} bash -c 'compile_core_file "$1"' _ {}
 
 status=0
-if [ "${#failed_with_prelude[@]}" -gt 0 ]; then
+mapfile -t failed < <(LC_ALL=C sort "$failed_list")
+if [ "${#failed[@]}" -gt 0 ]; then
     status=1
-    echo "build.sh: ${#failed_with_prelude[@]} core files do not compile with host_prelude.h either:" >&2
-    for source in "${failed_with_prelude[@]}"; do
+    echo "build.sh: ${#failed[@]} of ${#sources[@]} core files do not compile:" >&2
+    for source in "${failed[@]}"; do
         echo "=== $source" >&2
         head -n 60 "$objects/${source//\//__}.o.log" >&2
     done
@@ -109,8 +85,10 @@ fi
 # -rdynamic keeps the function names for the backtrace that the driver prints on a fatal signal.
 g++ -O2 -rdynamic "$objects"/*.o "$driver_object" -o "$output_directory/latinime_driver"
 
-echo "build.sh: built $output_directory/latinime_driver from ${#sources[@]} core files and latinime_driver.cpp"
-echo "build.sh: core files compiled with host_prelude.h in front: ${#failed_as_is[@]}"
-for source in "${failed_as_is[@]}"; do
-    echo "  $source"
+echo "build.sh: built $output_directory/latinime_driver from ${#sources[@]} unchanged core files and latinime_driver.cpp"
+core_bytes=0
+for object in "$objects"/*.o; do
+    core_bytes=$((core_bytes + $(stat --format=%s "$object")))
 done
+echo "build.sh: object files of the core: $core_bytes bytes; driver binary: $(stat --format=%s "$output_directory/latinime_driver") bytes"
+size "$output_directory/latinime_driver"
