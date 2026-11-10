@@ -22,6 +22,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[4]
 CASES = ROOT / "scripts" / "typing-evaluation" / "cases"
 OUTPUT = ROOT / "build" / "typing-evaluation"
+# The cases from published misspelling lists, which build_external_english_cases.py writes.
+EXTERNAL = OUTPUT / "external"
 HUNSPELL_DICTIONARY = Path("/usr/share/hunspell/en_US")
 
 
@@ -230,13 +232,17 @@ def main():
     parser.add_argument("--workers", type=int, default=1, help="processes for an engine that corrects one token at a time")
     parser.add_argument("--jamspell-model", type=Path, help="the path of the JamSpell model file en.bin")
     parser.add_argument("--show-misses", type=int, default=0, help="print this many wrong dev cases per category")
+    parser.add_argument("--with-external-cases", action="store_true",
+                        help="also run the cases of build/typing-evaluation/external/, from published misspelling lists")
     arguments = parser.parse_args()
 
     kind, build = ENGINES[arguments.engine]
-    cases = {
-        half: [json.loads(line) for line in (CASES / f"english.{half}.jsonl").read_text(encoding="utf-8").splitlines() if line]
-        for half in arguments.half
-    }
+    cases = {}
+    for half in arguments.half:
+        files = [CASES / f"english.{half}.jsonl"]
+        if arguments.with_external_cases:
+            files.append(EXTERNAL / f"english.{half}.jsonl")
+        cases[half] = [json.loads(line) for path in files for line in path.read_text(encoding="utf-8").splitlines() if line]
     started = time.monotonic()
     outputs: dict[str, str] = {}
     if kind == "token":

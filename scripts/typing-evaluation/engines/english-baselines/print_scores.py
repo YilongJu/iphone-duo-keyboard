@@ -30,9 +30,13 @@ def main():
         for category in categories:
             cells = [f"{summaries[engine]['categories'][category]['accuracy']:.4f}" for engine in engines]
             print(f"| `{category}` | {summaries[engines[0]]['categories'][category]['cases']} | " + " | ".join(cells) + " |")
-        for group in ("clean", "slips"):
-            cells = [f"{summaries[engine][group]['accuracy']:.4f}" for engine in engines]
-            print(f"| ALL {group.upper()} | {summaries[engines[0]][group]['cases']} | " + " | ".join(cells) + " |")
+        groups = list(summaries[engines[0]]["groups"])
+        for engine, summary in summaries.items():
+            if list(summary["groups"]) != groups:
+                raise ValueError(f"{engine} has other groups than {engines[0]} on the {half} half")
+        for group in groups:
+            cells = [f"{summaries[engine]['groups'][group]['accuracy']:.4f}" for engine in engines]
+            print(f"| GROUP `{group}` | {summaries[engines[0]]['groups'][group]['cases']} | " + " | ".join(cells) + " |")
 
 
 if __name__ == "__main__":
