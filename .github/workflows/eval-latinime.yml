@@ -33,6 +33,8 @@ jobs:
         run: bash "$ENGINE/fetch_sources.sh" build/latinime/source
       - name: Build the engine core and the driver
         run: bash "$ENGINE/build.sh" build/latinime/source build/latinime
+      - name: Choose the tuned threshold on the dev half
+        run: python3 "$ENGINE/run_latinime.py" --tune-on-dev
       - name: Print the dictionary counts, the layout and the suggestions for a few dev examples
         run: python3 "$ENGINE/run_latinime.py" --explain-samples
       - name: Run the engine on the dev half and the test half
@@ -41,7 +43,7 @@ jobs:
           for half in dev test; do
             python3 "$ENGINE/run_latinime.py" --half "$half"
           done
-      - name: Print the five controls on the dev half
+      - name: Print the four controls on the dev half
         run: python3 "$ENGINE/run_latinime.py" --controls
       - name: Score each engine name on each half
         run: |
