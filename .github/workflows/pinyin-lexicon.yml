@@ -3,22 +3,40 @@ name: Pinyin lexicon
 # Builds Shared/lexicon-pinyin.bin from the libime dictionary and language model on a Linux
 # runner, scores the engine with it on the dev half, and uploads the file as an artifact.
 # Start it by hand:
-#   gh workflow run "Pinyin lexicon" -f pairs=1500000 -f sweep="omission=4;omission=4.5"
+#   gh workflow run "Pinyin lexicon" -f pairs=1250000 -f triples=3000000 -f sweep="beam=16;beam=64"
 on:
   workflow_dispatch:
     inputs:
       pairs:
         description: The number of word pairs to keep
-        default: '1500000'
+        default: '1250000'
+      triples:
+        description: The number of word triples to keep
+        default: '3000000'
+      gain:
+        description: Keep the entries on both sides of their back-off estimate (any), or only the entries above it (higher)
+        default: 'any'
       sweep:
         description: Engine settings to compare on the dev half, as sets of name=value pairs separated by semicolons
+        default: ''
+      sweep_jobs:
+        description: How many sets of the sweep run at one time. 1 gives times that compare.
+        default: '4'
+      table:
+        description: More lexicon sizes to build and score in this run, as "pairs triples gain" rows separated by semicolons
+        default: ''
+      inspect:
+        description: Word sequences to look up in the language model, words separated by spaces and sequences by semicolons, or --counts for counts over the whole model
+        default: ''
+      baseline:
+        description: A branch or tag whose engine and tracked lexicons are scored beside this one. The English outputs of both engines must be the same.
         default: ''
 
 jobs:
   build:
     name: Build the Pinyin lexicon from libime data
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v7
       - name: Download the libime data
@@ -29,21 +47,84 @@ jobs:
           curl -sSfLO https://download.fcitx-im.org/data/dict-20260907.tar.zst
           sha256sum *.tar.zst
           for archive in *.tar.zst; do tar --zstd -xf "$archive"; done
+      - name: Print the language model entries of the given word sequences
+        if: github.event.inputs.inspect != ''
+        env:
+          INSPECT: ${{ github.event.inputs.inspect }}
+        run: |
+          set -euo pipefail
+          IFS=';' read -ra sequences <<< "$INSPECT"
+          python3 scripts/typing-engine/inspect_language_model.py build/libime-data "${sequences[@]}"
+      - name: Build the engine and check its word-triple model against a second implementation
+        run: |
+          set -euo pipefail
+          mkdir -p build/engine
+          gcc -std=c11 -O1 -g -Wall -Wextra -Wpedantic -Werror -fsanitize=address,undefined \
+            Engine/duo_engine.c Engine/duo_cli.c -lm -o build/engine/duo_cli_checked
+          gcc -std=c11 -O2 -Wall -Wextra -Werror Engine/duo_engine.c Engine/duo_cli.c -lm -o build/engine/duo_cli
+          python3 scripts/typing-engine-check/check_back_off_model.py --cli build/engine/duo_cli_checked
+      # Every row runs on this one machine, one after the other, so the times compare.
+      - name: Build and score the lexicon sizes of the table
+        if: github.event.inputs.table != ''
+        env:
+          TABLE: ${{ github.event.inputs.table }}
+        run: |
+          set -euo pipefail
+          IFS=';' read -ra rows <<< "$TABLE"
+          for row in "${rows[@]}"; do
+            read -r pairs triples gain <<< "$row"
+            echo "TABLE ROW: $pairs pairs, $triples triples, gain $gain"
+            python3 scripts/typing-engine/build_pinyin_lexicon_from_libime.py build/libime-data "$pairs" "$triples" --gain "$gain" \
+              | grep -E '^(language model|wrote)'
+            echo "TABLE FILE: $(stat -c %s Shared/lexicon-pinyin.bin) bytes, sha256 $(sha256sum Shared/lexicon-pinyin.bin | cut -d' ' -f1)"
+            python3 scripts/typing-evaluation/run_duo_engine.py --task pinyin --half dev --show-time --name table \
+              | grep -E '^duo_cli|GROUP'
+          done
       - name: Build the lexicon
-        run: python3 scripts/typing-engine/build_pinyin_lexicon_from_libime.py build/libime-data ${{ github.event.inputs.pairs }}
+        run: |
+          set -euo pipefail
+          python3 scripts/typing-engine/build_pinyin_lexicon_from_libime.py build/libime-data \
+            ${{ github.event.inputs.pairs }} ${{ github.event.inputs.triples }} --gain ${{ github.event.inputs.gain }}
+          ls -l Shared/lexicon-pinyin.bin
+          sha256sum Shared/lexicon-pinyin.bin
       - name: Score the engine with this lexicon on the dev half
         env:
           SWEEP: ${{ github.event.inputs.sweep }}
         run: |
           set -euo pipefail
-          mkdir -p build/engine
-          gcc -std=c11 -O2 -Wall -Wextra -Werror Engine/duo_engine.c Engine/duo_cli.c -lm -o build/engine/duo_cli
-          ls -l Shared/lexicon-pinyin.bin
-          time python3 scripts/typing-evaluation/run_duo_engine.py --task pinyin --half dev --show-misses 3
+          time python3 scripts/typing-evaluation/run_duo_engine.py --task pinyin --half dev --show-misses 3 --show-time
           if [ -n "$SWEEP" ]; then
             IFS=';' read -ra sets <<< "$SWEEP"
-            python3 scripts/typing-evaluation/sweep_duo_engine.py --task pinyin "${sets[@]}"
+            python3 scripts/typing-evaluation/sweep_duo_engine.py --task pinyin --jobs ${{ github.event.inputs.sweep_jobs }} "${sets[@]}"
           fi
+      - name: Score the engine of the baseline, and compare the English outputs of both engines
+        if: github.event.inputs.baseline != ''
+        env:
+          BASELINE: ${{ github.event.inputs.baseline }}
+        run: |
+          set -euo pipefail
+          git fetch --depth 1 origin "$BASELINE"
+          git log -1 --format='baseline commit %H' FETCH_HEAD
+          mkdir -p build/baseline/Engine build/baseline/Shared
+          for file in duo_engine.c duo_engine.h duo_cli.c; do git show "FETCH_HEAD:Engine/$file" > "build/baseline/Engine/$file"; done
+          for file in lexicon-english.bin lexicon-pinyin.bin; do git show "FETCH_HEAD:Shared/$file" > "build/baseline/Shared/$file"; done
+          gcc -std=c11 -O2 -Wall -Wextra -Werror build/baseline/Engine/duo_engine.c build/baseline/Engine/duo_cli.c -lm -o build/engine/duo_cli_baseline
+          results=build/typing-evaluation/duo-engine
+          echo "The baseline engine with the baseline Pinyin lexicon:"
+          time python3 scripts/typing-evaluation/run_duo_engine.py --task pinyin --half dev --name compared \
+            --cli build/engine/duo_cli_baseline --lexicon build/baseline/Shared/lexicon-pinyin.bin
+          echo "The baseline engine with the baseline English lexicon:"
+          time python3 scripts/typing-evaluation/run_duo_engine.py --task english --half dev --name compared \
+            --cli build/engine/duo_cli_baseline --lexicon build/baseline/Shared/lexicon-english.bin
+          mkdir -p build/baseline/outputs
+          mv "$results/compared.english.dev.jsonl" "$results/compared.english.dev.summary.json" build/baseline/outputs/
+          echo "This engine with the English lexicon of this branch:"
+          cmp build/baseline/Shared/lexicon-english.bin Shared/lexicon-english.bin
+          time python3 scripts/typing-evaluation/run_duo_engine.py --task english --half dev --name compared --show-time
+          sha256sum build/baseline/outputs/compared.english.dev.* "$results"/compared.english.dev.*
+          cmp build/baseline/outputs/compared.english.dev.jsonl "$results/compared.english.dev.jsonl"
+          cmp build/baseline/outputs/compared.english.dev.summary.json "$results/compared.english.dev.summary.json"
+          echo "The English outputs and summaries of both engines are the same."
       - uses: actions/upload-artifact@v7
         with:
           name: lexicon-pinyin

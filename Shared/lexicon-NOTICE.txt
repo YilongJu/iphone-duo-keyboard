@@ -1,4 +1,4 @@
-lexicon-english.bin and lexicon-pinyin.bin hold the word lists and word-pair counts of the typing
+lexicon-english.bin and lexicon-pinyin.bin hold the word lists and the word-pair and word-triple statistics of the typing
 engine in Engine/duo_engine.c. Both files are built from data of other projects.
 
 lexicon-pinyin.bin
@@ -11,8 +11,10 @@ lexicon-pinyin.bin
 
   Both source files are under the GNU Lesser General Public License, version 2.1 or later
   (https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html), and lexicon-pinyin.bin is under the
-  same license. Changes: the converter keeps the single words with their weights, the 1,500,000
-  word pairs with the highest weight, and adds the spellings "lve", "nve", "lue" and "nue". The
+  same license. Changes: the converter keeps the single words with their weights and reading
+  costs, the 1,250,000 word pairs with the highest weight, the 231,023 further pairs that a kept
+  triple needs, all 2,189,434 word triples, and adds the spellings "lve", "nve", "lue" and "nue".
+  It stores the pair and triple values in steps of 1/2048 and 1/256 of a natural-log unit. The
   converter and the workflow in this repository rebuild the file from the two source files.
 
 lexicon-english.bin
