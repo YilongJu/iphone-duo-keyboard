@@ -56,7 +56,7 @@ PROBES = [
     ("sound pair n and l", "lixihuan"),
     ("sound pair z and zh", "zongguoren"),
     ("sound pair l and r, r typed for l", "raoshi"),
-    ("sound pair l and r, l typed for r", "lenshi"),
+    ("sound pair l and r, l typed for r", "liben"),
     ("sound pair eng and ong", "dengxi"),
     ("syllable outside the dictionary", "yiden"),
 ]
