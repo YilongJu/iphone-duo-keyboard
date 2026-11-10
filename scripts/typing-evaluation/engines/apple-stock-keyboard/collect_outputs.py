@@ -4,19 +4,27 @@ Usage, from the repository root:
     python3 scripts/typing-evaluation/engines/apple-stock-keyboard/collect_outputs.py \
         --parts build/typing-evaluation-parts --out build/typing-evaluation
 
-Each job of the workflow writes one part folder with a `part.json` file.
+Each simulator of a workflow job writes one part folder with a `part.json` file. The script
+reads every part folder under `--parts`, at any depth.
 
 A part of kind `keyboard` holds the cases one job typed on the stock keyboard:
 `sample.jsonl` (every sampled case of the engine name and half), `cases.jsonl` (the share of this
-job), `detail.jsonl` (what the UI test read from the text view) and the run logs, accessibility
-trees and screenshots. The script writes, for each engine name, task and half:
+job), `attempts.jsonl` (what the UI test read from the text view, one line per attempt) and the
+run logs, accessibility trees and screenshots. The script writes, for each engine name, task and half:
     TASK.HALF.cases.jsonl    the sampled cases, the file to score against
     TASK.HALF.jsonl          one object per typed case with the case `id` and the `output`
-    TASK.HALF.detail.jsonl   the raw reads, the output and the checks for each typed case
+    TASK.HALF.detail.jsonl   the counted attempt, the output and the checks for each typed case
+    TASK.HALF.checks.json    the counts of the checks and the measured key interval
     diagnostics/PART/        the logs, trees and screenshots of each part
 
 A part of kind `outputs` holds finished files under `outputs/ENGINE/`, and the script copies them.
 
+Counted attempt of a case: the UI test types a case once. It types a case again only when the
+attempt ended with an error or the last space did not arrive. The last complete attempt counts.
+A case without a complete attempt counts with its last attempt that read the text view.
+Control part: a part whose `part.json` holds `"control": true` was typed with every correction
+of the text view off. The script counts the cases whose text view holds exactly the context, the
+typed characters and the last space. That count checks that every key tap arrived.
 Field text of a case: the text view after the last space tap. Marked text does not count for
 English, because the English keyboard marks an inline prediction that the person has not accepted.
 Output of an English case: the field text after the first N words, where N is the number of
@@ -24,7 +32,7 @@ words in the context.
 Output of a Pinyin case: the field text without spaces at the ends.
 
 The host app stamps each change of the text with its time. The script reports the time between
-two text changes while a case is typed, which is the key interval the keyboard saw.
+two key arrivals while a case is typed, which is the key interval the keyboard saw.
 """
 import argparse
 import json
@@ -37,6 +45,10 @@ from score import normalize  # noqa: E402
 
 # The host app wraps marked text in these two brackets in each entry of the text history.
 OPEN, CLOSE = "⟦", "⟧"
+# Two growths of the typed text closer than this come from one tap, as in the host app.
+SAME_TAP_MS = 20
+# A case keeps its rhythm when each key gap stays under this many key intervals, as in the UI test.
+RHYTHM_LIMIT = 1.5
 
 
 def read_lines(path: Path) -> list[dict]:
@@ -58,20 +70,29 @@ def without_marked(entry: str) -> str:
     return entry[: entry.index(OPEN)] + entry[entry.index(CLOSE) + 1:]
 
 
-def arrival_gaps(detail: dict) -> list[int]:
-    """Milliseconds between two text changes while the case was typed. The first entry of the
-    history is the loaded case, so the first gap is left out. One tap can change the text twice
-    within a few milliseconds, and a gap under 20 ms is left out for that reason."""
-    times = detail["history_ms"]
-    return [later - earlier for earlier, later in zip(times[1:], times[2:]) if later - earlier >= 20]
+def key_gaps(task: str, attempt: dict) -> list[int]:
+    """Milliseconds between two key arrivals while the case was typed.
+
+    A key arrival is a moment the typed text grew: for English the text without the marked text,
+    and for Pinyin the letters of the text. A change of an inline prediction alone does not
+    count. The first entry of the history is the loaded case, so the time before the first key
+    is left out."""
+    arrivals: list[int] = []
+    length = None
+    for entry, time in zip(attempt["history"], attempt["history_ms"]):
+        new_length = len(without_marked(entry) if task == "english" else letters(entry))
+        if length is not None and new_length > length and (not arrivals or time - arrivals[-1] >= SAME_TAP_MS):
+            arrivals.append(time)
+        length = new_length
+    return [later - earlier for earlier, later in zip(arrivals, arrivals[1:])]
 
 
-def english_fields(case: dict, detail: dict) -> dict:
+def english_fields(case: dict, attempt: dict) -> dict:
     context_words = case["context"].split()
-    words = detail["after_committed"].split()
+    words = attempt["after_committed"].split()
     prefix = case["context"] + " " if case["context"] else ""
     tokens = case["typed"].split(" ")
-    states = [without_marked(entry).lower().replace("’", "'") for entry in detail["history"]]
+    states = [without_marked(entry).lower().replace("’", "'") for entry in attempt["history"]]
     return {
         "output": " ".join(words[len(context_words):]),
         # False when the keyboard changed a word of the context while the person typed.
@@ -82,12 +103,21 @@ def english_fields(case: dict, detail: dict) -> dict:
     }
 
 
-def pinyin_fields(case: dict, detail: dict) -> dict:
+def pinyin_fields(case: dict, attempt: dict) -> dict:
     return {
-        "output": detail["after"].strip(),
+        "output": attempt["after"].strip(),
         # True when the marked text once held every typed letter.
-        "letters_arrived": any(OPEN in entry and letters(entry) == case["typed"] for entry in detail["history"]),
+        "letters_arrived": any(OPEN in entry and letters(entry) == case["typed"] for entry in attempt["history"]),
     }
+
+
+def counted_attempt(attempts: list[dict]) -> dict | None:
+    """The last complete attempt, or the last attempt that read the text view."""
+    read = [attempt for attempt in attempts if "after" in attempt]
+    complete = [attempt for attempt in read if attempt["complete"]]
+    if complete:
+        return complete[-1]
+    return read[-1] if read else None
 
 
 def percentile(values: list[int], share: float) -> int:
@@ -101,7 +131,7 @@ def main():
     arguments = parser.parse_args()
 
     groups: dict[tuple[str, str, str], list[Path]] = {}
-    for part in sorted(path for path in arguments.parts.iterdir() if (path / "part.json").exists()):
+    for part in sorted(path.parent for path in arguments.parts.rglob("part.json")):
         meta = json.loads((part / "part.json").read_text(encoding="utf-8"))
         if meta["kind"] == "outputs":
             shutil.copytree(part / "outputs", arguments.out, dirs_exist_ok=True)
@@ -115,16 +145,18 @@ def main():
         folder = arguments.out / engine
         folder.mkdir(parents=True, exist_ok=True)
         sample = read_lines(parts[0] / "sample.jsonl")
-        key_interval_ms = round(1000 * json.loads((parts[0] / "part.json").read_text(encoding="utf-8"))["key_interval"])
-        details: dict[str, dict] = {}
+        first_meta = json.loads((parts[0] / "part.json").read_text(encoding="utf-8"))
+        key_interval_ms = round(1000 * first_meta["key_interval"])
+        control = first_meta["control"]
+        if control and task != "english":
+            raise SystemExit(f"{parts[0].name}: the control run is defined for the english task only")
+        attempts: dict[str, list[dict]] = {}
         for part in parts:
             if [case["id"] for case in read_lines(part / "sample.jsonl")] != [case["id"] for case in sample]:
                 raise SystemExit(f"{part.name}: the sample differs from the sample of {parts[0].name}")
-            if (part / "detail.jsonl").exists():
-                for detail in read_lines(part / "detail.jsonl"):
-                    if detail["id"] in details:
-                        raise SystemExit(f"{part.name}: case {detail['id']} appears in two parts")
-                    details[detail["id"]] = detail
+            if (part / "attempts.jsonl").exists():
+                for attempt in read_lines(part / "attempts.jsonl"):
+                    attempts.setdefault(attempt["id"], []).append(attempt)
             diagnostics = folder / "diagnostics" / part.name
             diagnostics.mkdir(parents=True, exist_ok=True)
             for path in part.iterdir():
@@ -133,38 +165,62 @@ def main():
 
         rows = []
         for case in sample:
-            if case["id"] not in details:
+            attempt = counted_attempt(attempts.get(case["id"], []))
+            if attempt is None:
                 continue
-            detail = details[case["id"]]
-            fields = english_fields(case, detail) if task == "english" else pinyin_fields(case, detail)
-            right = normalize(task, fields["output"]) == normalize(task, case["intended"])
-            gaps = arrival_gaps(detail)
-            rows.append({**detail, **fields, "intended": case["intended"], "right": right,
-                         "arrival_gap_max_ms": max(gaps) if gaps else None})
+            fields = english_fields(case, attempt) if task == "english" else pinyin_fields(case, attempt)
+            gaps = key_gaps(task, attempt)
+            rows.append({
+                **attempt, **fields, "intended": case["intended"],
+                "right": normalize(task, fields["output"]) == normalize(task, case["intended"]),
+                "key_gaps_ms": gaps,
+                "rhythm_kept": all(gap <= RHYTHM_LIMIT * key_interval_ms for gap in gaps),
+                **({"exact": attempt["after"] == (case["context"] + " " if case["context"] else "") + case["typed"] + " "} if control else {}),
+                "attempts": len(attempts[case["id"]]),
+            })
         write_lines(folder / f"{task}.{half}.cases.jsonl", sample)
         write_lines(folder / f"{task}.{half}.jsonl", [{"id": row["id"], "output": row["output"]} for row in rows])
         write_lines(folder / f"{task}.{half}.detail.jsonl", rows)
 
-        print()
-        print(f"{engine} {task}.{half}: {len(sample)} sampled cases, {len(rows)} typed, from {len(parts)} parts")
-        print(f"  cases where a key tap did not arrive: {sum(not row['letters_arrived'] for row in rows)}")
-        print(f"  cases where the read after the last space did not show the expected text: {sum(not row['after_as_expected'] for row in rows)}")
+        # The checks say how far the typing of this run matched the typing the cases describe.
+        checks = {
+            "sampled cases": len(sample),
+            "typed cases": len(rows),
+            "parts": len(parts),
+            "attempts": sum(len(case_attempts) for case_attempts in attempts.values()),
+            "attempts that ended with an error": sum("error" in attempt for case_attempts in attempts.values() for attempt in case_attempts),
+            "cases typed in more than one pass": sum(row["attempts"] > 1 for row in rows),
+            f"cases whose counted attempt has a key gap above {RHYTHM_LIMIT} times the key interval": sum(not row["rhythm_kept"] for row in rows),
+            "cases whose counted attempt is not complete": sum(not row["complete"] for row in rows),
+            "cases where a key tap did not arrive": sum(not row["letters_arrived"] for row in rows),
+            "right cases": sum(row["right"] for row in rows),
+            "cases with every key gap inside the limit": sum(row["rhythm_kept"] for row in rows),
+            "right cases among the cases with every key gap inside the limit": sum(row["right"] for row in rows if row["rhythm_kept"]),
+        }
+        if control:
+            exact = sum(row["exact"] for row in rows)
+            checks["control: cases whose text view holds exactly the typed characters"] = exact
+            checks["control: share of the typed cases"] = round(exact / len(rows), 4) if rows else None
         if task == "english":
-            print(f"  cases where the keyboard changed the context: {sum(not row['context_kept'] for row in rows)}")
-            print(f"  cases with an inline prediction left as marked text: {sum(row['after_marked'] for row in rows)}")
+            checks["cases where the keyboard changed the context"] = sum(not row["context_kept"] for row in rows)
+            checks["cases with an inline prediction left as marked text"] = sum(row["after_marked"] for row in rows)
         else:
-            print(f"  cases with marked text left after the space taps: {sum(row['after_marked'] for row in rows)}")
-            print(f"  cases that took more than one space tap: {sum(row['space_taps'] > 1 for row in rows)}")
-        gaps = [gap for row in rows for gap in arrival_gaps(row)]
+            checks["cases that took more than one space tap"] = sum(row["space_taps"] > 1 for row in rows)
+        gaps = [gap for row in rows for gap in row["key_gaps_ms"]]
         if gaps:
-            print(f"  key interval asked for: {key_interval_ms} ms")
-            print(f"  time between two text changes: median {percentile(gaps, 0.5)} ms, "
-                  f"10th percentile {percentile(gaps, 0.1)} ms, 90th percentile {percentile(gaps, 0.9)} ms, {len(gaps)} gaps")
-            slow = sum((row["arrival_gap_max_ms"] or 0) > 3 * key_interval_ms for row in rows)
-            print(f"  cases with a gap above 3 times the key interval: {slow}")
+            checks["key interval asked for, ms"] = key_interval_ms
+            checks["time between two key arrivals in the counted attempts, ms"] = {
+                "median": percentile(gaps, 0.5), "10th percentile": percentile(gaps, 0.1),
+                "90th percentile": percentile(gaps, 0.9), "99th percentile": percentile(gaps, 0.99), "gaps": len(gaps)}
         if rows:
             seconds = sorted(row["seconds"] for row in rows)
-            print(f"  seconds per case: median {seconds[len(seconds) // 2]}, sum {sum(seconds):.0f}")
+            checks["seconds per counted attempt"] = {"median": seconds[len(seconds) // 2], "sum": round(sum(seconds))}
+        (folder / f"{task}.{half}.checks.json").write_text(
+            json.dumps(checks, ensure_ascii=False, indent=2) + "\n", encoding="utf-8", newline="\n")
+        print()
+        print(f"{engine} {task}.{half}")
+        for name, value in checks.items():
+            print(f"  {name}: {value}")
         shown: dict[str, int] = {}
         for row in rows:
             shown[row["category"]] = shown.get(row["category"], 0) + 1
