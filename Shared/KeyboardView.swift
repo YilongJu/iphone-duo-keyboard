@@ -207,7 +207,7 @@ final class KeyboardView: UIView {
         case .end:
             return KeyDisplay(primary: "End", primaryFontSize: wordSize)
         case .selectAll:
-            return KeyDisplay(symbolName: "selection.pin.in.out", emphasized: selectAllActive)
+            return KeyDisplay(primary: "Select All", primaryFontSize: wordSize, emphasized: selectAllActive)
         case .forwardDelete:
             return KeyDisplay(symbolName: "delete.right")
         case .cut:
