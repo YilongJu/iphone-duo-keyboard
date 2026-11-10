@@ -396,7 +396,10 @@ final class KeyboardView: UIView {
     override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
         for touch in touches {
             guard let state = activeTouches.removeValue(forKey: touch) else { continue }
-            finish(state, commit: false)
+            // iOS cancels a touch when a second finger makes the system check for a two-finger
+            // gesture. A cancelled touch on a text key still types the key, so fast typing with
+            // two fingers does not drop letters.
+            finish(state, commit: state.keyView.key.kind.isTextKey && !state.cursorMode)
         }
     }
 

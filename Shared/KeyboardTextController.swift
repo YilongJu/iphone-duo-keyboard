@@ -13,10 +13,41 @@ protocol KeyboardDocument: AnyObject {
     var canUseClipboard: Bool { get }
     /// Identifies the text field. The value changes when the user moves to another field.
     var documentIdentifier: UUID { get }
+    /// False for a field that asks for no autocorrection, such as a web address field.
+    var allowsAutocorrection: Bool { get }
     func insertText(_ text: String)
     func deleteBackward()
     /// Moves the cursor. The offset counts UTF-16 units.
     func moveCursor(byUTF16Offset offset: Int)
+}
+
+/// Finds the correction for a misspelled word.
+@MainActor
+protocol SpellChecking: AnyObject {
+    /// Returns the corrected word, or nil when the word is fine or the checker has no close guess.
+    func correction(for word: String) -> String?
+    /// Stops the checker from flagging this word again.
+    func learn(_ word: String)
+}
+
+/// English spelling from the system's own spell checker.
+@MainActor
+final class SystemSpellChecker: SpellChecking {
+    private let checker = UITextChecker()
+    private let language = "en_US"
+
+    func correction(for word: String) -> String? {
+        let range = NSRange(location: 0, length: word.utf16.count)
+        let misspelled = checker.rangeOfMisspelledWord(
+            in: word, range: range, startingAt: 0, wrap: false, language: language)
+        guard misspelled.location != NSNotFound else { return nil }
+        let guesses = checker.guesses(forWordRange: range, in: word, language: language) ?? []
+        return KeyboardTextLogic.bestGuess(for: word, guesses: guesses)
+    }
+
+    func learn(_ word: String) {
+        UITextChecker.learnWord(word)
+    }
 }
 
 /// Turns the keys' actions into edits of the document. The keyboard extension and the host app's
@@ -29,6 +60,18 @@ protocol KeyboardDocument: AnyObject {
 final class KeyboardTextController: NSObject, KeyboardViewDelegate {
     private let keyboardView: KeyboardView
     private let document: KeyboardDocument
+    private let spellChecker: SpellChecking
+
+    /// The last autocorrection. One backspace right after the correction brings the typed word back.
+    private struct Correction {
+        let original: String
+        let corrected: String
+        let terminator: String
+    }
+
+    private var lastCorrection: Correction?
+    /// Words the user brought back after a correction. Autocorrection leaves these alone.
+    private var keptWords: Set<String> = []
 
     /// The owner hides the keyboard here.
     var onDismiss: @MainActor () -> Void = {}
@@ -56,9 +99,10 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
 
     private var pending: PendingReplacement?
 
-    init(keyboardView: KeyboardView, document: KeyboardDocument) {
+    init(keyboardView: KeyboardView, document: KeyboardDocument, spellChecker: SpellChecking) {
         self.keyboardView = keyboardView
         self.document = document
+        self.spellChecker = spellChecker
         super.init()
         keyboardView.delegate = self
     }
@@ -197,11 +241,48 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
             document.insertText(". ")
             previousInsertWasSpace = false
         } else {
+            correctLastWord(beforeTyping: text)
             document.insertText(text)
             previousInsertWasSpace = text == " "
             lastSpaceTime = now
         }
         updateAutoShift()
+    }
+
+    /// Replaces a misspelled word right before the cursor, when `terminator` ends that word.
+    private func correctLastWord(beforeTyping terminator: String) {
+        lastCorrection = nil
+        guard KeyboardTextLogic.wordTerminators.contains(terminator), document.allowsAutocorrection,
+            let word = KeyboardTextLogic.correctableWord(before: document.textBeforeCursor),
+            !keptWords.contains(word.lowercased())
+        else { return }
+        let corrected: String?
+        if word == "i" {
+            corrected = "I"
+        } else if word.count >= 2 {
+            corrected = spellChecker.correction(for: word)
+        } else {
+            corrected = nil
+        }
+        guard let corrected, corrected != word else { return }
+        deleteBackward(count: word.count)
+        document.insertText(corrected)
+        lastCorrection = Correction(original: word, corrected: corrected, terminator: terminator)
+        showNotice("\(word) \u{2192} \(corrected)")
+    }
+
+    /// Brings back the word the user typed, when the cursor still sits right after the correction.
+    private func undoLastCorrection() -> Bool {
+        guard let correction = lastCorrection else { return false }
+        lastCorrection = nil
+        let typed = correction.corrected + correction.terminator
+        guard document.textBeforeCursor.hasSuffix(typed) else { return false }
+        deleteBackward(count: typed.count)
+        document.insertText(correction.original)
+        keptWords.insert(correction.original.lowercased())
+        spellChecker.learn(correction.original)
+        showNotice("Kept \(correction.original)")
+        return true
     }
 
     /// Converts a count of characters into the UTF-16 offset the document expects.
@@ -237,8 +318,10 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
             replaceAllText(snapshot, with: nil)
             return
         }
-        document.deleteBackward()
         previousInsertWasSpace = false
+        if !undoLastCorrection() {
+            document.deleteBackward()
+        }
         updateAutoShift()
     }
 
@@ -250,12 +333,14 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
         guard pending == nil else { return }
         setAllText(nil)
         previousInsertWasSpace = false
+        lastCorrection = nil
         document.moveCursor(byUTF16Offset: utf16Offset(forCharacters: offset))
     }
 
     func keyboardView(_ keyboardView: KeyboardView, edit command: EditCommand) {
         guard pending == nil else { return }
         previousInsertWasSpace = false
+        lastCorrection = nil
         switch command {
         case .selectAll:
             if allText != nil {

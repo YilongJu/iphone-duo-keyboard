@@ -64,6 +64,70 @@ enum KeyboardTextLogic {
         }
     }
 
+    // MARK: Autocorrection
+
+    /// A character that ends a word. Autocorrection looks at the word when one of these arrives.
+    static let wordTerminators: Set<String> = [" ", ".", ",", "!", "?", ";", ":", "\n"]
+
+    /// The word right before the cursor, when autocorrection may change that word.
+    /// The function returns nil for text that is probably not plain prose: a word with a capital
+    /// after its first letter, a word with a digit or symbol in it, and a word that follows a
+    /// character such as "@", "/" or "." with no space between.
+    static func correctableWord(before: String) -> String? {
+        var start = before.endIndex
+        while start > before.startIndex {
+            let previous = before.index(before: start)
+            let character = before[previous]
+            guard character.isASCII, character.isLetter || character == "'" else { break }
+            start = previous
+        }
+        let word = String(before[start...])
+        guard let first = word.first, first.isLetter, word.last != "'" else { return nil }
+        if start > before.startIndex {
+            let preceding = before[before.index(before: start)]
+            guard preceding.isWhitespace || "([{\"".contains(preceding) else { return nil }
+        }
+        guard word.dropFirst().allSatisfy({ !$0.isUppercase }) else { return nil }
+        return word
+    }
+
+    /// Picks the first guess that is close to the typed word, and gives the guess the typed
+    /// word's capital. A short word allows one edit, and a longer word allows two.
+    static func bestGuess(for word: String, guesses: [String]) -> String? {
+        let typed = word.lowercased()
+        let limit = typed.count <= 4 ? 1 : 2
+        for guess in guesses where !guess.contains(" ") {
+            let distance = editDistance(typed, guess.lowercased())
+            guard distance > 0, distance <= limit else { continue }
+            if let first = word.first, first.isUppercase {
+                return guess.prefix(1).uppercased() + guess.dropFirst()
+            }
+            return guess
+        }
+        return nil
+    }
+
+    /// Count of single-character edits between two words. A swap of two neighbors counts as one edit.
+    static func editDistance(_ first: String, _ second: String) -> Int {
+        let a = Array(first)
+        let b = Array(second)
+        if a.isEmpty { return b.count }
+        if b.isEmpty { return a.count }
+        var table = Array(repeating: Array(repeating: 0, count: b.count + 1), count: a.count + 1)
+        for i in 0...a.count { table[i][0] = i }
+        for j in 0...b.count { table[0][j] = j }
+        for i in 1...a.count {
+            for j in 1...b.count {
+                let cost = a[i - 1] == b[j - 1] ? 0 : 1
+                table[i][j] = min(table[i - 1][j] + 1, table[i][j - 1] + 1, table[i - 1][j - 1] + cost)
+                if i > 1, j > 1, a[i - 1] == b[j - 2], a[i - 2] == b[j - 1] {
+                    table[i][j] = min(table[i][j], table[i - 2][j - 2] + 1)
+                }
+            }
+        }
+        return table[a.count][b.count]
+    }
+
     static func returnKeyTitle(for type: UIReturnKeyType) -> String {
         switch type {
         case .go: return "go"

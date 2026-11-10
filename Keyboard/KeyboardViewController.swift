@@ -12,7 +12,8 @@ final class KeyboardViewController: UIInputViewController {
     /// (Apple feedback FB25073949), and the Duo does not draw a globe button of its own.
     private let keyboardView = KeyboardView()
     private lazy var document = ProxyDocument(controller: self)
-    private lazy var textController = KeyboardTextController(keyboardView: keyboardView, document: document)
+    private lazy var textController = KeyboardTextController(
+        keyboardView: keyboardView, document: document, spellChecker: SystemSpellChecker())
     private var heightConstraint: NSLayoutConstraint?
 
     override func viewDidLoad() {
@@ -36,6 +37,15 @@ final class KeyboardViewController: UIInputViewController {
         super.viewWillAppear(animated)
         updateHeight()
         refreshFromDocument()
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        // The system's edge gestures hold back touches near the screen edges for a moment.
+        // Without the delay, the keys at the edges respond as fast as the keys in the middle.
+        for recognizer in view.window?.gestureRecognizers ?? [] {
+            recognizer.delaysTouchesBegan = false
+        }
     }
 
     override func viewWillDisappear(_ animated: Bool) {
@@ -111,6 +121,17 @@ final class ProxyDocument: KeyboardDocument {
     var canUseClipboard: Bool { controller.hasFullAccess }
 
     var documentIdentifier: UUID { proxy.documentIdentifier }
+
+    /// A field can turn autocorrection off, and a field for an address or a number does not hold prose.
+    var allowsAutocorrection: Bool {
+        if proxy.autocorrectionType == .no { return false }
+        switch proxy.keyboardType {
+        case .URL, .emailAddress, .numberPad, .phonePad, .decimalPad, .asciiCapableNumberPad, .numbersAndPunctuation:
+            return false
+        default:
+            return true
+        }
+    }
 
     func insertText(_ text: String) {
         proxy.insertText(text)

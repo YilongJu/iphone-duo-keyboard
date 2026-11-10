@@ -13,7 +13,7 @@ final class SetupViewController: UIViewController, UITextViewDelegate {
     private let previewContainer = UIInputView(frame: .zero, inputViewStyle: .keyboard)
     private lazy var previewDocument = TextViewDocument(textView: previewField)
     private lazy var textController = KeyboardTextController(
-        keyboardView: previewKeyboard, document: previewDocument)
+        keyboardView: previewKeyboard, document: previewDocument, spellChecker: SystemSpellChecker())
     private var didAutoFocus = false
 
     override func viewDidLoad() {
@@ -200,6 +200,8 @@ final class TextViewDocument: KeyboardDocument {
     var canUseClipboard: Bool { true }
 
     let documentIdentifier = UUID()
+
+    var allowsAutocorrection: Bool { true }
 
     func insertText(_ text: String) {
         textView.insertText(text)
