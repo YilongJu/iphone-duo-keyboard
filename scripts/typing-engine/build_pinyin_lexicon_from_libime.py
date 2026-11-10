@@ -85,8 +85,17 @@ def main():
     entries = []
     known_texts = set()
     skipped_unknown = skipped_spelling = 0
+    two_field_lines = []
     for line in (folder / "dict_sc.txt").read_text(encoding="utf-8").splitlines():
-        text, pinyin, reading_log_share = line.split("\t")
+        fields = line.split()
+        if len(fields) == 2:
+            # A line without the third field gives a word and its Pinyin only. The script reads
+            # it as the word's single reading, which is a log share of 0, and reports the count.
+            two_field_lines.append(line)
+            fields.append("0")
+        if len(fields) != 3:
+            raise SystemExit(f"unexpected dictionary line: {line!r}")
+        text, pinyin, reading_log_share = fields
         if text not in words:
             skipped_unknown += 1
             continue
@@ -107,6 +116,9 @@ def main():
         f"dictionary: {len(entries)} spellings of {len(known_texts)} words kept, "
         f"{skipped_unknown} lines skipped because the language model does not know the word, "
         f"{skipped_spelling} lines skipped because the Pinyin holds other characters")
+    report.append(
+        f"dictionary lines with two fields, read as a word's single reading: {len(two_field_lines)}"
+        + (f", first: {two_field_lines[0]!r}" if two_field_lines else ""))
 
     pairs = {
         (first, second): log_probability * LN10
