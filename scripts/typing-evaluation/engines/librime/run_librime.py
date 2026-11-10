@@ -174,9 +174,19 @@ def main():
             encoding="utf-8", newline="\n")
         write_details(output / f"pinyin.{half}.details.tsv", rows)
         stops = Counter(row["stop"] for row in rows)
+
+        # Order control: the same cases in reverse order. When one case changes a later case, for
+        # example through the user dictionary, some outputs differ between the two orders.
+        reversed_rows = convert(cli, folders, settings, [(case["id"], case["typed"]) for case in reversed(cases)])
+        reversed_outputs = {row["id"]: row["output"] for row in reversed_rows}
+        changed = [row["id"] for row in rows if reversed_outputs[row["id"]] != row["output"]]
+
         info["halves"][half] = {"cases": len(rows), "seconds": round(seconds, 1), "stops": dict(stops),
-                                "cases_with_a_selection": sum(row["selections"] > 0 for row in rows)}
-        print(f"{arguments.engine} on pinyin.{half}: {len(rows)} cases in {seconds:.1f} s, stops {dict(stops)}", flush=True)
+                                "cases_with_a_selection": sum(row["selections"] > 0 for row in rows),
+                                "outputs_changed_by_reverse_order": len(changed),
+                                "ids_changed_by_reverse_order": changed[:20]}
+        print(f"{arguments.engine} on pinyin.{half}: {len(rows)} cases in {seconds:.1f} s, stops {dict(stops)}, "
+              f"outputs changed by the reverse order {len(changed)}", flush=True)
     (output / "run-info.json").write_text(json.dumps(info, ensure_ascii=False, indent=2) + "\n", encoding="utf-8", newline="\n")
 
 
