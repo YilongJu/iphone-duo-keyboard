@@ -117,6 +117,17 @@ final class KeyboardTextControllerTests: XCTestCase {
         XCTAssertEqual(document.text, "I came from the office. ")
     }
 
+    func testASpaceTypedAfterTheFixAppearsKeepsTheFix() async {
+        _ = makeProofreadingController(before: "", answers: ["I came form the office.": "I came from the office."])
+        type("I came form the office.")
+        await controller.proofreadTask?.value
+        XCTAssertNotNil(controller.proofreadSuggestion)
+        type(" ")
+        XCTAssertEqual(controller.proofreadSuggestion?.corrected, "I came from the office.")
+        controller.keyboardView(keyboardView, didSelectCandidateAt: 0)
+        XCTAssertEqual(document.text, "I came from the office. ")
+    }
+
     func testAChineseFixMustKeepTheSoundOfEachCharacter() async {
         // "\u{5B89}" (an) for "\u{597D}" (hao) changes the sound, so the fix is the model's own idea.
         let sentence = "\u{4F60}\u{597D}\u{4F60}\u{597D}\u{3002}"
