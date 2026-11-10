@@ -1,0 +1,59 @@
+name: Typing evaluation of the AOSP LatinIME engine
+
+# Builds the native suggest engine of the AOSP keyboard (LatinIME) on a Linux runner, runs it on
+# the English typing test cases, and scores it. scripts/typing-evaluation/engines/latinime/README.md
+# describes the engine, the adapter and the engine names.
+on:
+  push:
+    branches: ['eval/latinime']
+  workflow_dispatch:
+
+jobs:
+  latinime:
+    name: AOSP LatinIME engine on the English typing test cases
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      ENGINE: scripts/typing-evaluation/engines/latinime
+    steps:
+      - uses: actions/checkout@v7
+      - name: Print the versions of the tools
+        run: |
+          set -euo pipefail
+          grep PRETTY_NAME /etc/os-release
+          g++ --version | head -n 1
+          ld --version | head -n 1
+          ldd --version | head -n 1
+          python3 --version
+          curl --version | head -n 1
+          echo "JAVA_HOME=$JAVA_HOME"
+          "$JAVA_HOME/bin/java" -version 2>&1
+      - name: Fetch the AOSP LatinIME sources and the stock English dictionary
+        run: bash "$ENGINE/fetch_sources.sh" build/latinime/source
+      - name: Build the engine core and the driver
+        run: bash "$ENGINE/build.sh" build/latinime/source build/latinime
+      - name: Print the layout and the suggestions for a few dev examples
+        run: python3 "$ENGINE/run_latinime.py" --explain-samples
+      - name: Run the engine on the dev half and the test half
+        run: |
+          set -euo pipefail
+          for half in dev test; do
+            python3 "$ENGINE/run_latinime.py" --half "$half"
+          done
+      - name: Score each engine name on each half
+        run: |
+          set -euo pipefail
+          for name in $(python3 "$ENGINE/run_latinime.py" --list-engines); do
+            for half in dev test; do
+              python3 scripts/typing-evaluation/score.py --task english --engine "$name" \
+                --cases "scripts/typing-evaluation/cases/english.$half.jsonl" \
+                --predictions "build/typing-evaluation/$name/english.$half.jsonl" \
+                --json "build/typing-evaluation/$name/english.$half.summary.json"
+            done
+          done
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: typing-evaluation-latinime
+          path: build/typing-evaluation/
+          if-no-files-found: error
