@@ -51,15 +51,21 @@ def cell(entry: dict) -> str:
 
 def main():
     folder = Path(sys.argv[1])
-    control = json.loads((folder / "engine-check" / "result.json").read_text())["control"]
-    print("Table 1. Dev scores of the control (engine choice, Linux harness) and of each re-ranked model.\n")
+    check = json.loads((folder / "engine-check" / "result.json").read_text())
+    control = check["control"]
+    without = check["without_model"]["tuned"]["summary"]
+    oracle = check["oracle"]
+    print("Table 1. Dev scores of the control (engine choice, Linux harness), the margins tuned without a model, "
+          "each re-ranked model, and the oracle over the same reading lists.\n")
     print("| Run | " + " | ".join(GROUPS) + " | all dev cases |")
     print("| --- |" + " --- |" * (len(GROUPS) + 1))
-    print("| control | " + " | ".join(cell(control["groups"][g]) for g in GROUPS) + f" | {control['right']}/{control['cases']} |")
+    for label, entry in (("control", control), ("margins without a model", without)):
+        print(f"| {label} | " + " | ".join(cell(entry["groups"][g]) for g in GROUPS) + f" | {entry['right']}/{entry['cases']} |")
     rows = []
     for run in sorted(folder.glob("rerank-*")):
         name = run.name[len("rerank-"):]
-        probe = probe_numbers((run / f"probe-{name}.txt").read_text()) if (run / f"probe-{name}.txt").exists() else {}
+        probe_files = [p for p in run.glob("probe-*.txt") if p.name != "probe-baseline.txt"]
+        probe = probe_numbers(probe_files[0].read_text()) if probe_files else {}
         base = probe_numbers((run / "probe-baseline.txt").read_text()) if (run / "probe-baseline.txt").exists() else {}
         if "load_failed" in probe and (run / "load-error.txt").exists():
             reasons = [line for line in (run / "load-error.txt").read_text().splitlines() if "error loading model" in line]
@@ -77,18 +83,25 @@ def main():
             print(f"| {name} control differs from the engine-check control: {own_control['right']} |")
         tuned = result["tuned"]["summary"]
         print(f"| {name} | " + " | ".join(cell(tuned["groups"][g]) for g in GROUPS) + f" | {tuned['right']}/{tuned['cases']} |")
+    print("| oracle over the 8 readings | " + " | ".join(cell(oracle["groups"][g]) for g in GROUPS)
+          + f" | {oracle['right']}/{oracle['cases']} |")
 
-    print("\nTable 2. Tuned setting and the two-fold check inside the dev half (gain in right cases over the control).\n")
-    print("| Model | weight | margin from typed | margin to typed | margin other | space after | gain on dev | fold 0 to 1 | fold 1 to 0 |")
-    print("| --- | --- | --- | --- | --- | --- | --- | --- | --- |")
-    for name, probe, base, result in rows:
-        if result is None or result.get("tuned") is None:
-            continue
-        s = result["tuned"]["setting"]
-        folds = result["fold_check"]
-        gain = result["tuned"]["summary"]["right"] - result["control"]["right"]
+    print("\nTable 2. Tuned setting and the two-fold check inside the dev half: tuned on one fold (clean rule on that "
+          "fold only), gain in right cases over the control read on the other fold, and the change in right clean "
+          "cases on the other fold.\n")
+    print("| Run | weight | margin from typed | margin to typed | margin other | space after | gain on dev | "
+          "fold 0 to 1 | fold 1 to 0 | clean change, 0 to 1 / 1 to 0 |")
+    print("| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |")
+    entries = [("margins without a model", check["without_model"], control)]
+    entries += [(name, result, result["control"]) for name, probe, base, result in rows
+                if result is not None and result.get("tuned") is not None]
+    for name, tuned_result, own_control in entries:
+        s = tuned_result["tuned"]["setting"]
+        folds = tuned_result["fold_check"]
+        gain = tuned_result["tuned"]["summary"]["right"] - own_control["right"]
         print(f"| {name} | {s['weight']} | {s['margin_from_typed']} | {s['margin_to_typed']} | {s['margin_other']} | "
-              f"{s['space_after']} | {gain:+d} | {folds[0]['gain_on_other_fold']:+d} | {folds[1]['gain_on_other_fold']:+d} |")
+              f"{s['space_after']} | {gain:+d} | {folds[0]['gain_on_other_fold']:+d} | {folds[1]['gain_on_other_fold']:+d} | "
+              f"{folds[0]['clean_change_on_other_fold']:+d} / {folds[1]['clean_change_on_other_fold']:+d} |")
 
     print("\nTable 3. Size, speed on the Linux runner (2 threads, the model and distilgpt2 Q3_K_M on the same runner) "
           "and the phone estimates. Estimate A scales the phone's 8-candidate time (23.4 ms) by the per-token ratio, "

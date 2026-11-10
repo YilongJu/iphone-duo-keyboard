@@ -114,6 +114,15 @@ static int tokenize(const struct llama_vocab *vocab, const char *text, llama_tok
         if (tokens[index] == LLAMA_TOKEN_NULL && space_token != LLAMA_TOKEN_NULL) {
             tokens[index] = space_token;
             space_repairs++;
+            /* The first repairs go to the error stream with their tokens, for a check against
+               the Hugging Face tokenizer of the model. */
+            if (space_repairs <= 30) {
+                fprintf(stderr, "lm_score: repaired \"%s\":", text);
+                for (int shown = 0; shown < count; shown++) {
+                    fprintf(stderr, " %d", tokens[shown] == LLAMA_TOKEN_NULL ? space_token : tokens[shown]);
+                }
+                fprintf(stderr, "\n");
+            }
         }
         if (tokens[index] < 0 || tokens[index] >= vocabulary) {
             fprintf(stderr, "lm_score: the text \"%s\" gives token %d at place %d of %d\n", text, tokens[index], index, count);

@@ -110,7 +110,9 @@ def language_model_text(text: str, at_start: bool) -> str:
 
 
 class LanguageModel:
-    def __init__(self, program: Path, model: Path, threads: int):
+    def __init__(self, program: Path, model: Path, threads: int, no_context: bool):
+        # With no_context the model reads each reading alone, after the start token only.
+        self.no_context = no_context
         self.process = subprocess.Popen([str(program), str(model), str(threads)], stdin=subprocess.PIPE,
                                         stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, encoding="utf-8")
         ready = self.process.stdout.readline()
@@ -122,10 +124,14 @@ class LanguageModel:
         self.seconds = 0.0
 
     def scores(self, context: str, candidates: list[str]) -> dict[str, tuple[float, float]]:
-        key = (context, tuple(sorted(candidates)))
+        # A reading that opens the field gets its capital, also when the model does not see the text before it.
+        opens_field = not context
+        if self.no_context:
+            context = ""
+        key = (context, tuple(sorted(candidates)), opens_field)
         if key not in self.cache:
             lm_context = language_model_text(context, True)
-            lm_candidates = [language_model_text(c, not context) for c in key[1]]
+            lm_candidates = [language_model_text(c, opens_field) for c in key[1]]
             for text in [lm_context, *lm_candidates]:
                 if "\t" in text or "\n" in text:
                     raise SystemExit(f"a text holds a tab or a line break: {text!r}")
@@ -159,13 +165,38 @@ class Setting:
     space_after: int
 
 
-def choose(readings: list[dict], context: str, setting: Setting | None, model: LanguageModel | None) -> str:
+def engine_choice(readings: list[dict], text_before: str) -> str:
+    return next(r for r in readings if r["chosen"])["text"]
+
+
+def oracle_chooser(target: str):
+    """A chooser that knows the intended text: it takes the reading that keeps the field a
+    prefix of the intended text, when the list holds one, and the engine's choice otherwise.
+    Its score is an upper bound for any chooser over the same lists, one correction at a time."""
+    def chooser(readings: list[dict], text_before: str) -> str:
+        for reading in readings:
+            if target.startswith(text_before + reading["text"] + " "):
+                return reading["text"]
+        return engine_choice(readings, text_before)
+    return chooser
+
+
+def setting_chooser(setting: Setting, model: LanguageModel | None):
+    def chooser(readings: list[dict], text_before: str) -> str:
+        return choose(readings, text_before.rstrip(" "), setting, model)
+    return chooser
+
+
+def choose(readings: list[dict], context: str, setting: Setting, model: LanguageModel | None) -> str:
     chosen = next(r for r in readings if r["chosen"])
-    if setting is None or len(readings) == 1:
+    if len(readings) == 1:
         return chosen["text"]
-    lm = model.scores(context, [r["text"] for r in readings])
+    # Weight 0 is the control without the model: the same margins on the engine score alone.
+    lm = model.scores(context, [r["text"] for r in readings]) if setting.weight != 0 else None
 
     def combined(reading: dict) -> float:
+        if lm is None:
+            return reading["score"]
         log_probability, space_after = lm[reading["text"]]
         return reading["score"] + setting.weight * (log_probability + (space_after if setting.space_after else 0.0))
 
@@ -235,8 +266,9 @@ class RecentWord:
     context: str
 
 
-def type_case(case: dict, engine: Engine, setting: Setting | None, model: LanguageModel | None) -> str:
-    """Types one case and returns the text the field holds after the context."""
+def type_case(case: dict, engine: Engine, chooser) -> str:
+    """Types one case and returns the text the field holds after the context. `chooser` takes
+    the readings and the text before the span and returns the reading to show."""
     start = case["context"] + " " if case["context"] else ""
     document = start
     recent: RecentWord | None = None
@@ -260,7 +292,7 @@ def type_case(case: dict, engine: Engine, setting: Setting | None, model: Langua
                 if len(typed_span) >= 2:
                     readings = engine.readings(word_before_space(text_before), typed_span.lower())
                     if readings is not None:
-                        reading = choose(readings, text_before.rstrip(" "), setting, model)
+                        reading = chooser(readings, text_before)
                 final = reading if reading is not None else shown_span
                 final_words = [w for w in final.split(" ") if w]
                 if final != shown_span:
@@ -275,26 +307,60 @@ def type_case(case: dict, engine: Engine, setting: Setting | None, model: Langua
 
 # ---- Scoring ----
 
-def run(cases: list[dict], engine: Engine, setting: Setting | None, model: LanguageModel | None) -> dict[str, str]:
-    return {case["id"]: type_case(case, engine, setting, model) for case in cases}
+# The categories of the groups clean and clean_symbols. A setting must keep as many of them right as the control.
+CLEAN_CATEGORIES = {"clean_common", "clean_rare", "clean_names_and_terms", "clean_two_words",
+                    "clean_symbol_token", "clean_bracket_or_dot_word"}
+
+
+def run(cases: list[dict], engine: Engine, chooser) -> dict[str, str]:
+    return {case["id"]: type_case(case, engine, chooser) for case in cases}
+
+
+def fold_of(case: dict) -> int:
+    """The fold of a case inside the dev half. Cases with the same context and intended text
+    share a fold, so one fold does not hold the same phrase as the other."""
+    key = case["context"] + "|" + case["intended"].strip().lower()
+    return hashlib.sha256(key.encode()).digest()[0] & 1
 
 
 def summarize(cases: list[dict], predictions: dict[str, str]) -> dict:
-    """Groups of both case files, and the count of right cases over all of them."""
+    """Groups of both case files, the count of right cases over all of them, and the same
+    counts inside each fold of the dev half."""
     summary = score("english", cases, predictions)
     groups = {name: {"right": entry["right"], "cases": entry["cases"], "accuracy": entry["accuracy"]}
               for name, entry in summary["groups"].items()}
     categories = {name: {"right": entry["right"], "cases": entry["cases"]} for name, entry in summary["categories"].items()}
     total = sum(entry["right"] for entry in summary["categories"].values())
-    return {"groups": groups, "categories": categories, "right": total, "cases": len(cases)}
+    folds = []
+    for fold in (0, 1):
+        members = [c for c in cases if fold_of(c) == fold]
+        right = [c for c in members if predictions[c["id"]].strip().lower() == c["intended"].strip().lower()]
+        folds.append({"cases": len(members), "right": len(right),
+                      "clean_right": sum(1 for c in right if c["category"] in CLEAN_CATEGORIES)})
+    return {"groups": groups, "categories": categories, "right": total, "cases": len(cases), "folds": folds}
 
 
 def keeps_clean(candidate: dict, control: dict) -> bool:
     return all(candidate["groups"][g]["right"] >= control["groups"][g]["right"] for g in ("clean", "clean_symbols"))
 
 
-def fold_of(case_id: str) -> int:
-    return hashlib.sha256(case_id.encode()).digest()[0] & 1
+def tune(rows: list[dict], control: dict) -> dict:
+    """The best setting on the whole dev half, and the two-fold check. In the check, the clean
+    rule and the choice both use the tuning fold only, and the gain is read on the other fold."""
+    allowed = [row for row in rows if keeps_clean(row["summary"], control)]
+    best = max(allowed, key=lambda row: row["summary"]["right"]) if allowed else None
+    folds = []
+    for tune_fold in (0, 1):
+        other = 1 - tune_fold
+        base = control["folds"][tune_fold]
+        fold_allowed = [row for row in rows if row["summary"]["folds"][tune_fold]["clean_right"] >= base["clean_right"]]
+        pick = max(fold_allowed, key=lambda row: row["summary"]["folds"][tune_fold]["right"])
+        folds.append({"tuned_on": tune_fold, "setting": pick["setting"],
+                      "gain_on_tuning_fold": pick["summary"]["folds"][tune_fold]["right"] - base["right"],
+                      "gain_on_other_fold": pick["summary"]["folds"][other]["right"] - control["folds"][other]["right"],
+                      "clean_change_on_other_fold": pick["summary"]["folds"][other]["clean_right"]
+                      - control["folds"][other]["clean_right"]})
+    return {"settings_tried": len(rows), "settings_keeping_clean": len(allowed), "tuned": best, "fold_check": folds}
 
 
 def main():
@@ -303,6 +369,8 @@ def main():
     parser.add_argument("--lm", type=Path)
     parser.add_argument("--model", type=Path)
     parser.add_argument("--threads", type=int, default=4)
+    parser.add_argument("--no-context", action="store_true",
+                        help="the model reads each reading without the text before it, as a control")
     parser.add_argument("--name", required=True)
     parser.add_argument("--out", type=Path, required=True)
     arguments = parser.parse_args()
@@ -315,50 +383,48 @@ def main():
     engine = Engine(arguments.shim, LEXICON)
     arguments.out.mkdir(parents=True, exist_ok=True)
 
-    control_predictions = run(cases, engine, None, None)
+    control_predictions = run(cases, engine, engine_choice)
     control = summarize(cases, control_predictions)
     print("control", json.dumps(control["groups"]), flush=True)
     result = {"name": arguments.name, "cases": [p.name for p in CASE_FILES], "readings_per_correction": READINGS,
-              "control": control}
+              "no_context": arguments.no_context, "control": control}
     write_predictions(arguments.out / "control.dev.jsonl", cases, control_predictions)
     calls = [len(r) for r in engine.cache.values() if r is not None]
     result["engine_calls"] = {"distinct_spans": len(calls), "mean_readings": sum(calls) / max(1, len(calls))}
 
+    # The upper bound over the same reading lists.
+    oracle_predictions = {case["id"]: type_case(case, engine, oracle_chooser(
+        (case["context"] + " " if case["context"] else "") + case["intended"].strip().lower() + " ")) for case in cases}
+    result["oracle"] = summarize(cases, oracle_predictions)
+    print("oracle", json.dumps(result["oracle"]["groups"]), flush=True)
+
+    # The same margins without the model, tuned the same way.
+    no_model_settings = [Setting(0.0, *values, 0) for values in itertools.product(
+        GRID["margin_from_typed"], GRID["margin_to_typed"], GRID["margin_other"])]
+    no_model_rows = [{"setting": s.__dict__, "summary": summarize(cases, run(cases, engine, setting_chooser(s, None)))}
+                     for s in no_model_settings]
+    result["without_model"] = tune(no_model_rows, control)
+    print("without model", json.dumps({"setting": result["without_model"]["tuned"]["setting"],
+                                       "right": result["without_model"]["tuned"]["summary"]["right"],
+                                       "fold_check": result["without_model"]["fold_check"]}), flush=True)
+
     if arguments.model is not None:
-        model = LanguageModel(arguments.lm, arguments.model, arguments.threads)
+        model = LanguageModel(arguments.lm, arguments.model, arguments.threads, arguments.no_context)
         result["lm_ready"] = model.ready
         settings = [Setting(*values) for values in itertools.product(*GRID.values())]
         rows = []
         started = time.monotonic()
         for index, setting in enumerate(settings):
-            predictions = run(cases, engine, setting, model)
-            summary = summarize(cases, predictions)
-            per_fold = [sum(1 for c in cases if fold_of(c["id"]) == f and predictions[c["id"]].lower() == c["intended"].lower())
-                        for f in (0, 1)]
-            rows.append({"setting": setting.__dict__, "summary": summary, "fold_right": per_fold})
-            if index % 50 == 0:
+            predictions = run(cases, engine, setting_chooser(setting, model))
+            rows.append({"setting": setting.__dict__, "summary": summarize(cases, predictions)})
+            if index % 100 == 0:
                 print(f"setting {index + 1} of {len(settings)}, {time.monotonic() - started:.0f} s, "
                       f"{model.requests} model requests in {model.seconds:.0f} s", flush=True)
-        control_fold = [sum(1 for c in cases if fold_of(c["id"]) == f and control_predictions[c["id"]].lower() == c["intended"].lower())
-                        for f in (0, 1)]
-        allowed = [row for row in rows if keeps_clean(row["summary"], control)]
-        best = max(allowed, key=lambda row: row["summary"]["right"]) if allowed else None
         result["grid"] = {name: values for name, values in GRID.items()}
-        result["settings_tried"] = len(rows)
-        result["settings_keeping_clean"] = len(allowed)
-        result["tuned"] = best
-        # Two-fold check inside the dev half: tune on one fold, read the gain on the other.
-        result["control_fold_right"] = control_fold
-        folds = []
-        for tune_fold in (0, 1):
-            other = 1 - tune_fold
-            pick = max(allowed, key=lambda row: row["fold_right"][tune_fold]) if allowed else None
-            folds.append({"tuned_on": tune_fold, "setting": pick and pick["setting"],
-                          "gain_on_tuning_fold": pick and pick["fold_right"][tune_fold] - control_fold[tune_fold],
-                          "gain_on_other_fold": pick and pick["fold_right"][other] - control_fold[other]})
-        result["fold_check"] = folds
+        result.update(tune(rows, control))
+        best = result["tuned"]
         if best is not None:
-            tuned_predictions = run(cases, engine, Setting(**best["setting"]), model)
+            tuned_predictions = run(cases, engine, setting_chooser(Setting(**best["setting"]), model))
             write_predictions(arguments.out / "reranked.dev.jsonl", cases, tuned_predictions)
         result["lm_requests"] = model.requests
         result["lm_seconds"] = model.seconds
@@ -367,7 +433,8 @@ def main():
             for row in rows:
                 file.write(json.dumps(row) + "\n")
         print("tuned", json.dumps(best and {"setting": best["setting"], "groups": best["summary"]["groups"]}), flush=True)
-        print("fold check", json.dumps(folds), flush=True)
+        print("fold check", json.dumps(result["fold_check"]), flush=True)
+        print(result["lm_report"], flush=True)
     (arguments.out / "result.json").write_text(json.dumps(result, indent=2), encoding="utf-8")
 
 
