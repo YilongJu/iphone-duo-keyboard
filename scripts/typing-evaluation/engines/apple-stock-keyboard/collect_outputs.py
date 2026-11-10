@@ -17,12 +17,14 @@ trees and screenshots. The script writes, for each engine name, task and half:
 
 A part of kind `outputs` holds finished files under `outputs/ENGINE/`, and the script copies them.
 
-Field text of a case: the text view after the last space tap, read a second time after the
-settle time of the run. Marked text does not count for English, because the English keyboard
-marks an inline prediction that the person has not accepted.
+Field text of a case: the text view after the last space tap. Marked text does not count for
+English, because the English keyboard marks an inline prediction that the person has not accepted.
 Output of an English case: the field text after the first N words, where N is the number of
 words in the context.
 Output of a Pinyin case: the field text without spaces at the ends.
+
+The host app stamps each change of the text with its time. The script reports the time between
+two text changes while a case is typed, which is the key interval the keyboard saw.
 """
 import argparse
 import json
@@ -56,10 +58,17 @@ def without_marked(entry: str) -> str:
     return entry[: entry.index(OPEN)] + entry[entry.index(CLOSE) + 1:]
 
 
+def arrival_gaps(detail: dict) -> list[int]:
+    """Milliseconds between two text changes while the case was typed. The first entry of the
+    history is the loaded case, so the first gap is left out. One tap can change the text twice
+    within a few milliseconds, and a gap under 20 ms is left out for that reason."""
+    times = detail["history_ms"]
+    return [later - earlier for earlier, later in zip(times[1:], times[2:]) if later - earlier >= 20]
+
+
 def english_fields(case: dict, detail: dict) -> dict:
     context_words = case["context"].split()
-    field_text = detail.get("settled_committed", detail["after_committed"])
-    words = field_text.split()
+    words = detail["after_committed"].split()
     prefix = case["context"] + " " if case["context"] else ""
     tokens = case["typed"].split(" ")
     states = [without_marked(entry).lower().replace("’", "'") for entry in detail["history"]]
@@ -70,19 +79,19 @@ def english_fields(case: dict, detail: dict) -> dict:
         # True when the field once held the context and the first typed token, letter for letter,
         # and once ended with the last typed token. False means that a key tap did not arrive.
         "letters_arrived": prefix + tokens[0] in states and any(state.endswith(tokens[-1]) for state in states),
-        "changed_after_first_read": field_text != detail["after_committed"],
     }
 
 
 def pinyin_fields(case: dict, detail: dict) -> dict:
-    field_text = detail.get("settled", detail["after"])
     return {
-        "output": field_text.strip(),
+        "output": detail["after"].strip(),
         # True when the marked text once held every typed letter.
         "letters_arrived": any(OPEN in entry and letters(entry) == case["typed"] for entry in detail["history"]),
-        "marked_text_left": detail.get("settled_marked", detail["after_marked"]),
-        "changed_after_first_read": field_text != detail["after"],
     }
+
+
+def percentile(values: list[int], share: float) -> int:
+    return sorted(values)[min(len(values) - 1, int(share * len(values)))]
 
 
 def main():
@@ -106,6 +115,7 @@ def main():
         folder = arguments.out / engine
         folder.mkdir(parents=True, exist_ok=True)
         sample = read_lines(parts[0] / "sample.jsonl")
+        key_interval_ms = round(1000 * json.loads((parts[0] / "part.json").read_text(encoding="utf-8"))["key_interval"])
         details: dict[str, dict] = {}
         for part in parts:
             if [case["id"] for case in read_lines(part / "sample.jsonl")] != [case["id"] for case in sample]:
@@ -128,21 +138,30 @@ def main():
             detail = details[case["id"]]
             fields = english_fields(case, detail) if task == "english" else pinyin_fields(case, detail)
             right = normalize(task, fields["output"]) == normalize(task, case["intended"])
-            rows.append({**detail, **fields, "intended": case["intended"], "right": right})
+            gaps = arrival_gaps(detail)
+            rows.append({**detail, **fields, "intended": case["intended"], "right": right,
+                         "arrival_gap_max_ms": max(gaps) if gaps else None})
         write_lines(folder / f"{task}.{half}.cases.jsonl", sample)
         write_lines(folder / f"{task}.{half}.jsonl", [{"id": row["id"], "output": row["output"]} for row in rows])
         write_lines(folder / f"{task}.{half}.detail.jsonl", rows)
 
-        print(f"\n{engine} {task}.{half}: {len(sample)} sampled cases, {len(rows)} typed, from {len(parts)} parts")
+        print()
+        print(f"{engine} {task}.{half}: {len(sample)} sampled cases, {len(rows)} typed, from {len(parts)} parts")
         print(f"  cases where a key tap did not arrive: {sum(not row['letters_arrived'] for row in rows)}")
-        print(f"  cases where the first read after the space did not show the expected change: {sum(not row['after_as_expected'] for row in rows)}")
-        print(f"  cases where the field text changed between the first read and the settled read: {sum(row['changed_after_first_read'] for row in rows)}")
+        print(f"  cases where the read after the last space did not show the expected text: {sum(not row['after_as_expected'] for row in rows)}")
         if task == "english":
             print(f"  cases where the keyboard changed the context: {sum(not row['context_kept'] for row in rows)}")
-            print(f"  cases with an inline prediction left as marked text: {sum(row.get('settled_marked', row['after_marked']) for row in rows)}")
+            print(f"  cases with an inline prediction left as marked text: {sum(row['after_marked'] for row in rows)}")
         else:
-            print(f"  cases with marked text left after the space taps: {sum(row['marked_text_left'] for row in rows)}")
+            print(f"  cases with marked text left after the space taps: {sum(row['after_marked'] for row in rows)}")
             print(f"  cases that took more than one space tap: {sum(row['space_taps'] > 1 for row in rows)}")
+        gaps = [gap for row in rows for gap in arrival_gaps(row)]
+        if gaps:
+            print(f"  key interval asked for: {key_interval_ms} ms")
+            print(f"  time between two text changes: median {percentile(gaps, 0.5)} ms, "
+                  f"10th percentile {percentile(gaps, 0.1)} ms, 90th percentile {percentile(gaps, 0.9)} ms, {len(gaps)} gaps")
+            slow = sum((row["arrival_gap_max_ms"] or 0) > 3 * key_interval_ms for row in rows)
+            print(f"  cases with a gap above 3 times the key interval: {slow}")
         if rows:
             seconds = sorted(row["seconds"] for row in rows)
             print(f"  seconds per case: median {seconds[len(seconds) // 2]}, sum {sum(seconds):.0f}")

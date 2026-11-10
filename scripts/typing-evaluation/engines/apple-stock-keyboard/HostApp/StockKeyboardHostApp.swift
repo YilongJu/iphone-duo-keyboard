@@ -34,9 +34,14 @@ struct FieldStatus: Codable {
     let t: String
     /// The text of the text view without the marked text.
     let c: String
+    /// Number of times since the case was loaded that the text without the marked text gained a
+    /// space at its end. Each space tap of the English keyboard adds one.
+    let e: Int
     /// Every state of the text since the case was loaded, oldest first. Each entry is the text
     /// with the marked text between the two marks of `FieldViewController.markedBrackets`.
     let h: [String]
+    /// The time of each entry of `h`, in milliseconds since the case was loaded.
+    let ht: [Int]
 }
 
 /// The only screen. The "Next case" button loads the context of the next case into the text
@@ -51,6 +56,10 @@ final class FieldViewController: UIViewController, UITextViewDelegate {
     private var contexts: [String] = []
     private var caseIndex = -1
     private var history: [String] = []
+    private var historyTimes: [Int] = []
+    private var loadTime = Date()
+    private var spaceArrivals = 0
+    private var lastCommitted = ""
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -124,6 +133,10 @@ final class FieldViewController: UIViewController, UITextViewDelegate {
             field.becomeFirstResponder()
         }
         history = []
+        historyTimes = []
+        loadTime = Date()
+        spaceArrivals = 0
+        lastCommitted = field.text ?? ""
         updateStatus()
     }
 
@@ -146,10 +159,17 @@ final class FieldViewController: UIViewController, UITextViewDelegate {
             committed = text.replacingCharacters(in: range, with: "")
             annotated = text.replacingCharacters(in: range, with: brackets.open + text.substring(with: range) + brackets.close)
         }
+        if committed.hasSuffix(" ") && !lastCommitted.hasSuffix(" ") {
+            spaceArrivals += 1
+        }
+        lastCommitted = committed
         if history.last != annotated {
             history.append(annotated)
+            historyTimes.append(Int((Date().timeIntervalSince(loadTime) * 1000).rounded()))
         }
-        let status = FieldStatus(i: caseIndex, m: field.markedTextRange != nil, t: text as String, c: committed, h: history)
+        let status = FieldStatus(
+            i: caseIndex, m: field.markedTextRange != nil, t: text as String, c: committed,
+            e: spaceArrivals, h: history, ht: historyTimes)
         guard let data = try? JSONEncoder().encode(status) else {
             fatalError("the field status did not encode as JSON")
         }
