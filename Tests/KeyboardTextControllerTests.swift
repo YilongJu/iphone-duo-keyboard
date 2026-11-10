@@ -12,6 +12,7 @@ final class FakeDocument: KeyboardDocument {
     var autocapitalizationType: UITextAutocapitalizationType = .none
     var canUseClipboard = true
     var documentIdentifier = UUID()
+    var allowsAutocorrection = true
 
     init(before: String, after: String = "") {
         text = before + after
@@ -38,16 +39,88 @@ final class FakeDocument: KeyboardDocument {
     }
 }
 
+/// A spell checker with a fixed list of corrections.
+@MainActor
+final class FakeSpellChecker: SpellChecking {
+    var corrections: [String: String] = ["teh": "the", "Teh": "The", "recieve": "receive"]
+    var learned: [String] = []
+
+    func correction(for word: String) -> String? {
+        corrections[word]
+    }
+
+    func learn(_ word: String) {
+        learned.append(word)
+    }
+}
+
 @MainActor
 final class KeyboardTextControllerTests: XCTestCase {
     private var keyboardView: KeyboardView!
     private var document: FakeDocument!
+    private var spellChecker: FakeSpellChecker!
     private var controller: KeyboardTextController!
+
+    private func type(_ text: String) {
+        for character in text {
+            controller.keyboardView(keyboardView, insert: String(character))
+        }
+    }
+
+    func testASpaceCorrectsTheWordBeforeIt() {
+        makeController(before: "")
+        type("teh ")
+        XCTAssertEqual(document.text, "the ")
+    }
+
+    func testACorrectionKeepsTheCapital() {
+        makeController(before: "")
+        type("Teh.")
+        XCTAssertEqual(document.text, "The.")
+    }
+
+    func testBackspaceRightAfterACorrectionBringsTheTypedWordBack() {
+        makeController(before: "")
+        type("teh ")
+        controller.keyboardViewDeleteBackward(keyboardView)
+        XCTAssertEqual(document.text, "teh")
+        XCTAssertEqual(spellChecker.learned, ["teh"])
+        type(" ")
+        XCTAssertEqual(document.text, "teh ")
+    }
+
+    func testALoneLowerCaseIBecomesACapital() {
+        makeController(before: "then ")
+        type("i ")
+        XCTAssertEqual(document.text, "then I ")
+    }
+
+    func testAFieldWithoutAutocorrectionKeepsTheTypedWord() {
+        makeController(before: "")
+        document.allowsAutocorrection = false
+        type("teh ")
+        XCTAssertEqual(document.text, "teh ")
+    }
+
+    func testAWordInsideAnAddressStaysAsTyped() {
+        makeController(before: "name@")
+        type("teh ")
+        XCTAssertEqual(document.text, "name@teh ")
+    }
+
+    func testPastedTextStaysAsPasted() {
+        makeController(before: "")
+        UIPasteboard.general.string = "teh "
+        controller.keyboardView(keyboardView, edit: .paste)
+        XCTAssertEqual(document.text, "teh ")
+    }
 
     private func makeController(before: String, after: String = "") {
         keyboardView = KeyboardView()
         document = FakeDocument(before: before, after: after)
-        controller = KeyboardTextController(keyboardView: keyboardView, document: document)
+        spellChecker = FakeSpellChecker()
+        controller = KeyboardTextController(
+            keyboardView: keyboardView, document: document, spellChecker: spellChecker)
     }
 
     /// The controller deletes the text after the cursor in a delayed step, so the test waits.
@@ -247,6 +320,32 @@ final class KeyboardTextLogicTests: XCTestCase {
 
     func testDownOnTheLastLineGoesToTheLineEnd() {
         XCTAssertEqual(offset(.lineDown, "abc", "def"), 3)
+    }
+
+    func testCorrectableWordSkipsTextThatIsNotProse() {
+        XCTAssertEqual(KeyboardTextLogic.correctableWord(before: "say teh"), "teh")
+        XCTAssertEqual(KeyboardTextLogic.correctableWord(before: "dont"), "dont")
+        XCTAssertEqual(KeyboardTextLogic.correctableWord(before: "(teh"), "teh")
+        XCTAssertNil(KeyboardTextLogic.correctableWord(before: "iPhone"))
+        XCTAssertNil(KeyboardTextLogic.correctableWord(before: "NASA"))
+        XCTAssertNil(KeyboardTextLogic.correctableWord(before: "www.teh"))
+        XCTAssertNil(KeyboardTextLogic.correctableWord(before: "file_teh"))
+        XCTAssertNil(KeyboardTextLogic.correctableWord(before: "abc123"))
+        XCTAssertNil(KeyboardTextLogic.correctableWord(before: "word "))
+    }
+
+    func testBestGuessTakesTheFirstCloseGuess() {
+        XCTAssertEqual(KeyboardTextLogic.bestGuess(for: "teh", guesses: ["tea", "the"]), "tea")
+        XCTAssertEqual(KeyboardTextLogic.bestGuess(for: "teh", guesses: ["tether", "the"]), "the")
+        XCTAssertEqual(KeyboardTextLogic.bestGuess(for: "Recieve", guesses: ["receive"]), "Receive")
+        XCTAssertNil(KeyboardTextLogic.bestGuess(for: "xyzzy", guesses: ["pizza", "a lot"]))
+    }
+
+    func testEditDistanceCountsASwapAsOneEdit() {
+        XCTAssertEqual(KeyboardTextLogic.editDistance("teh", "the"), 1)
+        XCTAssertEqual(KeyboardTextLogic.editDistance("cat", "cart"), 1)
+        XCTAssertEqual(KeyboardTextLogic.editDistance("kitten", "sitting"), 3)
+        XCTAssertEqual(KeyboardTextLogic.editDistance("same", "same"), 0)
     }
 
     func testAutomaticCapitalizationFollowsSentenceEnds() {
