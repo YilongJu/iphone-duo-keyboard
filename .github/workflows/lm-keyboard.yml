@@ -1,8 +1,9 @@
 name: Language model in the keyboard
 
 # Types the dev cases through the keyboard's own code with distilgpt2 on the macOS simulator,
-# and through the harness of scripts/lm-rerank with the same tuned rule on an x86 Linux, an ARM
-# Linux and the macOS runner, and compares them case by case and correction by correction. scripts/lm-keyboard/README.md describes the
+# and through the harness of scripts/lm-rerank with the same tuned rule on an x86 Linux runner,
+# an ARM Linux runner and the macOS runner of the simulator, and compares them case by case and
+# correction by correction. scripts/lm-keyboard/README.md describes the
 # check. Only the dev half is typed and scored. Every unit test runs as well.
 on:
   push:
@@ -121,62 +122,8 @@ jobs:
           path: build/lm-keyboard/harness
           if-no-files-found: error
 
-  harness-mac:
-    # The same harness on the macOS runner of the simulator, with lm_score linked against the
-    # macOS part of the app's llama.cpp framework, so it computes on the same machine as the keyboard.
-    name: macOS harness with the app's framework, and the keyboard's scorer against lm_score
-    runs-on: xcode-27
-    timeout-minutes: 90
-    steps:
-      - uses: actions/checkout@v7
-      - name: Fetch the llama.cpp framework and the language model
-        run: bash scripts/ci/fetch_language_model.sh
-      - name: Build the engine shim, lm_score and the keyboard's scorer against the framework
-        run: |
-          set -euo pipefail
-          mkdir -p build/lm-rerank build/lm-keyboard/harness
-          fw="$PWD/Vendor/llama.xcframework/macos-arm64_x86_64"
-          clang -std=c11 -O2 -Wall -Wextra -shared -fPIC -I Engine Engine/duo_engine.c scripts/lm-rerank/engine_shim.c \
-            -o build/lm-rerank/libduo_shim.so
-          clang -std=c11 -O2 -Wall -Wextra -I "$fw/llama.framework/Headers" scripts/lm-rerank/lm_score.c \
-            -F "$fw" -framework llama -Wl,-rpath,"$fw" -o build/lm-rerank/lm_score
-          clang -std=c11 -O2 -Wall -Wextra -Werror -I LanguageModel -F "$fw" LanguageModel/duo_lm_scorer.c \
-            scripts/lm-keyboard/scorer_cli.c -framework llama -Wl,-rpath,"$fw" -o build/lm-keyboard/scorer_cli
-          { sysctl -n machdep.cpu.brand_string; sysctl hw.optional | grep -E 'arm|neon|fp16|i8mm|dotprod' || true; } \
-            | tee build/lm-keyboard/harness/runner.txt
-      - name: Type the dev cases through the harness with the tuned rule
-        run: |
-          set -euo pipefail
-          python3 scripts/lm-keyboard/harness_trace.py --shim build/lm-rerank/libduo_shim.so \
-            --lm build/lm-rerank/lm_score --model Shared/distilgpt2.Q3_K_M.gguf --out build/lm-keyboard/harness
-      - name: Score the harness requests with lm_score at 4 threads and the keyboard's scorer at 2 threads
-        run: |
-          set -euo pipefail
-          out=build/lm-keyboard/harness
-          model=Shared/distilgpt2.Q3_K_M.gguf
-          # lm_score writes a line that starts with "ready" before its answers.
-          build/lm-rerank/lm_score "$model" 4 < "$out/requests.tsv" 2> "$out/lm_score.log" | tail -n +2 > "$out/lm_score.answers"
-          build/lm-keyboard/scorer_cli "$model" 2 < "$out/requests.tsv" > "$out/scorer_cli.answers" 2> "$out/scorer_cli.log"
-          {
-            echo "requests: $(wc -l < "$out/requests.tsv" | tr -d ' ')"
-            echo "lm_score answers: $(wc -l < "$out/lm_score.answers" | tr -d ' '), scorer_cli answers: $(wc -l < "$out/scorer_cli.answers" | tr -d ' ')"
-            if cmp -s "$out/lm_score.answers" "$out/scorer_cli.answers"; then
-              echo "the answers are the same byte for byte, 5 decimals each"
-            else
-              echo "the answers differ in $(diff "$out/lm_score.answers" "$out/scorer_cli.answers" | grep -c '^<') lines"
-            fi
-            cat "$out/scorer_cli.log"
-          } | tee "$out/scorer-check.txt"
-          cmp "$out/lm_score.answers" "$out/scorer_cli.answers"
-      - uses: actions/upload-artifact@v7
-        if: always()
-        with:
-          name: harness-mac
-          path: build/lm-keyboard/harness
-          if-no-files-found: error
-
   keyboard:
-    name: Unit tests, and the dev cases through the keyboard code with the model
+    name: Unit tests, the dev cases through the keyboard code with the model, and the harness on the same machine
     runs-on: xcode-27
     timeout-minutes: 150
     steps:
@@ -236,6 +183,55 @@ jobs:
           name: keyboard
           path: build/lm-keyboard/keyboard
           if-no-files-found: error
+      # The harness on this same machine, with lm_score linked against the macOS part of the
+      # app's llama.cpp framework. llama.cpp gives other numbers on another machine, so only
+      # the same machine separates the code from the machine.
+      - name: Build the engine shim, lm_score and the keyboard's scorer against the framework
+        if: always()
+        run: |
+          set -euo pipefail
+          mkdir -p build/lm-rerank build/lm-keyboard/harness-mac
+          fw="$PWD/Vendor/llama.xcframework/macos-arm64_x86_64"
+          clang -std=c11 -O2 -Wall -Wextra -shared -fPIC -I Engine Engine/duo_engine.c scripts/lm-rerank/engine_shim.c \
+            -o build/lm-rerank/libduo_shim.so
+          clang -std=c11 -O2 -Wall -Wextra -I "$fw/llama.framework/Headers" scripts/lm-rerank/lm_score.c \
+            -F "$fw" -framework llama -Wl,-rpath,"$fw" -o build/lm-rerank/lm_score
+          clang -std=c11 -O2 -Wall -Wextra -Werror -I LanguageModel -F "$fw" LanguageModel/duo_lm_scorer.c \
+            scripts/lm-keyboard/scorer_cli.c -framework llama -Wl,-rpath,"$fw" -o build/lm-keyboard/scorer_cli
+          { sysctl -n machdep.cpu.brand_string; sysctl hw.optional | grep -E 'arm|neon|fp16|i8mm|dotprod' || true; } \
+            | tee build/lm-keyboard/harness-mac/runner.txt
+      - name: Type the dev cases through the harness with the tuned rule, on this machine
+        if: always()
+        run: |
+          set -euo pipefail
+          python3 scripts/lm-keyboard/harness_trace.py --shim build/lm-rerank/libduo_shim.so \
+            --lm build/lm-rerank/lm_score --model Shared/distilgpt2.Q3_K_M.gguf --out build/lm-keyboard/harness-mac
+      - name: Score the harness requests with lm_score and the keyboard's scorer, on this machine
+        if: always()
+        run: |
+          set -euo pipefail
+          out=build/lm-keyboard/harness-mac
+          model=Shared/distilgpt2.Q3_K_M.gguf
+          # lm_score writes a line that starts with "ready" before its answers.
+          build/lm-rerank/lm_score "$model" 4 < "$out/requests.tsv" 2> "$out/lm_score.log" | tail -n +2 > "$out/lm_score.answers"
+          build/lm-keyboard/scorer_cli "$model" 2 < "$out/requests.tsv" > "$out/scorer_cli.answers" 2> "$out/scorer_cli.log"
+          {
+            echo "requests: $(wc -l < "$out/requests.tsv" | tr -d ' ')"
+            echo "lm_score answers: $(wc -l < "$out/lm_score.answers" | tr -d ' '), scorer_cli answers: $(wc -l < "$out/scorer_cli.answers" | tr -d ' ')"
+            if cmp -s "$out/lm_score.answers" "$out/scorer_cli.answers"; then
+              echo "the answers are the same byte for byte, 5 decimals each"
+            else
+              echo "the answers differ in $(diff "$out/lm_score.answers" "$out/scorer_cli.answers" | grep -c '^<') lines"
+            fi
+            cat "$out/scorer_cli.log"
+          } | tee "$out/scorer-check.txt"
+          cmp "$out/lm_score.answers" "$out/scorer_cli.answers"
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: harness-mac
+          path: build/lm-keyboard/harness-mac
+          if-no-files-found: error
 
   device-build:
     name: Release build for the device
@@ -263,7 +259,7 @@ jobs:
 
   compare:
     name: Keyboard against both harnesses, case by case
-    needs: [harness, harness-arm, harness-mac, keyboard]
+    needs: [harness, harness-arm, keyboard]
     if: always()
     runs-on: ubuntu-24.04
     timeout-minutes: 10
