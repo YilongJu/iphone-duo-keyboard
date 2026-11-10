@@ -57,15 +57,16 @@ def prepare(arguments) -> None:
               "start_token": train.start_token_of(tokenizer),
               "space_tokens": len(train.space_token_ids(tokenizer, len(tokenizer)))}
     if arguments.model_dir:
-        model = AutoModelForCausalLM.from_pretrained(arguments.model_dir, dtype=torch.float32).to("cuda").eval()
+        torch.set_num_threads(4)
+        model = AutoModelForCausalLM.from_pretrained(arguments.model_dir, dtype=torch.float32).to(arguments.device).eval()
         vocabulary = model.get_output_embeddings().weight.shape[0]
         space_ids = train.space_token_ids(tokenizer, vocabulary)
-        space_tokens = torch.tensor(space_ids, dtype=torch.long, device="cuda")
+        space_tokens = torch.tensor(space_ids, dtype=torch.long, device=arguments.device)
         report["space_tokens"] = len(space_ids)
         with (arguments.out / "hf-scores.jsonl").open("w", encoding="utf-8") as file, torch.no_grad():
             for start in range(0, SCORE_LISTS, 16):
                 chunk = items[start:min(start + 16, SCORE_LISTS)]
-                batch = train.make_batch(chunk, tokenizer.eos_token_id, "cuda")
+                batch = train.make_batch(chunk, tokenizer.eos_token_id, arguments.device)
                 log_probability, space_after = train.reading_scores(model, batch, space_tokens, low_precision=False)
                 index = 0
                 for item in chunk:
@@ -137,6 +138,7 @@ def main():
     parser.add_argument("--model-dir", type=Path)
     parser.add_argument("--prompt-format", choices=rerank.PROMPT_FORMATS, default="typed")
     parser.add_argument("--no-context", action="store_true")
+    parser.add_argument("--device", default="cpu", help="cpu, or cuda when the GPU has room")
     parser.add_argument("--out", type=Path, required=True)
     arguments = parser.parse_args()
     prepare(arguments) if arguments.step == "prepare" else compare(arguments)
