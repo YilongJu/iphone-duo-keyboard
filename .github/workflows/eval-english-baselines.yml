@@ -1,0 +1,103 @@
+name: English baseline engines on the typing test cases
+
+# Scores open-source English spelling engines on the English typing test cases, on a Linux runner.
+# The engines are SymSpell, pyspellchecker, Hunspell and JamSpell. The adapter and its README are in
+# scripts/typing-evaluation/engines/english-baselines/.
+on:
+  push:
+    branches: ['eval/english-baselines']
+  workflow_dispatch:
+
+env:
+  # A fixed hash seed makes pyspellchecker choose the same word when two candidates have equal counts.
+  PYTHONHASHSEED: '0'
+  PYTHON: build/venv/bin/python
+  ENGINES: scripts/typing-evaluation/engines/english-baselines
+
+jobs:
+  english-baselines:
+    name: English baseline engines
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install SymSpell, pyspellchecker and Hunspell
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends hunspell hunspell-en-us
+          command -v uv || pipx install uv
+          uv venv --python /usr/bin/python3 build/venv
+          uv pip install --python "$PYTHON" symspellpy pyspellchecker
+          mkdir -p build/typing-evaluation/english-baselines
+
+      - name: Build JamSpell from its repository and download its English model
+        id: jamspell
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          sudo apt-get install -y --no-install-recommends swig build-essential python3-dev
+          swig -version | grep -i version
+          uv pip install --python "$PYTHON" \
+            "jamspell @ git+https://github.com/bakwc/JamSpell@25d3f5c2c76786cc6cbbfcf79b3989fc5e48eaa8"
+          mkdir -p build/jamspell
+          curl --fail --location --retry 3 --silent --show-error \
+            --output build/jamspell/en.tar.gz https://github.com/bakwc/JamSpell-models/raw/master/en.tar.gz
+          sha256sum build/jamspell/en.tar.gz
+          tar -xzf build/jamspell/en.tar.gz -C build/jamspell
+          ls -l build/jamspell
+          "$PYTHON" -c "import jamspell; print(jamspell.TSpellCorrector)"
+
+      - name: Print the installed versions
+        run: |
+          set -euo pipefail
+          echo "runner image: $ImageOS $ImageVersion" | tee build/typing-evaluation/english-baselines/versions.txt
+          if [ "${{ steps.jamspell.outcome }}" = "success" ]; then
+            bash "$ENGINES/print_versions.sh" build/jamspell/en.bin 2>&1 | tee -a build/typing-evaluation/english-baselines/versions.txt
+          else
+            echo "JamSpell build outcome: ${{ steps.jamspell.outcome }}" | tee -a build/typing-evaluation/english-baselines/versions.txt
+            bash "$ENGINES/print_versions.sh" 2>&1 | tee -a build/typing-evaluation/english-baselines/versions.txt
+          fi
+
+      - name: Run and score symspell-lookup
+        if: ${{ !cancelled() }}
+        run: bash "$ENGINES/run_and_score.sh" symspell-lookup --show-misses 3
+
+      - name: Run and score symspell-compound
+        if: ${{ !cancelled() }}
+        run: bash "$ENGINES/run_and_score.sh" symspell-compound --show-misses 3
+
+      - name: Run and score symspell-segmentation
+        if: ${{ !cancelled() }}
+        run: bash "$ENGINES/run_and_score.sh" symspell-segmentation --show-misses 3
+
+      - name: Run and score hunspell
+        if: ${{ !cancelled() }}
+        run: bash "$ENGINES/run_and_score.sh" hunspell --show-misses 3
+
+      - name: Run and score pyspellchecker
+        if: ${{ !cancelled() }}
+        run: bash "$ENGINES/run_and_score.sh" pyspellchecker --workers 4 --show-misses 3
+
+      - name: Run and score jamspell
+        if: ${{ !cancelled() && steps.jamspell.outcome == 'success' }}
+        run: bash "$ENGINES/run_and_score.sh" jamspell --jamspell-model build/jamspell/en.bin --show-misses 3
+
+      - name: Run and score jamspell-no-context
+        if: ${{ !cancelled() && steps.jamspell.outcome == 'success' }}
+        run: bash "$ENGINES/run_and_score.sh" jamspell-no-context --jamspell-model build/jamspell/en.bin --show-misses 3
+
+      - name: Print the scores of every engine
+        if: ${{ !cancelled() }}
+        run: |
+          set -euo pipefail
+          "$PYTHON" "$ENGINES/print_scores.py" | tee build/typing-evaluation/english-baselines/scores.md
+          cat build/typing-evaluation/english-baselines/scores.md >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v7
+        if: ${{ !cancelled() }}
+        with:
+          name: typing-evaluation-english-baselines
+          path: build/typing-evaluation/
+          if-no-files-found: error
