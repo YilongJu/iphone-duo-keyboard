@@ -468,6 +468,7 @@ typedef struct {
     const char *typed;  /* the typed text from the word's first position on */
     int length;         /* count of typed bytes from that position to the end */
     int start;          /* the word's first position in the whole typed text */
+    int has_symbol;     /* whether that typed text holds a symbol or digit key */
     /* rows[d][b]: the lowest slip cost that lines up the first d letters of the spelling with
        the first k typed bytes, where k = d - BAND + b. Only readings within BAND slips of the
        diagonal are kept, which is why a row holds ROW numbers and not one per typed byte. */
@@ -477,17 +478,49 @@ typedef struct {
     int edge_count;
 } walk_t;
 
+/* A reading that takes a symbol key for a letter and the same letter beside it for an extra
+   key gives the text without the symbol: "[please" and "p[lease" would read as "please", and
+   "a[pple" as "apple". The engine never drops a symbol key, so the two checks below leave
+   those readings out. */
+
+/* Whether the typed letter at `index` starts a run of that letter that ends right before a
+   symbol key that can stand for the letter, as each "p" does in "pp[lease". Such a letter is
+   never an extra key. The check does not know which letter the symbol key will stand for, so
+   it also leaves out the rare reading with the symbol key as another letter. */
+static int runs_into_symbol(const walk_t *walk, int index) {
+    char typed = walk->typed[index];
+    int next = index + 1;
+    while (next < walk->length && walk->typed[next] == typed) next++;
+    return next < walk->length && symbol_is_beside(walk->typed[next], typed);
+}
+
+/* Whether the typed letter at `index` follows a symbol key, alone or after a run of the same
+   letter, while the spelling reads the symbol key and the whole run as that letter. `letter`
+   is the last letter of the spelling that is lined up with the bytes before `index`, and
+   `depth` is the count of letters before it. */
+static int follows_symbol_as_same_letter(const walk_t *walk, int index, int depth, char letter) {
+    char typed = walk->typed[index];
+    if (typed != letter) return 0;
+    int run = 0;
+    while (index - run - 1 >= 0 && walk->typed[index - run - 1] == typed) run++;
+    int symbol = index - run - 1;
+    if (symbol < 0 || !symbol_is_beside(walk->typed[symbol], typed) || depth < run) return 0;
+    for (int back = 1; back <= run; back++) {
+        if (walk->letters[depth - back] != typed) return 0;
+    }
+    return 1;
+}
+
 static float insertion_cost(const walk_t *walk, int index) {
     char typed = walk->typed[index];
     if (typed == ' ') return walk->params->extra_space;
-    if (!is_letter(typed)) {
-        /* A symbol or digit key is never an extra key: a person may have typed it on purpose. */
-        if (symbol_neighbors(typed) != NULL) return BIG;
-    } else if (index + 1 < walk->length && symbol_is_beside(walk->typed[index + 1], typed)) {
-        /* A letter right before a symbol key that can stand for the same letter is not extra
-           either. With "p" as an extra key and "[" as "p", the text "p[lease" would read as
-           "please", which drops the bracket. */
-        return BIG;
+    if (walk->has_symbol) {
+        if (!is_letter(typed)) {
+            /* A symbol or digit key is never an extra key: a person may have typed it on purpose. */
+            if (symbol_neighbors(typed) != NULL) return BIG;
+        } else if (runs_into_symbol(walk, index)) {
+            return BIG;
+        }
     }
     if (index > 0 && walk->typed[index - 1] == typed) return walk->params->insertion_of_double;
     return walk->params->insertion;
@@ -533,11 +566,8 @@ static void walk_node(walk_t *walk, uint32_t node_index, int depth) {
                     /* The typed byte stands for this letter: a match, or a wrong key. */
                     float cost = above[b] + substitution_cost(params, walk->typed[consumed - 1], letter);
                     if (cost < best) best = cost;
-                    /* The typed byte is extra. A symbol key that stands for this letter, with the
-                       same letter typed right after it, is the other way to drop the symbol
-                       ("[please" as "please"), so that reading is left out. */
-                    if (b >= 1 && !(consumed >= 2 && walk->typed[consumed - 1] == letter
-                                    && symbol_is_beside(walk->typed[consumed - 2], letter))) {
+                    /* The typed byte is extra. */
+                    if (b >= 1 && !(walk->has_symbol && follows_symbol_as_same_letter(walk, consumed - 1, depth, letter))) {
                         cost = row[b - 1] + insertion_cost(walk, consumed - 1);
                         if (cost < best) best = cost;
                     }
@@ -576,6 +606,10 @@ static int find_edges(
     walk.start = start;
     walk.edges = edges;
     walk.edge_count = 0;
+    walk.has_symbol = 0;
+    for (int index = 0; index < walk.length && !walk.has_symbol; index++) {
+        walk.has_symbol = !is_letter(walk.typed[index]) && symbol_neighbors(walk.typed[index]) != NULL;
+    }
     for (int b = 0; b < ROW; b++) {
         int consumed = b - BAND;
         if (consumed < 0 || consumed > walk.length) walk.rows[0][b] = BIG;
@@ -939,8 +973,10 @@ static uint32_t word_beside_symbol(
    beside it, after the word `previous`. The typed word has two readings. Typed on purpose, it
    is the known word at the cost of the key. It can also be unknown text. A reading that takes
    the key for a slip must beat the first one by margin_known, as for any known word, and the
-   second one by margin_unknown. The typed text as a whole gets margin_known, so the unknown
-   text counts that much lower here. `node` and `symbol_cost` come from word_beside_symbol. */
+   second one by margin_unknown. Typed text whose words are all known gets margin_known as a
+   whole, so the unknown text counts that much lower here. In typed text with an unknown word
+   beside this one, the whole text gets margin_unknown, as it does without a symbol key.
+   `node` and `symbol_cost` come from word_beside_symbol. */
 static float score_beside_symbol(
     const duo_lexicon *lexicon, const duo_params *params, uint32_t previous, uint32_t node,
     float symbol_cost, int length, uint32_t *word) {

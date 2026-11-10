@@ -456,10 +456,28 @@ final class KeyboardTextControllerTests: XCTestCase {
         XCTAssertEqual(document.text, "[the ")
     }
 
+    func testAWordWithACapitalAfterABracketIsCorrectedWithoutTheBracket() {
+        // The capital shows that the person typed the bracket on purpose.
+        makeController(before: "")
+        type("[Teh ")
+        XCTAssertEqual(document.text, "[The ")
+        XCTAssertEqual(spellChecker.requests, ["|teh"])
+    }
+
+    func testAKeptWordStaysAsTypedAfterASymbolKey() {
+        makeController(before: "")
+        spellChecker.corrections["[teh"] = "[the"
+        type("teh ")
+        controller.keyboardViewDeleteBackward(keyboardView)
+        XCTAssertEqual(spellChecker.learned, ["teh"])
+        type(" [teh ")
+        XCTAssertEqual(document.text, "teh [teh ")
+    }
+
     func testTextWithASymbolThatIsNotProseDoesNotGoToTheChecker() {
-        // More than one symbol or digit, one letter only, a capital after the symbol, a symbol
-        // key that is not beside a letter, and a word inside an address.
-        for text in ["abc123", "x86", "[a", "4k", "[Lease", "#teh", "te_h", "name@[lease", "www.[lease", "a;ike"] {
+        // More than one symbol or digit, one letter only, a capital after a digit, a symbol key
+        // that is not beside a letter, and a word inside an address.
+        for text in ["abc123", "x86", "[a", "4k", "[;ike", "2Hat", "#teh", "te_h", "name@[lease", "www.[lease", "a;ike"] {
             // The field already holds the text, and the space asks for a correction of its end.
             makeController(before: text)
             spellChecker.corrections = ["[lease": "please", ";ike": "like", "teh": "the"]
@@ -514,8 +532,14 @@ final class KeyboardTextControllerTests: XCTestCase {
         XCTAssertNil(KeyboardTextLogic.correctableWord(before: "e.g"))
         XCTAssertNil(KeyboardTextLogic.correctableWord(before: "well-known"))
         XCTAssertNil(KeyboardTextLogic.correctableWord(before: "ike;"))
+        XCTAssertNil(KeyboardTextLogic.correctableWord(before: "[;ike"))
+        // A capital right after a symbol key: the word starts after the key, and only an
+        // opening bracket may stand right before a word.
+        XCTAssertEqual(KeyboardTextLogic.correctableWord(before: "[Teh"), "Teh")
+        XCTAssertNil(KeyboardTextLogic.correctableWord(before: ";Ike"))
+        XCTAssertNil(KeyboardTextLogic.correctableWord(before: "2Hat"))
         // The rules for text that is not prose still hold.
-        XCTAssertNil(KeyboardTextLogic.correctableWord(before: "[Lease"))
+        XCTAssertNil(KeyboardTextLogic.correctableWord(before: "[LEase"))
         XCTAssertNil(KeyboardTextLogic.correctableWord(before: "2hAT"))
         XCTAssertNil(KeyboardTextLogic.correctableWord(before: "name@2hat"))
         XCTAssertNil(KeyboardTextLogic.correctableWord(before: "path/[lease"))
