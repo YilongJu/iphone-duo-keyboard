@@ -50,8 +50,8 @@ SYMBOLS_INSIDE_WORDS = set("0123456789[")
 RECENT_CONTEXT_LENGTH = 48
 
 GRID = {
-    "weight": [0.1, 0.2, 0.3, 0.5, 0.75, 1.0, 1.5, 2.0],
-    "margin_from_typed": [0, 1, 2, 3, 4, 6, 8, 12, 16, 24],
+    "weight": [0.1, 0.2, 0.3, 0.5, 0.75, 1.0, 1.5, 2.0, 3.0],
+    "margin_from_typed": [0, 1, 2, 3, 4, 6, 8, 12, 16, 24, 32, 48],
     "margin_to_typed": [0, 2, 4, 8, 99],
     "margin_other": [0, 2],
     "space_after": [0, 1],
