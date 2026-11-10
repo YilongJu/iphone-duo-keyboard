@@ -116,7 +116,7 @@ final class KeyboardView: UIView {
         var latestX: CGFloat = 0
         var holdTimer: Timer?
         var startPoint: CGPoint = .zero
-        /// True while the key will type its shifted character, after a long press or a slide up.
+        /// True while the key will type its shifted character, after a long press or a slide up or down.
         var alternateActive = false
         var alternateFromHold = false
 
@@ -527,15 +527,22 @@ final class KeyboardView: UIView {
         }
     }
 
-    // MARK: Long press and slide up
+    // MARK: Long press and slide
+
+    /// Seconds a finger rests on a key before the long press starts.
+    private static let holdDelay: TimeInterval = 0.3
 
     private func startHoldTimer(_ state: TouchState) {
-        state.holdTimer = Timer.scheduledTimer(
-            timeInterval: 0.4, target: self, selector: #selector(holdTimerFired(_:)),
+        let timer = Timer(
+            timeInterval: Self.holdDelay, target: self, selector: #selector(holdTimerFired(_:)),
             userInfo: state, repeats: false)
+        // The common modes include the mode that the run loop uses while a finger moves, so the
+        // long press also starts when the finger does not rest fully still.
+        RunLoop.main.add(timer, forMode: .common)
+        state.holdTimer = timer
     }
 
-    /// A finger held for 0.4 seconds selects the shifted character on a key with two characters,
+    /// A finger held for 0.3 seconds selects the shifted character on a key with two characters,
     /// and turns the keyboard into a cursor trackpad on the space bar.
     @objc private func holdTimerFired(_ timer: Timer) {
         guard let state = timer.userInfo as? TouchState, !state.committed else { return }
@@ -554,19 +561,20 @@ final class KeyboardView: UIView {
         }
     }
 
-    /// A slide up on a key with two characters selects the shifted character.
-    /// A slide back down returns to the base character.
+    /// A slide up or down on a key with two characters selects the shifted character.
+    /// A slide back to the start returns to the base character.
     private func updateAlternate(_ state: TouchState, at point: CGPoint) {
         guard let metrics = metrics() else { return }
         let dx = point.x - state.startPoint.x
         let dy = point.y - state.startPoint.y
         let threshold = max(14, metrics.rowHeight * 0.35)
         if !state.alternateActive {
-            let leftKeyUpward = point.y < state.keyView.hitFrame.minY && dy < -8
-            if abs(dx) < abs(dy), dy < -threshold || leftKeyUpward {
+            let frame = state.keyView.hitFrame
+            let leftKey = (point.y < frame.minY || point.y > frame.maxY) && abs(dy) > 8
+            if abs(dx) < abs(dy), abs(dy) > threshold || leftKey {
                 setAlternate(state, active: true)
             }
-        } else if !state.alternateFromHold, dy > -threshold / 2 {
+        } else if !state.alternateFromHold, abs(dy) < threshold / 2 {
             setAlternate(state, active: false)
         }
     }

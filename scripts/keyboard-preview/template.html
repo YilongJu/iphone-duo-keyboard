@@ -54,7 +54,7 @@
 <h1>Duo Keyboard preview</h1>
 <p class="lead">This page draws all three keyboard layers from <code>Shared/keyboard-layout.json</code>,
 the same file the iPhone app reads. Click a key to type into the text box. Hold a two-character key,
-or drag up on it, for the upper character. A layer key such as <code>.?123</code> outlines the layer
+or drag up or down on it, for the upper character. A layer key such as <code>.?123</code> outlines the layer
 it opens.</p>
 
 <div class="controls">
@@ -280,15 +280,15 @@ function attach(el, key, rowHeight) {
       act(key, false, true);
       holdTimer = setTimeout(() => { repeatTimer = setInterval(() => act(key, false, true), 80); }, 450);
     } else if (key.type === "dual") {
-      holdTimer = setTimeout(() => { held = true; setAlt(true); }, 400);
+      holdTimer = setTimeout(() => { held = true; setAlt(true); }, 300);
     }
   });
   el.addEventListener("pointermove", event => {
     if (!down || key.type !== "dual" || held) return;
     const dy = event.clientY - startY;
     const threshold = Math.max(14, rowHeight * 0.35);
-    if (!alt && dy < -threshold) { clearTimeout(holdTimer); setAlt(true); }
-    else if (alt && dy > -threshold / 2) setAlt(false);
+    if (!alt && Math.abs(dy) > threshold) { clearTimeout(holdTimer); setAlt(true); }
+    else if (alt && !held && Math.abs(dy) < threshold / 2) setAlt(false);
   });
   const up = commit => {
     if (!down) return;
