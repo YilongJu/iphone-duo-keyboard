@@ -8,6 +8,8 @@ The script prints three things for each engine name and half:
 2. The count of cases where a patched engine and the default engine of one schema differ, per
    category, with the count of cases that changed from wrong to right and from right to wrong.
 3. An error when librime committed a case, because a commit feeds the user dictionary of librime.
+4. An error when the reverse order of the cases changed an output, because one case then changes
+   a later case.
 """
 import argparse
 import json
@@ -36,6 +38,7 @@ def main():
     if not engines:
         raise SystemExit(f"{OUTPUT} does not hold a run-info.json file")
     committed = 0
+    changed_by_order = 0
     for engine in engines:
         info = json.loads((OUTPUT / engine / "run-info.json").read_text(encoding="utf-8"))
         print(f"{engine}: librime {info['librime_version']}, schema {info['schema']}, "
@@ -46,8 +49,10 @@ def main():
             with_letters = sum(bool(re.search("[a-z]", row["output"])) for row in rows.values())
             entry = info["halves"][half]
             committed += entry["stops"].get("committed", 0)
+            changed_by_order += entry["outputs_changed_by_reverse_order"]
             print(f"  pinyin.{half}: {entry['cases']} cases in {entry['seconds']} s, stops {entry['stops']}, "
-                  f"cases with a space press {entry['cases_with_a_selection']}, outputs that hold letters {with_letters}")
+                  f"cases with a space press {entry['cases_with_a_selection']}, outputs that hold letters {with_letters}, "
+                  f"outputs changed by the reverse order {entry['outputs_changed_by_reverse_order']}")
 
     for default, patched in PAIRS:
         if default not in engines or patched not in engines:
@@ -71,7 +76,9 @@ def main():
 
     if committed:
         raise SystemExit(f"librime committed {committed} cases, so its user dictionary changed during the run")
-    print("librime did not commit a case, so its user dictionary stayed empty.")
+    if changed_by_order:
+        raise SystemExit(f"the reverse order of the cases changed {changed_by_order} outputs, so one case changes a later case")
+    print("librime did not commit a case, and the reverse order of the cases did not change an output.")
 
 
 if __name__ == "__main__":

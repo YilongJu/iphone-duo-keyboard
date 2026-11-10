@@ -7,7 +7,7 @@ librime 1.10.0 with stock data repairs at most 6.6 percent of the dev slip cases
 1. Read the scores in Table 4 and the two figures under it.
 2. Run the evaluation again with `gh workflow run "Typing evaluation of librime" --ref eval/librime`.
 3. Download the outputs of a run with `gh run download RUN_ID --name typing-evaluation-librime`.
-4. Plan the slip repair outside librime 1.10.0. Each of its repair settings lowers the dev clean accuracy by 8 to 19 points.
+4. Use these scores for librime 1.10.0 with the five settings of Table 2 only. Each patched setting lowers the dev clean accuracy by 8 to 19 percentage points.
 
 The scores do not cover librime 1.16 or later, a grammar model, or a user dictionary with typing history.
 
@@ -27,6 +27,7 @@ Table 1. The terms of this document. Each term keeps one meaning in every sectio
 | Spelling rule | One line of the list `speller/algebra` in a schema. A spelling rule adds one accepted spelling of a syllable, such as `dagn` for `dang`. |
 | Candidate | One conversion that librime offers for the typed letters. A space press selects the first candidate. |
 | Commit preview | The text that librime would put in the text field now. The commit preview is the first candidate, followed by the letters that the first candidate does not cover. |
+| Unigram word model | A model that scores a sentence by the frequency of each word alone. The model does not look at the neighboring words. |
 | User dictionary | The store where librime records each text that a person commits. librime ranks a recorded text higher later. |
 | Slip case, clean case | A test case with a typing slip, and a test case with correct Pinyin. [The evaluation README](../../README.md) defines both. |
 
@@ -40,7 +41,7 @@ Table 2. The five engine names. The three patched engine names differ from their
 | --- | --- | --- |
 | `rime-default` | The stock schema `luna_pinyin_simp`. Its dictionary is `luna_pinyin`, with the word frequencies of `essay.txt`. OpenCC converts the Traditional Chinese candidates to Simplified Chinese. | The stock schema of Rime for Simplified Chinese with the stock essay data |
 | `rime-correction` | `rime-default` plus the custom patch `translator/enable_correction: true` | The neighbor-key correction that librime has built in |
-| `rime-fuzzy` | `rime-default` plus five fuzzy-sound templates from the stock file `pinyin.yaml` | The stock answer of Rime to the category `fuzzy_sound` |
+| `rime-fuzzy` | `rime-default` plus five fuzzy-sound templates from the stock file `pinyin.yaml`. The five are the templates for the sound pairs of the category `fuzzy_sound`. | The fuzzy-sound templates that Rime ships, matched to the category `fuzzy_sound` |
 | `rime-pinyin-simp-default` | The stock schema `pinyin_simp`. Its dictionary comes from the Android Pinyin input method. | A second stock schema, whose data has the Apache-2.0 license |
 | `rime-pinyin-simp-correction` | `rime-pinyin-simp-default` plus the custom patch `translator/enable_correction: true` | The neighbor-key correction on the second schema |
 
@@ -84,8 +85,8 @@ Table 3. The two task rows that the librime adapter fills. The five engine names
 
 | Row | librime |
 | --- | --- |
-| Model | librime 1.10.0. The spelling rules turn the letters into a graph of syllables. The dictionary gives the words for each path. When one dictionary entry spells all the letters, that entry is the first candidate. In the other cases a unigram word model picks one sentence by dynamic programming. librime does not train during the run. |
-| Output | One string: the commit preview after the last letter. The string holds Chinese characters, plus the letters a to z that librime did not convert. |
+| Model | librime 1.10.0. The spelling rules turn the letters into a graph of syllables. The dictionary gives the words for each path. When one dictionary entry spells all the letters that librime reads as syllables, that entry is the first candidate. In the other cases a unigram word model picks the sentence with the highest total word score. librime does not train during the run. |
+| Output | One string: the commit preview at the end of the steps in Figure 3. The string holds Chinese characters, plus the letters a to z that librime did not convert. |
 
 ## Scores of the five engine names on the Pinyin cases
 
@@ -102,6 +103,7 @@ Table 4. Share of cases with the exact intended text, with the count of cases in
 | `rime-pinyin-simp-correction` | 0.3300 (297) | 0.0357 (75) | 0.3511 (316) | 0.0281 (59) |
 
 ```mermaid
+%%{init: {"xyChart": {"width": 1000, "height": 440}}}%%
 xychart-beta horizontal
     title "Dev clean cases with the exact intended text"
     x-axis ["rime-default 0.560", "rime-correction 0.378", "rime-fuzzy 0.476", "rime-pinyin-simp-default 0.518", "rime-pinyin-simp-correction 0.330"]
@@ -110,9 +112,10 @@ xychart-beta horizontal
     line [0.5500, 0.5500, 0.5500, 0.5078, 0.5078]
 ```
 
-Figure 1. Share of the 900 dev clean cases with the exact intended text. The line marks the lowest clean share that the evaluation accepts. That share is 1 point under the default engine name of the same schema. The three patched engine names are 7 to 18 points under the line.
+Figure 1. Share of the 900 dev clean cases with the exact intended text. The line marks the lowest clean share that the evaluation accepts. That share is 1 percentage point under the default engine name of the same schema. The three patched engine names are 7 to 18 percentage points under the line.
 
 ```mermaid
+%%{init: {"xyChart": {"width": 1000, "height": 440}}}%%
 xychart-beta horizontal
     title "Dev slip cases with the exact intended text"
     x-axis ["rime-default 0.019", "rime-correction 0.035", "rime-fuzzy 0.066", "rime-pinyin-simp-default 0.017", "rime-pinyin-simp-correction 0.036"]
@@ -122,7 +125,7 @@ xychart-beta horizontal
 
 Figure 2. Share of the 2,100 dev slip cases with the exact intended text. Every engine name stays under 0.07. The figure does not draw a reference line, because the measurement of Apple's keyboard is still open.
 
-Table 5. Count of dev cases with the exact intended text, of 300 per category. A patched engine name repairs one category each: `rime-correction` repairs `substitution_adjacent`, and `rime-fuzzy` repairs `fuzzy_sound`.
+Table 5. Count of dev cases with the exact intended text, of 300 per category. The largest gain of `rime-correction` is in `substitution_adjacent`, and the largest gain of `rime-fuzzy` is in `fuzzy_sound`.
 
 | Category | `rime-default` | `rime-correction` | `rime-fuzzy` | `rime-pinyin-simp-default` | `rime-pinyin-simp-correction` |
 | --- | --- | --- | --- | --- | --- |
@@ -137,7 +140,7 @@ Table 5. Count of dev cases with the exact intended text, of 300 per category. A
 | `two_errors` | 0 | 0 | 0 | 0 | 0 |
 | `fuzzy_sound` | 0 | 0 | 94 | 0 | 0 |
 
-The numbers come from workflow run 42755280003 on commit `2e7e471`. The scorer `score.py` wrote them to `pinyin.HALF.summary.json` in the artifact `typing-evaluation-librime`. Workflow run 42754169971 holds four of the engine names. Its output files equal the files of run 42755280003, byte for byte.
+The numbers come from workflow run 42755280003 on commit `2e7e471`. The scorer `score.py` wrote them to `pinyin.HALF.summary.json` in the artifact `typing-evaluation-librime`. Workflow runs 42754169971 and 42756613694 give the same output files, byte for byte, for the engine names they hold.
 
 ## Ubuntu 24.04 packages of librime and its data
 
@@ -182,7 +185,7 @@ The upstream column comes from the GitHub license field of each repository, read
 
 ## librime calls of the adapter for one case
 
-The adapter types the letters of a case as key events and reads the commit preview. The adapter never commits a case.
+The adapter types the letters of a case as key events and reads the commit preview. The adapter does not commit a case.
 
 ```mermaid
 flowchart TD
@@ -203,7 +206,7 @@ The program `rime_cli.cc` calls the C interface in `rime_api.h` in this order:
 2. Deployment, once for each engine name: `start_maintenance(True)`, `join_maintenance_thread`, `finalize`. The program stops when librime does not send the message `deploy success`.
 3. Session: `create_session`, `select_schema`, `get_current_schema`.
 4. Check of the settings: `schema_open`, `config_get_bool` on `translator/enable_correction`, `config_get_cstring` on `translator/dictionary`, `config_close`. The program stops when the deployed schema does not match the engine name.
-5. One case: `clear_composition`, then `process_key` for each letter, then `get_input` to confirm the letters.
+5. One case: `clear_composition`, then `process_key` for each letter, then `get_input` to confirm the letters. A call to `get_commit` confirms that librime did not commit a text.
 6. Reading: `get_context` gives `commit_text_preview` and `menu.num_candidates`, then `free_context`.
 7. A space press, only while letters remain and librime offers a candidate: `process_key` with key code `0x20`, then `get_commit`.
 8. End: `destroy_session`, `finalize`.
@@ -214,14 +217,15 @@ The script `run_librime.py` runs the program for the probe strings and for each 
 
 - The scores belong to librime 1.10.0. The release notes of librime 1.16.0 list two new features for correction, and the adapter does not score that version.
 - The user dictionary stays empty. A person who types for weeks gets candidates that the adapter does not see.
-- The sentence model is a unigram word model. The packages do not install a grammar model, and the adapter does not add one.
+- Two checks guard the empty user dictionary. The program stops when librime commits a text. The script also types each half in reverse order and counts the outputs that change. The workflow run ends with an error when that count is above zero.
+- The packages do not install a grammar model, and the adapter does not add one. The sentence model is the unigram word model.
 - The adapter reads the first candidate only. A person can pick the second candidate, and the scores do not count that.
-- librime does not offer a candidate for a letter that cannot start a syllable. The output keeps the letters from that point on. `rime-default` gives such an output for 311 of the 3,000 dev cases.
-- The scorer counts each kept letter as one edit, so an output with kept letters gets a low character accuracy.
+- With the neighbor-key correction off, librime does not offer a candidate at a letter that cannot start a syllable. The output keeps the letters from that point on. `rime-default` gives such an output for 311 of the 3,000 dev cases. The first kept letter is `i` in 194 cases, `u` in 101 and `v` in 16.
+- The scorer counts each kept letter as one edit, which lowers the character accuracy of such an output.
 - The neighbor-key correction of librime 1.10.0 swaps a key for its left or right neighbor only. The slip generator also uses the neighbors in the row above and the row below.
-- `rime-fuzzy` uses the five stock templates that match the sound pairs of `fuzzy_sound`. The stock templates do not cover three sound pairs of the category. The three are `an` with `ang`, `r` typed for `l`, and `h` with `f` outside the `hu` syllables.
+- The template list of `rime-fuzzy` follows the definition of the category `fuzzy_sound`. `rime-fuzzy` is therefore a setting made for this evaluation. A score did not choose the list. The stock templates do not cover three sound pairs of the category. The three are `an` with `ang`, `r` typed for `l`, and `h` with `f` outside the `hu` syllables.
 - `rime-default` gets Simplified Chinese from OpenCC, so a conversion choice of OpenCC can change a character.
-- The adapter does not tune a setting. Each engine name has fixed settings, so the dev half and the test half measure the same thing.
+- A score did not choose a setting of an engine name. Each engine name has fixed settings, so the dev half and the test half measure the same thing.
 
 ## Files of the librime adapter
 
@@ -231,7 +235,7 @@ Table 8. The files of the adapter. Three files run on the runner, and the workfl
 | --- | --- |
 | `rime_cli.cc` | The C++ program that deploys a schema and types cases into librime |
 | `run_librime.py` | The script that prepares the folders of one engine name and writes `build/typing-evaluation/NAME/pinyin.HALF.jsonl` |
-| `summarize_runs.py` | The script that prints the stop reasons and compares a patched engine name with its default engine name |
+| `summarize_runs.py` | The script that prints the stop reasons, compares patched and default engine names, and reports the two user dictionary checks |
 | `../../../../.github/workflows/eval-librime.yml` | The workflow that installs the packages, builds the program, runs the five engine names, scores them and uploads the artifact |
 
-Each engine name also gets three files beside its predictions: `pinyin.HALF.details.tsv`, `probes.tsv` and `run-info.json`. The details file holds the typed letters, the output, the stop reason and the first candidate of every case.
+Each engine name also gets four files beside its predictions: `pinyin.dev.details.tsv`, `pinyin.test.details.tsv`, `probes.tsv` and `run-info.json`. A details file holds the typed letters, the output, the stop reason and the first candidate of every case.

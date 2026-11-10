@@ -22,10 +22,11 @@
 //
 // The column "stop" names the reason the program stopped:
 //   covered        the first candidates cover every letter
-//   no_candidates  librime offers no candidate for the remaining letters, and the output ends
-//                  with these letters, as it would after a commit
+//   no_candidates  librime does not offer a candidate for the remaining letters, and the output
+//                  ends with these letters, as it would after a commit
 //   committed      librime committed on a space press. The program counts these cases, because
 //                  a commit feeds the user dictionary.
+// The program stops with an error when librime commits while the letters go in.
 #include <rime_api.h>
 
 #include <chrono>
@@ -120,6 +121,18 @@ size_t trailing_letters(const std::string& text) {
   return count;
 }
 
+// Reads and clears the text that librime committed since the last call.
+bool read_commit(RimeSessionId session, std::string* text) {
+  RimeCommit commit = {};
+  RIME_STRUCT_INIT(RimeCommit, commit);
+  if (!rime->get_commit(session, &commit)) {
+    return false;
+  }
+  *text = commit.text;
+  rime->free_commit(&commit);
+  return true;
+}
+
 struct Conversion {
   std::string output;
   std::string stop;
@@ -141,6 +154,11 @@ Conversion convert(RimeSessionId session, const std::string& typed) {
   const char* input = rime->get_input(session);
   if (input == nullptr || typed != input) {
     die("librime holds the input '" + std::string(input ? input : "") + "' after the keys of '" + typed + "'");
+  }
+  // A commit while the letters go in would feed the user dictionary, so the program stops on one.
+  std::string committed;
+  if (read_commit(session, &committed)) {
+    die("librime committed '" + committed + "' while the program typed '" + typed + "'");
   }
 
   size_t previous_remaining = typed.size() + 1;
@@ -185,12 +203,9 @@ Conversion convert(RimeSessionId session, const std::string& typed) {
       die("librime did not accept the space key for '" + typed + "'");
     }
     ++result.selections;
-    RimeCommit commit = {};
-    RIME_STRUCT_INIT(RimeCommit, commit);
-    if (rime->get_commit(session, &commit)) {
-      result.output = commit.text;
+    if (read_commit(session, &committed)) {
+      result.output = committed;
       result.stop = "committed";
-      rime->free_commit(&commit);
       return result;
     }
   }
