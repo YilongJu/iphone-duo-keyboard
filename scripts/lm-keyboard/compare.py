@@ -1,20 +1,27 @@
-"""Compares the keyboard's own code on the macOS simulator with the Linux harness of
-scripts/lm-rerank, on the dev half only: the right cases per group, the output of every case,
-and every correction that went to the language model.
+"""Compares two runs of the dev cases with the tuned re-ranking rule: the right cases per group,
+the output of every case, and every correction that went to the language model.
+
+A run is either a folder of harness_trace.py (the Linux harness of scripts/lm-rerank) or a folder
+of Tests/TypingEvaluationTests.swift with TYPING_HALVES=dev (the keyboard's own code). The script
+reads the dev half only, and it stops unread when a folder holds a test-half file.
 
 Inputs:
-    --harness DIR   the outputs of harness_trace.py, and scorer-check.txt of the workflow
-    --keyboard DIR  the outputs of Tests/TypingEvaluationTests.swift with TYPING_HALVES=dev
+    --reference DIR, --reference-name NAME   the run to compare against
+    --other DIR, --other-name NAME           the run to compare
+    --published                              also require the reference to give the numbers of
+                                             scripts/lm-rerank/README.md, Table 1
 Outputs in --out:
     report.md          the tables, also written to standard output
-    differences.json   every case and every correction that differs, with both sides' numbers
+    differences.json   every case and every correction that differs, with both runs' numbers
 
-The script stops with exit code 1 when the outputs of any case differ after the scorer's
-normalization (letter case and a curly apostrophe), so a workflow run turns red.
+The script stops with exit code 1, so a workflow run turns red, when any of these holds: the
+outputs of a case differ after the scorer's normalization (letter case and a curly apostrophe),
+the reference does not give the published numbers (with --published), a trace holds a correction
+twice, or a run's recorded choice is not the choice of the tuned rule on that run's own numbers.
 
 Usage, from the repository root:
-    python3 scripts/lm-keyboard/compare.py --harness build/lm-keyboard/harness \
-        --keyboard build/lm-keyboard/keyboard --out build/lm-keyboard/compare
+    python3 scripts/lm-keyboard/compare.py --reference build/lm-keyboard/harness --reference-name "x86 harness" \
+        --other build/lm-keyboard/keyboard --other-name keyboard --published --out build/lm-keyboard/compare
 """
 import argparse
 import json
@@ -26,8 +33,11 @@ sys.path.insert(0, str(ROOT / "scripts" / "lm-rerank"))
 import rerank  # noqa: E402
 from score import normalize  # noqa: E402
 
-TUNED = {"weight": 1.0, "margin_from_typed": 24.0, "margin_to_typed": 0.0, "margin_other": 2.0, "space_after": True}
+TUNED = {"weight": 1.0, "margin_from_typed": 24.0, "margin_to_typed": 0.0, "margin_other": 2.0}
 GROUPS = ["clean", "letter_slips", "space_slips", "symbol_slips", "clean_symbols"]
+# The harness numbers of scripts/lm-rerank/README.md, Table 1 (run 42877972004 at commit 6a000f7):
+# right cases per group, then all dev cases.
+PUBLISHED = {"engine only": [957, 1943, 1299, 1131, 427, 6069], "with the model": [958, 1975, 1316, 1139, 427, 6126]}
 TASKS = ["english", "english-symbols"]
 
 
@@ -45,26 +55,46 @@ def predictions(paths: list[Path]) -> dict[str, str]:
     return result
 
 
-def as_float(value) -> float:
-    # The keyboard writes an infinite number as the text "inf" or "-inf", which float() reads.
-    return float(value)
+def keyed(entries: list[dict], name: str) -> dict:
+    result = {}
+    for entry in entries:
+        key = (entry["id"], entry["step"])
+        if key in result:
+            raise SystemExit(f"the trace of {name} holds {key} twice")
+        result[key] = entry
+    return result
+
+
+def load_run(folder: Path, name: str) -> dict:
+    test_files = sorted(p.name for p in folder.iterdir() if ".test." in p.name)
+    if test_files:
+        raise SystemExit(f"{folder} holds test-half files, which this script does not read: {test_files}")
+    if (folder / "reranked.dev.jsonl").exists():
+        return {"name": name, "engine only": predictions([folder / "control.dev.jsonl"]),
+                "with the model": predictions([folder / "reranked.dev.jsonl"]),
+                "trace": keyed(read_jsonl(folder / "trace.dev.jsonl"), name), "folder": folder}
+    return {"name": name,
+            "engine only": predictions([folder / f"{t}.dev.engine-only.jsonl" for t in TASKS]),
+            "with the model": predictions([folder / f"{t}.dev.jsonl" for t in TASKS]),
+            "trace": keyed([e for t in TASKS for e in read_jsonl(folder / f"{t}.dev.trace.jsonl")], name),
+            "folder": folder}
 
 
 def decision(entry: dict) -> dict:
-    """The tuned rule on one side's numbers: the combined scores, the winner, and the slack, the
-    distance of the deciding difference from its threshold."""
+    """The tuned rule on one run's numbers. `distance` is the smallest change of one combined
+    score that turns the decision: the lead of the first maximum over the next reading, or the
+    distance of the deciding lead from its margin."""
     readings = entry["readings"]
-    combined = [r["engine_score"] + TUNED["weight"] * (as_float(r["log_probability"]) + as_float(r["space_after"]))
+    combined = [r["engine_score"] + TUNED["weight"] * (float(r["log_probability"]) + float(r["space_after"]))
                 for r in readings]
     chosen = next(i for i, r in enumerate(readings) if r["chosen"])
     best = 0
     for index in range(1, len(readings)):
         if combined[index] > combined[best]:
             best = index
+    gap = combined[best] - max(c for i, c in enumerate(combined) if i != best)
     if best == chosen:
-        others = [c for i, c in enumerate(combined) if i != chosen]
-        # The engine's choice leads; the slack is its lead over the next reading.
-        return {"winner": readings[chosen]["text"], "slack": combined[chosen] - max(others), "kind": "engine choice leads"}
+        return {"winner": readings[chosen]["text"], "distance": gap}
     if readings[chosen]["as_typed"]:
         margin = TUNED["margin_from_typed"]
     elif readings[best]["as_typed"]:
@@ -73,164 +103,180 @@ def decision(entry: dict) -> dict:
         margin = TUNED["margin_other"]
     lead = combined[best] - combined[chosen]
     winner = readings[best]["text"] if lead >= margin else readings[chosen]["text"]
-    return {"winner": winner, "slack": lead - margin, "kind": "margin"}
+    return {"winner": winner, "distance": min(abs(lead - margin), gap)}
 
 
-def summary_row(summary: dict) -> list[str]:
-    return [f"{summary['groups'][g]['right']}/{summary['groups'][g]['cases']}" for g in GROUPS] + [
-        f"{summary['right']}/{summary['cases']}"]
+def summary_numbers(summary: dict) -> list[int]:
+    return [summary["groups"][g]["right"] for g in GROUPS] + [summary["right"]]
 
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--harness", type=Path, required=True)
-    parser.add_argument("--keyboard", type=Path, required=True)
+    parser.add_argument("--reference", type=Path, required=True)
+    parser.add_argument("--reference-name", required=True)
+    parser.add_argument("--other", type=Path, required=True)
+    parser.add_argument("--other-name", required=True)
+    parser.add_argument("--published", action="store_true")
     parser.add_argument("--out", type=Path, required=True)
     arguments = parser.parse_args()
     arguments.out.mkdir(parents=True, exist_ok=True)
 
-    # Only the dev half. A test-half file in the keyboard folder stops the script unread.
-    test_files = sorted(p.name for p in arguments.keyboard.iterdir() if ".test." in p.name)
-    if test_files:
-        raise SystemExit(f"the keyboard folder holds test-half files, which this script does not read: {test_files}")
     cases = rerank.load_cases(rerank.CASE_FILES)
     if any(case["split"] != "dev" for case in cases):
         raise SystemExit("a case outside the dev half")
     by_id = {case["id"]: case for case in cases}
+    reference = load_run(arguments.reference, arguments.reference_name)
+    other = load_run(arguments.other, arguments.other_name)
+    for run in (reference, other):
+        for kind in ("engine only", "with the model"):
+            if set(run[kind]) != set(by_id):
+                raise SystemExit(f"{run['name']}, {kind}, does not hold exactly the {len(by_id)} dev cases")
 
-    runs = {
-        "harness control": predictions([arguments.harness / "control.dev.jsonl"]),
-        "keyboard, engine only": predictions([arguments.keyboard / f"{t}.dev.engine-only.jsonl" for t in TASKS]),
-        "harness re-ranked": predictions([arguments.harness / "reranked.dev.jsonl"]),
-        "keyboard with the model": predictions([arguments.keyboard / f"{t}.dev.jsonl" for t in TASKS]),
-    }
-    for name, values in runs.items():
-        if set(values) != set(by_id):
-            raise SystemExit(f"{name} does not hold exactly the {len(by_id)} dev cases")
-    summaries = {name: rerank.summarize(cases, values) for name, values in runs.items()}
-
-    lines = ["# Keyboard code against the Linux harness on the dev half", ""]
-    lines += ["Table 1. Right dev cases per group.", "",
-              "| Run | " + " | ".join(GROUPS) + " | all dev cases |",
+    failed = False
+    differences = {"cases": [], "corrections": [], "rule mismatches": []}
+    lines = [f"# {other['name']} against {reference['name']} on the dev half", ""]
+    lines += ["Table 1. Right dev cases per group.", "", "| Run | " + " | ".join(GROUPS) + " | all dev cases |",
               "| --- |" + " --- |" * (len(GROUPS) + 1)]
-    for name, summary in summaries.items():
-        lines.append(f"| {name} | " + " | ".join(summary_row(summary)) + " |")
+    numbers = {}
+    for run in (reference, other):
+        for kind in ("engine only", "with the model"):
+            summary = rerank.summarize(cases, run[kind])
+            numbers[(run["name"], kind)] = summary_numbers(summary)
+            cells = [f"{summary['groups'][g]['right']}/{summary['groups'][g]['cases']}" for g in GROUPS]
+            lines.append(f"| {run['name']}, {kind} | " + " | ".join(cells) + f" | {summary['right']}/{summary['cases']} |")
+    lines.append("")
+    for kind, expected in PUBLISHED.items():
+        got = numbers[(reference["name"], kind)]
+        same = got == expected
+        if arguments.published:
+            failed |= not same
+        lines.append(f"{reference['name']}, {kind}: {'the same as' if same else 'different from'} the published "
+                     f"numbers {expected} (this run {got}).")
     lines.append("")
 
-    differences = {"cases": [], "corrections": []}
-    failed = False
-    lines += ["Table 2. Cases whose outputs differ between the two sides.", "",
-              "| Pair | differ after normalization | differ in letter case only |", "| --- | --- | --- |"]
-    for harness_name, keyboard_name in [("harness control", "keyboard, engine only"),
-                                        ("harness re-ranked", "keyboard with the model")]:
-        normalized, case_only = [], 0
+    lines += ["Table 2. Cases whose outputs differ between the two runs.", "",
+              "| Run | differ after normalization | differ in letter case only |", "| --- | --- | --- |"]
+    for kind in ("engine only", "with the model"):
+        normalized, case_only = 0, 0
         for case_id in by_id:
-            a, b = runs[harness_name][case_id], runs[keyboard_name][case_id]
+            a, b = reference[kind][case_id], other[kind][case_id]
             if normalize("english", a) != normalize("english", b):
-                normalized.append(case_id)
-                differences["cases"].append({"pair": f"{harness_name} / {keyboard_name}", "id": case_id,
-                                             "harness": a, "keyboard": b, "intended": by_id[case_id]["intended"]})
+                normalized += 1
+                differences["cases"].append({"run": kind, "id": case_id, reference["name"]: a, other["name"]: b,
+                                             "intended": by_id[case_id]["intended"]})
             elif a != b:
                 case_only += 1
-        failed |= bool(normalized)
-        lines.append(f"| {harness_name} / {keyboard_name} | {len(normalized)} | {case_only} |")
+        failed |= normalized > 0
+        lines.append(f"| {kind} | {normalized} | {case_only} |")
     lines.append("")
 
-    # Correction by correction.
-    harness_trace = {(e["id"], e["step"]): e for e in read_jsonl(arguments.harness / "trace.dev.jsonl")}
-    keyboard_trace = {}
-    for task in TASKS:
-        for entry in read_jsonl(arguments.keyboard / f"{task}.dev.trace.jsonl"):
-            keyboard_trace[(entry["id"], entry["step"])] = entry
-    shared = sorted(set(harness_trace) & set(keyboard_trace))
-    counts = {"harness corrections": len(harness_trace), "keyboard corrections": len(keyboard_trace),
-              "on both sides": len(shared), "same context": 0, "same readings in the same order": 0,
-              "same candidates": 0, "same choice": 0, "keyboard results other than scores": 0}
-    widest = {"engine score": 0.0, "log probability": 0.0, "space after": 0.0, "combined": 0.0}
-    gaps = []
-    for key in shared:
-        h, k = harness_trace[key], keyboard_trace[key]
-        if k["result"] != "scores":
-            counts["keyboard results other than scores"] += 1
-            continue
-        counts["same context"] += h["context"] == k["context"]
-        same_order = [r["text"] for r in h["readings"]] == [r["text"] for r in k["readings"]]
-        counts["same readings in the same order"] += same_order
-        counts["same candidates"] += sorted(r["candidate"] for r in h["readings"]) == sorted(
-            r["candidate"] for r in k["readings"])
-        counts["same choice"] += h["choice"] == k["choice"]
-        keyboard_by_text = {r["text"]: r for r in k["readings"]}
-        for r in h["readings"]:
-            other = keyboard_by_text.get(r["text"])
-            if other is None:
+    # Each run's recorded choice must be the tuned rule's choice on that run's own numbers.
+    for run in (reference, other):
+        for key, entry in run["trace"].items():
+            if entry["result"] != "scores":
                 continue
-            gap_engine = abs(r["engine_score"] - other["engine_score"])
-            gap_lp = abs(as_float(r["log_probability"]) - as_float(other["log_probability"]))
-            gap_space = abs(as_float(r["space_after"]) - as_float(other["space_after"]))
-            widest["engine score"] = max(widest["engine score"], gap_engine)
-            widest["log probability"] = max(widest["log probability"], gap_lp)
-            widest["space after"] = max(widest["space after"], gap_space)
-            widest["combined"] = max(widest["combined"], gap_engine + gap_lp + gap_space)
-            gaps.append(gap_lp)
-        if h["choice"] != k["choice"] or h["context"] != k["context"] or not same_order:
-            differences["corrections"].append({
-                "id": key[0], "step": key[1], "harness": h, "keyboard": k,
-                "harness decision": decision(h), "keyboard decision": decision(k)})
-    only_harness = sorted(set(harness_trace) - set(keyboard_trace))
-    only_keyboard = sorted(set(keyboard_trace) - set(harness_trace))
-    counts["only in the harness"] = len(only_harness)
-    counts["only in the keyboard"] = len(only_keyboard)
-    differences["only in the harness"] = [list(k) for k in only_harness]
-    differences["only in the keyboard"] = [list(k) for k in only_keyboard]
+            rule = decision(entry)
+            if rule["winner"] != entry["choice"]:
+                differences["rule mismatches"].append({"run": run["name"], "id": key[0], "step": key[1],
+                                                       "choice": entry["choice"], "rule": rule})
+    failed |= bool(differences["rule mismatches"])
+
+    a_trace, b_trace = reference["trace"], other["trace"]
+    shared = sorted(set(a_trace) & set(b_trace))
+    counts = {f"corrections of {reference['name']}": len(a_trace), f"corrections of {other['name']}": len(b_trace),
+              "in both runs": len(shared), "results other than scores": 0, "same text before, ignoring letter case": 0,
+              "same context": 0, "same readings in the same order, with the same marks": 0, "same candidates": 0,
+              "same choice": 0, "recorded choices that differ from the rule on the same run's numbers":
+                  len(differences["rule mismatches"])}
+    widest = {"engine score": 0.0, "log probability": 0.0, "space after": 0.0}
+    gaps = []
+    flips = []
+    for key in shared:
+        a, b = a_trace[key], b_trace[key]
+        if a["result"] != "scores" or b["result"] != "scores":
+            counts["results other than scores"] += 1
+            continue
+        same_before = a["text_before"].lower() == b["text_before"].lower()
+        counts["same text before, ignoring letter case"] += same_before
+        counts["same context"] += a["context"] == b["context"]
+        marks = lambda entry: [(r["text"], r["as_typed"], r["chosen"]) for r in entry["readings"]]  # noqa: E731
+        same_readings = marks(a) == marks(b)
+        counts["same readings in the same order, with the same marks"] += same_readings
+        same_candidates = [r["candidate"] for r in a["readings"]] == [r["candidate"] for r in b["readings"]]
+        counts["same candidates"] += same_candidates
+        counts["same choice"] += a["choice"] == b["choice"]
+        by_text = {r["text"]: r for r in b["readings"]}
+        for r in a["readings"]:
+            o = by_text.get(r["text"])
+            if o is None:
+                continue
+            widest["engine score"] = max(widest["engine score"], abs(r["engine_score"] - o["engine_score"]))
+            gap = abs(float(r["log_probability"]) - float(o["log_probability"]))
+            widest["log probability"] = max(widest["log probability"], gap)
+            widest["space after"] = max(widest["space after"], abs(float(r["space_after"]) - float(o["space_after"])))
+            gaps.append(gap)
+        if a["choice"] != b["choice"] or a["context"] != b["context"] or not same_readings or not same_candidates \
+                or not same_before:
+            entry = {"id": key[0], "step": key[1], "same readings": same_readings, reference["name"]: a,
+                     other["name"]: b, f"decision of {reference['name']}": decision(a),
+                     f"decision of {other['name']}": decision(b)}
+            differences["corrections"].append(entry)
+            if a["choice"] != b["choice"]:
+                flips.append(entry)
+    counts[f"only in {reference['name']}"] = len(set(a_trace) - set(b_trace))
+    counts[f"only in {other['name']}"] = len(set(b_trace) - set(a_trace))
 
     lines += ["Table 3. Corrections that went to the model, matched by case and by their place in the case.", "",
               "| Count | Value |", "| --- | --- |"]
     lines += [f"| {name} | {value} |" for name, value in counts.items()]
     lines.append("")
     gaps.sort()
-    lines += ["Table 4. Widest difference of a number between the two sides, over the readings of the matched "
-              "corrections, in natural-log units. The harness reads the model's numbers with 5 decimals and the "
-              "engine's with 6.", "", "| Number | Widest difference |", "| --- | --- |"]
-    lines += [f"| {name} | {value:.6f} |" for name, value in widest.items()]
+    lines += ["Table 4. Difference of a number between the two runs, over the readings of the matched corrections, "
+              "in natural-log units. The harness reads the model's numbers with 5 decimals and the engine's with 6.",
+              "", "| Number | Value |", "| --- | --- |"]
+    lines += [f"| {name}, widest | {value:.6f} |" for name, value in widest.items()]
     if gaps:
         lines.append(f"| log probability, median | {gaps[len(gaps) // 2]:.6f} |")
         lines.append(f"| log probability, 99th percentile | {gaps[min(len(gaps) - 1, int(len(gaps) * 0.99))]:.6f} |")
     lines.append("")
+    distances = sorted(decision(e)["distance"] for e in a_trace.values() if e["result"] == "scores")
+    for limit in (1e-5, 0.01, 0.1, 0.5):
+        lines.append(f"Decisions of {reference['name']} that a change of {limit:g} in one combined score can turn: "
+                     f"{sum(1 for d in distances if d <= limit)} of {len(distances)}.")
+    lines.append("")
 
-    # Decisions of the harness that a difference of the widest size could turn.
-    slacks = sorted(abs(decision(e)["slack"]) for e in harness_trace.values())
-    near = sum(1 for s in slacks if s <= 2 * widest["combined"])
-    lines += [f"Harness decisions whose slack is at most twice the widest combined difference "
-              f"({2 * widest['combined']:.6f}): {near} of {len(slacks)}. Smallest slacks: "
-              + ", ".join(f"{s:.6f}" for s in slacks[:5]) + ".", ""]
-
-    if differences["corrections"]:
-        lines += ["Table 5. Corrections whose context, readings or choice differ.", "",
-                  "| Case | Step | Harness choice | Keyboard choice | Harness slack | Keyboard slack |",
-                  "| --- | --- | --- | --- | --- | --- |"]
-        for row in differences["corrections"][:50]:
-            lines.append(f"| {row['id']} | {row['step']} | {row['harness']['choice']} | {row['keyboard']['choice']} | "
-                         f"{row['harness decision']['slack']:.6f} | {row['keyboard decision']['slack']:.6f} |")
+    if flips:
+        lines += ["Table 5. Corrections whose choice differs, with the distance of each run's decision from its "
+                  "turning point.", "",
+                  f"| Case | Step | Same readings | {reference['name']} | {other['name']} | distance, {reference['name']} "
+                  f"| distance, {other['name']} |", "| --- | --- | --- | --- | --- | --- | --- |"]
+        a_name, b_name = reference["name"], other["name"]
+        for row in flips:
+            a_distance = row["decision of " + a_name]["distance"]
+            b_distance = row["decision of " + b_name]["distance"]
+            lines.append(f"| {row['id']} | {row['step']} | {row['same readings']} | {row[a_name]['choice']} | "
+                         f"{row[b_name]['choice']} | {a_distance:.4f} | {b_distance:.4f} |")
         lines.append("")
 
-    scorer_check = arguments.harness / "scorer-check.txt"
-    if scorer_check.exists():
-        lines += ["The keyboard's scorer against lm_score on the same Linux runner and the same requests:", ""]
-        lines += ["    " + line for line in scorer_check.read_text(encoding="utf-8").splitlines()]
-        lines.append("")
-    for task in TASKS:
-        report = arguments.keyboard / f"{task}.dev.reranker.txt"
-        if report.exists():
-            lines += [f"The keyboard's model in the simulator after {task} dev:", ""]
-            lines += ["    " + line for line in report.read_text(encoding="utf-8").splitlines()]
+    for run in (reference, other):
+        check = run["folder"] / "scorer-check.txt"
+        if check.exists():
+            lines += [f"The keyboard's scorer against lm_score on the runner of {run['name']}, same requests:", ""]
+            lines += ["    " + line for line in check.read_text(encoding="utf-8").splitlines()]
             lines.append("")
+        for task in TASKS:
+            report = run["folder"] / f"{task}.dev.reranker.txt"
+            if report.exists():
+                lines += [f"The model of {run['name']} after {task} dev:", ""]
+                lines += ["    " + line for line in report.read_text(encoding="utf-8").splitlines()]
+                lines.append("")
 
     text = "\n".join(lines) + "\n"
     (arguments.out / "report.md").write_text(text, encoding="utf-8")
     (arguments.out / "differences.json").write_text(json.dumps(differences, indent=1), encoding="utf-8")
     print(text)
     if failed:
-        print("The outputs differ in at least one case. differences.json lists each one.", file=sys.stderr)
+        print("At least one check failed. report.md and differences.json give each difference.", file=sys.stderr)
         sys.exit(1)
 
 

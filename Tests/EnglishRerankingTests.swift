@@ -70,8 +70,9 @@ final class RerankRuleTests: XCTestCase {
 
     func testAMoveAwayFromTheTextAsTypedNeedsTheMarginFromTyped() {
         let readings = [reading("teh", -10, typed: true, chosen: true), reading("the", -12)]
-        XCTAssertEqual(rule.choose(readings, model(-30, -8.01)), 0)
-        XCTAssertEqual(rule.choose(readings, model(-30, -8)), 1)
+        // "teh" has -40 and "the" -16.01, then -16: a lead of 23.99, then exactly 24.
+        XCTAssertEqual(rule.choose(readings, model(-30, -4.01)), 0)
+        XCTAssertEqual(rule.choose(readings, model(-30, -4)), 1)
     }
 
     func testAMoveBackToTheTextAsTypedNeedsNoMargin() {
