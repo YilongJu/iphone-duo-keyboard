@@ -98,11 +98,23 @@ static double log_of_marked(const float *scores, int vocabulary, const unsigned 
     return log(sum);
 }
 
+/* The token whose text is one space. llama.cpp b4846 (src/llama-vocab.cpp, the BPE session)
+   writes the token of "[UNK]" for a word piece that is a lone space, and a GPT-2 style
+   vocabulary has no "[UNK]", so the tokenizer gives -1. The text of this script holds no line
+   break, so -1 can only stand for a lone space, and the space token takes its place, as in the
+   Hugging Face tokenizer: " ich" is the space token and then "ich". */
+static llama_token space_token = LLAMA_TOKEN_NULL;
+static long space_repairs = 0;
+
 static int tokenize(const struct llama_vocab *vocab, const char *text, llama_token *tokens, int capacity) {
     int count = llama_tokenize(vocab, text, (int32_t)strlen(text), tokens, capacity, false, false);
     if (count < 0) die("a text gives more tokens than the buffer holds");
     int vocabulary = llama_vocab_n_tokens(vocab);
     for (int index = 0; index < count; index++) {
+        if (tokens[index] == LLAMA_TOKEN_NULL && space_token != LLAMA_TOKEN_NULL) {
+            tokens[index] = space_token;
+            space_repairs++;
+        }
         if (tokens[index] < 0 || tokens[index] >= vocabulary) {
             fprintf(stderr, "lm_score: the text \"%s\" gives token %d at place %d of %d\n", text, tokens[index], index, count);
             die("a token is outside the vocabulary");
@@ -148,6 +160,7 @@ int main(int argc, char **argv) {
         if (length > 0 && piece[0] == ' ') {
             space_first[token] = 1;
             space_tokens++;
+            if (length == 1 && space_token == LLAMA_TOKEN_NULL) space_token = token;
         }
     }
     if (space_tokens == 0) die("no token starts with a space");
@@ -166,7 +179,8 @@ int main(int argc, char **argv) {
     if (model_context == NULL) die("the model state did not set up");
     struct llama_batch batch = llama_batch_init(BATCH_SIZE, 0, 1);
 
-    fprintf(stdout, "ready vocabulary=%d start=%d space_tokens=%d\n", vocabulary, start, space_tokens);
+    fprintf(stdout, "ready vocabulary=%d start=%d space_tokens=%d space_token=%d\n", vocabulary, start, space_tokens,
+            space_token);
     fflush(stdout);
 
     static char line[MAX_LINE];
@@ -272,6 +286,7 @@ int main(int argc, char **argv) {
 
     fprintf(stderr, "lm_score: %ld tokens read, %.1f ms in the model and the scores\n", tokens_read, model_ms);
     fprintf(stderr, "lm_score: highest RssAnon %ld kB\n", highest_anon);
+    fprintf(stderr, "lm_score: %ld lone-space tokens put in place of -1\n", space_repairs);
     llama_batch_free(batch);
     llama_free(model_context);
     llama_model_free(model);
