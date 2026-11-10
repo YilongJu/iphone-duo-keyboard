@@ -52,6 +52,11 @@ final class SystemModelProofreader: SentenceProofreading {
         Answer: \u{6211}\u{4EEC}\u{660E}\u{5929}\u{5728}\u{5317}\u{4EAC}\u{89C1}\u{9762}\u{3002}
         """
 
+    /// False while this app does not hold Apple's Private Cloud Compute entitlement. A build
+    /// without the entitlement stopped the keyboard at each finished sentence when it asked for
+    /// the cloud model, so the request is off until Apple grants the entitlement.
+    static let usesCloudModel = false
+
     /// The larger model on Apple's Private Cloud Compute servers answers a finished sentence
     /// when it is available. The model on the device answers a clause that ends in a comma,
     /// because the cloud model has a daily limit, and it answers everything when the cloud
@@ -60,7 +65,8 @@ final class SystemModelProofreader: SentenceProofreading {
     func proofread(_ sentence: String) async -> ProofreadResult {
         #if canImport(FoundationModels)
         var cloudNote: String?
-        if #available(iOS 27.0, *), let last = sentence.last, KeyboardTextLogic.sentenceEnds.contains(last) {
+        if Self.usesCloudModel, #available(iOS 27.0, *), let last = sentence.last,
+            KeyboardTextLogic.sentenceEnds.contains(last) {
             let cloud = await askCloudModel(sentence)
             if cloud.text != nil { return cloud }
             cloudNote = cloud.note
