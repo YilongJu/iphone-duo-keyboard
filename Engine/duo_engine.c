@@ -5,7 +5,9 @@
 #include <string.h>
 
 #define DUO_MAGIC 0x4C4F5544u
-#define DUO_VERSION 1u
+#define DUO_VERSION 2u
+#define WORD_BYTES 12
+#define MODEL_BACK_OFF 1u
 
 /* The most slips the search follows inside one word. */
 #define BAND 2
@@ -59,11 +61,15 @@ static node_t node_at(const duo_lexicon *lexicon, uint32_t index) {
 }
 
 static float word_log_probability(const duo_lexicon *lexicon, uint32_t word) {
-    return read_f32(lexicon->words + 8 * (size_t)word + 4);
+    return read_f32(lexicon->words + WORD_BYTES * (size_t)word + 4);
+}
+
+static float word_back_off(const duo_lexicon *lexicon, uint32_t word) {
+    return read_f32(lexicon->words + WORD_BYTES * (size_t)word + 8);
 }
 
 static const char *word_text(const duo_lexicon *lexicon, uint32_t word) {
-    return (const char *)lexicon->strings + read_u32(lexicon->words + 8 * (size_t)word);
+    return (const char *)lexicon->strings + read_u32(lexicon->words + WORD_BYTES * (size_t)word);
 }
 
 int duo_lexicon_open(duo_lexicon *lexicon, const void *data, size_t size) {
@@ -74,7 +80,9 @@ int duo_lexicon_open(duo_lexicon *lexicon, const void *data, size_t size) {
     uint32_t word_count = read_u32(bytes + 12);
     uint32_t strings_size = read_u32(bytes + 16);
     uint32_t pair_count = read_u32(bytes + 20);
-    size_t expected = 32 + (size_t)node_count * 12 + (size_t)word_count * 8
+    uint32_t model = read_u32(bytes + 24);
+    if (model > MODEL_BACK_OFF) return 0;
+    size_t expected = 32 + (size_t)node_count * 12 + (size_t)word_count * WORD_BYTES
         + ((size_t)word_count + 1) * 4 + (size_t)pair_count * 8 + (size_t)strings_size;
     if (node_count == 0 || expected != size) return 0;
 
@@ -82,9 +90,10 @@ int duo_lexicon_open(duo_lexicon *lexicon, const void *data, size_t size) {
     lexicon->word_count = word_count;
     lexicon->pair_count = pair_count;
     lexicon->strings_size = strings_size;
+    lexicon->model = model;
     lexicon->nodes = bytes + 32;
     lexicon->words = lexicon->nodes + (size_t)node_count * 12;
-    lexicon->pair_index = lexicon->words + (size_t)word_count * 8;
+    lexicon->pair_index = lexicon->words + (size_t)word_count * WORD_BYTES;
     lexicon->pairs = lexicon->pair_index + ((size_t)word_count + 1) * 4;
     lexicon->strings = lexicon->pairs + (size_t)pair_count * 8;
 
@@ -98,7 +107,7 @@ int duo_lexicon_open(duo_lexicon *lexicon, const void *data, size_t size) {
     }
     if (strings_size > 0 && lexicon->strings[strings_size - 1] != 0) return 0;
     for (uint32_t word = 0; word < word_count; word++) {
-        if (read_u32(lexicon->words + 8 * (size_t)word) >= strings_size) return 0;
+        if (read_u32(lexicon->words + WORD_BYTES * (size_t)word) >= strings_size) return 0;
     }
     uint32_t previous_start = 0;
     for (uint32_t word = 0; word <= word_count; word++) {
@@ -363,21 +372,32 @@ static uint32_t find_exact_node(const duo_lexicon *lexicon, const char *letters,
 /* ---- Word probabilities ---- */
 
 /* Picks the most probable word of a node after the word `previous`, and its log probability.
-   With a known previous word the probability mixes the word-pair statistic and the word's own
-   frequency. The words of a node sit side by side in the word table, so the pairs of `previous`
-   that fall inside the node are one run of its sorted pair list. */
+   With a known previous word the probability comes from the word-pair statistic and the word's
+   own frequency, combined by the lexicon's model. The words of a node sit side by side in the
+   word table, so the pairs of `previous` that fall inside the node are one run of its sorted
+   pair list. */
 static void best_word(
     const duo_lexicon *lexicon, const duo_params *params, uint32_t previous, uint32_t node_index,
     uint32_t *word, float *log_probability) {
     node_t node = node_at(lexicon, node_index);
     float top = word_log_probability(lexicon, node.first_word);
     *word = node.first_word;
-    if (previous == NO_WORD || lexicon->pair_count == 0 || params->pair_weight <= 0.0f) {
+    if (previous == NO_WORD || lexicon->pair_count == 0) {
+        *log_probability = top;
+        return;
+    }
+    int back_off_model = lexicon->model == MODEL_BACK_OFF;
+    if (!back_off_model && params->pair_weight <= 0.0f) {
         *log_probability = top;
         return;
     }
     float own_share = 1.0f - params->pair_weight;
-    float best = top + logf(own_share);
+    /* Back-off model: a listed pair gives the chance of its second word, so the back-off
+       estimate holds only for the words of the node that have no listed pair. `listed` keeps
+       the listed words, to find the best word outside them. */
+    uint32_t listed[32];
+    int listed_count = 0;
+    float best = back_off_model ? -BIG : top + logf(own_share);
     uint32_t low = read_u32(lexicon->pair_index + 4 * (size_t)previous);
     uint32_t end = read_u32(lexicon->pair_index + 4 * ((size_t)previous + 1));
     uint32_t high = end;
@@ -389,12 +409,35 @@ static void best_word(
     for (uint32_t pair = low; pair < end; pair++) {
         uint32_t second = read_u32(lexicon->pairs + 8 * (size_t)pair);
         if (second >= node.first_word + node.word_count) break;
-        float mixed = logf(
-            params->pair_weight * expf(read_f32(lexicon->pairs + 8 * (size_t)pair + 4))
-            + own_share * expf(word_log_probability(lexicon, second)));
-        if (mixed > best) {
-            best = mixed;
+        float pair_value = read_f32(lexicon->pairs + 8 * (size_t)pair + 4);
+        float value = back_off_model
+            ? pair_value
+            : logf(params->pair_weight * expf(pair_value) + own_share * expf(word_log_probability(lexicon, second)));
+        if (back_off_model && listed_count < 32) listed[listed_count++] = second;
+        if (value > best) {
+            best = value;
             *word = second;
+        }
+    }
+    if (back_off_model) {
+        /* The words of a node are sorted by their own probability, so the first word without a
+           listed pair has the best back-off estimate. */
+        float weight = word_back_off(lexicon, previous);
+        for (uint32_t candidate = node.first_word; candidate < node.first_word + node.word_count; candidate++) {
+            int is_listed = 0;
+            for (int index = 0; index < listed_count; index++) {
+                if (listed[index] == candidate) {
+                    is_listed = 1;
+                    break;
+                }
+            }
+            if (is_listed) continue;
+            float value = weight + word_log_probability(lexicon, candidate);
+            if (value > best) {
+                best = value;
+                *word = candidate;
+            }
+            break;
         }
     }
     *log_probability = best;

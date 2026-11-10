@@ -13,7 +13,7 @@ Usage, from the repository root:
 import math
 from pathlib import Path
 
-from lexicon_format import write_lexicon
+from lexicon_format import MODEL_MIXED, write_lexicon
 
 ROOT = Path(__file__).resolve().parents[2]
 SOURCE = ROOT / "Shared" / "pinyin-dictionary.txt"
@@ -26,8 +26,8 @@ def main():
         spelling, word, frequency = line.split("\t")
         rows.append((spelling.replace(" ", ""), word, float(frequency)))
     total = sum(frequency for _, _, frequency in rows)
-    entries = [(spelling, word, math.log(frequency / total)) for spelling, word, frequency in rows]
-    stats = write_lexicon(OUTPUT, entries, {})
+    entries = [(spelling, word, math.log(frequency / total), 0.0) for spelling, word, frequency in rows]
+    stats = write_lexicon(OUTPUT, entries, {}, MODEL_MIXED)
     print(f"wrote {OUTPUT.relative_to(ROOT)}: {stats}")
 
 
