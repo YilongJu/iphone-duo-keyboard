@@ -69,6 +69,7 @@ final class SetupViewController: UIViewController, UITextViewDelegate {
         stack.addArrangedSubview(diagnosticsLabel)
 
         textController.proofreader = SystemModelProofreader()
+        textController.rememberLanguage()
         textController.onDismiss = { [weak self] in
             self?.previewField.resignFirstResponder()
         }

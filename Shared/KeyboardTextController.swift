@@ -111,6 +111,22 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
     /// The owner hides the keyboard here.
     var onDismiss: @MainActor () -> Void = {}
 
+    private static let languageKey = "typesChinese"
+    private var remembersLanguage = false
+
+    /// Opens the keyboard in the language it typed last, and stores each later switch. iOS
+    /// starts the keyboard anew each time it appears, so without this call the keyboard would
+    /// open in English every time.
+    func rememberLanguage() {
+        remembersLanguage = true
+        // A phone that never switched the language does not have the stored value, and the
+        // keyboard then opens in English.
+        guard UserDefaults.standard.bool(forKey: Self.languageKey), !chineseMode else { return }
+        chineseMode = true
+        keyboardView.chineseActive = true
+        refreshCaption()
+    }
+
     /// Reads each finished sentence and proposes a fix. Without a proofreader the keyboard
     /// does not propose anything.
     var proofreader: SentenceProofreading?
@@ -671,6 +687,9 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
             chineseMode.toggle()
             keyboardView.chineseActive = chineseMode
             refreshCaption()
+            if remembersLanguage {
+                UserDefaults.standard.set(chineseMode, forKey: Self.languageKey)
+            }
         case .selectAll:
             if allText != nil {
                 setAllText(nil)
