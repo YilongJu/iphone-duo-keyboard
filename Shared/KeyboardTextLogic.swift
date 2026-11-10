@@ -132,43 +132,6 @@ enum KeyboardTextLogic {
         return words.joined(separator: " ")
     }
 
-    /// Picks the first guess that is close to the typed word, and gives the guess the typed
-    /// word's capital. A short word allows one edit, and a longer word allows two.
-    static func bestGuess(for word: String, guesses: [String]) -> String? {
-        let typed = word.lowercased()
-        let limit = typed.count <= 4 ? 1 : 2
-        for guess in guesses where !guess.contains(" ") {
-            let distance = editDistance(typed, guess.lowercased())
-            guard distance > 0, distance <= limit else { continue }
-            if let first = word.first, first.isUppercase {
-                return guess.prefix(1).uppercased() + guess.dropFirst()
-            }
-            return guess
-        }
-        return nil
-    }
-
-    /// Count of single-character edits between two words. A swap of two neighbors counts as one edit.
-    static func editDistance(_ first: String, _ second: String) -> Int {
-        let a = Array(first)
-        let b = Array(second)
-        if a.isEmpty { return b.count }
-        if b.isEmpty { return a.count }
-        var table = Array(repeating: Array(repeating: 0, count: b.count + 1), count: a.count + 1)
-        for i in 0...a.count { table[i][0] = i }
-        for j in 0...b.count { table[0][j] = j }
-        for i in 1...a.count {
-            for j in 1...b.count {
-                let cost = a[i - 1] == b[j - 1] ? 0 : 1
-                table[i][j] = min(table[i - 1][j] + 1, table[i][j - 1] + 1, table[i - 1][j - 1] + cost)
-                if i > 1, j > 1, a[i - 1] == b[j - 2], a[i - 2] == b[j - 1] {
-                    table[i][j] = min(table[i][j], table[i - 2][j - 2] + 1)
-                }
-            }
-        }
-        return table[a.count][b.count]
-    }
-
     static func returnKeyTitle(for type: UIReturnKeyType) -> String {
         switch type {
         case .go: return "go"

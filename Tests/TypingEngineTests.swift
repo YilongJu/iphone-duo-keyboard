@@ -16,31 +16,31 @@ final class TypingEngineTests: XCTestCase {
         _ = TypingLexicon(resource: "lexicon-pinyin", fullCheck: true)
     }
 
-    func testEnglishKeepsAKnownWord() {
-        XCTAssertNil(Self.english.correction(previousWord: "", typed: "the"))
-        XCTAssertNil(Self.english.correction(previousWord: "", typed: "good morning"))
+    func testEnglishReadsAKnownWordAsTyped() {
+        XCTAssertEqual(Self.english.reading(previousWord: "", typed: "the"), "the")
+        XCTAssertEqual(Self.english.reading(previousWord: "", typed: "good morning"), "good morning")
     }
 
     func testEnglishRepairsLetterSlips() {
-        XCTAssertEqual(Self.english.correction(previousWord: "", typed: "teh"), "the")
-        XCTAssertEqual(Self.english.correction(previousWord: "will", typed: "recieve"), "receive")
-        XCTAssertEqual(Self.english.correction(previousWord: "", typed: "hello wrold"), "hello world")
-        XCTAssertEqual(Self.english.correction(previousWord: "", typed: "dont"), "don't")
+        XCTAssertEqual(Self.english.reading(previousWord: "", typed: "teh"), "the")
+        XCTAssertEqual(Self.english.reading(previousWord: "will", typed: "recieve"), "receive")
+        XCTAssertEqual(Self.english.reading(previousWord: "", typed: "hello wrold"), "hello world")
+        XCTAssertEqual(Self.english.reading(previousWord: "", typed: "dont"), "don't")
     }
 
     func testEnglishRepairsSlipsAroundTheSpaceBar() {
-        XCTAssertEqual(Self.english.correction(previousWord: "", typed: "thequick"), "the quick")
-        XCTAssertEqual(Self.english.correction(previousWord: "", typed: "th e"), "the")
-        XCTAssertEqual(Self.english.correction(previousWord: "", typed: "tob e"), "to be")
-        XCTAssertEqual(Self.english.correction(previousWord: "the", typed: "qu ick"), "quick")
+        XCTAssertEqual(Self.english.reading(previousWord: "", typed: "thequick"), "the quick")
+        XCTAssertEqual(Self.english.reading(previousWord: "", typed: "th e"), "the")
+        XCTAssertEqual(Self.english.reading(previousWord: "", typed: "tob e"), "to be")
+        XCTAssertEqual(Self.english.reading(previousWord: "the", typed: "qu ick"), "quick")
     }
 
     func testEnglishKeepsTextItCannotRead() {
         // A capital, a digit and a double space are outside the engine's input.
-        XCTAssertNil(Self.english.correction(previousWord: "", typed: "Teh"))
-        XCTAssertNil(Self.english.correction(previousWord: "", typed: "teh2"))
-        XCTAssertNil(Self.english.correction(previousWord: "", typed: "th  e"))
-        XCTAssertNil(Self.english.correction(previousWord: "", typed: ""))
+        XCTAssertNil(Self.english.reading(previousWord: "", typed: "Teh"))
+        XCTAssertNil(Self.english.reading(previousWord: "", typed: "teh2"))
+        XCTAssertNil(Self.english.reading(previousWord: "", typed: "th  e"))
+        XCTAssertNil(Self.english.reading(previousWord: "", typed: ""))
     }
 
     func testPinyinReadsASentence() {
@@ -121,6 +121,13 @@ final class TypingEngineTests: XCTestCase {
         let first = bundledEngine().candidates(for: "xi'an").first
         XCTAssertEqual(first?.word, "\u{897F}\u{5B89}")
         XCTAssertEqual(first?.consumedLetters, 5)
+    }
+
+    func testAPickForLettersWithAnApostropheComesFirstTheNextTime() {
+        let engine = bundledEngine()
+        let picked = engine.candidates(for: "xi'an").first { $0.word == "\u{897F}\u{5CB8}" }!
+        engine.learn(spelling: picked.spelling, word: picked.word)
+        XCTAssertEqual(engine.candidates(for: "xi'an").first?.word, "\u{897F}\u{5CB8}")
     }
 
     func testAPickIsRememberedUnderTheTypedLetters() {

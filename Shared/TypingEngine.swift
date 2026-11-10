@@ -48,17 +48,16 @@ final class EnglishTypingEngine {
         self.lexicon = lexicon
     }
 
-    /// Reads typed text and returns the text the person most likely meant, or nil when the
-    /// engine keeps the text as typed.
+    /// Reads typed text and returns the text the person most likely meant. The result equals
+    /// `typed` when the engine reads the text as typed.
     ///
     /// `typed` holds one or two words in lower case: letters, apostrophes and single spaces.
     /// `previousWord` is the word before the typed text, in lower case, or an empty string.
-    /// Text with any other character comes back as nil, which means "keep as typed".
-    func correction(previousWord: String, typed: String) -> String? {
+    /// Text with any other character is outside the engine's input, and the result is nil.
+    func reading(previousWord: String, typed: String) -> String? {
         var result = duo_result()
         guard duo_correct_english(&lexicon.lexicon, &params, previousWord, typed, &result) == 1 else { return nil }
-        let text = TypingLexicon.text(of: &result)
-        return text == typed ? nil : text
+        return TypingLexicon.text(of: &result)
     }
 }
 
