@@ -917,6 +917,19 @@ final class KeyboardTextControllerTests: XCTestCase {
 }
 
 final class KeyboardTextLogicTests: XCTestCase {
+    func testEveryReturnKeyTypeHasASymbolThatExists() {
+        let types: [UIReturnKeyType] = [
+            .default, .go, .google, .join, .next, .route, .search, .send, .yahoo, .done,
+            .emergencyCall, .continue,
+        ]
+        for type in types {
+            let name = KeyboardTextLogic.returnKeySymbol(for: type)
+            XCTAssertNotNil(UIImage(systemName: name), "\(type.rawValue): \(name)")
+        }
+        XCTAssertEqual(KeyboardTextLogic.returnKeySymbol(for: .send), "paperplane")
+        XCTAssertEqual(KeyboardTextLogic.returnKeySymbol(for: .default), "return.left")
+    }
+
     private func offset(_ command: EditCommand, _ before: String, _ after: String) -> Int {
         KeyboardTextLogic.cursorOffset(for: command, before: before, after: after)
     }
