@@ -24,8 +24,9 @@
                reads all of them in one call.
    done        the model is freed and the test is over
 
- A line that holds the word "failed" names the step that did not run. The test then frees what
- it loaded and stops.
+ A line that holds the word "failed" names the step that did not run, and the test then frees
+ what it loaded and stops. Two checks only mark the result and let the test go on: a memory
+ reading that iOS refused, and candidate scores that differ between the two ways.
 
  1 MB is 1,048,576 bytes in every line.
  */
@@ -41,7 +42,7 @@ typedef void (*duo_lm_line_fn)(const char *line, void *context);
 
 /* Runs the whole test on the calling thread with the model file at `model_path`, and hands
    each result line to `emit` as soon as the line exists. The model is freed before the call
-   returns. Returns 1 when every step ran and 0 when a step failed. */
+   returns. Returns 1 when every step ran and every check held, and 0 otherwise. */
 int duo_lm_measure(const char *model_path, duo_lm_line_fn emit, void *context);
 
 #ifdef __cplusplus

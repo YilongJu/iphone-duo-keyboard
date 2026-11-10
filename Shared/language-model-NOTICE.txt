@@ -1,0 +1,45 @@
+The language model test of Duo Keyboard uses one model file and one framework of other projects.
+The repository does not hold either file. scripts/ci/fetch_language_model.sh downloads both
+before a build, each from a fixed address, and checks each against a fixed SHA-256 value.
+
+distilgpt2.Q3_K_M.gguf
+
+  DistilGPT2 by Hugging Face, https://huggingface.co/distilbert/distilgpt2, an English language
+  model with 82 million weights, under the Apache License, Version 2.0
+  (http://www.apache.org/licenses/LICENSE-2.0).
+
+  Changes: the user mradermacher of huggingface.co converted the model to the GGUF file format
+  of llama.cpp and stored its weights with about 3 bits each (the setting Q3_K_M). The file comes
+  unchanged from
+  https://huggingface.co/mradermacher/distilgpt2-GGUF/resolve/524d576d63aa026274d5a1ee42414edf7f61e7c7/distilgpt2.Q3_K_M.gguf
+  SHA-256: a0fdd02371cf4b318445575ab917cd3cf4abf494e09c24f760f777eb641b2b85
+
+llama.framework
+
+  llama.cpp, https://github.com/ggml-org/llama.cpp, at release b4846, built by the azooKey
+  project from its copy of the source, https://github.com/azooKey/llama.cpp. The file comes
+  unchanged from
+  https://github.com/azooKey/llama.cpp/releases/download/b4846/signed-llama.xcframework.zip
+  SHA-256: db3b13169df8870375f212e6ac21194225f1c85f7911d595ab64c8c790068e0a
+
+  MIT License
+
+  Copyright (c) 2023-2024 The ggml authors
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in all
+  copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.

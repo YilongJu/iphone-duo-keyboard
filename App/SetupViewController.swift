@@ -1,12 +1,15 @@
 import UIKit
 
-/// The host app's only screen. The screen has four parts: setup steps, a field that uses the
-/// system-selected keyboard, a field that always shows this app's keyboard, and the display
-/// measurements that decide which layout appears.
+/// The host app's only screen. The screen has five parts: setup steps, a field that uses the
+/// system-selected keyboard, a field that always shows this app's keyboard, the display
+/// measurements that decide which layout appears, and the language model test.
 final class SetupViewController: UIViewController, UITextViewDelegate {
     private let scrollView = UIScrollView()
     private let stack = UIStackView()
     private let diagnosticsLabel = UILabel()
+    private let languageModelButton = UIButton(type: .system)
+    private let languageModelResults = UITextView()
+    private let languageModelTest = BundledLanguageModelTest()
     private let systemField = UITextView()
     private let previewField = UITextView()
     private let previewKeyboard = KeyboardView()
@@ -67,6 +70,27 @@ final class SetupViewController: UIViewController, UITextViewDelegate {
         diagnosticsLabel.font = .monospacedSystemFont(ofSize: 13, weight: .regular)
         diagnosticsLabel.accessibilityIdentifier = "diagnostics"
         stack.addArrangedSubview(diagnosticsLabel)
+
+        stack.addArrangedSubview(makeLabel("Language model test", style: .headline))
+        var testConfiguration = UIButton.Configuration.filled()
+        testConfiguration.title = "Run language model test"
+        languageModelButton.configuration = testConfiguration
+        languageModelButton.accessibilityIdentifier = "languageModelButton"
+        languageModelButton.addAction(UIAction { [weak self] _ in
+            self?.runLanguageModelTest()
+        }, for: .touchUpInside)
+        stack.addArrangedSubview(languageModelButton)
+        // A text view lets the person select and copy the result lines.
+        languageModelResults.isEditable = false
+        languageModelResults.isScrollEnabled = false
+        languageModelResults.font = .monospacedSystemFont(ofSize: 13, weight: .regular)
+        languageModelResults.backgroundColor = .clear
+        languageModelResults.textContainerInset = .zero
+        languageModelResults.textContainer.lineFragmentPadding = 0
+        languageModelResults.accessibilityIdentifier = "languageModelResults"
+        languageModelResults.text = "The test runs in this app. For the keyboard's own numbers, "
+            + "type duo:lm and a space with Duo Keyboard in the Notes app."
+        stack.addArrangedSubview(languageModelResults)
 
         textController.proofreader = SystemModelProofreader()
         textController.rememberLanguage()
@@ -166,6 +190,22 @@ final class SetupViewController: UIViewController, UITextViewDelegate {
             "model      \(model)",
             "system     iOS \(UIDevice.current.systemVersion)",
         ].joined(separator: "\n")
+    }
+
+    /// Runs the language model test in the app's own process and shows each result line when
+    /// the line exists. iOS allows an app far more memory than a keyboard, so the numbers
+    /// to hold against the keyboard's limit come from the same test inside the keyboard.
+    private func runLanguageModelTest() {
+        languageModelButton.isEnabled = false
+        languageModelResults.text = ""
+        let lines = languageModelTest.resultLines()
+        Task { [weak self] in
+            for await line in lines {
+                guard let self else { return }
+                self.languageModelResults.text = (self.languageModelResults.text ?? "") + line + "\n"
+            }
+            self?.languageModelButton.isEnabled = true
+        }
     }
 
     // MARK: UITextViewDelegate

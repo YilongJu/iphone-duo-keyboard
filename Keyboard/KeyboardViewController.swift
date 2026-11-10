@@ -20,6 +20,8 @@ final class KeyboardViewController: UIInputViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         textController.proofreader = SystemModelProofreader()
+        // The test loads its model only when the person types "duo:lm" and a space.
+        textController.languageModelMeasurer = BundledLanguageModelTest()
         textController.rememberLanguage()
         // iPadOS draws undo, redo and paste buttons over the keyboard's top left corner. This
         // request to drop them is honored for a text field's own input view. For a keyboard

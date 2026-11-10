@@ -17,7 +17,6 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
-#include <sys/stat.h>
 #include <time.h>
 #include <unistd.h>
 
@@ -42,6 +41,9 @@
 /* The most tokens one call hands to the model. The context and the candidates need 20 and 16. */
 #define BATCH_CAPACITY 64
 #define BYTES_PER_MB 1048576.0
+/* The two ways to score a candidate may differ by this much, in natural-log units. They run
+   the same arithmetic in a different order, which moves a result in its last digits only. */
+#define SCORE_TOLERANCE 0.01
 
 /* 20 common words and one comma, which the GPT-2 vocabulary holds as one token each. */
 static const char context_text[] =
@@ -56,6 +58,8 @@ static const int thread_counts[] = {1, 2, 4};
 typedef struct {
     duo_lm_line_fn emit;
     void *context;
+    /* Set when a check did not hold while the test went on, so the last line says so. */
+    int check_failed;
 } report_t;
 
 #if defined(__GNUC__)
@@ -77,6 +81,16 @@ static double now_ms(void) {
     return (double)moment.tv_sec * 1000.0 + (double)moment.tv_nsec / 1e6;
 }
 
+/* Size of the file in bytes, or -1 when the file is not readable. The size comes from the
+   end position of the open file, because Apple asks an app to declare each use of stat. */
+static long file_size(const char *path) {
+    FILE *file = fopen(path, "rb");
+    if (file == NULL) return -1;
+    long size = fseek(file, 0, SEEK_END) == 0 ? ftell(file) : -1;
+    fclose(file);
+    return size;
+}
+
 /* The last error text of llama.cpp. A failed step reports it. */
 static char last_error[200];
 
@@ -93,13 +107,14 @@ static void keep_last_error(enum ggml_log_level level, const char *text, void *u
 }
 
 /* Writes one line with the memory of the process at the named moment. */
-static void memory_line(const report_t *report, const char *moment) {
+static void memory_line(report_t *report, const char *moment) {
 #if defined(__APPLE__)
     task_vm_info_data_t info;
     mach_msg_type_number_t count = TASK_VM_INFO_COUNT;
     kern_return_t result = task_info(mach_task_self(), TASK_VM_INFO, (task_info_t)&info, &count);
     if (result != KERN_SUCCESS) {
         line(report, "memory      %s: failed, task_info returned %d", moment, (int)result);
+        report->check_failed = 1;
         return;
     }
     line(report, "memory      %s: footprint %.1f MB, highest %.1f MB, still allowed %.1f MB", moment,
@@ -254,7 +269,7 @@ static void token_text(const struct llama_vocab *vocab, llama_token token, char 
 
 /* Reads the context once and scores the candidates both ways, with the thread count that the
    model context holds now. Returns 0 when the model did not run. */
-static int measure_candidates(const report_t *report, struct llama_context *model_context,
+static int measure_candidates(report_t *report, struct llama_context *model_context,
                               struct llama_batch *batch, int vocabulary, const llama_token *context_tokens,
                               const candidates_t *candidates, const char *label) {
     double start = now_ms();
@@ -287,7 +302,8 @@ static int measure_candidates(const report_t *report, struct llama_context *mode
     for (int candidate = 0; candidate < CANDIDATES; candidate++) {
         if (alone[candidate] > alone[best]) best = candidate;
         double gap = fabs(alone[candidate] - together[candidate]);
-        if (gap > widest_gap) widest_gap = gap;
+        /* A score that is not a number gives a gap that is not a number, and that gap stays. */
+        if (isnan(gap) || gap > widest_gap) widest_gap = gap;
     }
     line(report, "candidates  %s: context %.1f ms, then %d candidates of %d tokens: %.1f ms one by one, "
          "%.1f ms in one batch",
@@ -295,6 +311,10 @@ static int measure_candidates(const report_t *report, struct llama_context *mode
          together_done - alone_done);
     line(report, "candidates  %s: most probable \"%s\" (log probability %.2f), the two ways differ by %.4f at most",
          label, candidate_texts[best] + 1, alone[best], widest_gap);
+    if (!(widest_gap <= SCORE_TOLERANCE)) {
+        line(report, "candidates  %s: failed check, the two ways must agree within %.2f", label, SCORE_TOLERANCE);
+        report->check_failed = 1;
+    }
     return 1;
 }
 
@@ -329,8 +349,8 @@ static int measure_per_token(const report_t *report, struct llama_context *model
 }
 
 int duo_lm_measure(const char *model_path, duo_lm_line_fn emit, void *context) {
-    report_t report_value = {emit, context};
-    const report_t *report = &report_value;
+    report_t report_value = {emit, context, 0};
+    report_t *report = &report_value;
     struct llama_model *model = NULL;
     struct llama_context *model_context = NULL;
     struct llama_batch batch;
@@ -338,8 +358,8 @@ int duo_lm_measure(const char *model_path, duo_lm_line_fn emit, void *context) {
     int has_batch = 0;
     int passed = 0;
 
-    struct stat file_info;
-    if (stat(model_path, &file_info) != 0) {
+    long model_bytes = file_size(model_path);
+    if (model_bytes < 0) {
         line(report, "model       failed: the file %s is not readable", model_path);
         line(report, "done        a step failed, see the line that says failed");
         return 0;
@@ -378,7 +398,7 @@ int duo_lm_measure(const char *model_path, duo_lm_line_fn emit, void *context) {
     const struct llama_vocab *vocab = llama_model_get_vocab(model);
     int vocabulary = llama_vocab_n_tokens(vocab);
     line(report, "model       %s, %.1f MB, %.1f million weights, %d tokens in the vocabulary", file_name,
-         (double)file_info.st_size / BYTES_PER_MB, (double)llama_model_n_params(model) / 1e6, vocabulary);
+         (double)model_bytes / BYTES_PER_MB, (double)llama_model_n_params(model) / 1e6, vocabulary);
     line(report, "load        %.0f ms", load_ms);
     memory_line(report, "after load");
 
@@ -470,6 +490,7 @@ finish:
     if (model_context != NULL) llama_free(model_context);
     if (model != NULL) llama_model_free(model);
     memory_line(report, "after the model is freed");
-    line(report, passed ? "done        every step ran" : "done        a step failed, see the line that says failed");
+    if (report->check_failed) passed = 0;
+    line(report, "%s", passed ? "done        every step ran" : "done        a step failed, see the line that says failed");
     return passed;
 }
