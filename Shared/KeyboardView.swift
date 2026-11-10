@@ -1,5 +1,6 @@
 import UIKit
 
+@MainActor
 protocol KeyboardViewDelegate: AnyObject {
     func keyboardView(_ keyboardView: KeyboardView, insert text: String)
     func keyboardViewDeleteBackward(_ keyboardView: KeyboardView)
@@ -41,6 +42,11 @@ final class KeyboardView: UIView {
 
     var shiftState: ShiftState = .off {
         didSet { if oldValue != shiftState { refreshLabels() } }
+    }
+
+    /// True while the select-all key is on. The key then draws in the pressed color.
+    var selectAllActive = false {
+        didSet { if oldValue != selectAllActive { refreshLabels() } }
     }
 
     /// True while shift is on because of automatic capitalization. Automatic shift makes the
@@ -123,6 +129,13 @@ final class KeyboardView: UIView {
         return rowHeight * KeyboardLayout.totalRowHeight(style: style) + spec.topPadding + spec.bottomPadding
     }
 
+    /// Opens a layer from code. The keys themselves switch layers during normal use.
+    func show(layer: KeyboardLayer) {
+        guard layer != currentLayer else { return }
+        currentLayer = layer
+        rebuild()
+    }
+
     // MARK: Building
 
     private func rebuild() {
@@ -154,8 +167,7 @@ final class KeyboardView: UIView {
         let wordSize: CGFloat = 16
         switch kind {
         case .character(let character):
-            let text = isLetter(character) && shiftState != .off ? character.uppercased() : character
-            return KeyDisplay(primary: text, primaryFontSize: letterSize)
+            return KeyDisplay(primary: characterText(character), primaryFontSize: letterSize)
         case .dual(let base, let shifted):
             return KeyDisplay(primary: base, secondary: shifted, primaryFontSize: 19)
         case .space:
@@ -194,6 +206,10 @@ final class KeyboardView: UIView {
             return KeyDisplay(primary: "home", primaryFontSize: wordSize)
         case .end:
             return KeyDisplay(primary: "end", primaryFontSize: wordSize)
+        case .selectAll:
+            return KeyDisplay(symbolName: "selection.pin.in.out", emphasized: selectAllActive)
+        case .forwardDelete:
+            return KeyDisplay(symbolName: "delete.right")
         case .cut:
             return KeyDisplay(symbolName: "scissors")
         case .copy:
@@ -205,13 +221,17 @@ final class KeyboardView: UIView {
             switch target {
             case .letters: title = "ABC"
             case .symbols: title = style == .wide ? ".?123" : "123"
+            case .more: title = "#+="
             }
             return KeyDisplay(primary: title, primaryFontSize: wordSize)
         }
     }
 
-    private func isLetter(_ text: String) -> Bool {
-        !text.isEmpty && text.allSatisfy { $0.isLetter }
+    /// The text a character key shows and types. Shift changes the case on the letters layer
+    /// only, so a symbol such as "π" on another layer keeps its form.
+    func characterText(_ character: String) -> String {
+        let isLetter = !character.isEmpty && character.allSatisfy { $0.isLetter }
+        return currentLayer == .letters && isLetter && shiftState != .off ? character.uppercased() : character
     }
 
     // MARK: Layout
@@ -313,7 +333,7 @@ final class KeyboardView: UIView {
 
             let kind = keyView.key.kind
             switch kind {
-            case .backspace, .cursorLeft, .cursorRight, .cursorUp, .cursorDown:
+            case _ where kind.repeats:
                 state.committed = true
                 perform(kind)
                 startRepeating(kind)
@@ -518,7 +538,7 @@ final class KeyboardView: UIView {
         lastShiftTapTime = 0
         switch kind {
         case .character(let character):
-            let text = isLetter(character) && shiftState != .off ? character.uppercased() : character
+            let text = characterText(character)
             // Shift resets before the delegate call, because the delegate may turn shift on again.
             if shiftState == .on { shiftState = .off }
             delegate?.keyboardView(self, insert: text)
@@ -546,6 +566,10 @@ final class KeyboardView: UIView {
             delegate?.keyboardView(self, edit: .lineStart)
         case .end:
             delegate?.keyboardView(self, edit: .lineEnd)
+        case .selectAll:
+            delegate?.keyboardView(self, edit: .selectAll)
+        case .forwardDelete:
+            delegate?.keyboardView(self, edit: .deleteForward)
         case .cut:
             delegate?.keyboardView(self, edit: .cut)
         case .copy:

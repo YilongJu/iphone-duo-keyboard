@@ -52,12 +52,16 @@ sys.exit("simulator not found: " + prefix)
   xcrun simctl bootstatus "$udid" -b
   xcrun simctl install "$udid" "$app_path"
   xcrun simctl ui "$udid" appearance light
-  xcrun simctl launch "$udid" "$bundle_id" -focusPreviewField
-  sleep 12
-  capture "$udid" "$output_dir/$slug-light"
+  # One launch per layer. The "-layer" argument opens that layer of the keyboard.
+  for layer in letters symbols more; do
+    xcrun simctl terminate "$udid" "$bundle_id" 2>/dev/null || true
+    xcrun simctl launch "$udid" "$bundle_id" -focusPreviewField -layer "$layer"
+    sleep 10
+    capture "$udid" "$output_dir/$slug-$layer-light"
+  done
   xcrun simctl ui "$udid" appearance dark
   sleep 4
-  capture "$udid" "$output_dir/$slug-dark"
+  capture "$udid" "$output_dir/$slug-more-dark"
   xcrun simctl shutdown "$udid"
 done
 

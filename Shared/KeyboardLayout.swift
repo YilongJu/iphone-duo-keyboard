@@ -1,9 +1,11 @@
 import UIKit
 
-/// The set of keys on screen. `letters` is the main layer, `symbols` is the layer behind the ".?123" key.
+/// The set of keys on screen. `letters` is the main layer, `symbols` is the layer behind the
+/// ".?123" key, and `more` is the layer behind the "#+=" key on the symbols layer.
 enum KeyboardLayer {
     case letters
     case symbols
+    case more
 }
 
 /// `compact` is the phone-width layout (10 key units per row).
@@ -21,6 +23,8 @@ enum ShiftState {
 
 /// An editing action that the owner of the keyboard carries out on the text field.
 enum EditCommand {
+    case selectAll
+    case deleteForward
     case cut
     case copy
     case paste
@@ -49,6 +53,8 @@ enum KeyKind: Equatable {
     case cursorDown
     case home
     case end
+    case selectAll
+    case forwardDelete
     case cut
     case copy
     case paste
@@ -65,7 +71,7 @@ enum KeyKind: Equatable {
     /// Repeating keys act on finger down and repeat while the finger stays down.
     var repeats: Bool {
         switch self {
-        case .backspace, .cursorLeft, .cursorRight, .cursorUp, .cursorDown: return true
+        case .backspace, .forwardDelete, .cursorLeft, .cursorRight, .cursorUp, .cursorDown: return true
         default: return false
         }
     }
@@ -95,11 +101,14 @@ enum KeyKind: Equatable {
         case "down": return .cursorDown
         case "home": return .home
         case "end": return .end
+        case "selectAll": return .selectAll
+        case "forwardDelete": return .forwardDelete
         case "cut": return .cut
         case "copy": return .copy
         case "paste": return .paste
         case "symbols": return .switchLayer(.symbols)
         case "letters": return .switchLayer(.letters)
+        case "more": return .switchLayer(.more)
         default: return nil
         }
     }
@@ -181,6 +190,15 @@ struct KeyboardSpec: Decodable {
         let units: CGFloat
         let letters: [Row]
         let symbols: [Row]
+        let more: [Row]
+
+        func rows(for layer: KeyboardLayer) -> [Row] {
+            switch layer {
+            case .letters: return letters
+            case .symbols: return symbols
+            case .more: return more
+            }
+        }
     }
 
     let metrics: Metrics
@@ -217,7 +235,7 @@ struct KeyboardLayout {
 
     static func make(style: LayoutStyle, layer: KeyboardLayer, showsGlobe: Bool) -> KeyboardLayout {
         let styleSpec = KeyboardSpec.shared.style(style)
-        let rowSpecs = layer == .letters ? styleSpec.letters : styleSpec.symbols
+        let rowSpecs = styleSpec.rows(for: layer)
         let rows = rowSpecs.map { row in showsGlobe ? row.keys : withoutGlobe(row.keys) }
         return KeyboardLayout(rows: rows, rowHeights: rowSpecs.map { $0.height }, units: styleSpec.units)
     }

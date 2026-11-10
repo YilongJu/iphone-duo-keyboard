@@ -17,7 +17,9 @@
   body { margin: 0; padding: 20px 16px 48px; background: var(--page); color: var(--ink);
     font: 15px/1.45 -apple-system, "Segoe UI", system-ui, sans-serif; }
   h1 { font-size: 22px; margin: 0 0 4px; }
-  p.lead { margin: 0 0 16px; color: var(--muted); max-width: 70ch; }
+  h2 { font-size: 15px; margin: 22px 0 8px; }
+  h2 span { color: var(--muted); font-weight: 400; }
+  p.lead { margin: 0 0 16px; color: var(--muted); max-width: 72ch; }
   .controls { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; margin-bottom: 14px; }
   .controls label { color: var(--muted); font-size: 13px; }
   button.chip { border: 1px solid var(--line); background: var(--panel); color: var(--ink);
@@ -26,31 +28,34 @@
   input[type="range"] { vertical-align: middle; }
   .readout { font: 13px/1.5 ui-monospace, Consolas, monospace; color: var(--muted); margin: 0 0 12px; }
   .stage { overflow-x: auto; padding-bottom: 8px; }
-  .device { background: var(--panel); border: 1px solid var(--line); overflow: hidden; position: relative; }
-  .typed { min-height: 110px; padding: 14px 16px; white-space: pre-wrap; word-break: break-word;
-    font-size: 17px; }
+  .typed { min-height: 84px; padding: 14px 16px; white-space: pre-wrap; word-break: break-word;
+    font-size: 17px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; }
   .caret { display: inline-block; width: 2px; height: 1.1em; background: var(--accent);
     vertical-align: text-bottom; margin: 0 -1px; }
+  .device { border: 1px solid var(--line); border-top: 0; overflow: hidden; position: relative;
+    outline: 3px solid transparent; transition: outline-color 0.2s; }
+  .device.flash { outline-color: var(--accent); }
   .board { position: relative; background: var(--board); touch-action: none; user-select: none; }
   .key { position: absolute; display: flex; flex-direction: column; align-items: center;
     justify-content: center; border-radius: 5px; background: var(--key); color: var(--key-ink);
-    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.3); overflow: hidden; }
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.3); overflow: hidden; white-space: nowrap; }
   .key.fn { background: var(--fn); }
-  .key.pressed, .key.fn.on { background: var(--fn); }
+  .key.pressed { background: var(--fn); }
   .key.fn.pressed, .key.fn.on { background: var(--key); }
   .key .top { font-size: 14px; line-height: 1; margin-bottom: 3px; }
   .key .main { line-height: 1; }
   .key.alt .top { display: none; }
-  table { border-collapse: collapse; margin-top: 18px; font-size: 14px; }
+  table { border-collapse: collapse; margin-top: 22px; font-size: 14px; }
   caption { text-align: left; color: var(--muted); padding-bottom: 6px; }
   th, td { text-align: left; padding: 4px 14px 4px 0; border-bottom: 1px solid var(--line); }
 </style>
 </head>
 <body>
 <h1>Duo Keyboard preview</h1>
-<p class="lead">This page draws the keyboard from <code>Shared/keyboard-layout.json</code>, the same
-file the iPhone app reads. Click a key to type. Hold a two-character key, or drag up on it, for the
-upper character.</p>
+<p class="lead">This page draws all three keyboard layers from <code>Shared/keyboard-layout.json</code>,
+the same file the iPhone app reads. Click a key to type into the text box. Hold a two-character key,
+or drag up on it, for the upper character. A layer key such as <code>.?123</code> outlines the layer
+it opens.</p>
 
 <div class="controls">
   <span id="presets"></span>
@@ -61,24 +66,28 @@ upper character.</p>
 <p class="readout" id="readout"></p>
 
 <div class="stage">
-  <div class="device" id="device">
-    <div class="typed" id="typed"></div>
-    <div class="board" id="board"></div>
-  </div>
+  <div class="typed" id="typed"></div>
+  <div id="layers"></div>
 </div>
 
 <table>
   <caption>Differences between this preview and the phone</caption>
   <tr><th>Topic</th><th>Preview</th><th>Phone</th></tr>
-  <tr><td>Icons</td><td>Text symbols</td><td>Apple's SF Symbols</td></tr>
+  <tr><td>Layers</td><td>All three at once</td><td>One at a time</td></tr>
+  <tr><td>Icons</td><td>Text symbols and words</td><td>Apple's SF Symbols</td></tr>
   <tr><td>Corner radius</td><td>The slider's value</td><td>The display's real radius</td></tr>
   <tr><td>Cut, copy, paste</td><td>A notice on the space bar</td><td>The system clipboard, with Full Access on</td></tr>
   <tr><td>Space bar hold</td><td>Not simulated</td><td>Moves the cursor</td></tr>
 </table>
 
 <script>
-const SPEC = {"metrics": {"wideMinimumWidth": 600, "topPadding": 4, "bottomPadding": 8, "horizontalPadding": 3, "bottomRowCornerInset": 16, "gapX": 3, "gapYWide": 3.5, "gapYCompact": 5, "wideRowHeightPerUnit": 1.05, "wideRowHeightMin": 46, "wideRowHeightMax": 60, "compactRowHeight": 46, "landscapePhoneRowHeight": 38}, "wide": {"units": 14.5, "letters": [{"height": 0.72, "keys": [{"f": "cut", "w": 2.9}, {"f": "copy", "w": 2.9}, {"f": "paste", "w": 2.9}, {"f": "home", "w": 2.9}, {"f": "end", "w": 2.9}]}, {"height": 1, "keys": [["`", "~"], ["1", "!"], ["2", "@"], ["3", "#"], ["4", "$"], ["5", "%"], ["6", "^"], ["7", "&"], ["8", "*"], ["9", "("], ["0", ")"], ["-", "_"], ["=", "+"], {"f": "backspace", "w": 1.5}]}, {"height": 1, "keys": [{"f": "tab", "w": 1.5}, "q", "w", "e", "r", "t", "y", "u", "i", "o", "p", ["[", "{"], ["]", "}"], ["\\", "|"]]}, {"height": 1, "keys": [{"f": "capsLock", "w": 1.75}, "a", "s", "d", "f", "g", "h", "j", "k", "l", [";", ":"], ["'", "\""], {"f": "return", "w": 1.75}]}, {"height": 1, "keys": [{"f": "shift", "w": 2.25}, "z", "x", "c", "v", "b", "n", "m", [",", "<"], [".", ">"], ["/", "?"], {"f": "shift", "w": 2.25}]}, {"height": 1, "keys": [{"f": "globe", "w": 1.25}, {"f": "symbols", "w": 1.25}, {"f": "space", "w": 6.75}, {"f": "left", "w": 1}, {"f": "up", "w": 1}, {"f": "down", "w": 1}, {"f": "right", "w": 1}, {"f": "dismiss", "w": 1.25}]}], "symbols": [{"height": 0.72, "keys": [{"f": "cut", "w": 2.9}, {"f": "copy", "w": 2.9}, {"f": "paste", "w": 2.9}, {"f": "home", "w": 2.9}, {"f": "end", "w": 2.9}]}, {"height": 1, "keys": ["€", "£", "¥", "₩", "₹", "¢", "§", "°", "•", "…", "–", "×", "÷", {"f": "backspace", "w": 1.5}]}, {"height": 1, "keys": [{"f": "tab", "w": 1.5}, "!", "@", "#", "$", "%", "^", "&", "*", "(", ")", "{", "}", "|"]}, {"height": 1, "keys": [{"f": "letters", "w": 1.75}, "-", "_", "=", "+", "/", "\\", ":", ";", "'", "\"", "~", {"f": "return", "w": 1.75}]}, {"height": 1, "keys": [{"f": "letters", "w": 2.25}, "<", ">", "[", "]", "?", ",", ".", "`", "¿", "¡", {"f": "letters", "w": 2.25}]}, {"height": 1, "keys": [{"f": "globe", "w": 1.25}, {"f": "letters", "w": 1.25}, {"f": "space", "w": 6.75}, {"f": "left", "w": 1}, {"f": "up", "w": 1}, {"f": "down", "w": 1}, {"f": "right", "w": 1}, {"f": "dismiss", "w": 1.25}]}]}, "compact": {"units": 10, "letters": [{"height": 0.72, "keys": [{"f": "cut", "w": 2}, {"f": "copy", "w": 2}, {"f": "paste", "w": 2}, {"f": "home", "w": 2}, {"f": "end", "w": 2}]}, {"height": 1, "keys": [["1", "!"], ["2", "@"], ["3", "#"], ["4", "$"], ["5", "%"], ["6", "^"], ["7", "&"], ["8", "*"], ["9", "("], ["0", ")"]]}, {"height": 1, "keys": ["q", "w", "e", "r", "t", "y", "u", "i", "o", "p"]}, {"height": 1, "keys": ["a", "s", "d", "f", "g", "h", "j", "k", "l"]}, {"height": 1, "keys": [{"f": "shift", "w": 1.5}, "z", "x", "c", "v", "b", "n", "m", {"f": "backspace", "w": 1.5}]}, {"height": 1, "keys": [{"f": "symbols", "w": 1.25}, {"f": "globe", "w": 1.25}, {"f": "space", "w": 4}, ".", {"f": "return", "w": 2.5}]}], "symbols": [{"height": 0.72, "keys": [{"f": "cut", "w": 2}, {"f": "copy", "w": 2}, {"f": "paste", "w": 2}, {"f": "home", "w": 2}, {"f": "end", "w": 2}]}, {"height": 1, "keys": [["1", "!"], ["2", "@"], ["3", "#"], ["4", "$"], ["5", "%"], ["6", "^"], ["7", "&"], ["8", "*"], ["9", "("], ["0", ")"]]}, {"height": 1, "keys": ["-", "/", ":", ";", "(", ")", "$", "&", "@", "\""]}, {"height": 1, "keys": ["[", "]", "{", "}", "#", "%", "^", "*", "+", "="]}, {"height": 1, "keys": [{"c": "_", "w": 0.85}, {"c": "\\", "w": 0.85}, {"c": "|", "w": 0.85}, {"c": "~", "w": 0.85}, {"c": "<", "w": 0.85}, {"c": ">", "w": 0.85}, {"c": ".", "w": 0.85}, {"c": ",", "w": 0.85}, {"c": "?", "w": 0.85}, {"c": "!", "w": 0.85}, {"f": "backspace", "w": 1.5}]}, {"height": 1, "keys": [{"f": "letters", "w": 1.25}, {"f": "globe", "w": 1.25}, {"f": "space", "w": 4}, "'", {"f": "return", "w": 2.5}]}]}};
+const SPEC = {"metrics": {"wideMinimumWidth": 600, "topPadding": 4, "bottomPadding": 8, "horizontalPadding": 3, "bottomRowCornerInset": 16, "gapX": 3, "gapYWide": 3.5, "gapYCompact": 5, "wideRowHeightPerUnit": 1.05, "wideRowHeightMin": 46, "wideRowHeightMax": 54, "compactRowHeight": 46, "landscapePhoneRowHeight": 34}, "wide": {"units": 14.5, "letters": [{"height": 0.72, "keys": [{"f": "selectAll", "w": 2.5}, {"f": "cut", "w": 2.5}, {"f": "copy", "w": 2.5}, {"f": "paste", "w": 2.5}, {"f": "home", "w": 2.25}, {"f": "end", "w": 2.25}]}, {"height": 1, "keys": [["`", "~"], ["1", "!"], ["2", "@"], ["3", "#"], ["4", "$"], ["5", "%"], ["6", "^"], ["7", "&"], ["8", "*"], ["9", "("], ["0", ")"], ["-", "_"], ["=", "+"], {"f": "backspace", "w": 1.5}]}, {"height": 1, "keys": [{"f": "tab", "w": 1.5}, "q", "w", "e", "r", "t", "y", "u", "i", "o", "p", ["[", "{"], ["]", "}"], ["\\", "|"]]}, {"height": 1, "keys": [{"f": "capsLock", "w": 1.75}, "a", "s", "d", "f", "g", "h", "j", "k", "l", [";", ":"], ["'", "\""], {"f": "return", "w": 1.75}]}, {"height": 1, "keys": [{"f": "shift", "w": 2.25}, "z", "x", "c", "v", "b", "n", "m", [",", "<"], [".", ">"], ["/", "?"], {"f": "shift", "w": 2.25}]}, {"height": 1, "keys": [{"f": "globe", "w": 1.25}, {"f": "symbols", "w": 1.25}, {"f": "space", "w": 6.75}, {"f": "left", "w": 1}, {"f": "up", "w": 1}, {"f": "down", "w": 1}, {"f": "right", "w": 1}, {"f": "dismiss", "w": 1.25}]}], "symbols": [{"height": 0.72, "keys": [{"f": "selectAll", "w": 2.5}, {"f": "cut", "w": 2.5}, {"f": "copy", "w": 2.5}, {"f": "paste", "w": 2.5}, {"f": "home", "w": 2.25}, {"f": "end", "w": 2.25}]}, {"height": 1, "keys": ["`", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "<", ">", {"f": "backspace", "w": 1.5}]}, {"height": 1, "keys": [{"f": "tab", "w": 1.5}, "[", "]", "{", "}", "#", "%", "^", "*", "+", "=", "\\", "|", "~"]}, {"height": 1, "keys": [{"c": "-", "w": 1.0625}, {"c": "/", "w": 1.0625}, {"c": ":", "w": 1.0625}, {"c": ";", "w": 1.0625}, {"c": "(", "w": 1.0625}, {"c": ")", "w": 1.0625}, {"c": "$", "w": 1.0625}, {"c": "&", "w": 1.0625}, {"c": "@", "w": 1.0625}, {"c": "\"", "w": 1.0625}, {"c": "€", "w": 1.0625}, {"c": "£", "w": 1.0625}, {"f": "return", "w": 1.75}]}, {"height": 1, "keys": [{"f": "more", "w": 1.75}, ".", ",", "?", "!", "'", "_", "…", "•", "°", "–", "¥", {"f": "forwardDelete", "w": 1.75}]}, {"height": 1, "keys": [{"f": "globe", "w": 1.25}, {"f": "letters", "w": 1.25}, {"f": "space", "w": 6.75}, {"f": "left", "w": 1}, {"f": "up", "w": 1}, {"f": "down", "w": 1}, {"f": "right", "w": 1}, {"f": "dismiss", "w": 1.25}]}], "more": [{"height": 0.72, "keys": [{"f": "selectAll", "w": 2.5}, {"f": "cut", "w": 2.5}, {"f": "copy", "w": 2.5}, {"f": "paste", "w": 2.5}, {"f": "home", "w": 2.25}, {"f": "end", "w": 2.25}]}, {"height": 1, "keys": ["¢", "₹", "₩", "₽", "₿", "§", "¶", "©", "®", "™", "²", "³", "½", {"f": "backspace", "w": 1.5}]}, {"height": 1, "keys": [{"f": "tab", "w": 1.5}, "×", "÷", "±", "≠", "≈", "≤", "≥", "∞", "√", "∑", "π", "µ", "∆"]}, {"height": 1, "keys": [{"c": "←", "w": 1.0625}, {"c": "→", "w": 1.0625}, {"c": "↑", "w": 1.0625}, {"c": "↓", "w": 1.0625}, {"c": "↔", "w": 1.0625}, {"c": "⇐", "w": 1.0625}, {"c": "⇒", "w": 1.0625}, {"c": "⇔", "w": 1.0625}, {"c": "∈", "w": 1.0625}, {"c": "∀", "w": 1.0625}, {"c": "∃", "w": 1.0625}, {"c": "∂", "w": 1.0625}, {"f": "return", "w": 1.75}]}, {"height": 1, "keys": [{"f": "symbols", "w": 1.75}, "·", "“", "”", "‘", "’", "«", "»", "¿", "¡", "✓", "✗", {"f": "forwardDelete", "w": 1.75}]}, {"height": 1, "keys": [{"f": "globe", "w": 1.25}, {"f": "letters", "w": 1.25}, {"f": "space", "w": 6.75}, {"f": "left", "w": 1}, {"f": "up", "w": 1}, {"f": "down", "w": 1}, {"f": "right", "w": 1}, {"f": "dismiss", "w": 1.25}]}]}, "compact": {"units": 10, "letters": [{"height": 0.72, "keys": [{"f": "selectAll", "w": 1.75}, {"f": "cut", "w": 1.75}, {"f": "copy", "w": 1.75}, {"f": "paste", "w": 1.75}, {"f": "home", "w": 1.5}, {"f": "end", "w": 1.5}]}, {"height": 1, "keys": [["1", "!"], ["2", "@"], ["3", "#"], ["4", "$"], ["5", "%"], ["6", "^"], ["7", "&"], ["8", "*"], ["9", "("], ["0", ")"]]}, {"height": 1, "keys": ["q", "w", "e", "r", "t", "y", "u", "i", "o", "p"]}, {"height": 1, "keys": ["a", "s", "d", "f", "g", "h", "j", "k", "l"]}, {"height": 1, "keys": [{"f": "shift", "w": 1.5}, "z", "x", "c", "v", "b", "n", "m", {"f": "backspace", "w": 1.5}]}, {"height": 1, "keys": [{"f": "symbols", "w": 1.25}, {"f": "globe", "w": 1.25}, {"f": "space", "w": 4}, ".", {"f": "return", "w": 2.5}]}], "symbols": [{"height": 0.72, "keys": [{"f": "selectAll", "w": 1.75}, {"f": "cut", "w": 1.75}, {"f": "copy", "w": 1.75}, {"f": "paste", "w": 1.75}, {"f": "home", "w": 1.5}, {"f": "end", "w": 1.5}]}, {"height": 1, "keys": [["1", "!"], ["2", "@"], ["3", "#"], ["4", "$"], ["5", "%"], ["6", "^"], ["7", "&"], ["8", "*"], ["9", "("], ["0", ")"]]}, {"height": 1, "keys": ["-", "/", ":", ";", "(", ")", "$", "&", "@", "\""]}, {"height": 1, "keys": ["[", "]", "{", "}", "#", "%", "^", "*", "+", "="]}, {"height": 1, "keys": [{"f": "more", "w": 1.5}, ".", ",", "?", "!", "'", "`", "_", {"f": "backspace", "w": 1.5}]}, {"height": 1, "keys": [{"f": "letters", "w": 1.25}, {"f": "globe", "w": 1.25}, {"f": "space", "w": 5}, {"f": "return", "w": 2.5}]}], "more": [{"height": 0.72, "keys": [{"f": "selectAll", "w": 1.75}, {"f": "cut", "w": 1.75}, {"f": "copy", "w": 1.75}, {"f": "paste", "w": 1.75}, {"f": "home", "w": 1.5}, {"f": "end", "w": 1.5}]}, {"height": 1, "keys": [["1", "!"], ["2", "@"], ["3", "#"], ["4", "$"], ["5", "%"], ["6", "^"], ["7", "&"], ["8", "*"], ["9", "("], ["0", ")"]]}, {"height": 1, "keys": ["\\", "|", "~", "<", ">", "€", "£", "¥", "•", "°"]}, {"height": 1, "keys": ["×", "÷", "±", "≠", "≈", "≤", "≥", "…", "–", "✓"]}, {"height": 1, "keys": [{"f": "symbols", "w": 1.5}, "←", "→", "↑", "↓", "∞", "π", "µ", {"f": "backspace", "w": 1.5}]}, {"height": 1, "keys": [{"f": "letters", "w": 1.25}, {"f": "globe", "w": 1.25}, {"f": "space", "w": 5}, {"f": "return", "w": 2.5}]}]}};
 const M = SPEC.metrics;
+const LAYERS = [
+  { name: "letters", title: "Letters layer", note: "the layer the keyboard opens with" },
+  { name: "symbols", title: "Symbols layer", note: "after the .?123 key" },
+  { name: "more", title: "More symbols layer", note: "after the #+= key on the symbols layer" },
+];
 const PRESETS = [
   { name: "Closed, portrait", width: 466, compactHeight: false },
   { name: "Open, portrait", width: 669, compactHeight: false },
@@ -86,83 +95,101 @@ const PRESETS = [
   { name: "Open, landscape", width: 951, compactHeight: false },
 ];
 const FN_LABEL = {
-  backspace: "⌫", shift: "⇧", capsLock: "⇪", tab: "⇥", globe: "🌐", dismiss: "⌨↓",
-  left: "←", right: "→", up: "↑", down: "↓", home: "home", end: "end",
-  cut: "✂", copy: "⧉", paste: "📋", symbols: ".?123", letters: "ABC", space: "",
+  backspace: "⌫", forwardDelete: "⌦", shift: "⇧", capsLock: "⇪", tab: "⇥", globe: "🌐", dismiss: "⌨↓",
+  left: "←", right: "→", up: "↑", down: "↓", home: "home", end: "end", selectAll: "select all",
+  cut: "✂", copy: "⧉", paste: "📋", symbols: ".?123", letters: "ABC", more: "#+=", space: "", return: "return",
 };
 const state = {
-  width: 669, compactHeight: false, layer: "letters", shift: "off", autoShift: false,
-  text: "", cursor: 0, notice: null, noticeTimer: null,
+  width: 669, compactHeight: false, shift: "off", autoShift: false,
+  text: "", cursor: 0, allSelected: false, notice: null, noticeTimer: null,
 };
 
-function normalize(key) {
-  if (typeof key === "string") return { type: "char", base: key, w: 1 };
-  if (Array.isArray(key)) return { type: "dual", base: key[0], alt: key[1], w: 1 };
-  if (key.c !== undefined) return { type: "char", base: key.c, w: key.w ?? 1 };
-  if (FN_LABEL[key.f] === undefined && key.f !== "return") throw new Error("Unknown key: " + key.f);
-  return { type: "fn", name: key.f, w: key.w ?? 1 };
+function normalize(key, layer) {
+  if (typeof key === "string") return { type: "char", base: key, w: 1, layer };
+  if (Array.isArray(key)) return { type: "dual", base: key[0], alt: key[1], w: 1, layer };
+  if (key.c !== undefined) return { type: "char", base: key.c, w: key.w ?? 1, layer };
+  if (FN_LABEL[key.f] === undefined) throw new Error("Unknown key: " + key.f);
+  return { type: "fn", name: key.f, w: key.w ?? 1, layer };
+}
+// Shift changes the case on the letters layer only, so "π" on another layer keeps its form.
+function characterText(key) {
+  const shifts = key.layer === "letters" && isLetter(key.base) && state.shift !== "off";
+  return shifts ? key.base.toUpperCase() : key.base;
 }
 function styleName() { return state.width >= M.wideMinimumWidth ? "wide" : "compact"; }
-function rowsNow() { return SPEC[styleName()][state.layer].map(r => ({ height: r.height, keys: r.keys.map(normalize) })); }
-function preferredHeight() {
-  const style = styleName();
-  let rowHeight;
-  if (state.compactHeight) rowHeight = M.landscapePhoneRowHeight;
-  else if (style === "wide") {
+function rowHeightNow() {
+  if (state.compactHeight) return M.landscapePhoneRowHeight;
+  if (styleName() === "wide") {
     const unit = state.width / SPEC.wide.units;
-    rowHeight = Math.min(Math.max(unit * M.wideRowHeightPerUnit, M.wideRowHeightMin), M.wideRowHeightMax);
-  } else rowHeight = M.compactRowHeight;
-  const total = SPEC[style].letters.reduce((sum, r) => sum + r.height, 0);
-  return rowHeight * total + M.topPadding + M.bottomPadding;
+    return Math.min(Math.max(unit * M.wideRowHeightPerUnit, M.wideRowHeightMin), M.wideRowHeightMax);
+  }
+  return M.compactRowHeight;
 }
 function isLetter(s) { return s.toLowerCase() !== s.toUpperCase(); }
 
 function render() {
-  const board = document.getElementById("board");
-  const device = document.getElementById("device");
   const style = styleName();
-  const rows = rowsNow();
-  const height = preferredHeight();
   const radius = Number(document.getElementById("radius").value);
-  device.style.width = state.width + "px";
-  device.style.borderRadius = `0 0 ${radius}px ${radius}px`;
-  board.style.height = height + "px";
-  board.replaceChildren();
-
-  const usableWidth = state.width - 2 * M.horizontalPadding;
-  const totalFraction = rows.reduce((sum, r) => sum + r.height, 0);
-  const rowHeight = (height - M.topPadding - M.bottomPadding) / totalFraction;
-  const gapY = style === "wide" ? M.gapYWide : M.gapYCompact;
-  const units = SPEC[style].units;
-  let y = M.topPadding;
+  const rowHeight = rowHeightNow();
+  const container = document.getElementById("layers");
+  const flashed = container.querySelector(".device.flash")?.dataset.layer;
+  container.replaceChildren();
+  let boardHeight = 0;
   let letterKeyWidth = 0;
-  rows.forEach((row, rowIndex) => {
-    const rowWeight = row.keys.reduce((sum, k) => sum + k.w, 0);
-    const inset = rowIndex === rows.length - 1 ? M.bottomRowCornerInset : 0;
-    const unit = (usableWidth - 2 * inset) / units;
-    if (rowIndex === 2) letterKeyWidth = unit;
-    let x = M.horizontalPadding + inset + (units - rowWeight) / 2 * unit;
-    const h = row.height * rowHeight;
-    for (const key of row.keys) {
-      const el = document.createElement("div");
-      el.className = "key" + (key.type === "fn" && key.name !== "space" ? " fn" : "");
-      el.style.left = (x + M.gapX) + "px";
-      el.style.top = (y + gapY) + "px";
-      el.style.width = (key.w * unit - 2 * M.gapX) + "px";
-      el.style.height = (h - 2 * gapY) + "px";
-      paint(el, key, style);
-      attach(el, key, rowHeight);
-      board.appendChild(el);
-      x += key.w * unit;
-    }
-    y += h;
-  });
+  for (const layer of LAYERS) {
+    const rows = SPEC[style][layer.name].map(r => ({ height: r.height, keys: r.keys.map(k => normalize(k, layer.name)) }));
+    const heading = document.createElement("h2");
+    heading.textContent = layer.title + " ";
+    const note = document.createElement("span");
+    note.textContent = layer.note;
+    heading.appendChild(note);
+    container.appendChild(heading);
+
+    const device = document.createElement("div");
+    device.className = "device" + (flashed === layer.name ? " flash" : "");
+    device.dataset.layer = layer.name;
+    device.style.width = state.width + "px";
+    device.style.borderRadius = `0 0 ${radius}px ${radius}px`;
+    const board = document.createElement("div");
+    board.className = "board";
+    const totalFraction = rows.reduce((sum, r) => sum + r.height, 0);
+    boardHeight = rowHeight * totalFraction + M.topPadding + M.bottomPadding;
+    board.style.height = boardHeight + "px";
+
+    const usableWidth = state.width - 2 * M.horizontalPadding;
+    const gapY = style === "wide" ? M.gapYWide : M.gapYCompact;
+    const units = SPEC[style].units;
+    let y = M.topPadding;
+    rows.forEach((row, rowIndex) => {
+      const rowWeight = row.keys.reduce((sum, k) => sum + k.w, 0);
+      const inset = rowIndex === rows.length - 1 ? M.bottomRowCornerInset : 0;
+      const unit = (usableWidth - 2 * inset) / units;
+      if (rowIndex === 2) letterKeyWidth = unit;
+      let x = M.horizontalPadding + inset + (units - rowWeight) / 2 * unit;
+      const h = row.height * rowHeight;
+      for (const key of row.keys) {
+        const el = document.createElement("div");
+        el.className = "key" + (key.type === "fn" && key.name !== "space" ? " fn" : "");
+        el.style.left = (x + M.gapX) + "px";
+        el.style.top = (y + gapY) + "px";
+        el.style.width = (key.w * unit - 2 * M.gapX) + "px";
+        el.style.height = (h - 2 * gapY) + "px";
+        paint(el, key, style);
+        attach(el, key, rowHeight);
+        board.appendChild(el);
+        x += key.w * unit;
+      }
+      y += h;
+    });
+    device.appendChild(board);
+    container.appendChild(device);
+  }
 
   document.getElementById("widthValue").textContent = state.width;
   document.getElementById("radiusValue").textContent = radius;
   document.getElementById("width").value = state.width;
   document.getElementById("readout").textContent =
-    `layout ${style}   keyboard ${state.width} x ${height.toFixed(0)} pt   letter key ${letterKeyWidth.toFixed(1)} pt wide   ` +
+    `layout ${style}   keyboard ${state.width} x ${boardHeight.toFixed(0)} pt   letter key ${letterKeyWidth.toFixed(1)} pt wide   ` +
     `row ${rowHeight.toFixed(1)} pt high   wide layout starts at ${M.wideMinimumWidth} pt`;
   for (const chip of document.querySelectorAll("#presets .chip")) {
     chip.setAttribute("aria-pressed", String(Number(chip.dataset.width) === state.width));
@@ -187,16 +214,20 @@ function paint(el, key, style) {
     main.textContent = key.base;
     main.style.fontSize = "19px";
   } else if (key.type === "char") {
-    main.textContent = isLetter(key.base) && state.shift !== "off" ? key.base.toUpperCase() : key.base;
+    main.textContent = characterText(key);
     main.style.fontSize = style === "wide" ? "24px" : "23px";
   } else {
-    let label = key.name === "return" ? "return" : FN_LABEL[key.name];
-    if (key.name === "space") label = state.notice ?? (style === "compact" ? "space" : "");
+    let label = FN_LABEL[key.name];
+    const caption = state.notice ?? (state.allSelected ? "All text selected" : null);
+    if (key.name === "space") label = caption ?? (style === "compact" ? "space" : "");
     if (key.name === "symbols" && style === "compact") label = "123";
     if (key.name === "shift" && state.shift === "locked") label = "⇪";
     main.textContent = label;
-    main.style.fontSize = key.name === "space" && state.notice ? "13px" : label.length > 2 ? "16px" : "20px";
-    const on = (key.name === "shift" && state.shift !== "off") || (key.name === "capsLock" && state.shift === "locked");
+    const small = (key.name === "space" && caption) || key.name === "selectAll";
+    main.style.fontSize = small ? "13px" : label.length > 2 ? "16px" : "20px";
+    const on = (key.name === "shift" && state.shift !== "off")
+      || (key.name === "capsLock" && state.shift === "locked")
+      || (key.name === "selectAll" && state.allSelected);
     el.classList.toggle("on", on);
   }
   el.appendChild(main);
@@ -204,7 +235,7 @@ function paint(el, key, style) {
 
 function attach(el, key, rowHeight) {
   let startY = 0, alt = false, held = false, holdTimer = null, repeatTimer = null, down = false;
-  const repeats = key.type === "fn" && ["backspace", "left", "right", "up", "down"].includes(key.name);
+  const repeats = key.type === "fn" && ["backspace", "forwardDelete", "left", "right", "up", "down"].includes(key.name);
   const setAlt = value => {
     alt = value;
     el.classList.toggle("alt", value);
@@ -216,8 +247,8 @@ function attach(el, key, rowHeight) {
     down = true; startY = event.clientY; alt = false; held = false;
     el.classList.add("pressed");
     if (repeats) {
-      act(key, false);
-      holdTimer = setTimeout(() => { repeatTimer = setInterval(() => act(key, false), 80); }, 450);
+      act(key, false, true);
+      holdTimer = setTimeout(() => { repeatTimer = setInterval(() => act(key, false, true), 80); }, 450);
     } else if (key.type === "dual") {
       holdTimer = setTimeout(() => { held = true; setAlt(true); }, 400);
     }
@@ -234,7 +265,7 @@ function attach(el, key, rowHeight) {
     down = false;
     clearTimeout(holdTimer); clearInterval(repeatTimer);
     el.classList.remove("pressed");
-    if (commit && !repeats) act(key, alt);
+    if (commit && !repeats) act(key, alt, false);
     else render();
   };
   el.addEventListener("pointerup", () => up(true));
@@ -242,13 +273,28 @@ function attach(el, key, rowHeight) {
 }
 
 function insert(text) {
+  if (state.allSelected) { state.text = ""; state.cursor = 0; state.allSelected = false; }
   state.text = state.text.slice(0, state.cursor) + text + state.text.slice(state.cursor);
   state.cursor += text.length;
+}
+function deleteAllIfSelected() {
+  if (!state.allSelected) return false;
+  state.text = ""; state.cursor = 0; state.allSelected = false;
+  return true;
 }
 function notice(text) {
   state.notice = text;
   clearTimeout(state.noticeTimer);
   state.noticeTimer = setTimeout(() => { state.notice = null; render(); }, 2500);
+}
+function flash(layerName) {
+  for (const device of document.querySelectorAll(".device")) device.classList.remove("flash");
+  const target = document.querySelector(`.device[data-layer="${layerName}"]`);
+  target.classList.add("flash");
+  target.scrollIntoView({ behavior: "smooth", block: "center" });
+  setTimeout(() => {
+    document.querySelector(`.device[data-layer="${layerName}"]`)?.classList.remove("flash");
+  }, 1600);
 }
 function lineMove(command) {
   const before = state.text.slice(0, state.cursor), after = state.text.slice(state.cursor);
@@ -277,9 +323,10 @@ function autoShift() {
   state.autoShift = capitalize;
   state.shift = capitalize ? "on" : "off";
 }
-function act(key, alt) {
+function act(key, alt, keepLayerView) {
+  let layerToFlash = null;
   if (key.type === "char") {
-    insert(isLetter(key.base) && state.shift !== "off" ? key.base.toUpperCase() : key.base);
+    insert(characterText(key));
     if (state.shift === "on") state.shift = "off";
     autoShift();
   } else if (key.type === "dual") {
@@ -293,31 +340,44 @@ function act(key, alt) {
       case "tab": insert("\t"); autoShift(); break;
       case "return": insert("\n"); autoShift(); break;
       case "backspace":
-        if (state.cursor > 0) {
+        if (!deleteAllIfSelected() && state.cursor > 0) {
           state.text = state.text.slice(0, state.cursor - 1) + state.text.slice(state.cursor);
           state.cursor -= 1;
         }
         autoShift(); break;
-      case "left": state.cursor = Math.max(0, state.cursor - 1); autoShift(); break;
-      case "right": state.cursor = Math.min(state.text.length, state.cursor + 1); autoShift(); break;
+      case "forwardDelete":
+        if (!deleteAllIfSelected()) {
+          state.text = state.text.slice(0, state.cursor) + state.text.slice(state.cursor + 1);
+        }
+        autoShift(); break;
+      case "left": state.allSelected = false; state.cursor = Math.max(0, state.cursor - 1); autoShift(); break;
+      case "right": state.allSelected = false; state.cursor = Math.min(state.text.length, state.cursor + 1); autoShift(); break;
       case "up": case "down": case "home": case "end":
-        state.cursor += lineMove(key.name); autoShift(); break;
+        state.allSelected = false; state.cursor += lineMove(key.name); autoShift(); break;
       case "shift":
         state.autoShift = false;
         state.shift = state.shift === "off" ? "on" : "off"; break;
       case "capsLock":
         state.autoShift = false;
         state.shift = state.shift === "locked" ? "off" : "locked"; break;
-      case "symbols": state.layer = "symbols"; break;
-      case "letters": state.layer = "letters"; break;
-      case "cut": notice("Cut"); break;
-      case "copy": notice("Copied"); break;
+      case "selectAll":
+        if (state.allSelected) state.allSelected = false;
+        else if (state.text === "") notice("No text to select");
+        else state.allSelected = true;
+        break;
+      case "copy": notice(state.allSelected ? "Copied all text" : "Select text first"); break;
+      case "cut":
+        if (state.allSelected) { deleteAllIfSelected(); notice("Cut all text"); autoShift(); }
+        else notice("Select text first");
+        break;
       case "paste": notice("Paste"); break;
+      case "symbols": case "letters": case "more": layerToFlash = key.name; break;
       case "globe": notice("Next keyboard"); break;
       case "dismiss": notice("Hide keyboard"); break;
     }
   }
   render();
+  if (layerToFlash && !keepLayerView) flash(layerToFlash);
 }
 
 const presets = document.getElementById("presets");
