@@ -394,7 +394,7 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
         updateAutoShift()
     }
 
-    /// Takes the proposed fix off the candidate row. Every key press calls this first.
+    /// Takes the proposed fix off the candidate row. Every key press except a space calls this first.
     private func clearProofreadSuggestion() {
         guard proofreadSuggestion != nil else { return }
         proofreadSuggestion = nil
@@ -696,7 +696,9 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
     // MARK: KeyboardViewDelegate
 
     func keyboardView(_ keyboardView: KeyboardView, insert text: String) {
-        clearProofreadSuggestion()
+        // A person types a space after a period out of habit, so a space keeps the fix on the
+        // row. The fix then replaces the sentence and keeps the spaces after it.
+        if text != " " { clearProofreadSuggestion() }
         defer { proofreadFinishedSentence() }
         if var replacement = pending {
             // A replacement is still running. The typed character joins the ones that wait for the delete.
