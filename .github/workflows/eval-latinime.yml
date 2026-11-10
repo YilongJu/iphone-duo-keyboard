@@ -1,0 +1,81 @@
+name: Typing evaluation of the AOSP LatinIME engine
+
+# Builds the native suggest engine of the AOSP keyboard (LatinIME) on a Linux runner, runs it on
+# the English typing test cases, and scores it. scripts/typing-evaluation/engines/latinime/README.md
+# describes the engine, the adapter and the engine names.
+on:
+  push:
+    branches: ['eval/latinime']
+  workflow_dispatch:
+
+jobs:
+  latinime:
+    name: AOSP LatinIME engine on the English typing test cases
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      ENGINE: scripts/typing-evaluation/engines/latinime
+    steps:
+      - uses: actions/checkout@v7
+      - name: Print the versions of the tools
+        run: |
+          set -euo pipefail
+          grep PRETTY_NAME /etc/os-release
+          g++ --version | sed -n 1p
+          ld --version | sed -n 1p
+          python3 --version
+          curl --version | sed -n 1p
+          echo "JAVA_HOME=$JAVA_HOME"
+          "$JAVA_HOME/bin/java" -version 2>&1
+          # The license line in the header of the JNI header that the build includes.
+          grep -n -m 1 'Classpath' "$JAVA_HOME/include/jni.h"
+      - name: Fetch the AOSP LatinIME sources and the stock English dictionary
+        run: bash "$ENGINE/fetch_sources.sh" build/latinime/source
+      - name: Build the engine core and the driver
+        run: bash "$ENGINE/build.sh" build/latinime/source build/latinime
+      # The same step as in evaluation.yml.
+      - name: Build the cases from published misspelling lists
+        run: |
+          set -euo pipefail
+          python3 -m pip install --quiet --break-system-packages wordfreq
+          python3 scripts/typing-evaluation/build_external_english_cases.py
+      # The two tuned engine names keep the threshold 0.27 that the adapter's README reports.
+      # run_latinime.py --tune-on-dev chose it on the dev cases of commit e997c39. This run does not
+      # choose a threshold again, so every engine name has the setting that the README gives it.
+      - name: Write the tuned threshold of the adapter's README
+        run: |
+          set -euo pipefail
+          mkdir -p build/latinime
+          echo "0.27" > build/latinime/tuned-threshold.txt
+      - name: Print the dictionary counts, the layout and the suggestions for a few dev examples
+        run: python3 "$ENGINE/run_latinime.py" --explain-samples
+      - name: Run the engine on the dev half and the test half
+        run: |
+          set -euo pipefail
+          for half in dev test; do
+            python3 "$ENGINE/run_latinime.py" --half "$half" --with-external-cases
+          done
+      - name: Print the four controls on the dev half
+        run: python3 "$ENGINE/run_latinime.py" --controls
+      - name: Score each engine name on each half
+        run: |
+          set -euo pipefail
+          for name in $(python3 "$ENGINE/run_latinime.py" --list-engines); do
+            for half in dev test; do
+              python3 scripts/typing-evaluation/score.py --task english --engine "$name" \
+                --cases "scripts/typing-evaluation/cases/english.$half.jsonl" "build/typing-evaluation/external/english.$half.jsonl" \
+                --predictions "build/typing-evaluation/$name/english.$half.jsonl" \
+                --json "build/typing-evaluation/$name/english.$half.summary.json"
+            done
+          done
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: typing-evaluation-latinime
+          # The published misspelling lists and the cases made from them stay out of the artifact,
+          # because the page of the lists does not state a license.
+          path: |
+            build/typing-evaluation/
+            !build/typing-evaluation/external/
+            !build/typing-evaluation/mitton/
+          if-no-files-found: error

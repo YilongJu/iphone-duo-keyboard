@@ -1,0 +1,182 @@
+{
+  "categories": {
+    "clean": {
+      "cases": 750,
+      "right": 288,
+      "missing": 0,
+      "accuracy": 0.384,
+      "character_accuracy": 0.7783454182728177
+    },
+    "substitution_adjacent": {
+      "cases": 745,
+      "right": 6,
+      "missing": 0,
+      "accuracy": 0.008053691275167786,
+      "character_accuracy": 0.4547084134654521,
+      "twin_right_cases": 286,
+      "accuracy_when_twin_right": 0.02097902097902098
+    },
+    "deletion": {
+      "cases": 745,
+      "right": 51,
+      "missing": 0,
+      "accuracy": 0.06845637583892618,
+      "character_accuracy": 0.5440564508815698,
+      "twin_right_cases": 286,
+      "accuracy_when_twin_right": 0.17832167832167833
+    },
+    "double_letter": {
+      "cases": 745,
+      "right": 0,
+      "missing": 0,
+      "accuracy": 0.0,
+      "character_accuracy": 0.4807548822629754,
+      "twin_right_cases": 286,
+      "accuracy_when_twin_right": 0.0
+    },
+    "extra_adjacent": {
+      "cases": 745,
+      "right": 3,
+      "missing": 0,
+      "accuracy": 0.004026845637583893,
+      "character_accuracy": 0.4235759354614675,
+      "twin_right_cases": 286,
+      "accuracy_when_twin_right": 0.01048951048951049
+    },
+    "transposition": {
+      "cases": 745,
+      "right": 19,
+      "missing": 0,
+      "accuracy": 0.025503355704697986,
+      "character_accuracy": 0.4027026589883198,
+      "twin_right_cases": 286,
+      "accuracy_when_twin_right": 0.06643356643356643
+    },
+    "fuzzy_sound": {
+      "cases": 710,
+      "right": 253,
+      "missing": 0,
+      "accuracy": 0.3563380281690141,
+      "character_accuracy": 0.7751540173308478,
+      "twin_right_cases": 267,
+      "accuracy_when_twin_right": 0.947565543071161
+    },
+    "two_errors": {
+      "cases": 592,
+      "right": 0,
+      "missing": 0,
+      "accuracy": 0.0,
+      "character_accuracy": 0.31498441806829963,
+      "twin_right_cases": 211,
+      "accuracy_when_twin_right": 0.0
+    }
+  },
+  "groups": {
+    "clean": {
+      "cases": 750,
+      "right": 288,
+      "missing": 0,
+      "accuracy": 0.384,
+      "character_accuracy": 0.7783454182728177,
+      "categories": [
+        "clean"
+      ]
+    },
+    "finger_slips": {
+      "cases": 4317,
+      "right": 79,
+      "missing": 0,
+      "accuracy": 0.018299745193421358,
+      "character_accuracy": 0.4411143246666604,
+      "twin_right_cases": 1641,
+      "accuracy_when_twin_right": 0.04814137720901889,
+      "categories": [
+        "substitution_adjacent",
+        "deletion",
+        "double_letter",
+        "extra_adjacent",
+        "transposition",
+        "two_errors"
+      ]
+    }
+  },
+  "strata": {
+    "clean by length_bin": {
+      "2-3": {
+        "cases": 150,
+        "right": 74,
+        "missing": 0,
+        "accuracy": 0.49333333333333335,
+        "character_accuracy": 0.6677777777777778
+      },
+      "4-7": {
+        "cases": 300,
+        "right": 121,
+        "missing": 0,
+        "accuracy": 0.4033333333333333,
+        "character_accuracy": 0.7801111111111111
+      },
+      "8-20": {
+        "cases": 300,
+        "right": 93,
+        "missing": 0,
+        "accuracy": 0.31,
+        "character_accuracy": 0.8318635456820441
+      }
+    },
+    "finger_slips by typed_parses_exactly": {
+      "False": {
+        "cases": 3258,
+        "right": 62,
+        "missing": 0,
+        "accuracy": 0.019030079803560467,
+        "character_accuracy": 0.42070153816240374,
+        "twin_right_cases": 1242,
+        "accuracy_when_twin_right": 0.0499194847020934
+      },
+      "True": {
+        "cases": 1059,
+        "right": 17,
+        "missing": 0,
+        "accuracy": 0.016052880075542966,
+        "character_accuracy": 0.5039140021273482,
+        "twin_right_cases": 399,
+        "accuracy_when_twin_right": 0.042606516290726815
+      }
+    },
+    "finger_slips by length_bin": {
+      "2-3": {
+        "cases": 733,
+        "right": 21,
+        "missing": 0,
+        "accuracy": 0.0286493860845839,
+        "character_accuracy": 0.15939063210550253,
+        "twin_right_cases": 365,
+        "accuracy_when_twin_right": 0.057534246575342465
+      },
+      "4-7": {
+        "cases": 1784,
+        "right": 29,
+        "missing": 0,
+        "accuracy": 0.016255605381165918,
+        "character_accuracy": 0.39938207345718557,
+        "twin_right_cases": 718,
+        "accuracy_when_twin_right": 0.0403899721448468
+      },
+      "8-20": {
+        "cases": 1800,
+        "right": 29,
+        "missing": 0,
+        "accuracy": 0.01611111111111111,
+        "character_accuracy": 0.597199770669456,
+        "twin_right_cases": 558,
+        "accuracy_when_twin_right": 0.05197132616487455
+      }
+    }
+  },
+  "engine": "libpinyin-correction-incomplete-fuzzy",
+  "task": "pinyin",
+  "cases_files": [
+    "pinyin.test.jsonl"
+  ]
+}
