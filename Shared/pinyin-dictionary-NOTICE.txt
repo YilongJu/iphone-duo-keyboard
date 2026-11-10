@@ -13,6 +13,6 @@ is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND
 or implied. See the License for the specific language governing permissions and limitations under
 the License.
 
-Changes: entries outside the GB2312 character set are removed, the frequency column is removed,
-and the entries are sorted with the most frequent word first. scripts/pinyin-dictionary/build_dictionary.py
+Changes: entries outside the GB2312 character set are removed, the frequencies are rounded to
+five digits, and the entries are sorted with the most frequent word first. scripts/pinyin-dictionary/build_dictionary.py
 makes the file.
