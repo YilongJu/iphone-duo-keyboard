@@ -46,7 +46,24 @@ final class KeyboardView: UIView {
         didSet { if oldValue != shiftState { refreshLabels() } }
     }
 
-    /// True while the keyboard types Chinese. The language key then draws in the pressed color.
+    /// The text of the language key: both languages in a fixed order, as in the common
+    /// "\u{6587}/A" sign. The language the keyboard types now is large, bold and in the full
+    /// text color. The other language is small and gray. A press switches the two.
+    static func languageKeyText(chineseActive: Bool) -> NSAttributedString {
+        func part(_ text: String, active: Bool) -> NSAttributedString {
+            NSAttributedString(string: text, attributes: [
+                .font: UIFont.systemFont(ofSize: active ? 20 : 15, weight: active ? .bold : .regular),
+                .foregroundColor: active ? KeyColors.text : UIColor.secondaryLabel,
+            ])
+        }
+        let text = NSMutableAttributedString()
+        text.append(part("\u{4E2D}", active: chineseActive))
+        text.append(part("/", active: false))
+        text.append(part("A", active: !chineseActive))
+        return text
+    }
+
+    /// True while the keyboard types Chinese. The language key then shows the Chinese sign as the active one.
     var chineseActive = false {
         didSet { if oldValue != chineseActive { refreshLabels() } }
     }
@@ -245,7 +262,7 @@ final class KeyboardView: UIView {
         case .gap:
             return KeyDisplay()
         case .language:
-            return KeyDisplay(primary: "\u{4E2D}", primaryFontSize: 18, emphasized: chineseActive)
+            return KeyDisplay(styledPrimary: Self.languageKeyText(chineseActive: chineseActive))
         case .cut:
             return KeyDisplay(symbolName: "scissors")
         case .copy:
