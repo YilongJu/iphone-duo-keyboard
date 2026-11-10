@@ -117,6 +117,16 @@ final class KeyboardTextControllerTests: XCTestCase {
         XCTAssertEqual(document.text, "I came from the office. ")
     }
 
+    func testACommaAlsoGetsAFix() async {
+        let proofreader = makeProofreadingController(
+            before: "", answers: ["I came form the office,": "I came from the office,"])
+        type("I came form the office, ")
+        await controller.proofreadTask?.value
+        XCTAssertEqual(proofreader.requests, ["I came form the office,"])
+        controller.keyboardView(keyboardView, didSelectCandidateAt: 0)
+        XCTAssertEqual(document.text, "I came from the office, ")
+    }
+
     func testTheNextKeyTakesTheFixAway() async {
         _ = makeProofreadingController(before: "", answers: ["I came form the office.": "I came from the office."])
         type("I came form the office.")
@@ -150,6 +160,14 @@ final class KeyboardTextControllerTests: XCTestCase {
         XCTAssertEqual(KeyboardTextLogic.finishedSentence(before: "One. Two three four.  "), "Two three four.")
         XCTAssertEqual(KeyboardTextLogic.finishedSentence(before: "a\nIs it so here?"), "Is it so here?")
         XCTAssertNil(KeyboardTextLogic.finishedSentence(before: "Two three four"))
+        // A comma, a semicolon and a colon also end a text to read. The text starts at the
+        // sentence's start, so it holds the clauses before the mark.
+        XCTAssertEqual(KeyboardTextLogic.finishedSentence(before: "One. Two three four, "), "Two three four,")
+        XCTAssertEqual(KeyboardTextLogic.finishedSentence(before: "Two three four, five six;"), "Two three four, five six;")
+        XCTAssertEqual(KeyboardTextLogic.finishedSentence(before: "Two three four\u{2026}"), "Two three four\u{2026}")
+        XCTAssertEqual(
+            KeyboardTextLogic.finishedSentence(before: "\u{4ECA}\u{5929}\u{5929}\u{6C14}\u{597D}\u{FF0C}"),
+            "\u{4ECA}\u{5929}\u{5929}\u{6C14}\u{597D}\u{FF0C}")
         XCTAssertNil(KeyboardTextLogic.finishedSentence(before: "Two three."))
         XCTAssertEqual(
             KeyboardTextLogic.finishedSentence(before: "\u{4F60}\u{597D}\u{3002}\u{4ECA}\u{5929}\u{5929}\u{6C14}\u{597D}\u{3002}"),

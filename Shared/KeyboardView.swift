@@ -77,8 +77,25 @@ final class KeyboardView: UIView {
             candidateBar.show(composition: composition, words: words)
             candidateBar.isHidden = false
         } else {
+            if !candidateBar.isHidden {
+                candidatesHiddenTime = ProcessInfo.processInfo.systemUptime
+            }
             candidateBar.isHidden = true
         }
+    }
+
+    /// The moment the candidate row last left the screen, on the clock of `UITouch.timestamp`.
+    private var candidatesHiddenTime: TimeInterval = -1
+
+    /// True for a touch on the first row that must not press a key. The candidate row lies
+    /// over the first row's keys. A touch on an empty part of the candidate row would reach
+    /// the key under it, and a tap aimed at a candidate would reach that key when the row has
+    /// just left. The key at the left is Select All, and the next typed character would then
+    /// replace all the text. So the first row's keys do not react while the candidate row
+    /// shows, and for half a second after it leaves.
+    private func candidateRowTakesTouch(at point: CGPoint, time: TimeInterval) -> Bool {
+        guard let metrics = metrics(), point.y < metrics.rowEdges[1] else { return false }
+        return !candidateBar.isHidden || time - candidatesHiddenTime < 0.5
     }
 
     /// True while the select-all key is on. The key then draws in the pressed color.
@@ -442,6 +459,7 @@ final class KeyboardView: UIView {
             // A second finger down commits the first finger's key, so fast typing keeps its order.
             commitPendingTextTouches()
             let point = touch.location(in: self)
+            if candidateRowTakesTouch(at: point, time: touch.timestamp) { continue }
             guard let keyView = keyView(at: point) else { continue }
             let state = TouchState(keyView: keyView)
             state.startPoint = point

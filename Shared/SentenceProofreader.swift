@@ -28,7 +28,9 @@ protocol SentenceProofreading: AnyObject {
 final class SystemModelProofreader: SentenceProofreading {
     static let instructions = """
         You fix typing errors in one sentence. Fix a wrong word that is a typing slip, such as \
-        "form" for "from", a misspelled word, and a wrong Chinese character with the same sound. \
+        "form" for "from", a misspelled word, a letter typed as the symbol or digit key next to \
+        it, such as "[lay" for "play", and a wrong Chinese character with the same sound. The \
+        text can be a sentence that is not finished yet. \
         Do not rephrase, do not change the meaning, the tone or the punctuation style, and do not \
         add or remove information. Answer with the corrected sentence only, without quotation \
         marks and without any comment. When the sentence has no error, answer with the sentence \
