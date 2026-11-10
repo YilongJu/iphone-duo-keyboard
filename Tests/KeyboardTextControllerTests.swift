@@ -95,6 +95,20 @@ final class KeyboardTextControllerTests: XCTestCase {
         XCTAssertEqual(controller.pinyinBuffer, "hao")
     }
 
+    func testChineseQuotationMarksOpenAndClose() {
+        makeController(before: "")
+        controller.keyboardView(keyboardView, edit: .toggleLanguage)
+        type("\"wo \"")
+        XCTAssertEqual(document.text, "\u{201C}\u{6211}\u{201D}")
+    }
+
+    func testAnApostropheSplitsTheSyllablesWhileTyping() {
+        makeController(before: "")
+        controller.keyboardView(keyboardView, edit: .toggleLanguage)
+        type("xi'an ")
+        XCTAssertEqual(document.text, "\u{897F}\u{5B89}")
+    }
+
     func testBackspaceRemovesAPinyinLetterBeforeAnyText() {
         makeController(before: "a")
         controller.keyboardView(keyboardView, edit: .toggleLanguage)
@@ -445,8 +459,8 @@ final class PinyinEngineTests: XCTestCase {
     func testTheFirstCandidateIsTheWholeSentence() {
         // "wo ni hao" is not a dictionary word. The most likely cut is "wo" plus the phrase "ni hao".
         let candidates = engine.candidates(for: "wonihao")
-        XCTAssertEqual(candidates.first, PinyinCandidate(word: "\u{6211}\u{4F60}\u{597D}", consumedLetters: 7))
-        XCTAssertEqual(candidates.dropFirst().first, PinyinCandidate(word: "\u{6211}", consumedLetters: 2))
+        XCTAssertEqual(candidates.first, PinyinCandidate(word: "\u{6211}\u{4F60}\u{597D}", consumedLetters: 7, spelling: "wo ni hao"))
+        XCTAssertEqual(candidates.dropFirst().first, PinyinCandidate(word: "\u{6211}", consumedLetters: 2, spelling: "wo"))
     }
 
     func testTheSentencePrefersAPhraseOverItsSingleCharacters() {
@@ -457,6 +471,39 @@ final class PinyinEngineTests: XCTestCase {
     func testAPickOfAShorterWordLeavesTheRestForANewSentence() {
         let afterFirstPick = engine.candidates(for: "nihao")
         XCTAssertEqual(afterFirstPick.first?.word, "\u{4F60}\u{597D}")
+    }
+
+    func testFirstLettersOfferTheWordsThatStartThatWay() {
+        let candidates = engine.candidates(for: "nh")
+        XCTAssertEqual(candidates.first, PinyinCandidate(word: "\u{4F60}\u{597D}", consumedLetters: 2, spelling: "ni hao"))
+        XCTAssertEqual(engine.candidates(for: "zg").first?.word, "\u{4E2D}\u{56FD}")
+    }
+
+    func testAnApostropheForcesASyllableBreak() {
+        XCTAssertEqual(engine.segment("xian").syllables, ["xian"])
+        XCTAssertEqual(engine.segment("xi'an").syllables, ["xi", "an"])
+        let candidates = engine.candidates(for: "xi'an")
+        XCTAssertEqual(candidates.first?.word, "\u{897F}\u{5B89}")
+        XCTAssertEqual(candidates.first?.consumedLetters, 5)
+        XCTAssertEqual(engine.display(for: "xi'an"), "xi'an")
+    }
+
+    func testALearnedWordComesFirstAndIsSaved() {
+        var saved: [String: [String]] = [:]
+        let learning = PinyinEngine(dictionaryText: testDictionary, saveLearnedWords: { saved = $0 })
+        XCTAssertEqual(learning.candidates(for: "ni").first?.word, "\u{4F60}")
+        learning.learn(spelling: "ni", word: "\u{5C3C}")
+        XCTAssertEqual(learning.candidates(for: "ni").first?.word, "\u{5C3C}")
+        XCTAssertEqual(saved["ni"], ["\u{5C3C}"])
+        let reloaded = PinyinEngine(dictionaryText: testDictionary, learnedWords: saved)
+        XCTAssertEqual(reloaded.candidates(for: "ni").first?.word, "\u{5C3C}")
+    }
+
+    func testALearnedPhraseBecomesTheSentence() {
+        let learning = PinyinEngine(dictionaryText: testDictionary)
+        XCTAssertEqual(learning.sentence(for: ["wo", "men"]), "\u{6211}\u{4EEC}")
+        learning.learn(spelling: "wo men", word: "\u{6211}\u{95E8}")
+        XCTAssertEqual(learning.sentence(for: ["wo", "men"]), "\u{6211}\u{95E8}")
     }
 
     func testAnIncompleteSyllableOffersCharactersThatStartThatWay() {
