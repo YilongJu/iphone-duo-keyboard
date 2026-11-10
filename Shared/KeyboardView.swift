@@ -405,7 +405,7 @@ final class KeyboardView: UIView {
         candidateBar.frame = CGRect(
             x: metrics.originX + shortcutButtons, y: metrics.rowEdges[0],
             width: metrics.width - shortcutButtons, height: metrics.rowEdges[1] - metrics.rowEdges[0]
-        ).insetBy(dx: spec.gapX, dy: gapY)
+        ).insetBy(dx: spec.gapX + 4, dy: gapY)
         for (rowIndex, row) in rows.enumerated() {
             let rowWeight = row.reduce(0) { $0 + $1.key.weight }
             let rowInset = rowIndex == rows.count - 1 ? spec.bottomRowCornerInset : 0
