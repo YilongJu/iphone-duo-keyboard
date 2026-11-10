@@ -23,14 +23,16 @@ def main():
             continue
         categories = list(summaries[0]["categories"])
         print(f"pinyin.{half}: share of cases with an exact match")
-        print("| engine | ALL CLEAN | ALL SLIPS | " + " | ".join(categories) + " |")
-        print("| --- | --- | --- | " + " | ".join("---" for _ in categories) + " |")
+        print("| engine | GROUP clean | GROUP finger_slips | finger_slips when the clean twin is right | "
+              + " | ".join(categories) + " |")
+        print("| --- | --- | --- | --- | " + " | ".join("---" for _ in categories) + " |")
         for summary in summaries:
             if list(summary["categories"]) != categories:
                 raise ValueError(f"{summary['engine']}: the categories differ from {summaries[0]['engine']}")
             cells = [f"{summary['categories'][name]['accuracy']:.4f}" for name in categories]
-            print(f"| {summary['engine']} | {summary['clean']['accuracy']:.4f} | {summary['slips']['accuracy']:.4f} | "
-                  + " | ".join(cells) + " |")
+            groups = summary["groups"]
+            print(f"| {summary['engine']} | {groups['clean']['accuracy']:.4f} | {groups['finger_slips']['accuracy']:.4f} | "
+                  f"{groups['finger_slips']['accuracy_when_twin_right']:.4f} | " + " | ".join(cells) + " |")
         print(f"pinyin.{half}: character accuracy")
         print("| engine | " + " | ".join(categories) + " |")
         print("| --- | " + " | ".join("---" for _ in categories) + " |")

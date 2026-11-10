@@ -47,6 +47,14 @@ jobs:
           tar -xzf build/jamspell/en.tar.gz -C build/jamspell
           "$PYTHON" -c "import jamspell; print(jamspell.TSpellCorrector)"
 
+      # The same step as in evaluation.yml. wordfreq goes into its own environment, apart from the engines.
+      - name: Build the cases from published misspelling lists
+        run: |
+          set -euo pipefail
+          uv venv --python /usr/bin/python3 build/venv-cases
+          uv pip install --python build/venv-cases/bin/python wordfreq
+          build/venv-cases/bin/python scripts/typing-evaluation/build_external_english_cases.py
+
       - name: Print the installed versions
         run: |
           set -euo pipefail

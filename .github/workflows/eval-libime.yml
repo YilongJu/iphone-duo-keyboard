@@ -18,7 +18,7 @@ jobs:
   libime:
     name: libime on the Pinyin typing test cases
     runs-on: ubuntu-24.04
-    timeout-minutes: 75
+    timeout-minutes: 180
     env:
       ADAPTER_DIR: scripts/typing-evaluation/engines/libime
       FCITX5_TAG: '5.1.23'

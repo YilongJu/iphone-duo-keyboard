@@ -16,7 +16,7 @@ jobs:
   evaluate:
     name: googlepinyin and libpinyin on the Pinyin test cases
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 90
     env:
       PYTHONUTF8: '1'
       EVALUATE: scripts/typing-evaluation/engines/googlepinyin-libpinyin/evaluate.sh

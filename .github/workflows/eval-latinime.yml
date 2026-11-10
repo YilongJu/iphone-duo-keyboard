@@ -33,15 +33,27 @@ jobs:
         run: bash "$ENGINE/fetch_sources.sh" build/latinime/source
       - name: Build the engine core and the driver
         run: bash "$ENGINE/build.sh" build/latinime/source build/latinime
-      - name: Choose the tuned threshold on the dev half
-        run: python3 "$ENGINE/run_latinime.py" --tune-on-dev
+      # The same step as in evaluation.yml.
+      - name: Build the cases from published misspelling lists
+        run: |
+          set -euo pipefail
+          python3 -m pip install --quiet --break-system-packages wordfreq
+          python3 scripts/typing-evaluation/build_external_english_cases.py
+      # The two tuned engine names keep the threshold 0.27 that the adapter's README reports.
+      # run_latinime.py --tune-on-dev chose it on the dev cases of commit e997c39. This run does not
+      # choose a threshold again, so every engine name has the setting that the README gives it.
+      - name: Write the tuned threshold of the adapter's README
+        run: |
+          set -euo pipefail
+          mkdir -p build/latinime
+          echo "0.27" > build/latinime/tuned-threshold.txt
       - name: Print the dictionary counts, the layout and the suggestions for a few dev examples
         run: python3 "$ENGINE/run_latinime.py" --explain-samples
       - name: Run the engine on the dev half and the test half
         run: |
           set -euo pipefail
           for half in dev test; do
-            python3 "$ENGINE/run_latinime.py" --half "$half"
+            python3 "$ENGINE/run_latinime.py" --half "$half" --with-external-cases
           done
       - name: Print the four controls on the dev half
         run: python3 "$ENGINE/run_latinime.py" --controls
@@ -51,7 +63,7 @@ jobs:
           for name in $(python3 "$ENGINE/run_latinime.py" --list-engines); do
             for half in dev test; do
               python3 scripts/typing-evaluation/score.py --task english --engine "$name" \
-                --cases "scripts/typing-evaluation/cases/english.$half.jsonl" \
+                --cases "scripts/typing-evaluation/cases/english.$half.jsonl" "build/typing-evaluation/external/english.$half.jsonl" \
                 --predictions "build/typing-evaluation/$name/english.$half.jsonl" \
                 --json "build/typing-evaluation/$name/english.$half.summary.json"
             done

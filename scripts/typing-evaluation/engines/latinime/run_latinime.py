@@ -32,6 +32,8 @@ from score import score  # noqa: E402
 
 CASES = EVALUATION / "cases"
 OUTPUT = ROOT / "build" / "typing-evaluation"
+# The cases from published misspelling lists, which build_external_english_cases.py writes.
+EXTERNAL = OUTPUT / "external"
 BUILD = ROOT / "build" / "latinime"
 TUNED_THRESHOLD_FILE = BUILD / "tuned-threshold.txt"
 
@@ -172,9 +174,11 @@ def run_driver(arguments: argparse.Namespace, layout: Path, inputs: list[tuple[s
     return outputs
 
 
-def load_cases(half: str) -> list[dict]:
-    cases_file = CASES / f"english.{half}.jsonl"
-    return [json.loads(line) for line in cases_file.read_text(encoding="utf-8").split("\n") if line]
+def load_cases(half: str, with_external_cases: bool = False) -> list[dict]:
+    files = [CASES / f"english.{half}.jsonl"]
+    if with_external_cases:
+        files.append(EXTERNAL / f"english.{half}.jsonl")
+    return [json.loads(line) for path in files for line in path.read_text(encoding="utf-8").split("\n") if line]
 
 
 def clean_and_slip_shares(cases: list[dict], outputs: dict[str, str]) -> tuple[float, float]:
@@ -223,7 +227,7 @@ def tune_on_dev(arguments: argparse.Namespace, layout: Path) -> None:
 
 
 def run_half(arguments: argparse.Namespace, layout: Path) -> None:
-    cases = load_cases(arguments.half)
+    cases = load_cases(arguments.half, arguments.with_external_cases)
     engines = engine_settings()
     outputs = run_driver(arguments, layout, [(case["id"], case["context"], case["typed"]) for case in cases], engines)
     for name, mode, threshold in engines:
@@ -324,6 +328,9 @@ def main() -> None:
     action.add_argument("--list-engines", action="store_true", help="print the engine names")
     parser.add_argument("--clean-floor", type=float, default=CLEAN_FLOOR,
                         help="for --tune-on-dev: the share of clean dev cases that the tuned threshold must keep")
+    parser.add_argument("--with-external-cases", action="store_true",
+                        help="for --half: also run the cases of build/typing-evaluation/external/, "
+                             "from published misspelling lists")
     parser.add_argument("--driver", type=Path, default=BUILD / "latinime_driver")
     parser.add_argument("--dictionary", type=Path,
                         default=BUILD / "source" / "java" / "res" / "raw" / "main_en.dict")
