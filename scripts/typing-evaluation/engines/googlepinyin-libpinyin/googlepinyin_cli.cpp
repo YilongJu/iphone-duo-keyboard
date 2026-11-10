@@ -85,7 +85,7 @@ first_candidates::FirstCandidate search_googlepinyin(const std::string &letters,
     if (!window_is_cut || !result.found || result.covered != letters.size())
         return result;
     // The window can end inside a syllable. A cut syllable has kMaxPinyinSize - 1 letters at most
-    // inside the window, so a syllable start before those letters is a safe place to stop.
+    // inside the window. A syllable start before those letters is a safe place to stop.
     // Search again with the letters up to the last safe syllable start. The next search then
     // reads the cut syllable whole.
     const uint16 *starts = NULL;

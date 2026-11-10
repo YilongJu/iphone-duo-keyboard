@@ -19,8 +19,8 @@
 // window's letters only, and the search function learns when more letters follow the window.
 //
 // Every search runs in a child process. The engine libraries in the Ubuntu packages are built
-// with assertions on, and a failed assertion aborts the process. The parent process treats an
-// aborted search as a search without a candidate, so step 3 applies.
+// with assertions on. An assertion that does not hold aborts the process. The parent process
+// treats an aborted search as a search with a missing candidate, so step 3 applies.
 #ifndef TYPING_EVALUATION_FIRST_CANDIDATES_H
 #define TYPING_EVALUATION_FIRST_CANDIDATES_H
 

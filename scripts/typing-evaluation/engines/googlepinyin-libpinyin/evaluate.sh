@@ -185,6 +185,10 @@ score() {
         --json "$OUTPUT/$name/pinyin.$half.summary.json"
     done
   done | tee "$OUTPUT/$GROUP.scores.txt"
+  # Google Pinyin reads 39 letters in one search, so the clean cases over 39 letters get a count of their own.
+  for half in "$@"; do
+    python3 "$HERE/score_by_length.py" --half "$half" --letters 39 "${NAMES[@]}"
+  done | tee "$OUTPUT/$GROUP.clean-by-length.txt"
 }
 
 step="${1:-}"
