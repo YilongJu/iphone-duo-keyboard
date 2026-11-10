@@ -63,6 +63,11 @@ jobs:
       - name: Generate the Xcode project
         run: xcodegen generate
       - name: Run the unit tests in a simulator
+        env:
+          # xcodebuild hands a variable to the test process when its name starts with TEST_RUNNER_.
+          # The typing evaluation reads its cases from the first folder and writes to the second.
+          TEST_RUNNER_TYPING_CASES_DIR: ${{ github.workspace }}/scripts/typing-evaluation/cases
+          TEST_RUNNER_TYPING_OUTPUT_DIR: ${{ github.workspace }}/build/typing-evaluation/shipping-keyboard
         run: |
           set -o pipefail
           udid=$(xcrun simctl list devices available -j | python3 -c '
@@ -80,6 +85,24 @@ jobs:
             -scheme DuoKeyboard \
             -destination "platform=iOS Simulator,id=$udid" \
             -derivedDataPath build-test | xcbeautify
+      - name: Score the shipping keyboard on the typing test cases
+        run: |
+          set -euo pipefail
+          cases=scripts/typing-evaluation/cases
+          outputs=build/typing-evaluation/shipping-keyboard
+          for task in english pinyin; do
+            for half in dev test; do
+              python3 scripts/typing-evaluation/score.py --task "$task" --engine shipping-keyboard \
+                --cases "$cases/$task.$half.jsonl" --predictions "$outputs/$task.$half.jsonl" \
+                --json "$outputs/$task.$half.summary.json"
+            done
+          done
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: typing-evaluation-shipping-keyboard
+          path: build/typing-evaluation/shipping-keyboard
+          if-no-files-found: error
 
   screenshots:
     name: Simulator screenshots of the keyboard
