@@ -9,6 +9,10 @@
 // at a letter that cannot extend a syllable. im_get_candidate gives candidate 0, the
 // whole-sentence candidate for the kept letters.
 //
+// A case with more than 39 letters fills the decoder's window, and the window can end inside a
+// syllable. The program then reads the syllable starts with im_get_spl_start_pos and searches
+// again with the letters before the possible cut. search_googlepinyin holds that rule.
+//
 // The program never calls im_choose, so the decoder does not learn from one case to the next.
 #include <pinyinime.h>
 
@@ -62,7 +66,7 @@ std::string utf16_to_utf8(const char16 *units) {
     return text;
 }
 
-first_candidates::FirstCandidate search_googlepinyin(const std::string &letters) {
+first_candidates::FirstCandidate search_once(const std::string &letters) {
     first_candidates::FirstCandidate result;
     im_reset_search();
     im_search(letters.c_str(), letters.size());
@@ -74,6 +78,27 @@ first_candidates::FirstCandidate search_googlepinyin(const std::string &letters)
         result.text = utf16_to_utf8(candidate);
     }
     return result;
+}
+
+first_candidates::FirstCandidate search_googlepinyin(const std::string &letters, bool window_is_cut) {
+    const first_candidates::FirstCandidate result = search_once(letters);
+    if (!window_is_cut || !result.found || result.covered != letters.size())
+        return result;
+    // The window can end inside a syllable. A cut syllable has kMaxPinyinSize - 1 letters at most
+    // inside the window, so a syllable start before those letters is a safe place to stop.
+    // Search again with the letters up to the last safe syllable start. The next search then
+    // reads the cut syllable whole.
+    const uint16 *starts = NULL;
+    const size_t syllables = im_get_spl_start_pos(starts);
+    const size_t last_safe_start = letters.size() - (kMaxPinyinSize - 1);
+    size_t stop = 0;
+    for (size_t index = 1; index < syllables; index++) {
+        if (static_cast<size_t>(starts[index]) <= last_safe_start)
+            stop = starts[index];
+    }
+    if (stop == 0)
+        return result;
+    return search_once(letters.substr(0, stop));
 }
 
 }  // namespace

@@ -28,7 +28,7 @@ namespace {
 
 pinyin_instance_t *g_instance = NULL;
 
-first_candidates::FirstCandidate search_libpinyin(const std::string &letters) {
+first_candidates::FirstCandidate search_libpinyin(const std::string &letters, bool) {
     first_candidates::FirstCandidate result;
     pinyin_reset(g_instance);
     result.covered = pinyin_parse_more_full_pinyins(g_instance, letters.c_str());
@@ -74,6 +74,8 @@ int main(int argc, char **argv) {
     pinyin_context_t *context = pinyin_init(argv[1], argv[2]);
     if (context == NULL)
         fail(std::string("pinyin_init did not load the data in ") + argv[1]);
+    // pinyin_init reports the missing user.conf of the new user directory without a line end.
+    std::cerr << std::endl;
     if (!pinyin_set_options(context, options))
         fail("pinyin_set_options returned false");
     g_instance = pinyin_alloc_instance(context);

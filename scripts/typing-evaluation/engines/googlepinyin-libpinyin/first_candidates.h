@@ -15,6 +15,9 @@
 //   4. A letter that does not start any candidate goes to the text unchanged.
 //   5. Repeat from step 1 with the letters after the covered ones.
 //
+// An engine can have a window: the most letters that one search reads. A search then gets the
+// window's letters only, and the search function learns when more letters follow the window.
+//
 // Every search runs in a child process. The engine libraries in the Ubuntu packages are built
 // with assertions on, and a failed assertion aborts the process. The parent process treats an
 // aborted search as a search without a candidate, so step 3 applies.
@@ -38,12 +41,13 @@ namespace first_candidates {
 
 // The result of one search with a string of letters.
 struct FirstCandidate {
-    size_t covered = 0;          // leading letters that the engine used
+    size_t covered = 0;  // leading letters that the engine used
     bool found = false;  // false when the engine does not give a candidate for them
-    std::string text;            // the first candidate, in UTF-8
+    std::string text;    // the first candidate, in UTF-8
 };
 
-using Search = std::function<FirstCandidate(const std::string &letters)>;
+// `window_is_cut` is true when the letters fill the engine's window and more letters follow them.
+using Search = std::function<FirstCandidate(const std::string &letters, bool window_is_cut)>;
 
 struct Statistics {
     size_t cases = 0;
@@ -103,8 +107,8 @@ inline void write_all(int descriptor, const std::string &data) {
 }
 
 // Runs one search in a child process. `aborted` becomes true when SIGABRT ended the child.
-inline FirstCandidate search_in_child(const Search &search, const std::string &letters, bool &aborted,
-                                    Statistics &statistics) {
+inline FirstCandidate search_in_child(const Search &search, const std::string &letters, bool window_is_cut,
+                                      bool &aborted, Statistics &statistics) {
     int result_pipe[2];
     int error_pipe[2];
     if (pipe(result_pipe) != 0 || pipe(error_pipe) != 0)
@@ -119,7 +123,7 @@ inline FirstCandidate search_in_child(const Search &search, const std::string &l
         close(error_pipe[0]);
         if (dup2(error_pipe[1], STDERR_FILENO) < 0)
             _exit(2);
-        const FirstCandidate result = search(letters);
+        const FirstCandidate result = search(letters, window_is_cut);
         std::string message = std::to_string(result.covered);
         message += result.found ? "\t1\t" : "\t0\t";
         message += result.text;
@@ -169,7 +173,7 @@ inline FirstCandidate search_in_child(const Search &search, const std::string &l
 // Puts the first candidate for a leading part of `letters` in `text`.
 // Returns the count of letters that the candidate covers.
 // Returns 0 when the engine does not give a candidate for any leading part.
-// `most_letters` is the count of letters that one search of the engine reads. 0 means every letter.
+// `most_letters` is the engine's window, the most letters that one search reads. 0 means every letter.
 inline size_t first_candidate(const Search &search, const std::string &letters, size_t most_letters,
                               std::string &text, bool &case_has_aborted_search, Statistics &statistics) {
     size_t length = letters.size();
@@ -177,8 +181,9 @@ inline size_t first_candidate(const Search &search, const std::string &letters, 
         length = std::min(length, most_letters);
     while (length > 0) {
         const std::string attempt = letters.substr(0, length);
+        const bool window_is_cut = most_letters > 0 && length == most_letters && letters.size() > most_letters;
         bool aborted = false;
-        const FirstCandidate result = search_in_child(search, attempt, aborted, statistics);
+        const FirstCandidate result = search_in_child(search, attempt, window_is_cut, aborted, statistics);
         statistics.searches++;
         if (aborted) {
             statistics.aborted_searches++;
