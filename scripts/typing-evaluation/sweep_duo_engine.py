@@ -21,6 +21,7 @@ def main():
     parser.add_argument("--cli", type=Path, default=ROOT / "build" / "engine" / "duo_cli")
     parser.add_argument("--lexicon", type=Path)
     parser.add_argument("--categories", action="store_true", help="also print each category")
+    parser.add_argument("--jobs", type=int, help="how many sets run at one time; 1 gives times that compare")
     parser.add_argument("settings", nargs="+")
     arguments = parser.parse_args()
 
@@ -32,7 +33,7 @@ def main():
         return settings, score(arguments.task, cases, predictions), time_report
 
     # Each run is its own process, so threads are enough to use every core.
-    with ThreadPoolExecutor() as pool:
+    with ThreadPoolExecutor(max_workers=arguments.jobs) as pool:
         results = list(pool.map(one, arguments.settings))
 
     for settings, summary, time_report in results:

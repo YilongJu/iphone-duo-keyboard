@@ -11,9 +11,9 @@ The engine uses all three levels: a word's own probability with its back-off wei
 probability after one word with the pair's back-off weight, and a word's probability after two
 words. The script keeps the pairs and the triples that change the probability most. The weight
 of a pair or a triple is the chance of seeing it times the distance between its listed log
-probability and the back-off estimate that the engine uses without it. With --gain higher, the
-default, the script keeps only the entries that sit above their estimate. With --gain any it
-also keeps the entries below.
+probability and the back-off estimate that the engine uses without it. An entry below its
+estimate counts like an entry above it, because the engine gives its words too high a chance
+without it. With --gain higher the script keeps only the entries that sit above their estimate.
 
 A kept triple needs the pair of its first two words, so the script keeps that pair too. With
 triples, every kept pair holds its back-off weight. Without triples the lexicon is a pair model,
@@ -31,7 +31,7 @@ keeps the marks that the model lists under spellings that nobody can type (the b
 so the engine can ask how likely a word is to open or to close a sentence.
 
 Usage, from the repository root, on a machine that holds the unpacked files:
-    python3 scripts/typing-engine/build_pinyin_lexicon_from_libime.py FOLDER PAIRS [TRIPLES] [--gain any]
+    python3 scripts/typing-engine/build_pinyin_lexicon_from_libime.py FOLDER PAIRS [TRIPLES] [--gain higher]
 """
 import argparse
 import heapq
@@ -156,8 +156,8 @@ def main():
     parser.add_argument("folder", type=Path, help="the folder with lm_sc.arpa and dict_sc.txt")
     parser.add_argument("pairs", type=int, help="the number of word pairs to keep by weight")
     parser.add_argument("triples", type=int, nargs="?", default=0, help="the number of word triples to keep by weight")
-    parser.add_argument("--gain", choices=["higher", "any"], default="higher",
-                        help="keep only the entries above their back-off estimate, or the entries on both sides")
+    parser.add_argument("--gain", choices=["any", "higher"], default="any",
+                        help="keep the entries on both sides of their back-off estimate, or only the entries above it")
     arguments = parser.parse_args()
     folder = arguments.folder
     report = [f"settings: {arguments.pairs} pairs, {arguments.triples} triples, gain {arguments.gain}"]
