@@ -93,6 +93,10 @@ final class StockKeyboardTests: XCTestCase {
             throw Failure("EVAL_KEY_INTERVAL must be a number of seconds above \(hold)")
         }
         keyInterval = interval
+        let control = try variable("EVAL_CONTROL")
+        guard control == "yes" || control == "no" else {
+            throw Failure("EVAL_CONTROL must be yes or no, and the value is \(control)")
+        }
         continueAfterFailure = true
         outputFolder = URL(fileURLWithPath: try variable("EVAL_OUTPUT_DIR"))
         try FileManager.default.createDirectory(at: outputFolder, withIntermediateDirectories: true)
@@ -107,10 +111,6 @@ final class StockKeyboardTests: XCTestCase {
         app.launchEnvironment["EVAL_TASK"] = task
         if let inlinePrediction = environment["EVAL_INLINE_PREDICTION"] {
             app.launchEnvironment["EVAL_INLINE_PREDICTION"] = inlinePrediction
-        }
-        let control = try variable("EVAL_CONTROL")
-        guard control == "yes" || control == "no" else {
-            throw Failure("EVAL_CONTROL must be yes or no, and the value is \(control)")
         }
         app.launchEnvironment["EVAL_CONTROL"] = control
 
