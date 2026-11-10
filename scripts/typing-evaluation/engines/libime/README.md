@@ -23,9 +23,9 @@ Table 1. The Pinyin conversion task of the evaluation, in the eight rows that de
 | Output | One string of any length: the first sentence that libime gives for all the letters. The string is Chinese text. A part that libime does not convert stays in Latin letters. |
 | Target | `intended`: a clause of 2 to 20 Simplified Chinese characters from Tatoeba. The case generator made its Pinyin with pypinyin. |
 | Training signal | None. libime runs with its stock data, and each engine name has a fixed flag set. |
-| Negatives | The clean cases, where any change is an error. Each half has 900 clean cases beside 2,100 slip cases. |
+| Negatives | The clean cases: correct Pinyin, where slip handling must not lower accuracy. Each half has 900 clean cases beside 2,100 slip cases. |
 | Split | The Tatoeba sentence, by the parity of its id. One parity forms the dev half and the other the test half. |
-| Eval | Exact match between output and target, as a percent of cases. The scorer counts per category of 300 cases, then pools the 3 clean categories and the 7 slip categories. |
+| Eval | Exact match between output and target, as a percent of cases. The scorer counts per category of 300 cases, then pools the 3 clean categories and the 7 slip categories. The scorer also gives character accuracy per category. Character accuracy is 1 minus the edit distance over the target length, floored at 0. The scorer averages that value over the cases. |
 
 Each flag set is read against the same libime build with every flag off, scored in the same run.
 
@@ -152,7 +152,7 @@ Five comparisons in Table 6 change one group of settings at a time. The runs do 
 
 - Correction raises the repaired dev slip cases from 4.95 to 9.52 percent. Clean dev accuracy goes from 73.56 to 73.44 percent.
 - The sound-pair flags and PartialFinal raise the repaired dev slip cases from 9.52 to 18.05 percent. The same flags lower clean dev accuracy from 73.44 to 65.67 percent.
-- The fcitx5 settings and four more flags change the dev scores by at most 1 of 3,000 cases. The four flags are `VE_UE`, `Letter`, `Inner` and `InnerShort`.
+- The fcitx5 settings and four more flags change the exact-match counts by at most 1 of 3,000 dev cases. The four flags are `VE_UE`, `Letter`, `Inner` and `InnerShort`. Table 8 shows their effect on character accuracy.
 - The newer data raises clean dev accuracy from 68.89 to 73.67 percent. Clean test accuracy goes from 68.56 to 71.22 percent.
 - The newer code leaves every exact-match score of Table 6 and Table 7 unchanged. `libime-src-none-packaged-data` and `libime-none` differ in 11 of 6,000 outputs, and both miss each of those cases.
 
@@ -179,15 +179,38 @@ Each flag repairs mainly one slip category, and two categories stay near zero un
 - Correction repairs 30.0 percent of the neighbor-key substitutions. The QWERTY correction profile lists the left and right neighbor of each key. The case generator also uses neighbors in the row above and the row below.
 - Correction adds 96 repaired dev cases: 90 neighbor-key substitutions, 4 swapped-letter cases and 2 two-slip cases.
 - AdvancedTypo repairs 20.3 to 20.7 percent of the swapped letters. CommonTypo alone repairs 4.3 to 5.3 percent.
-- The sound-pair flags repair 59.3 percent of the `fuzzy_sound` cases. With these flags on, libime repairs fewer substitutions (30.00 to 24.67 percent) and fewer swapped letters (22.00 to 19.33 percent).
+- `libime-allflags` repairs 59.3 percent of the `fuzzy_sound` cases. Against `libime-fcitx5-mobile`, the same name repairs fewer substitutions (30.00 to 24.67 percent) and fewer swapped letters (22.00 to 19.33 percent).
 - Every engine name repairs 0 to 0.7 percent of the doubled letters and the extra letters.
 - The engine names repair 10.7 to 20.0 percent of the deleted letters. One cause is that libime reads a lone consonant as the start of a syllable.
+
+Character accuracy counts the right characters inside a sentence that is not an exact match. The fcitx5 settings and four more flags raise character accuracy on 6 of the 7 slip categories.
+
+Table 8. Character accuracy on the dev half, in percent, by category. Each value is the mean over 300 cases.
+
+| Engine name | `clean_short` | `clean_medium` | `clean_long` | `substitution_adjacent` | `deletion` | `double_letter` | `extra_adjacent` | `transposition` | `two_errors` | `fuzzy_sound` |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `libime-none` | 80.28 | 91.34 | 94.18 | 54.19 | 65.91 | 56.67 | 50.92 | 41.10 | 29.99 | 70.18 |
+| `libime-commontypo` | 80.28 | 91.34 | 94.18 | 55.27 | 66.34 | 56.84 | 51.66 | 45.44 | 31.36 | 70.18 |
+| `libime-advancedtypo` | 80.28 | 91.23 | 94.14 | 55.50 | 66.63 | 56.73 | 52.07 | 54.55 | 34.71 | 70.02 |
+| `libime-src-none-packaged-data` | 80.28 | 91.34 | 94.18 | 54.19 | 65.70 | 56.67 | 50.92 | 41.17 | 29.93 | 70.18 |
+| `libime-src-none` | 82.78 | 93.31 | 95.63 | 54.26 | 67.00 | 58.00 | 52.68 | 42.45 | 31.96 | 71.08 |
+| `libime-src-commontypo` | 82.78 | 93.24 | 95.63 | 55.34 | 67.65 | 58.21 | 53.31 | 46.59 | 33.44 | 71.08 |
+| `libime-src-advancedtypo` | 82.78 | 93.13 | 95.63 | 56.00 | 68.10 | 58.23 | 53.73 | 55.65 | 36.42 | 71.08 |
+| `libime-correction` | 82.94 | 93.15 | 95.60 | 75.04 | 74.17 | 69.42 | 60.82 | 66.66 | 50.99 | 71.10 |
+| `libime-fcitx5-desktop` | 82.78 | 93.13 | 95.60 | 59.96 | 72.81 | 67.21 | 57.55 | 63.49 | 44.67 | 70.77 |
+| `libime-fcitx5-mobile` | 82.72 | 93.13 | 95.62 | 75.00 | 73.84 | 68.69 | 61.35 | 66.28 | 50.79 | 71.05 |
+| `libime-allflags` | 76.11 | 89.56 | 93.16 | 71.84 | 72.62 | 64.91 | 58.70 | 64.48 | 48.94 | 89.88 |
+
+Two rows of Table 8 differ in the fcitx5 settings and the four flags only:
+
+- On swapped letters, character accuracy goes from 55.65 percent for `libime-src-advancedtypo` to 63.49 percent for `libime-fcitx5-desktop`.
+- On deleted letters, character accuracy goes from 68.10 to 72.81 percent.
 
 ## Repeatable outputs through a fixed address layout
 
 The scored runs start the adapter with a fixed address layout, so two processes give the same outputs. With the normal random layout, libime 1.1.17 with its 2026 data gives a different first sentence for a few cases.
 
-Table 8. Dev outputs that differ between two adapter processes, of 3,000 cases, in workflow run 42762822650. Both layouts ran with the same environment.
+Table 9. Dev outputs that differ between two adapter processes, of 3,000 cases, in workflow run 42762822650. Both layouts ran with the same environment.
 
 | libime build and flags | Random address layout | Fixed address layout |
 | --- | --- | --- |
@@ -211,13 +234,13 @@ With the packaged data, the outputs did not depend on the address layout. The th
 
 The build file of libime 1.1.17 passes `-q 4` to the model builder, and the build file of 1.1.5 passes `-q 8`. The option sets the bits for each stored probability. A coarser model can make equal scores more common. The runs did not test this difference as the cause.
 
-The adapter gets the fixed layout from `setarch -R`. `check_repeatability.py` makes the counts of Table 8.
+The adapter gets the fixed layout from `setarch -R`. `check_repeatability.py` makes the counts of Table 9.
 
 ## Versions and packages on the ubuntu-24.04 runner
 
 The runner installed libime 1.1.5 from Ubuntu packages and built libime 1.1.17 from source in one job.
 
-Table 9. Packages that `apt-get install` put on the runner for the engine names on libime 1.1.5.
+Table 10. Packages that `apt-get install` put on the runner for the engine names on libime 1.1.5.
 
 | Package | Version |
 | --- | --- |
@@ -233,7 +256,7 @@ Table 9. Packages that `apt-get install` put on the runner for the engine names 
 
 CMake 3.31.6 and Ninja come from the runner image.
 
-Table 10. Sources and packages of the libime 1.1.17 build.
+Table 11. Sources and packages of the libime 1.1.17 build.
 
 | Part | Version |
 | --- | --- |
@@ -248,7 +271,7 @@ Table 10. Sources and packages of the libime 1.1.17 build.
 
 libime 1.1.17 needs the fcitx5 utility library 5.1.20 or later, and Ubuntu 24.04 packages 5.1.7. The job builds both libraries into the folder `build/libime-source/prefix`. The adapter for the source build runs with `LD_LIBRARY_PATH` set to that folder. The job checks the loaded libraries with `ldd`.
 
-Table 11. Data files that the adapter loads. Both language models are trigram models.
+Table 12. Data files that the adapter loads. Both language models are trigram models.
 
 | Property | libime 1.1.5 packages | libime 1.1.17 source build |
 | --- | --- | --- |
@@ -265,7 +288,7 @@ The n-gram order comes from the KenLM header of each file, read by `kenlm_header
 
 The libime code and the libime data carry the license LGPL-2.1-or-later.
 
-Table 12. License of each part, and the file that states it.
+Table 13. License of each part, and the file that states it.
 
 | Part | License | File that states the license |
 | --- | --- | --- |
@@ -292,7 +315,7 @@ In every run the first candidate covered all the letters, so step 7 made one pic
 
 Seven files of this folder and one workflow file make the evaluation run.
 
-Table 13. Files of the adapter folder.
+Table 14. Files of the adapter folder.
 
 | File | Content |
 | --- | --- |
@@ -311,7 +334,7 @@ Table 13. Files of the adapter folder.
 - The adapter loads the stock dictionary and the stock language model only. The adapter does not load a user dictionary, a typing history, `chaizi.dict`, `extb.dict` or `zh_CN.lm.predict`, and never calls `learn()`.
 - Each case starts in a new context, so libime does not see the text before the clause.
 - The packaged libime 1.1.5 does not have the Correction flag, so `libime-correction` exists for the source build only.
-- The scores hold for the fixed address layout and for this order of the cases. Table 8 gives the size of the change under a random layout.
+- The scores hold for the fixed address layout and for this order of the cases. Table 9 gives the size of the change under a random layout.
 - With the packaged data, typing letter by letter and typing all letters in one call give the same outputs. With the 2026 data the two outputs differ in 5 to 27 of 3,000 cases per run. The scores use one letter at a time.
 - In run 42762822650 the adapter took 0.6 to 1.3 milliseconds per letter with Correction off. With Correction on, the adapter took 2.2 to 3.1 milliseconds. Four adapter processes ran at the same time on one runner, so these times do not predict phone latency.
 - The corpus behind the libime language model is not stated in the files read for this work. An overlap with the Tatoeba sentences of the cases is therefore possible.
