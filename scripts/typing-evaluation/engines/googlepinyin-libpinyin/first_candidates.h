@@ -37,13 +37,13 @@
 namespace first_candidates {
 
 // The result of one search with a string of letters.
-struct SearchResult {
+struct FirstCandidate {
     size_t covered = 0;          // leading letters that the engine used
-    bool has_candidate = false;  // false when the engine does not give a candidate for them
+    bool found = false;  // false when the engine does not give a candidate for them
     std::string text;            // the first candidate, in UTF-8
 };
 
-using Search = std::function<SearchResult(const std::string &letters)>;
+using Search = std::function<FirstCandidate(const std::string &letters)>;
 
 struct Statistics {
     size_t cases = 0;
@@ -103,7 +103,7 @@ inline void write_all(int descriptor, const std::string &data) {
 }
 
 // Runs one search in a child process. `aborted` becomes true when SIGABRT ended the child.
-inline SearchResult search_in_child(const Search &search, const std::string &letters, bool &aborted,
+inline FirstCandidate search_in_child(const Search &search, const std::string &letters, bool &aborted,
                                     Statistics &statistics) {
     int result_pipe[2];
     int error_pipe[2];
@@ -119,9 +119,9 @@ inline SearchResult search_in_child(const Search &search, const std::string &let
         close(error_pipe[0]);
         if (dup2(error_pipe[1], STDERR_FILENO) < 0)
             _exit(2);
-        const SearchResult result = search(letters);
+        const FirstCandidate result = search(letters);
         std::string message = std::to_string(result.covered);
-        message += result.has_candidate ? "\t1\t" : "\t0\t";
+        message += result.found ? "\t1\t" : "\t0\t";
         message += result.text;
         write_all(result_pipe[1], message);
         _exit(0);
@@ -150,7 +150,7 @@ inline SearchResult search_in_child(const Search &search, const std::string &let
 
     aborted = WIFSIGNALED(status) && WTERMSIG(status) == SIGABRT;
     if (aborted)
-        return SearchResult();
+        return FirstCandidate();
     if (!WIFEXITED(status) || WEXITSTATUS(status) != 0)
         fail("the search process for " + letters + " ended with wait status " + std::to_string(status) + ": " +
              error_text);
@@ -159,9 +159,9 @@ inline SearchResult search_in_child(const Search &search, const std::string &let
     const size_t second_tab = first_tab == std::string::npos ? first_tab : message.find('\t', first_tab + 1);
     if (second_tab == std::string::npos)
         fail("the search process for " + letters + " returned a message without two tabs");
-    SearchResult result;
+    FirstCandidate result;
     result.covered = static_cast<size_t>(std::stoull(message.substr(0, first_tab)));
-    result.has_candidate = message.substr(first_tab + 1, second_tab - first_tab - 1) == "1";
+    result.found = message.substr(first_tab + 1, second_tab - first_tab - 1) == "1";
     result.text = message.substr(second_tab + 1);
     return result;
 }
@@ -178,7 +178,7 @@ inline size_t first_candidate(const Search &search, const std::string &letters, 
     while (length > 0) {
         const std::string attempt = letters.substr(0, length);
         bool aborted = false;
-        const SearchResult result = search_in_child(search, attempt, aborted, statistics);
+        const FirstCandidate result = search_in_child(search, attempt, aborted, statistics);
         statistics.searches++;
         if (aborted) {
             statistics.aborted_searches++;
@@ -192,7 +192,7 @@ inline size_t first_candidate(const Search &search, const std::string &letters, 
             fail("the engine covered more letters than it got for " + attempt);
         if (result.covered == 0)
             return 0;
-        if (result.has_candidate) {
+        if (result.found) {
             if (result.text.empty())
                 fail("the first candidate is empty for " + attempt);
             text = result.text;
