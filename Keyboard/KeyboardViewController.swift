@@ -38,6 +38,11 @@ final class KeyboardViewController: UIInputViewController {
         refreshFromDocument()
     }
 
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        textController.cancelPendingEdits()
+    }
+
     override func viewWillLayoutSubviews() {
         super.viewWillLayoutSubviews()
         updateHeight()
@@ -93,13 +98,19 @@ final class ProxyDocument: KeyboardDocument {
     // The proxy returns nil for an empty context, and an empty string means the same here.
     var textBeforeCursor: String { proxy.documentContextBeforeInput ?? "" }
     var textAfterCursor: String { proxy.documentContextAfterInput ?? "" }
-    var selectedText: String? { proxy.selectedText }
+    var selectedText: String? {
+        // An empty selection and a missing selection both mean a plain insertion point.
+        guard let selected = proxy.selectedText, !selected.isEmpty else { return nil }
+        return selected
+    }
 
     /// `.sentences` is the value UIKit documents for a text field that does not set the trait.
     var autocapitalizationType: UITextAutocapitalizationType { proxy.autocapitalizationType ?? .sentences }
 
     /// iOS gives a keyboard the clipboard only when the user turns on Full Access.
     var canUseClipboard: Bool { controller.hasFullAccess }
+
+    var documentIdentifier: UUID { proxy.documentIdentifier }
 
     func insertText(_ text: String) {
         proxy.insertText(text)

@@ -7,3 +7,4 @@ App/Info.plist
 Keyboard/Info.plist
 .env
 .playwright-mcp/
+__pycache__/
