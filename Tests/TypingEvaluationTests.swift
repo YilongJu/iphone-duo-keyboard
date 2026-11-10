@@ -53,9 +53,24 @@ final class TypingEvaluationTests: XCTestCase {
     /// Types each English case through the typing controller: the context is already in the
     /// field, then come the typed characters and one space, as a person would type them.
     func testEnglishCasesThroughTheTypingController() throws {
+        try typeEnglishCases(named: "english")
+    }
+
+    /// The cases with a symbol or digit key in place of a letter have their own files. A cases
+    /// folder without those files skips them.
+    func testEnglishSymbolCasesThroughTheTypingController() throws {
+        let (casesFolder, _) = try folders()
+        let first = casesFolder.appendingPathComponent("english-symbols.dev.jsonl")
+        guard FileManager.default.fileExists(atPath: first.path) else {
+            throw XCTSkip("english-symbols.dev.jsonl is not in the cases folder")
+        }
+        try typeEnglishCases(named: "english-symbols")
+    }
+
+    private func typeEnglishCases(named name: String) throws {
         let (casesFolder, outputFolder) = try folders()
         for half in ["dev", "test"] {
-            let cases = try loadCases(EnglishCase.self, from: casesFolder.appendingPathComponent("english.\(half).jsonl"))
+            let cases = try loadCases(EnglishCase.self, from: casesFolder.appendingPathComponent("\(name).\(half).jsonl"))
             var outputs: [Output] = []
             let spellChecker = EngineSpellChecker(
                 engine: EnglishTypingEngine(lexicon: TypingLexicon(resource: "lexicon-english", fullCheck: false)))
@@ -72,7 +87,7 @@ final class TypingEvaluationTests: XCTestCase {
                 let produced = String(document.text.dropFirst(before.count)).trimmingCharacters(in: .whitespaces)
                 outputs.append(Output(id: item.id, output: produced))
             }
-            try write(outputs, to: outputFolder.appendingPathComponent("english.\(half).jsonl"))
+            try write(outputs, to: outputFolder.appendingPathComponent("\(name).\(half).jsonl"))
         }
     }
 

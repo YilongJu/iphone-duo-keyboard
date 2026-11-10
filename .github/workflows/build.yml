@@ -97,6 +97,12 @@ jobs:
                 --json "$outputs/$task.$half.summary.json"
             done
           done
+          # The cases with a symbol or digit key in place of a letter, scored by the English rules.
+          for half in dev test; do
+            python3 scripts/typing-evaluation/score.py --task english --engine shipping-keyboard \
+              --cases "$cases/english-symbols.$half.jsonl" --predictions "$outputs/english-symbols.$half.jsonl" \
+              --json "$outputs/english-symbols.$half.summary.json"
+          done
       - uses: actions/upload-artifact@v7
         if: always()
         with:
