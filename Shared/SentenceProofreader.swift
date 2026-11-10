@@ -65,21 +65,19 @@ final class SystemModelProofreader: SentenceProofreading {
     func proofread(_ sentence: String) async -> ProofreadResult {
         #if canImport(FoundationModels)
         var cloudNote: String?
-        if Self.usesCloudModel, #available(iOS 27.0, *), let last = sentence.last,
-            KeyboardTextLogic.sentenceEnds.contains(last) {
+        if Self.usesCloudModel, let last = sentence.last, KeyboardTextLogic.sentenceEnds.contains(last) {
             let cloud = await askCloudModel(sentence)
             if cloud.text != nil { return cloud }
             cloudNote = cloud.note
         }
-        if #available(iOS 26.0, *) {
-            var result = await askSystemModel(sentence)
-            if result.text != nil, let cloudNote {
-                result = ProofreadResult(text: result.text, seconds: result.seconds, note: cloudNote, source: result.source)
-            }
-            return result
+        var result = await askSystemModel(sentence)
+        if result.text != nil, let cloudNote {
+            result = ProofreadResult(text: result.text, seconds: result.seconds, note: cloudNote, source: result.source)
         }
+        return result
+        #else
+        return ProofreadResult(text: nil, seconds: 0, note: "the SDK has no Foundation Models framework")
         #endif
-        return ProofreadResult(text: nil, seconds: 0, note: "the on-device model needs iOS 26")
     }
 
     /// Cuts a model's answer down to the corrected text.
@@ -92,7 +90,6 @@ final class SystemModelProofreader: SentenceProofreading {
     }
 
     #if canImport(FoundationModels)
-    @available(iOS 27.0, *)
     private func askCloudModel(_ sentence: String) async -> ProofreadResult {
         let model = PrivateCloudComputeLanguageModel()
         guard case .available = model.availability else {
@@ -111,7 +108,6 @@ final class SystemModelProofreader: SentenceProofreading {
         }
     }
 
-    @available(iOS 26.0, *)
     private func askSystemModel(_ sentence: String) async -> ProofreadResult {
         let model = SystemLanguageModel.default
         switch model.availability {
