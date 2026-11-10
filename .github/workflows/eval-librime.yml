@@ -15,7 +15,7 @@ jobs:
   librime:
     name: librime on the Pinyin typing test cases
     runs-on: ubuntu-24.04
-    timeout-minutes: 90
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v7
       - name: Install librime and its stock data from the Ubuntu packages
