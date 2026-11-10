@@ -8,7 +8,7 @@ Usage, from the repository root, after fetch_sources.sh and build.sh in this fol
 
 --half writes build/typing-evaluation/NAME/english.HALF.jsonl for each engine name, with one JSON
 object per case: the case `id` and the engine's `output`.
---controls prints four checks on the dev half that score.py does not make.
+--controls prints five checks on the dev half that score.py does not make.
 
 The script builds the keyboard layout from scripts/typing-evaluation/keyboard_noise.py and hands
 the cases to latinime_driver, which calls the engine. README.md in this folder describes both.
@@ -25,6 +25,7 @@ ROOT = EVALUATION.parents[1]
 sys.path.insert(0, str(EVALUATION))
 
 import keyboard_noise as noise  # noqa: E402
+from score import score  # noqa: E402
 
 CASES = EVALUATION / "cases"
 OUTPUT = ROOT / "build" / "typing-evaluation"
@@ -52,6 +53,11 @@ ENGINES = [
     ("latinime-token-very-aggressive", "token", "very-aggressive"),
     ("latinime-span-very-aggressive", "span", "very-aggressive"),
 ]
+
+# Thresholds of the dev sweep in --controls, from the stock value upward. "inf" switches the
+# threshold rule off, so that only a whitelist entry replaces a typed word.
+SWEEP_THRESHOLDS = ["0.185", "0.2", "0.22", "0.24", "0.26", "0.28", "0.3", "0.32", "0.34", "0.36", "0.38",
+                    "0.4", "0.45", "0.5", "0.6", "0.8", "1", "inf"]
 
 # Context and typed text for --explain-samples: cases of the dev half, one for each category
 # example of Table 3 in scripts/typing-evaluation/README.md, and the word "hid". The stock word
@@ -112,35 +118,41 @@ def write_layout(path: Path) -> None:
     path.write_text("\n".join(lines) + "\n", encoding="utf-8", newline="\n")
 
 
-def driver_command(arguments: argparse.Namespace, layout: Path) -> list[str]:
+# The six engine names as (name, mode, threshold value) for the driver.
+STOCK_ENGINES = [(name, mode, THRESHOLDS[threshold]) for name, mode, threshold in ENGINES]
+
+
+def driver_command(arguments: argparse.Namespace, layout: Path, engines: list[tuple[str, str, str]]) -> list[str]:
     for required in (arguments.driver, arguments.dictionary):
         if not required.is_file():
             raise SystemExit(f"{required} is missing: run fetch_sources.sh and build.sh first")
     command = [str(arguments.driver), "--dictionary", str(arguments.dictionary), "--layout", str(layout)]
-    for name, mode, threshold in ENGINES:
-        command += ["--engine", f"{name}:{mode}:{THRESHOLDS[threshold]}"]
+    for name, mode, threshold in engines:
+        command += ["--engine", f"{name}:{mode}:{threshold}"]
     return command
 
 
 def run_driver(arguments: argparse.Namespace, layout: Path, inputs: list[tuple[str, str, str]],
-               options: tuple[str, ...] = ()) -> dict[str, dict[str, str]]:
+               options: tuple[str, ...] = (),
+               engines: list[tuple[str, str, str]] = STOCK_ENGINES) -> dict[str, dict[str, str]]:
     """Runs (id, context, typed) triples through the driver. Returns output by engine name and id.
 
     `options` holds extra driver arguments, such as ("--lookup", "incremental").
+    `engines` holds (name, mode, threshold value) triples, the six engine names by default.
     """
     lines = [f"{case_id}\t{context}\t{typed}" for case_id, context, typed in inputs]
     completed = subprocess.run(
-        driver_command(arguments, layout) + list(options), input="\n".join(lines) + "\n",
+        driver_command(arguments, layout, engines) + list(options), input="\n".join(lines) + "\n",
         capture_output=True, text=True, encoding="utf-8")
     sys.stderr.write(completed.stderr)
     if completed.returncode != 0:
         raise SystemExit(f"latinime_driver stopped with exit code {completed.returncode}")
-    outputs: dict[str, dict[str, str]] = {name: {} for name, _, _ in ENGINES}
+    outputs: dict[str, dict[str, str]] = {name: {} for name, _, _ in engines}
     for line in completed.stdout.split("\n"):
         if line:
             case_id, name, output = line.split("\t", 2)
             outputs[name][case_id] = output
-    for name, _, _ in ENGINES:
+    for name, _, _ in engines:
         missing = [case_id for case_id, _, _ in inputs if case_id not in outputs[name]]
         if missing:
             raise SystemExit(f"{name}: the driver gave no output for {len(missing)} cases, first {missing[0]}")
@@ -180,7 +192,7 @@ def report_changes(cases: list[dict], first: dict[str, dict[str, str]], second: 
 
 
 def run_controls(arguments: argparse.Namespace, layout: Path) -> None:
-    """Four checks on the dev half that score.py does not make."""
+    """Five checks on the dev half that score.py does not make."""
     cases = load_cases("dev")
     inputs = [(case["id"], case["context"], case["typed"]) for case in cases]
     baseline = run_driver(arguments, layout, inputs)
@@ -223,11 +235,29 @@ def run_controls(arguments: argparse.Namespace, layout: Path) -> None:
     print("           when the first letter is typed in upper case")
     report_changes(empty_context, baseline, capitalized, ignore_case=True)
 
+    # Control 5: the threshold. The task picks a setting by the share of slips repaired while the
+    # share of clean cases stays at 0.98 or more, and the stock threshold keeps less than that.
+    # This control scores the dev half at higher thresholds, with score.py's own function. The
+    # first row returns the typed text as it is, to show both ends of the scale.
+    sweep = [(f"sweep-{mode}-{threshold}", mode, threshold)
+             for threshold in SWEEP_THRESHOLDS for mode in ("token", "span")]
+    swept = run_driver(arguments, layout, inputs, engines=sweep)
+    typed_as_is = score("english", cases, {case["id"]: case["typed"] for case in cases})
+    print("Control 5: dev shares by auto-correction threshold")
+    print(f"  typed text as it is   clean {typed_as_is['clean']['accuracy']:.4f}  slips {typed_as_is['slips']['accuracy']:.4f}")
+    for threshold in SWEEP_THRESHOLDS:
+        shares = []
+        for mode in ("token", "span"):
+            summary = score("english", cases, swept[f"sweep-{mode}-{threshold}"])
+            shares += [summary["clean"]["accuracy"], summary["slips"]["accuracy"]]
+        print(f"  threshold {threshold:>5s}   token clean {shares[0]:.4f} slips {shares[1]:.4f}"
+              f"   span clean {shares[2]:.4f} slips {shares[3]:.4f}")
+
 
 def explain_samples(arguments: argparse.Namespace, layout: Path) -> None:
     lines = [f"sample-{index:02d}\t{context}\t{typed}" for index, (context, typed) in enumerate(SAMPLES)]
     completed = subprocess.run(
-        driver_command(arguments, layout) + ["--explain", "--dump-layout", "--dictionary-statistics"],
+        driver_command(arguments, layout, STOCK_ENGINES) + ["--explain", "--dump-layout", "--dictionary-statistics"],
         input="\n".join(lines) + "\n", capture_output=True, text=True, encoding="utf-8")
     sys.stdout.write(completed.stdout)
     sys.stderr.write(completed.stderr)
@@ -239,7 +269,7 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     action = parser.add_mutually_exclusive_group(required=True)
     action.add_argument("--half", choices=["dev", "test"], help="run the cases of this half")
-    action.add_argument("--controls", action="store_true", help="print the four controls on the dev half")
+    action.add_argument("--controls", action="store_true", help="print the five controls on the dev half")
     action.add_argument("--explain-samples", action="store_true",
                         help="print the dictionary counts, the layout and the suggestions for a few dev examples")
     action.add_argument("--list-engines", action="store_true", help="print the engine names")
