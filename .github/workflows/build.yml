@@ -58,6 +58,8 @@ jobs:
       - uses: actions/checkout@v7
       - name: Check the layout file against the layout rules
         run: python3 scripts/keyboard-preview/check_layout.py
+      - name: Check the symbol keys beside each letter against the layout file
+        run: python3 scripts/typing-evaluation/symbol_keys.py --check
       - name: Install XcodeGen
         run: brew install xcodegen
       - name: Generate the Xcode project

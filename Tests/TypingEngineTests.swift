@@ -36,11 +36,53 @@ final class TypingEngineTests: XCTestCase {
     }
 
     func testEnglishKeepsTextItCannotRead() {
-        // A capital, a digit and a double space are outside the engine's input.
+        // A capital, two digits in one word and a double space are outside the engine's input.
         XCTAssertNil(Self.english.reading(previousWord: "", typed: "Teh"))
-        XCTAssertNil(Self.english.reading(previousWord: "", typed: "teh2"))
+        XCTAssertNil(Self.english.reading(previousWord: "", typed: "teh22"))
         XCTAssertNil(Self.english.reading(previousWord: "", typed: "th  e"))
         XCTAssertNil(Self.english.reading(previousWord: "", typed: ""))
+    }
+
+    func testEnglishRepairsASymbolOrDigitKeyInPlaceOfTheFirstLetter() {
+        XCTAssertEqual(Self.english.reading(previousWord: "", typed: "[lease"), "please")
+        XCTAssertEqual(Self.english.reading(previousWord: "", typed: "0lease"), "please")
+        XCTAssertEqual(Self.english.reading(previousWord: "", typed: "-lease"), "please")
+        XCTAssertEqual(Self.english.reading(previousWord: "i", typed: ";ike"), "like")
+        XCTAssertEqual(Self.english.reading(previousWord: "", typed: ",ore"), "more")
+        XCTAssertEqual(Self.english.reading(previousWord: "", typed: "2hat"), "what")
+        XCTAssertEqual(Self.english.reading(previousWord: "", typed: "hello [lease"), "hello please")
+        XCTAssertEqual(Self.english.reading(previousWord: "", typed: "tell ;ike"), "tell like")
+    }
+
+    func testEnglishRepairsADigitOrABracketInsideAWord() {
+        XCTAssertEqual(Self.english.reading(previousWord: "", typed: "wh3n"), "when")
+        XCTAssertEqual(Self.english.reading(previousWord: "", typed: "y0u"), "you")
+        XCTAssertEqual(Self.english.reading(previousWord: "", typed: "sho2"), "show")
+        XCTAssertEqual(Self.english.reading(previousWord: "", typed: "hel["), "help")
+        XCTAssertEqual(Self.english.reading(previousWord: "", typed: "peo[le"), "people")
+    }
+
+    func testEnglishKeepsASymbolOrDigitTypedOnPurpose() {
+        for typed in ["[note", "[art", "[it", ".net", ".com", ",and", ",but", "-ish", "2nd", "3rd", "7am", "4am", "5pm", "mp3", "h2o"] {
+            XCTAssertEqual(Self.english.reading(previousWord: "", typed: typed), typed)
+        }
+        // A word after an opening bracket is still repaired, and the bracket stays.
+        XCTAssertEqual(Self.english.reading(previousWord: "", typed: "[teh"), "[the")
+    }
+
+    func testEnglishNeverDropsATypedSymbol() {
+        // "[please" without the bracket is "please", and the engine does not read it that way.
+        XCTAssertEqual(Self.english.reading(previousWord: "", typed: "[please"), "[please")
+        XCTAssertEqual(Self.english.reading(previousWord: "", typed: "p[lease"), "p[lease")
+        XCTAssertEqual(Self.english.reading(previousWord: "", typed: "0open"), "0open")
+    }
+
+    func testEnglishRefusesTextWithOtherSymbols() {
+        // More than one symbol key in a word, fewer than two letters beside a symbol key, a
+        // punctuation key after the first place, and a key that is not beside a letter.
+        for typed in ["a1b2", "[[teh", "[a", "4k", "a;b", "teh;", "te-h", "te#h", "teh [a"] {
+            XCTAssertNil(Self.english.reading(previousWord: "", typed: typed), typed)
+        }
     }
 
     func testPinyinReadsASentence() {

@@ -27,6 +27,7 @@ protocol SpellChecking: AnyObject {
     /// Returns the text the person most likely meant. The result equals `typed` when the checker
     /// reads the text as typed, and it is nil when the checker cannot read the text at all.
     /// `typed` holds one word, or two words with one space between them, in lower case.
+    /// A word may hold one symbol or digit key, as `KeyboardTextLogic.correctableWord` allows.
     /// `previousWord` is the lower-case word before `typed`, or an empty string.
     func reading(previousWord: String, typed: String) -> String?
     /// Stops the keyboard from changing this word again.
@@ -36,8 +37,9 @@ protocol SpellChecking: AnyObject {
 }
 
 /// English correction from the typing engine in Engine/duo_engine.c. The engine reads a
-/// wrong neighbor key, a missing, extra or doubled letter, swapped letters, and slips around
-/// the space bar, and it weighs each reading by how common its words are.
+/// wrong neighbor key, also when that key is a symbol or a digit, a missing, extra or doubled
+/// letter, swapped letters, and slips around the space bar, and it weighs each reading by how
+/// common its words are.
 @MainActor
 final class EngineSpellChecker: SpellChecking {
     private static let keptWordsKey = "englishKeptWords"
@@ -441,7 +443,16 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
         recentWord = nil
         guard !chineseMode, document.allowsAutocorrection else { return }
         let before = document.textBeforeCursor
-        guard let word = KeyboardTextLogic.correctableWord(before: before) else { return }
+        guard let word = KeyboardTextLogic.correctableWord(before: before) else {
+            // A comma, period or semicolon key right after a space can be a slip for the first
+            // letter of the next word, as in ";ike" for "like". The word before stays ready, so
+            // the two words are still read together.
+            if let earlier, terminator.count == 1, let key = terminator.first,
+                KeyboardTextLogic.symbolsBesideLetters.contains(key), before.hasSuffix(earlier.context) {
+                recentWord = earlier
+            }
+            return
+        }
 
         let followedBySpace = terminator == " "
         // A word the person brought back after a correction stays as typed.
@@ -467,8 +478,13 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
         // A reading of two words together replaces an earlier reading of the first word alone,
         // also when it brings back the letters the person typed. Without a reading the shown
         // text stays, and only a lone "i" gets its capital.
-        let final = reading.map { KeyboardTextLogic.restoringCapitals(in: $0, from: typedSpan) }
+        let restored = reading.map { KeyboardTextLogic.restoringCapitals(in: $0, from: typedSpan) }
             ?? KeyboardTextLogic.restoringCapitals(in: shownSpan, from: shownSpan)
+        // A word whose first letter was typed as a symbol key gets the capital that the
+        // keyboard types by itself at that place, as in "[lease" at the start of a sentence.
+        let final = KeyboardTextLogic.capitalizingRepairedFirstLetters(
+            in: restored, from: typedSpan, textBefore: String(before.dropLast(shownSpan.count)),
+            type: document.autocapitalizationType)
         let finalWords = final.split(separator: " ")
         if final != shownSpan {
             deleteBackward(count: shownSpan.count)

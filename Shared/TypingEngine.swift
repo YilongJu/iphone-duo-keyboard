@@ -52,6 +52,8 @@ final class EnglishTypingEngine {
     /// `typed` when the engine reads the text as typed.
     ///
     /// `typed` holds one or two words in lower case: letters, apostrophes and single spaces.
+    /// A word of two or more letters may also hold one symbol or digit key that sits beside a
+    /// letter key, which the engine reads as a slip for that letter or as typed on purpose.
     /// `previousWord` is the word before the typed text, in lower case, or an empty string.
     /// Text with any other character is outside the engine's input, and the result is nil.
     func reading(previousWord: String, typed: String) -> String? {
