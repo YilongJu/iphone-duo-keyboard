@@ -1,43 +1,72 @@
 import Foundation
 
-/// One word the user can pick for the letters typed so far.
+/// One word or sentence the user can pick for the letters typed so far.
 struct PinyinCandidate: Equatable {
     let word: String
-    /// Count of typed letters this word stands for. The letters after them stay in the buffer.
+    /// Count of typed letters this candidate stands for. The letters after them stay in the buffer.
     let consumedLetters: Int
 }
 
 /// Turns typed Pinyin letters into Simplified Chinese candidates.
 ///
 /// The words come from `pinyin-dictionary.txt`, built from the Android Open Source Project's
-/// Pinyin dictionary. The file lists the most frequent word first, and the engine keeps that order.
+/// Pinyin dictionary. Each line holds a spelling, a word and the word's frequency, with the most
+/// frequent word first.
+///
+/// The first candidate is a whole sentence: the engine cuts all typed syllables into dictionary
+/// words in the most likely way, where the likelihood of a cut is the product of its words'
+/// frequencies. The candidates after that are single words for the leading syllables. A pick of
+/// a shorter word leaves the other letters in the buffer, and the engine converts those again.
 final class PinyinEngine {
-    /// Words by spelling. A spelling joins its syllables with spaces, as in "ni hao".
-    private var words: [String: [String]] = [:]
+    private struct Entry {
+        let word: String
+        /// Natural logarithm of the word's share of all word uses in the dictionary.
+        let logProbability: Double
+    }
+
+    /// Entries by spelling. A spelling joins its syllables with spaces, as in "ni hao".
+    private var entries: [String: [Entry]] = [:]
     /// Every one-syllable entry in file order, for a syllable the user has typed only in part.
     private var singles: [(syllable: String, word: String)] = []
     private var syllables: Set<String> = []
     private let longestSyllable: Int
+    /// The longest word in the dictionary, counted in syllables.
+    private let longestWord: Int
 
-    /// Reads dictionary text with one "syllables<TAB>word" entry per line.
+    /// Reads dictionary text with one "syllables<TAB>word<TAB>frequency" entry per line.
+    /// A line that does not have these three fields stops the process, because a broken
+    /// dictionary would give wrong candidates without any sign.
     init(dictionaryText: String) {
-        var longest = 0
+        var parsed: [(key: String, word: String, frequency: Double)] = []
+        var total = 0.0
         for line in dictionaryText.split(separator: "\n") {
-            guard let tab = line.firstIndex(of: "\t") else { continue }
-            let key = String(line[..<tab])
-            let word = String(line[line.index(after: tab)...])
-            words[key, default: []].append(word)
-            if !key.contains(" ") {
-                singles.append((key, word))
-                syllables.insert(key)
-                longest = max(longest, key.count)
+            let fields = line.split(separator: "\t")
+            guard fields.count == 3, let frequency = Double(fields[2]), frequency > 0 else {
+                fatalError("Bad dictionary line: \(line)")
+            }
+            parsed.append((String(fields[0]), String(fields[1]), frequency))
+            total += frequency
+        }
+        var longestSyllable = 0
+        var longestWord = 0
+        for item in parsed {
+            entries[item.key, default: []].append(
+                Entry(word: item.word, logProbability: log(item.frequency / total)))
+            if item.key.contains(" ") {
+                longestWord = max(longestWord, item.word.count)
+            } else {
+                singles.append((item.key, item.word))
+                syllables.insert(item.key)
+                longestSyllable = max(longestSyllable, item.key.count)
+                longestWord = max(longestWord, 1)
             }
         }
         // "n" and "ng" are spellings of a few rare sounds. Inside a longer spelling they would
         // split words in the wrong place, so they count as syllables only when typed alone.
         syllables.remove("n")
         syllables.remove("ng")
-        longestSyllable = longest
+        self.longestSyllable = longestSyllable
+        self.longestWord = longestWord
     }
 
     /// Loads the dictionary from the bundle. The keyboard cannot offer Chinese without the file,
@@ -88,8 +117,29 @@ final class PinyinEngine {
         return (parsed + (remainder.isEmpty ? [] : [remainder])).joined(separator: "'")
     }
 
-    /// Candidates for the typed letters: first the words for all syllables, then words for fewer
-    /// leading syllables, down to single characters for the first syllable.
+    /// The most likely sentence for the syllables, or nil when some syllable has no word at all.
+    /// `best[i]` holds the most likely text for the first `i` syllables.
+    func sentence(for syllables: [String]) -> String? {
+        guard !syllables.isEmpty else { return nil }
+        var best: [(text: String, logProbability: Double)?] = Array(repeating: nil, count: syllables.count + 1)
+        best[0] = ("", 0)
+        for end in 1...syllables.count {
+            let earliestStart = max(0, end - longestWord)
+            for start in earliestStart..<end {
+                guard let prefix = best[start],
+                    let top = entries[syllables[start..<end].joined(separator: " ")]?.first
+                else { continue }
+                let logProbability = prefix.logProbability + top.logProbability
+                if let current = best[end], current.logProbability >= logProbability { continue }
+                best[end] = (prefix.text + top.word, logProbability)
+            }
+        }
+        return best[syllables.count]?.text
+    }
+
+    /// Candidates for the typed letters: first the most likely sentence for all syllables, then
+    /// the words for all syllables, then words for fewer leading syllables, down to single
+    /// characters for the first syllable.
     func candidates(for letters: String, limit: Int = 60) -> [PinyinCandidate] {
         let (parsed, remainder) = segment(letters)
         var result: [PinyinCandidate] = []
@@ -101,7 +151,7 @@ final class PinyinEngine {
         if parsed.isEmpty {
             // The first syllable is incomplete, as in "zh". Offer the characters whose syllable starts that way.
             if remainder == "n" || remainder == "ng" {
-                for word in words[remainder] ?? [] { add(word, consumed: remainder.count) }
+                for entry in entries[remainder] ?? [] { add(entry.word, consumed: remainder.count) }
             }
             for single in singles where single.syllable.hasPrefix(remainder) {
                 if result.count >= limit { break }
@@ -109,12 +159,16 @@ final class PinyinEngine {
             }
             return result
         }
+        let allLetters = parsed.reduce(0) { $0 + $1.count }
+        if let sentence = sentence(for: parsed) {
+            add(sentence, consumed: allLetters)
+        }
         var count = parsed.count
         while count > 0 {
             let leading = parsed[0..<count]
             let consumed = leading.reduce(0) { $0 + $1.count }
-            for word in words[leading.joined(separator: " ")] ?? [] {
-                add(word, consumed: consumed)
+            for entry in entries[leading.joined(separator: " ")] ?? [] {
+                add(entry.word, consumed: consumed)
             }
             count -= 1
         }

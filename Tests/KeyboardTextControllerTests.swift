@@ -41,9 +41,9 @@ final class FakeDocument: KeyboardDocument {
 
 /// A small dictionary in the format of pinyin-dictionary.txt, most frequent word first.
 let testDictionary = [
-    "wo\t\u{6211}", "ni\t\u{4F60}", "hao\t\u{597D}", "ni hao\t\u{4F60}\u{597D}", "ni\t\u{5C3C}",
-    "zhong\t\u{4E2D}", "guo\t\u{56FD}", "zhong guo\t\u{4E2D}\u{56FD}", "xi\t\u{897F}", "an\t\u{5B89}",
-    "xian\t\u{5148}", "n\t\u{55EF}", "men\t\u{4EEC}",
+    "wo\t\u{6211}\t1000", "ni\t\u{4F60}\t900", "hao\t\u{597D}\t800", "ni hao\t\u{4F60}\u{597D}\t700",
+    "zhong guo\t\u{4E2D}\u{56FD}\t600", "zhong\t\u{4E2D}\t500", "guo\t\u{56FD}\t400", "xian\t\u{5148}\t300",
+    "men\t\u{4EEC}\t250", "xi\t\u{897F}\t200", "an\t\u{5B89}\t100", "n\t\u{55EF}\t10", "ni\t\u{5C3C}\t5",
 ].joined(separator: "\n")
 
 /// A spell checker with a fixed list of corrections.
@@ -440,6 +440,23 @@ final class PinyinEngineTests: XCTestCase {
         XCTAssertEqual(words, ["\u{4F60}\u{597D}", "\u{4F60}", "\u{5C3C}"])
         XCTAssertEqual(engine.candidates(for: "nihao").first?.consumedLetters, 5)
         XCTAssertEqual(engine.candidates(for: "nihao").last?.consumedLetters, 2)
+    }
+
+    func testTheFirstCandidateIsTheWholeSentence() {
+        // "wo ni hao" is not a dictionary word. The most likely cut is "wo" plus the phrase "ni hao".
+        let candidates = engine.candidates(for: "wonihao")
+        XCTAssertEqual(candidates.first, PinyinCandidate(word: "\u{6211}\u{4F60}\u{597D}", consumedLetters: 7))
+        XCTAssertEqual(candidates.dropFirst().first, PinyinCandidate(word: "\u{6211}", consumedLetters: 2))
+    }
+
+    func testTheSentencePrefersAPhraseOverItsSingleCharacters() {
+        XCTAssertEqual(engine.sentence(for: ["zhong", "guo", "ni", "hao"]), "\u{4E2D}\u{56FD}\u{4F60}\u{597D}")
+        XCTAssertNil(engine.sentence(for: ["zhong", "qi"]))
+    }
+
+    func testAPickOfAShorterWordLeavesTheRestForANewSentence() {
+        let afterFirstPick = engine.candidates(for: "nihao")
+        XCTAssertEqual(afterFirstPick.first?.word, "\u{4F60}\u{597D}")
     }
 
     func testAnIncompleteSyllableOffersCharactersThatStartThatWay() {

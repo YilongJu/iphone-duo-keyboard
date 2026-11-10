@@ -4,8 +4,9 @@ Source: rawdict_utf16_65105_freq.txt in platform/packages/inputmethods/PinyinIME
 Each source line holds a word, a frequency, a flag and the word's Pinyin syllables. Flag 1 marks a
 character outside the common GB2312 set, and this build leaves those out.
 
-The output holds one word per line as "syllables<TAB>word", with the most frequent word first.
-The keyboard reads the file top to bottom, so the candidates for a spelling keep that order.
+The output holds one word per line as "syllables<TAB>word<TAB>frequency", with the most frequent
+word first. The keyboard reads the file top to bottom, so the candidates for a spelling keep that
+order, and it uses the frequencies to pick the most likely sentence for a run of syllables.
 
 Usage, from the repository root:
     python scripts/pinyin-dictionary/build_dictionary.py
@@ -40,7 +41,7 @@ for line in CACHE.read_bytes().decode("utf-16").splitlines():
     entries.append((frequency, " ".join(syllables), word))
 
 entries.sort(key=lambda entry: -entry[0])
-text = "".join(f"{key}\t{word}\n" for _, key, word in entries)
+text = "".join(f"{key}\t{word}\t{frequency:.5g}\n" for frequency, key, word in entries)
 OUTPUT.write_text(text, encoding="utf-8", newline="\n")
 syllable_set = {key for _, key, _ in entries if " " not in key}
 print(f"wrote {OUTPUT.relative_to(ROOT)}: {len(entries)} words, {len(syllable_set)} syllables, {len(text.encode('utf-8'))} bytes")
