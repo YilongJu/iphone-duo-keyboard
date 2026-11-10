@@ -15,9 +15,13 @@ final class SetupViewController: UIViewController, UITextViewDelegate {
     private let previewKeyboard = KeyboardView()
     private let previewContainer = UIInputView(frame: .zero, inputViewStyle: .keyboard)
     private lazy var previewDocument = TextViewDocument(textView: previewField)
+    /// The preview keyboard re-ranks its English corrections with the same model as the
+    /// keyboard extension. The model loads when the preview keyboard appears in English.
+    private let languageModel = KeyboardLanguageModel.bundled()
+    private lazy var reranker = EnglishReranker(scorer: languageModel)
     private lazy var textController = KeyboardTextController(
-        keyboardView: previewKeyboard, document: previewDocument, spellChecker: EngineSpellChecker.bundled(),
-        pinyinEngine: { PinyinEngine.bundled() })
+        keyboardView: previewKeyboard, document: previewDocument,
+        spellChecker: EngineSpellChecker.bundled(reranker: reranker), pinyinEngine: { PinyinEngine.bundled() })
     private var didAutoFocus = false
 
     override func viewDidLoad() {
@@ -93,6 +97,16 @@ final class SetupViewController: UIViewController, UITextViewDelegate {
         stack.addArrangedSubview(languageModelResults)
 
         textController.proofreader = SystemModelProofreader()
+        textController.languageModelLoader = languageModel
+        languageModel.onEvent = { [weak self] event in
+            self?.textController.show(event)
+        }
+        reranker.onModelError = { [weak self] reason in
+            self?.textController.show(.modelError(reason))
+        }
+        languageModelTest.keyboardLines = { [languageModel, reranker] in
+            languageModel.reportLines(statistics: reranker.statistics)
+        }
         textController.rememberLanguage()
         textController.onDismiss = { [weak self] in
             self?.previewField.resignFirstResponder()
@@ -208,10 +222,22 @@ final class SetupViewController: UIViewController, UITextViewDelegate {
         }
     }
 
+    override func didReceiveMemoryWarning() {
+        super.didReceiveMemoryWarning()
+        languageModel.unload(reason: "memory warning")
+    }
+
     // MARK: UITextViewDelegate
 
     func textViewDidChangeSelection(_ textView: UITextView) {
         textController.documentDidChange()
+    }
+
+    func textViewDidBeginEditing(_ textView: UITextView) {
+        // The preview keyboard appears with its field.
+        if textView === previewField {
+            textController.keyboardWillAppear()
+        }
     }
 }
 

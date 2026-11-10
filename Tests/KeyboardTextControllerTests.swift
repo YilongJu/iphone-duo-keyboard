@@ -56,9 +56,12 @@ final class FakeSpellChecker: SpellChecking {
     var learned: [String] = []
     /// Every call of `reading`, as "previous word|typed text".
     var requests: [String] = []
+    /// The text before the typed text of every call of `reading`.
+    var textsBefore: [String] = []
 
-    func reading(previousWord: String, typed: String) -> String? {
+    func reading(previousWord: String, typed: String, textBefore: String) -> String? {
         requests.append("\(previousWord)|\(typed)")
+        textsBefore.append(textBefore)
         if let whole = corrections[typed] { return whole }
         return typed.split(separator: " ").map { corrections[String($0)] ?? String($0) }
             .joined(separator: " ")

@@ -61,6 +61,31 @@ final class EnglishTypingEngine {
         guard duo_correct_english(&lexicon.lexicon, &params, previousWord, typed, &result) == 1 else { return nil }
         return TypingLexicon.text(of: &result)
     }
+
+    /// The readings of typed text that the engine's search keeps, best score first, up to
+    /// `limit`: the text as typed, and the best reading for each last word. Exactly one reading
+    /// is the text as typed, and exactly one is the reading that `reading` returns. The input
+    /// rules are those of `reading`, and the result is nil for text outside them.
+    func readings(previousWord: String, typed: String, limit: Int) -> [EnglishReading]? {
+        precondition(limit >= 2, "the list holds the text as typed and the engine's choice")
+        var buffer = [duo_reading](repeating: duo_reading(), count: limit)
+        let count = buffer.withUnsafeMutableBufferPointer { pointer in
+            duo_english_readings(&lexicon.lexicon, &params, previousWord, typed, pointer.baseAddress, Int32(limit))
+        }
+        guard count > 0 else { return nil }
+        let readings = (0..<Int(count)).map { index in
+            EnglishReading(
+                text: withUnsafePointer(to: &buffer[index].text) { pointer in
+                    pointer.withMemoryRebound(to: CChar.self, capacity: Int(DUO_TEXT_SIZE)) { String(cString: $0) }
+                },
+                score: Double(buffer[index].score), slipCost: Double(buffer[index].slip_cost),
+                asTyped: buffer[index].as_typed == 1, chosen: buffer[index].chosen == 1)
+        }
+        // Engine/duo_engine.h promises both marks. A list without them is a fault of the engine.
+        precondition(readings.filter { $0.chosen }.count == 1, "readings of \(typed) need one chosen reading")
+        precondition(readings.filter { $0.asTyped }.count == 1, "readings of \(typed) need the text as typed")
+        return readings
+    }
 }
 
 /// One reading of typed Pinyin letters by the C typing engine.

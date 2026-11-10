@@ -28,8 +28,10 @@ protocol SpellChecking: AnyObject {
     /// reads the text as typed, and it is nil when the checker cannot read the text at all.
     /// `typed` holds one word, or two words with one space between them, in lower case.
     /// A word may hold one symbol or digit key, as `KeyboardTextLogic.correctableWord` allows.
-    /// `previousWord` is the lower-case word before `typed`, or an empty string.
-    func reading(previousWord: String, typed: String) -> String?
+    /// `previousWord` is the lower-case word before `typed`, or an empty string. `textBefore` is
+    /// the field's text right before the typed text, as the field holds it. The language model
+    /// reads it as the context of the readings.
+    func reading(previousWord: String, typed: String, textBefore: String) -> String?
     /// Stops the keyboard from changing this word again.
     func learn(_ word: String)
     /// True for a word the person brought back after a correction.
@@ -39,32 +41,49 @@ protocol SpellChecking: AnyObject {
 /// English correction from the typing engine in Engine/duo_engine.c. The engine reads a
 /// wrong neighbor key, also when that key is a symbol or a digit, a missing, extra or doubled
 /// letter, swapped letters, and slips around the space bar, and it weighs each reading by how
-/// common its words are.
+/// common its words are. A language model then re-ranks the engine's best readings with the
+/// text before them.
 @MainActor
 final class EngineSpellChecker: SpellChecking {
     private static let keptWordsKey = "englishKeptWords"
     private let engine: EnglishTypingEngine
+    /// Re-ranks the engine's readings. Without it the engine's own choice stays.
+    let reranker: EnglishReranker?
     /// Words the person brought back after a correction, kept across keyboard launches.
     private var keptWords: Set<String>
+    /// The store of the kept words. A test passes a store of its own, so the words it brings
+    /// back do not reach the keyboard or another test.
+    private let store: UserDefaults
 
-    init(engine: EnglishTypingEngine) {
+    init(engine: EnglishTypingEngine, reranker: EnglishReranker?, store: UserDefaults) {
         self.engine = engine
+        self.reranker = reranker
+        self.store = store
         // A phone on which nobody has brought a word back yet does not have the stored list.
-        keptWords = Set(UserDefaults.standard.stringArray(forKey: Self.keptWordsKey) ?? [])
+        keptWords = Set(store.stringArray(forKey: Self.keptWordsKey) ?? [])
     }
 
     /// The engine with the English lexicon of the app bundle.
-    static func bundled() -> EngineSpellChecker {
-        EngineSpellChecker(engine: EnglishTypingEngine(lexicon: TypingLexicon(resource: "lexicon-english", fullCheck: false)))
+    static func bundled(reranker: EnglishReranker?) -> EngineSpellChecker {
+        EngineSpellChecker(
+            engine: EnglishTypingEngine(lexicon: TypingLexicon(resource: "lexicon-english", fullCheck: false)),
+            reranker: reranker, store: .standard)
     }
 
-    func reading(previousWord: String, typed: String) -> String? {
-        engine.reading(previousWord: previousWord, typed: typed)
+    func reading(previousWord: String, typed: String, textBefore: String) -> String? {
+        guard let readings = engine.readings(
+            previousWord: previousWord, typed: typed, limit: EnglishReranker.readingCount)
+        else { return nil }
+        guard let reranker else {
+            // EnglishTypingEngine.readings holds exactly one chosen reading.
+            return readings.first { $0.chosen }!.text
+        }
+        return reranker.choose(readings: readings, textBefore: textBefore, typed: typed)
     }
 
     func learn(_ word: String) {
         guard keptWords.insert(word.lowercased()).inserted else { return }
-        UserDefaults.standard.set(Array(keptWords), forKey: Self.keptWordsKey)
+        store.set(Array(keptWords), forKey: Self.keptWordsKey)
     }
 
     func keeps(_ word: String) -> Bool {
@@ -152,10 +171,19 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
     static let languageModelTrigger = "duo:lm"
 
     /// Runs the language model test. Without a measurer the trigger text is typed as any
-    /// other text, and the keyboard does not load a model.
+    /// other text, and the test does not load a model.
     var languageModelMeasurer: LanguageModelMeasuring?
     /// The run of the test that is under way now. The tests wait for it.
     private(set) var languageModelTask: Task<Void, Never>?
+
+    /// Loads the language model of the English corrections. The controller asks for a load
+    /// when the keyboard appears in English and when the person switches to English, so
+    /// Chinese typing never loads the model.
+    var languageModelLoader: LanguageModelLoading?
+
+    /// A short text that stays on the space bar while the keyboard types English, such as the
+    /// words that the language model did not load. A notice and select all still come first.
+    private var englishCaption: String?
 
     private var previousInsertWasSpace = false
     private var lastSpaceTime: TimeInterval = 0
@@ -240,7 +268,33 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
     private func refreshCaption() {
         keyboardView.selectAllActive = allText != nil
         keyboardView.spaceCaption = notice
-            ?? (allText != nil ? "All text selected" : (chineseMode ? "\u{62FC}\u{97F3}" : nil))
+            ?? (allText != nil ? "All text selected" : (chineseMode ? "\u{62FC}\u{97F3}" : englishCaption))
+    }
+
+    /// The owner calls this when the keyboard appears.
+    func keyboardWillAppear() {
+        if !chineseMode { languageModelLoader?.loadInBackground() }
+    }
+
+    /// Names a change of the language model on the space bar. A model that did not load also
+    /// leaves a caption that stays until a later load works.
+    func show(_ event: LanguageModelEvent) {
+        switch event {
+        case .ready:
+            englishCaption = nil
+            refreshCaption()
+        case .loadFailed(let reason):
+            englishCaption = "No language model"
+            showNotice("Language model did not load: \(reason)")
+        case .freed(let reason):
+            showNotice("Language model freed: \(reason)")
+        case .modelError(let reason):
+            // The error comes in the middle of a correction, which shows its own notice right
+            // after. The error's notice waits for that one, so the correction does not hide it.
+            Task { @MainActor [weak self] in
+                self?.showNotice("Language model error: \(reason)")
+            }
+        }
     }
 
     /// Shows a short message on the space bar for 2.5 seconds.
@@ -625,7 +679,9 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
         // One letter alone is a word such as "a" or "I", or a label, so the checker reads a
         // single letter only together with the word before it.
         let reading = typedSpan.count >= 2
-            ? spellChecker.reading(previousWord: previousWord, typed: typedSpan.lowercased()) : nil
+            ? spellChecker.reading(
+                previousWord: previousWord, typed: typedSpan.lowercased(),
+                textBefore: String(before.dropLast(shownSpan.count))) : nil
         // A reading of two words together replaces an earlier reading of the first word alone,
         // also when it brings back the letters the person typed. Without a reading the shown
         // text stays, and only a lone "i" gets its capital.
@@ -772,6 +828,7 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
             if remembersLanguage {
                 UserDefaults.standard.set(chineseMode, forKey: Self.languageKey)
             }
+            if !chineseMode { languageModelLoader?.loadInBackground() }
         case .selectAll:
             if allText != nil {
                 setAllText(nil)

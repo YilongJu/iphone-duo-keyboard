@@ -12,16 +12,32 @@ final class KeyboardViewController: UIInputViewController {
     /// (Apple feedback FB25073949), and the Duo does not draw a globe button of its own.
     private let keyboardView = KeyboardView()
     private lazy var document = ProxyDocument(controller: self)
+    /// The model that re-ranks the English corrections. It loads when the keyboard appears in
+    /// English, and a memory warning frees it.
+    private let languageModel = KeyboardLanguageModel.bundled()
+    private lazy var reranker = EnglishReranker(scorer: languageModel)
     private lazy var textController = KeyboardTextController(
-        keyboardView: keyboardView, document: document, spellChecker: EngineSpellChecker.bundled(),
+        keyboardView: keyboardView, document: document, spellChecker: EngineSpellChecker.bundled(reranker: reranker),
         pinyinEngine: { PinyinEngine.bundled() })
     private var heightConstraint: NSLayoutConstraint?
 
     override func viewDidLoad() {
         super.viewDidLoad()
         textController.proofreader = SystemModelProofreader()
-        // The test loads its model only when the person types "duo:lm" and a space.
-        textController.languageModelMeasurer = BundledLanguageModelTest()
+        // The test loads its own model only when the person types "duo:lm" and a space. Its
+        // first lines describe the model that re-ranks the corrections.
+        let languageModelTest = BundledLanguageModelTest()
+        languageModelTest.keyboardLines = { [languageModel, reranker] in
+            languageModel.reportLines(statistics: reranker.statistics)
+        }
+        textController.languageModelMeasurer = languageModelTest
+        textController.languageModelLoader = languageModel
+        languageModel.onEvent = { [weak self] event in
+            self?.textController.show(event)
+        }
+        reranker.onModelError = { [weak self] reason in
+            self?.textController.show(.modelError(reason))
+        }
         textController.rememberLanguage()
         // iPadOS draws undo, redo and paste buttons over the keyboard's top left corner. This
         // request to drop them is honored for a text field's own input view. For a keyboard
@@ -47,6 +63,12 @@ final class KeyboardViewController: UIInputViewController {
         super.viewWillAppear(animated)
         updateHeight()
         refreshFromDocument()
+        textController.keyboardWillAppear()
+    }
+
+    override func didReceiveMemoryWarning() {
+        super.didReceiveMemoryWarning()
+        languageModel.unload(reason: "memory warning")
     }
 
     override func viewDidAppear(_ animated: Bool) {
