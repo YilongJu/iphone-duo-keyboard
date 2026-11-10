@@ -132,6 +132,12 @@ def main():
         f"dictionary lines with two fields, read as a word's single reading: {len(two_field_lines)}"
         + (f", first: {two_field_lines[0]!r}" if two_field_lines else ""))
 
+    marks_in_file = sorted(word for word in words if word.startswith("<"))
+    report.append(f"marks in the language model: {marks_in_file}")
+    missing = [mark for mark in MARK_SPELLINGS if mark not in words]
+    if missing:
+        print("\n".join(report))
+        raise SystemExit(f"the language model does not list the marks {missing}")
     for mark, spelling in MARK_SPELLINGS.items():
         entries.append((spelling, mark, words[mark][0] * LN10, words[mark][1] * LN10))
         known_texts.add(mark)
