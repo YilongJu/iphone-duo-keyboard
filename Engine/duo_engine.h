@@ -39,6 +39,11 @@ typedef struct {
     uint32_t word_count;
     uint32_t pair_count;
     uint32_t strings_size;
+    /* 0: a word's chance after another is a fixed blend of the pair statistic and the word's
+       own probability. 1: a back-off model, where a listed pair gives the chance directly and
+       an unlisted pair costs the first word's back-off weight plus the second word's own
+       log probability. */
+    uint32_t model;
 } duo_lexicon;
 
 /* Costs are in natural-log units, the same scale as the word probabilities: a cost of 4.6 makes
@@ -67,7 +72,8 @@ typedef struct {
     float extra_space;        /* a space typed inside a word */
     float space_for_letter;   /* a space typed in place of a letter from the row above the space bar */
     float shifted_space;      /* a space typed one key early or one key late */
-    /* Share of the word-pair statistic in a word's probability, from 0 to 1. */
+    /* Share of the word-pair statistic in a word's probability, from 0 to 1. A lexicon with a
+       back-off model does not use this share. */
     float pair_weight;
     /* Log probability of text that is not in the lexicon: unknown_word + unknown_letter * letters. */
     float unknown_word;
