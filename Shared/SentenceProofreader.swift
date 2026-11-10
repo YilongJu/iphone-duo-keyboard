@@ -35,6 +35,18 @@ final class SystemModelProofreader: SentenceProofreading {
         add or remove information. Answer with the corrected sentence only, without quotation \
         marks and without any comment. When the sentence has no error, answer with the sentence \
         exactly as given.
+
+        Examples:
+        Text: help where are you form.
+        Answer: help where are you from.
+        Text: I will sent it too you tomorrow,
+        Answer: I will send it to you tomorrow,
+        Text: She said the [lan is good.
+        Answer: She said the plan is good.
+        Text: The meeting starts at noon.
+        Answer: The meeting starts at noon.
+        Text: \u{6211}\u{4EEC}\u{660E}\u{5929}\u{518D}\u{5317}\u{4EAC}\u{89C1}\u{9762}\u{3002}
+        Answer: \u{6211}\u{4EEC}\u{660E}\u{5929}\u{5728}\u{5317}\u{4EAC}\u{89C1}\u{9762}\u{3002}
         """
 
     func proofread(_ sentence: String) async -> ProofreadResult {
@@ -66,8 +78,14 @@ final class SystemModelProofreader: SentenceProofreading {
         do {
             // A new session for each sentence, so an earlier sentence cannot leak into this answer.
             let session = LanguageModelSession(instructions: Self.instructions)
-            let response = try await session.respond(to: sentence)
-            return ProofreadResult(text: response.content, seconds: Date().timeIntervalSince(start), note: nil)
+            // The most likely answer each time, so one sentence always gets the same fix.
+            let response = try await session.respond(
+                to: "Text: \(sentence)\nAnswer:", options: GenerationOptions(sampling: .greedy))
+            var answer = response.content.trimmingCharacters(in: .whitespacesAndNewlines)
+            if answer.hasPrefix("Answer:") {
+                answer = String(answer.dropFirst("Answer:".count))
+            }
+            return ProofreadResult(text: answer, seconds: Date().timeIntervalSince(start), note: nil)
         } catch {
             return ProofreadResult(
                 text: nil, seconds: Date().timeIntervalSince(start), note: String(describing: error))
