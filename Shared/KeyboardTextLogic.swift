@@ -300,19 +300,19 @@ enum KeyboardTextLogic {
         return words.joined(separator: " ")
     }
 
-    static func returnKeyTitle(for type: UIReturnKeyType) -> String {
+    /// The SF Symbol on the return key for the return key type the text field asks for. A
+    /// symbol reads at a glance and keeps the key the same width in every field.
+    static func returnKeySymbol(for type: UIReturnKeyType) -> String {
         switch type {
-        case .go: return "go"
-        case .google, .search, .yahoo: return "search"
-        case .join: return "join"
-        case .next: return "next"
-        case .route: return "route"
-        case .send: return "send"
-        case .done: return "done"
-        case .continue: return "continue"
-        case .emergencyCall: return "call"
-        case .default: return "return"
-        @unknown default: return "return"
+        case .go, .join, .continue: return "arrow.right"
+        case .google, .search, .yahoo: return "magnifyingglass"
+        case .next: return "arrow.down"
+        case .route: return "arrow.triangle.turn.up.right.diamond"
+        case .send: return "paperplane"
+        case .done: return "checkmark"
+        case .emergencyCall: return "phone"
+        case .default: return "return.left"
+        @unknown default: return "return.left"
         }
     }
 }
