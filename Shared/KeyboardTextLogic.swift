@@ -102,9 +102,10 @@ enum KeyboardTextLogic {
             }
         }
         var word = String(before[start...])
-        // A capital right after a symbol key shows that the person typed the key on purpose:
-        // automatic shift turns off at a symbol key, so the person asked for that capital.
-        // The word then starts after the key, as "Teh" does in "[Teh".
+        // A capital right after a symbol key: the key is not read as a slip for the first
+        // letter, and the word starts after the key, as "Teh" does in "[Teh". In a field that
+        // capitalizes sentences or words, automatic shift turns off at a symbol key, so the
+        // person asked for that capital and typed the key on purpose.
         if let symbol = word.first, symbolsBesideLetters.contains(symbol),
             let second = word.dropFirst().first, second.isUppercase {
             start = before.index(after: start)
