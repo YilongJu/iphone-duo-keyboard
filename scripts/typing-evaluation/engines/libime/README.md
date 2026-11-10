@@ -10,11 +10,30 @@ With the fcitx5 phone defaults, libime 1.1.17 converts 73.4 percent of [clean](#
 
 The scores do not give slip rates in real typing, latency on a phone, or memory on a phone.
 
+## Pinyin conversion task with libime in the Model row
+
+The evaluation defines the task, and libime fills the Model row. The other seven rows are the same for every engine.
+
+Table 1. The Pinyin conversion task of the evaluation, in the eight rows that define a machine learning task.
+
+| Row | Pinyin conversion with libime |
+| --- | --- |
+| Input | One string, `typed`: 4 to 80 letters a to z with no spaces. The string is the toneless Pinyin of a clause, and a slip case holds one or two slips. One example is `dadehao`. |
+| Model | libime: a dictionary search with a trigram language model. The run does not train any part of libime. The 1.1.17 data holds 300,624 dictionary lines and 7,250,101 language model entries. |
+| Output | One string of any length: the first sentence that libime gives for all the letters. The string is Chinese text. A part that libime does not convert stays in Latin letters. |
+| Target | `intended`: a clause of 2 to 20 Simplified Chinese characters from Tatoeba. The case generator made its Pinyin with pypinyin. |
+| Training signal | None. libime runs with its stock data, and each engine name has a fixed flag set. |
+| Negatives | The clean cases, where any change is an error. Each half has 900 clean cases beside 2,100 slip cases. |
+| Split | The Tatoeba sentence, by the parity of its id. One parity forms the dev half and the other the test half. |
+| Eval | Exact match between output and target, as a percent of cases. The scorer counts per category of 300 cases, then pools the 3 clean categories and the 7 slip categories. |
+
+Each flag set is read against the same libime build with every flag off, scored in the same run.
+
 ## Terms of the libime evaluation
 
 Each term below keeps one meaning in every section.
 
-Table 1. Terms that this document uses with one fixed meaning.
+Table 2. Terms that this document uses with one fixed meaning.
 
 | Term | Meaning |
 | --- | --- |
@@ -35,7 +54,7 @@ Table 1. Terms that this document uses with one fixed meaning.
 
 An engine name is one libime build with one set of fuzzy flags. Three names repeat the packaged flag sets on the source build, and one name is a control. These four names separate flag effects from code effects and data effects.
 
-Table 2. The eleven engine names, in plain words.
+Table 3. The eleven engine names, in plain words.
 
 | Engine name | libime build and settings | Reason the name exists |
 | --- | --- | --- |
@@ -51,9 +70,9 @@ Table 2. The eleven engine names, in plain words.
 | `libime-fcitx5-mobile` | The desktop options plus Correction with the QWERTY correction profile | The decoder settings of fcitx5 on Android and iOS |
 | `libime-allflags` | The phone options plus PartialFinal and the 13 sound-pair flags | The most tolerant setting that libime offers |
 
-Table 3 gives the spellings that each flag accepts, in plain words. The first three rows come from probe strings that the workflow types.
+Table 4 gives the spellings that each flag accepts, in plain words. The first three rows come from probe strings that the workflow types.
 
-Table 3. Fuzzy flags in the engine names. A quoted text is the label of the option in fcitx5.
+Table 4. Fuzzy flags in the engine names. A quoted text is the label of the option in fcitx5.
 
 | Fuzzy flag | Spellings that the flag accepts |
 | --- | --- |
@@ -67,9 +86,9 @@ Table 3. Fuzzy flags in the engine names. A quoted text is the label of the opti
 | `PartialFinal` | "Match partial finals (e -> en, eng, ei)" |
 | 13 sound-pair flags | Two sounds read as one, such as "l <-> n", "z <-> zh" and "an <-> ang" |
 
-Table 4 gives the exact flags of each engine name. The more flags a name has, the more spellings libime accepts for one syllable.
+Table 5 gives the exact flags of each engine name. The more flags a name has, the more spellings libime accepts for one syllable.
 
-Table 4. The flags that the adapter passes to `PinyinIME::setFuzzyFlags`, and the other settings of each engine name.
+Table 5. The flags that the adapter passes to `PinyinIME::setFuzzyFlags`, and the other settings of each engine name.
 
 | Engine names | Fuzzy flags | Other settings |
 | --- | --- | --- |
@@ -95,82 +114,90 @@ The flag defaults come from `im/pinyin/pinyin.h` and `im/pinyin/pinyin.cpp` of f
 
 ## Scores of the eleven engine names on the dev half and the test half
 
-Every engine name repairs less than 19 percent of the slip cases. The more fuzzy flags are on, the more slip cases libime repairs in total.
+Every engine name repairs less than 19 percent of the slip cases. Each added typo flag raises that percent: CommonTypo, AdvancedTypo, Correction, then the sound-pair flags with PartialFinal.
 
-Table 5. Share of cases with an exact match, as `score.py` printed it in workflow run 42759199191. Each half has 900 clean cases and 2,100 slip cases.
+Table 6. Percent of cases with an exact match, in workflow run 42762822650. Each half has 900 clean cases and 2,100 slip cases. `score.py` prints the same values as shares from 0 to 1.
 
 | Engine name | Clean, dev | Slips, dev | Clean, test | Slips, test |
 | --- | --- | --- | --- | --- |
-| `libime-none` | 0.6889 | 0.0152 | 0.6856 | 0.0114 |
-| `libime-commontypo` | 0.6889 | 0.0229 | 0.6856 | 0.0162 |
-| `libime-advancedtypo` | 0.6878 | 0.0457 | 0.6833 | 0.0371 |
-| `libime-src-none-packaged-data` | 0.6889 | 0.0152 | 0.6856 | 0.0114 |
-| `libime-src-none` | 0.7367 | 0.0176 | 0.7122 | 0.0129 |
-| `libime-src-commontypo` | 0.7356 | 0.0271 | 0.7111 | 0.0195 |
-| `libime-src-advancedtypo` | 0.7356 | 0.0495 | 0.7122 | 0.0443 |
-| `libime-correction` | 0.7344 | 0.0952 | 0.7100 | 0.0848 |
-| `libime-fcitx5-desktop` | 0.7344 | 0.0495 | 0.7133 | 0.0443 |
-| `libime-fcitx5-mobile` | 0.7344 | 0.0952 | 0.7111 | 0.0848 |
-| `libime-allflags` | 0.6567 | 0.1805 | 0.6511 | 0.1614 |
+| `libime-none` | 68.89 | 1.52 | 68.56 | 1.14 |
+| `libime-commontypo` | 68.89 | 2.29 | 68.56 | 1.62 |
+| `libime-advancedtypo` | 68.78 | 4.57 | 68.33 | 3.71 |
+| `libime-src-none-packaged-data` | 68.89 | 1.52 | 68.56 | 1.14 |
+| `libime-src-none` | 73.67 | 1.76 | 71.22 | 1.29 |
+| `libime-src-commontypo` | 73.56 | 2.71 | 71.11 | 1.95 |
+| `libime-src-advancedtypo` | 73.56 | 4.95 | 71.22 | 4.43 |
+| `libime-correction` | 73.44 | 9.52 | 71.00 | 8.48 |
+| `libime-fcitx5-desktop` | 73.44 | 4.95 | 71.33 | 4.43 |
+| `libime-fcitx5-mobile` | 73.44 | 9.52 | 71.11 | 8.48 |
+| `libime-allflags` | 65.67 | 18.05 | 65.11 | 16.14 |
 
 ```mermaid
+---
+config:
+  themeVariables:
+    xyChart:
+      plotColorPalette: "#0969da"
+---
 xychart-beta horizontal
-    title "Share of the 2,100 dev slip cases with an exact match"
-    x-axis ["libime-none 0.015", "libime-commontypo 0.023", "libime-advancedtypo 0.046", "libime-src-none-packaged-data 0.015", "libime-src-none 0.018", "libime-src-commontypo 0.027", "libime-src-advancedtypo 0.050", "libime-correction 0.095", "libime-fcitx5-desktop 0.050", "libime-fcitx5-mobile 0.095", "libime-allflags 0.180"]
-    y-axis "Share of slip cases repaired" 0 --> 1
-    bar [0.0152, 0.0229, 0.0457, 0.0152, 0.0176, 0.0271, 0.0495, 0.0952, 0.0495, 0.0952, 0.1805]
+    title "Dev slip cases with an exact match, of 2,100"
+    x-axis "Engine name and its percent" ["libime-none 1.5", "libime-commontypo 2.3", "libime-advancedtypo 4.6", "libime-src-none-packaged-data 1.5", "libime-src-none 1.8", "libime-src-commontypo 2.7", "libime-src-advancedtypo 5.0", "libime-correction 9.5", "libime-fcitx5-desktop 5.0", "libime-fcitx5-mobile 9.5", "libime-allflags 18.0"]
+    y-axis "Slip cases repaired (percent)" 0 --> 100
+    bar [1.52, 2.29, 4.57, 1.52, 1.76, 2.71, 4.95, 9.52, 4.95, 9.52, 18.05]
 ```
 
-Figure 1. Slip cases repaired on the dev half, one bar per engine name, on one scale from 0 to 1. A bar at 1 means every slip case repaired. The longest bar, `libime-allflags`, ends at 0.180.
+Figure 1. Slip cases repaired on the dev half, one bar per engine name, on one scale from 0 to 100 percent. A bar at 100 means every slip case repaired. The longest bar, `libime-allflags`, ends at 18.0 percent.
 
-Five comparisons in Table 5 change one group of settings at a time. The runs do not separate the flags inside one group.
+Five comparisons in Table 6 change one group of settings at a time. The runs do not separate the flags inside one group.
 
-- Correction raises the dev slip share from 0.0495 to 0.0952. Clean dev accuracy changes by 1 of 900 cases.
-- The sound-pair flags and PartialFinal raise the dev slip share from 0.0952 to 0.1805. The same flags lower clean dev accuracy from 0.7344 to 0.6567.
+- Correction raises the repaired dev slip cases from 4.95 to 9.52 percent. Clean dev accuracy goes from 73.56 to 73.44 percent.
+- The sound-pair flags and PartialFinal raise the repaired dev slip cases from 9.52 to 18.05 percent. The same flags lower clean dev accuracy from 73.44 to 65.67 percent.
 - The fcitx5 settings and four more flags change the dev scores by at most 1 of 3,000 cases. The four flags are `VE_UE`, `Letter`, `Inner` and `InnerShort`.
-- The newer data raises clean accuracy by 4.8 points on dev and 2.7 points on test.
-- The newer code leaves every exact-match score of Table 5 and Table 6 unchanged. `libime-src-none-packaged-data` and `libime-none` differ in 11 of 6,000 outputs, and both miss each of those cases.
+- The newer data raises clean dev accuracy from 68.89 to 73.67 percent. Clean test accuracy goes from 68.56 to 71.22 percent.
+- The newer code leaves every exact-match score of Table 6 and Table 7 unchanged. `libime-src-none-packaged-data` and `libime-none` differ in 11 of 6,000 outputs, and both miss each of those cases.
 
-The evaluation allows a setting to lower clean accuracy by 1 point against the engine with slip handling off. `libime-allflags` lowers clean dev accuracy by 8.0 points against `libime-src-none`. The name therefore serves as an upper reference, and `libime-fcitx5-mobile` is the libime row.
+The evaluation allows a setting to lower clean dev accuracy by 1 point against the engine with slip handling off. `libime-allflags` lowers clean dev accuracy from 73.67 to 65.67 percent, so the name serves as an upper reference only. Inside the 1-point limit, `libime-correction` and `libime-fcitx5-mobile` repair the most dev slip cases, 9.52 percent each. `libime-fcitx5-mobile` is the libime row, because fcitx5 uses these options on a phone. The test half did not take part in this choice.
 
-Table 6. Share of dev slip cases with an exact match, by slip category. Each category has 300 cases.
+Table 7. Percent of dev slip cases with an exact match, by slip category. Each category has 300 cases, and the last column pools the 2,100 cases.
 
-| Engine name | `substitution_adjacent` | `deletion` | `double_letter` | `extra_adjacent` | `transposition` | `two_errors` | `fuzzy_sound` |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| `libime-none` | 0.0000 | 0.1067 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 |
-| `libime-commontypo` | 0.0000 | 0.1167 | 0.0000 | 0.0000 | 0.0433 | 0.0000 | 0.0000 |
-| `libime-advancedtypo` | 0.0000 | 0.1167 | 0.0000 | 0.0000 | 0.2033 | 0.0000 | 0.0000 |
-| `libime-src-none-packaged-data` | 0.0000 | 0.1067 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 |
-| `libime-src-none` | 0.0000 | 0.1233 | 0.0000 | 0.0000 | 0.0000 | 0.0000 | 0.0000 |
-| `libime-src-commontypo` | 0.0000 | 0.1367 | 0.0000 | 0.0000 | 0.0533 | 0.0000 | 0.0000 |
-| `libime-src-advancedtypo` | 0.0000 | 0.1367 | 0.0000 | 0.0000 | 0.2067 | 0.0033 | 0.0000 |
-| `libime-correction` | 0.3000 | 0.1367 | 0.0000 | 0.0000 | 0.2200 | 0.0100 | 0.0000 |
-| `libime-fcitx5-desktop` | 0.0000 | 0.1367 | 0.0000 | 0.0000 | 0.2067 | 0.0033 | 0.0000 |
-| `libime-fcitx5-mobile` | 0.3000 | 0.1367 | 0.0000 | 0.0000 | 0.2200 | 0.0100 | 0.0000 |
-| `libime-allflags` | 0.2467 | 0.2000 | 0.0033 | 0.0067 | 0.1933 | 0.0200 | 0.5933 |
+| Engine name | `substitution_adjacent` | `deletion` | `double_letter` | `extra_adjacent` | `transposition` | `two_errors` | `fuzzy_sound` | All slips |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `libime-none` | 0.00 | 10.67 | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 | 1.52 |
+| `libime-commontypo` | 0.00 | 11.67 | 0.00 | 0.00 | 4.33 | 0.00 | 0.00 | 2.29 |
+| `libime-advancedtypo` | 0.00 | 11.67 | 0.00 | 0.00 | 20.33 | 0.00 | 0.00 | 4.57 |
+| `libime-src-none-packaged-data` | 0.00 | 10.67 | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 | 1.52 |
+| `libime-src-none` | 0.00 | 12.33 | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 | 1.76 |
+| `libime-src-commontypo` | 0.00 | 13.67 | 0.00 | 0.00 | 5.33 | 0.00 | 0.00 | 2.71 |
+| `libime-src-advancedtypo` | 0.00 | 13.67 | 0.00 | 0.00 | 20.67 | 0.33 | 0.00 | 4.95 |
+| `libime-correction` | 30.00 | 13.67 | 0.00 | 0.00 | 22.00 | 1.00 | 0.00 | 9.52 |
+| `libime-fcitx5-desktop` | 0.00 | 13.67 | 0.00 | 0.00 | 20.67 | 0.33 | 0.00 | 4.95 |
+| `libime-fcitx5-mobile` | 30.00 | 13.67 | 0.00 | 0.00 | 22.00 | 1.00 | 0.00 | 9.52 |
+| `libime-allflags` | 24.67 | 20.00 | 0.33 | 0.67 | 19.33 | 2.00 | 59.33 | 18.05 |
 
 Each flag repairs mainly one slip category, and two categories stay near zero under every flag set:
 
 - Correction repairs 30.0 percent of the neighbor-key substitutions. The QWERTY correction profile lists the left and right neighbor of each key. The case generator also uses neighbors in the row above and the row below.
 - Correction adds 96 repaired dev cases: 90 neighbor-key substitutions, 4 swapped-letter cases and 2 two-slip cases.
 - AdvancedTypo repairs 20.3 to 20.7 percent of the swapped letters. CommonTypo alone repairs 4.3 to 5.3 percent.
-- The sound-pair flags repair 59.3 percent of the `fuzzy_sound` cases. With these flags on, libime repairs fewer substitutions (0.3000 to 0.2467) and fewer swapped letters (0.2200 to 0.1933).
+- The sound-pair flags repair 59.3 percent of the `fuzzy_sound` cases. With these flags on, libime repairs fewer substitutions (30.00 to 24.67 percent) and fewer swapped letters (22.00 to 19.33 percent).
 - Every engine name repairs 0 to 0.7 percent of the doubled letters and the extra letters.
-- A deleted letter is repaired in 10.7 to 20.0 percent of cases. One cause is that libime reads a lone consonant as the start of a syllable.
+- The engine names repair 10.7 to 20.0 percent of the deleted letters. One cause is that libime reads a lone consonant as the start of a syllable.
 
 ## Repeatable outputs through a fixed address layout
 
 The scored runs start the adapter with a fixed address layout, so two processes give the same outputs. With the normal random layout, libime 1.1.17 with its 2026 data gives a different first sentence for a few cases.
 
-Table 7. Dev outputs that differ between two adapter processes, of 3,000 cases, in workflow run 42759199191.
+Table 8. Dev outputs that differ between two adapter processes, of 3,000 cases, in workflow run 42762822650. Both layouts ran with the same environment.
 
 | libime build and flags | Random address layout | Fixed address layout |
 | --- | --- | --- |
 | libime 1.1.5 packages, every flag off | 0 | 0 |
-| libime 1.1.17 source build, every flag off | 5 | 0 |
-| libime 1.1.17 source build, fcitx5 phone options | 16 | 0 |
+| libime 1.1.17 source build, every flag off | 4 | 0 |
+| libime 1.1.17 source build, fcitx5 phone options | 18 | 0 |
 
-One case shows the effect. For the letters `zheshigeguanzi`, `libime-src-none` gave 这是个管子 in run 42753887385 and 这是个罐子 in run 42757015202. Both runs used the random layout.
+The fixed layout also repeats across runner machines. Workflow runs 42759199191 and 42762822650 gave the same 66,000 outputs for the eleven engine names.
+
+One case shows the effect of the random layout. For the letters `zheshigeguanzi`, `libime-src-none` gave 这是个管子 in run 42753887385 and 这是个罐子 in run 42757015202. Both runs used the random layout.
 
 The file `src/libime/core/decoder.cpp` of libime gives a mechanism that fits these counts:
 
@@ -180,17 +207,17 @@ The file `src/libime/core/decoder.cpp` of libime gives a mechanism that fits the
 
 Candidates with equal scores can therefore change order when the addresses change. A phone app also gets a random layout, so the same effect is possible there. The runs measured Linux processes only.
 
-With the packaged data, the outputs did not change between workflow runs. The three names on libime 1.1.5 gave the same outputs in runs 42753887385, 42757015202 and 42759199191. `libime-src-none-packaged-data` gave the same outputs under the random layout of run 42757015202 and the fixed layout of run 42759199191.
+With the packaged data, the outputs did not depend on the address layout. The three names on libime 1.1.5 gave the same outputs in runs 42753887385 and 42757015202, which used the random layout. The fixed layout gave these outputs again. `libime-src-none-packaged-data` gave the same outputs under the random layout of run 42757015202 and under the fixed layout.
 
 The build file of libime 1.1.17 passes `-q 4` to the model builder, and the build file of 1.1.5 passes `-q 8`. The option sets the bits for each stored probability. A coarser model can make equal scores more common. The runs did not test this difference as the cause.
 
-The adapter gets the fixed layout from `setarch -R`. `check_repeatability.py` makes the counts of Table 7.
+The adapter gets the fixed layout from `setarch -R`. `check_repeatability.py` makes the counts of Table 8.
 
 ## Versions and packages on the ubuntu-24.04 runner
 
 The runner installed libime 1.1.5 from Ubuntu packages and built libime 1.1.17 from source in one job.
 
-Table 8. Packages that `apt-get install` put on the runner for the engine names on libime 1.1.5.
+Table 9. Packages that `apt-get install` put on the runner for the engine names on libime 1.1.5.
 
 | Package | Version |
 | --- | --- |
@@ -206,7 +233,7 @@ Table 8. Packages that `apt-get install` put on the runner for the engine names 
 
 CMake 3.31.6 and Ninja come from the runner image.
 
-Table 9. Sources and packages of the libime 1.1.17 build.
+Table 10. Sources and packages of the libime 1.1.17 build.
 
 | Part | Version |
 | --- | --- |
@@ -221,7 +248,7 @@ Table 9. Sources and packages of the libime 1.1.17 build.
 
 libime 1.1.17 needs the fcitx5 utility library 5.1.20 or later, and Ubuntu 24.04 packages 5.1.7. The job builds both libraries into the folder `build/libime-source/prefix`. The adapter for the source build runs with `LD_LIBRARY_PATH` set to that folder. The job checks the loaded libraries with `ldd`.
 
-Table 10. Data files that the adapter loads. Both language models are trigram models.
+Table 11. Data files that the adapter loads. Both language models are trigram models.
 
 | Property | libime 1.1.5 packages | libime 1.1.17 source build |
 | --- | --- | --- |
@@ -238,7 +265,7 @@ The n-gram order comes from the KenLM header of each file, read by `kenlm_header
 
 The libime code and the libime data carry the license LGPL-2.1-or-later.
 
-Table 11. License of each part, and the file that states it.
+Table 12. License of each part, and the file that states it.
 
 | Part | License | File that states the license |
 | --- | --- | --- |
@@ -256,7 +283,7 @@ The adapter `libime_adapter.cpp` makes seven kinds of libime calls, in this orde
 1. `PinyinIME ime(std::make_unique<PinyinDictionary>(), std::make_unique<UserLanguageModel>(LM_PATH))` builds the engine with the stock language model.
 2. `ime.dict()->load(PinyinDictionary::SystemDict, DICT_PATH, PinyinDictFormat::Binary)` loads the stock dictionary.
 3. `ime.setCorrectionProfile(std::make_shared<PinyinCorrectionProfile>(BuiltinPinyinCorrectionProfile::Qwerty))` loads the QWERTY correction profile, for the engine names with Correction.
-4. `ime.setFuzzyFlags(flags)` sets the flags of Table 4. The fcitx5 names also get the four `PinyinIME` setters listed under Table 4.
+4. `ime.setFuzzyFlags(flags)` sets the flags of Table 5. The fcitx5 names also get the four `PinyinIME` setters listed under Table 5.
 5. `PinyinContext context(&ime)` makes a new context for each case. The fcitx5 names also call `context.setMaxSentenceLength(35)`.
 6. `context.type(&letter, 1)` types the case one letter at a time, as a keyboard does. The adapter stops when libime does not accept a letter.
 7. `context.select(0)` takes the first candidate while `context.selected()` is false. `context.selectedSentence()` then gives the output.
@@ -265,7 +292,7 @@ In every run the first candidate covered all the letters, so step 7 made one pic
 
 Seven files of this folder and one workflow file make the evaluation run.
 
-Table 12. Files of the adapter folder.
+Table 13. Files of the adapter folder.
 
 | File | Content |
 | --- | --- |
@@ -284,8 +311,8 @@ Table 12. Files of the adapter folder.
 - The adapter loads the stock dictionary and the stock language model only. The adapter does not load a user dictionary, a typing history, `chaizi.dict`, `extb.dict` or `zh_CN.lm.predict`, and never calls `learn()`.
 - Each case starts in a new context, so libime does not see the text before the clause.
 - The packaged libime 1.1.5 does not have the Correction flag, so `libime-correction` exists for the source build only.
-- The scores hold for the fixed address layout and for this order of the cases. Table 7 gives the size of the change under a random layout.
+- The scores hold for the fixed address layout and for this order of the cases. Table 8 gives the size of the change under a random layout.
 - With the packaged data, typing letter by letter and typing all letters in one call give the same outputs. With the 2026 data the two outputs differ in 5 to 27 of 3,000 cases per run. The scores use one letter at a time.
-- The adapter took 0.8 to 1.7 milliseconds per letter with Correction off, and 3.0 to 4.1 milliseconds with Correction on. Four adapter processes ran at the same time on one runner, so these times do not predict phone latency.
+- In run 42762822650 the adapter took 0.6 to 1.3 milliseconds per letter with Correction off. With Correction on, the adapter took 2.2 to 3.1 milliseconds. Four adapter processes ran at the same time on one runner, so these times do not predict phone latency.
 - The corpus behind the libime language model is not stated in the files read for this work. An overlap with the Tatoeba sentences of the cases is therefore possible.
 - The scores come from a slip generator and do not give the rate of each slip in real typing.
