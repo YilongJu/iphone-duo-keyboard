@@ -118,6 +118,7 @@ def hunspell(arguments):
     library.Hunspell_free_list.restype = None
     library.Hunspell_free_list.argtypes = [ctypes.c_void_p, ctypes.POINTER(text_list), ctypes.c_int]
 
+    # The handle serves every token of the run. The process ends after the run, so the adapter does not call Hunspell_destroy.
     handle = library.Hunspell_create(str(affix_file).encode(), str(word_file).encode())
     if not handle:
         raise RuntimeError("Hunspell_create returned a null handle")

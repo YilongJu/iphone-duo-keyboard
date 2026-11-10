@@ -32,8 +32,8 @@ jobs:
           uv pip install --python "$PYTHON" symspellpy==6.10.2 pyspellchecker==0.9.1
           mkdir -p build/typing-evaluation/english-baselines
 
-      # The JamSpell archive on PyPI asks for SWIG 3, and Ubuntu 24.04 ships SWIG 4.2.
-      # The repository commit below builds with SWIG 4.
+      # The JamSpell archive on PyPI asks for SWIG 3, and its build stops with an AssertionError on this runner.
+      # Ubuntu 24.04 ships SWIG 4.2, and the repository commit below builds with SWIG 4.
       - name: Build JamSpell from its repository and download its English model
         run: |
           set -euo pipefail
@@ -46,14 +46,6 @@ jobs:
           sha256sum build/jamspell/en.tar.gz
           tar -xzf build/jamspell/en.tar.gz -C build/jamspell
           "$PYTHON" -c "import jamspell; print(jamspell.TSpellCorrector)"
-
-      - name: Try the JamSpell archive from PyPI, as a record of its build error
-        continue-on-error: true
-        run: |
-          set -euo pipefail
-          uv venv --python /usr/bin/python3 build/jamspell-pypi-venv
-          uv pip install --python build/jamspell-pypi-venv/bin/python --no-cache jamspell==0.0.12
-          build/jamspell-pypi-venv/bin/python -c "import jamspell; print(jamspell.TSpellCorrector)"
 
       - name: Print the installed versions
         run: |

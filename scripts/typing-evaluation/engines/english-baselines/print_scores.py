@@ -4,7 +4,7 @@ Usage, from the repository root, after score.py wrote its summary files with --j
     python scripts/typing-evaluation/engines/english-baselines/print_scores.py
 
 The script reads build/typing-evaluation/ENGINE/english.HALF.summary.json. A cell holds the share
-of cases in which the engine's output equals the intended text.
+of cases with a right output: the engine's output equals the intended text under the scorer's rules.
 """
 import json
 from pathlib import Path
@@ -24,7 +24,7 @@ def main():
         for engine, summary in summaries.items():
             if list(summary["categories"]) != categories:
                 raise ValueError(f"{engine} has other categories than {engines[0]} on the {half} half")
-        print(f"\nShare of cases with the intended text, English {half} half\n")
+        print(f"\nShare of cases with a right output, English {half} half\n")
         print("| Category | Cases | " + " | ".join(engines) + " |")
         print("| --- | ---: | " + " | ".join("---:" for _ in engines) + " |")
         for category in categories:
