@@ -47,7 +47,7 @@ jobs:
       - name: Run the dev cases under the memory checks
         run: |
           set -euo pipefail
-          for task in english pinyin; do
+          for task in english english-symbols pinyin; do
             python3 scripts/typing-evaluation/run_duo_engine.py --task "$task" --half dev \
               --cli build/engine/duo_cli_checked > /dev/null
           done
@@ -58,6 +58,7 @@ jobs:
           halves="${{ github.event.inputs.halves || 'dev' }}"
           for half in $halves; do
             python3 scripts/typing-evaluation/run_duo_engine.py --task english --half "$half" ${{ github.event.inputs.english_settings }}
+            python3 scripts/typing-evaluation/run_duo_engine.py --task english-symbols --half "$half" ${{ github.event.inputs.english_settings }}
             python3 scripts/typing-evaluation/run_duo_engine.py --task pinyin --half "$half" ${{ github.event.inputs.pinyin_settings }}
           done
       - uses: actions/upload-artifact@v7
