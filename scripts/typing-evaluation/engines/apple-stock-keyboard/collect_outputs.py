@@ -17,9 +17,12 @@ trees and screenshots. The script writes, for each engine name, task and half:
 
 A part of kind `outputs` holds finished files under `outputs/ENGINE/`, and the script copies them.
 
-Output of an English case: the text view holds the context, the typed text and one space. The
-output is the field text after the first N words, where N is the number of words in the context.
-Output of a Pinyin case: the field text after the last space tap, without spaces at the ends.
+Field text of a case: the text view after the last space tap, read a second time after the
+settle time of the run. Marked text does not count for English, because the English keyboard
+marks an inline prediction that the person has not accepted.
+Output of an English case: the field text after the first N words, where N is the number of
+words in the context.
+Output of a Pinyin case: the field text without spaces at the ends.
 """
 import argparse
 import json
@@ -29,6 +32,9 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from score import normalize  # noqa: E402
+
+# The host app wraps marked text in these two brackets in each entry of the text history.
+OPEN, CLOSE = "⟦", "⟧"
 
 
 def read_lines(path: Path) -> list[dict]:
@@ -43,28 +49,39 @@ def letters(text: str) -> str:
     return "".join(character for character in text.lower() if "a" <= character <= "z")
 
 
+def without_marked(entry: str) -> str:
+    """The text of a history entry without its marked text."""
+    if OPEN not in entry:
+        return entry
+    return entry[: entry.index(OPEN)] + entry[entry.index(CLOSE) + 1:]
+
+
 def english_fields(case: dict, detail: dict) -> dict:
     context_words = case["context"].split()
-    words = detail["after"].split()
+    field_text = detail.get("settled_committed", detail["after_committed"])
+    words = field_text.split()
     prefix = case["context"] + " " if case["context"] else ""
-    fields = {
+    tokens = case["typed"].split(" ")
+    states = [without_marked(entry).lower().replace("’", "'") for entry in detail["history"]]
+    return {
         "output": " ".join(words[len(context_words):]),
         # False when the keyboard changed a word of the context while the person typed.
         "context_kept": [normalize("english", word) for word in words[: len(context_words)]] == context_words,
+        # True when the field once held the context and the first typed token, letter for letter,
+        # and once ended with the last typed token. False means that a key tap did not arrive.
+        "letters_arrived": prefix + tokens[0] in states and any(state.endswith(tokens[-1]) for state in states),
+        "changed_after_first_read": field_text != detail["after_committed"],
     }
-    if " " not in case["typed"]:
-        # Before the space the field must hold the context and the typed letters. Any other
-        # text means a key tap did not arrive.
-        fields["letters_arrived"] = normalize("english", detail["before_space"]) == normalize("english", prefix + case["typed"])
-    return fields
 
 
 def pinyin_fields(case: dict, detail: dict) -> dict:
+    field_text = detail.get("settled", detail["after"])
     return {
-        "output": detail["after"].strip(),
-        # Before the first space the marked text must hold every typed letter.
-        "letters_arrived": letters(detail["before_space"]) == case["typed"],
-        "marked_text_left": detail["after_marked"],
+        "output": field_text.strip(),
+        # True when the marked text once held every typed letter.
+        "letters_arrived": any(OPEN in entry and letters(entry) == case["typed"] for entry in detail["history"]),
+        "marked_text_left": detail.get("settled_marked", detail["after_marked"]),
+        "changed_after_first_read": field_text != detail["after"],
     }
 
 
@@ -117,9 +134,12 @@ def main():
         write_lines(folder / f"{task}.{half}.detail.jsonl", rows)
 
         print(f"\n{engine} {task}.{half}: {len(sample)} sampled cases, {len(rows)} typed, from {len(parts)} parts")
-        print(f"  cases where a key tap did not arrive: {sum(row.get('letters_arrived') is False for row in rows)}")
+        print(f"  cases where a key tap did not arrive: {sum(not row['letters_arrived'] for row in rows)}")
+        print(f"  cases where the first read after the space did not show the expected change: {sum(not row['after_as_expected'] for row in rows)}")
+        print(f"  cases where the field text changed between the first read and the settled read: {sum(row['changed_after_first_read'] for row in rows)}")
         if task == "english":
             print(f"  cases where the keyboard changed the context: {sum(not row['context_kept'] for row in rows)}")
+            print(f"  cases with an inline prediction left as marked text: {sum(row.get('settled_marked', row['after_marked']) for row in rows)}")
         else:
             print(f"  cases with marked text left after the space taps: {sum(row['marked_text_left'] for row in rows)}")
             print(f"  cases that took more than one space tap: {sum(row['space_taps'] > 1 for row in rows)}")

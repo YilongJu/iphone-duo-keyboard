@@ -38,11 +38,19 @@ jobs:
       matrix:
         # per_category is the size of the fixed-seed sample of each category. first keeps the
         # first cases of each sampled category for a short trial, and 0 keeps all of them.
+        # key_interval is the time between two touch-downs in seconds. final_space and settle
+        # are explained at the top of UITests/StockKeyboardTests.swift.
         include:
-          - {engine: apple-english, task: english, half: dev, per_category: 40, first: 3, shard: 0, shards: 1, tap_mode: single}
-          - {engine: apple-english-batch, task: english, half: dev, per_category: 40, first: 3, shard: 0, shards: 1, tap_mode: batch}
-          - {engine: apple-pinyin, task: pinyin, half: dev, per_category: 30, first: 2, shard: 0, shards: 1, tap_mode: single}
-          - {engine: apple-pinyin-batch, task: pinyin, half: dev, per_category: 30, first: 2, shard: 0, shards: 1, tap_mode: batch}
+          - {engine: trial-english-i160-separate-a, task: english, half: dev, per_category: 40, first: 5, shard: 0, shards: 1, tap_mode: batch, key_interval: '0.16', final_space: separate, settle: '1.5'}
+          - {engine: trial-english-i160-separate-b, task: english, half: dev, per_category: 40, first: 5, shard: 0, shards: 1, tap_mode: batch, key_interval: '0.16', final_space: separate, settle: '1.5'}
+          - {engine: trial-english-i160, task: english, half: dev, per_category: 40, first: 5, shard: 0, shards: 1, tap_mode: batch, key_interval: '0.16', final_space: same-event, settle: '1.5'}
+          - {engine: trial-english-i240, task: english, half: dev, per_category: 40, first: 5, shard: 0, shards: 1, tap_mode: batch, key_interval: '0.24', final_space: same-event, settle: '1.5'}
+          - {engine: trial-english-i330, task: english, half: dev, per_category: 40, first: 5, shard: 0, shards: 1, tap_mode: batch, key_interval: '0.33', final_space: same-event, settle: '1.5'}
+          - {engine: trial-english-i500, task: english, half: dev, per_category: 40, first: 5, shard: 0, shards: 1, tap_mode: batch, key_interval: '0.50', final_space: same-event, settle: '1.5'}
+          - {engine: trial-pinyin-i160-separate, task: pinyin, half: dev, per_category: 30, first: 3, shard: 0, shards: 1, tap_mode: batch, key_interval: '0.16', final_space: separate, settle: '1.5'}
+          - {engine: trial-pinyin-i160, task: pinyin, half: dev, per_category: 30, first: 3, shard: 0, shards: 1, tap_mode: batch, key_interval: '0.16', final_space: same-event, settle: '1.5'}
+          - {engine: trial-pinyin-i330, task: pinyin, half: dev, per_category: 30, first: 3, shard: 0, shards: 1, tap_mode: batch, key_interval: '0.33', final_space: same-event, settle: '1.5'}
+          - {engine: trial-pinyin-i500, task: pinyin, half: dev, per_category: 30, first: 3, shard: 0, shards: 1, tap_mode: batch, key_interval: '0.50', final_space: same-event, settle: '1.5'}
     env:
       PART: apple-stock-keyboard-part-${{ matrix.engine }}-${{ matrix.half }}-${{ matrix.shard }}
     steps:
@@ -67,9 +75,10 @@ jobs:
             --per-category ${{ matrix.per_category }} --first ${{ matrix.first }} --seed "$SAMPLE_SEED" \
             --shard ${{ matrix.shard }} --shards ${{ matrix.shards }} \
             --sample-out "$part/sample.jsonl" --shard-out "$part/cases.jsonl"
-          printf '{"kind": "keyboard", "engine": "%s", "task": "%s", "half": "%s", "shard": %s, "shards": %s, "tap_mode": "%s", "per_category": %s, "first": %s, "seed": %s}\n' \
+          printf '{"kind": "keyboard", "engine": "%s", "task": "%s", "half": "%s", "shard": %s, "shards": %s, "tap_mode": "%s", "key_interval": %s, "final_space": "%s", "settle_seconds": %s, "per_category": %s, "first": %s, "seed": %s}\n' \
             "${{ matrix.engine }}" "${{ matrix.task }}" "${{ matrix.half }}" "${{ matrix.shard }}" "${{ matrix.shards }}" \
-            "${{ matrix.tap_mode }}" "${{ matrix.per_category }}" "${{ matrix.first }}" "$SAMPLE_SEED" > "$part/part.json"
+            "${{ matrix.tap_mode }}" "${{ matrix.key_interval }}" "${{ matrix.final_space }}" "${{ matrix.settle }}" \
+            "${{ matrix.per_category }}" "${{ matrix.first }}" "$SAMPLE_SEED" > "$part/part.json"
           cat "$part/part.json"
       - name: Generate the Xcode project
         run: |
@@ -103,6 +112,9 @@ jobs:
           # xcodebuild hands a variable to the test process when its name starts with TEST_RUNNER_.
           export TEST_RUNNER_EVAL_TASK="${{ matrix.task }}"
           export TEST_RUNNER_EVAL_TAP_MODE="${{ matrix.tap_mode }}"
+          export TEST_RUNNER_EVAL_KEY_INTERVAL="${{ matrix.key_interval }}"
+          export TEST_RUNNER_EVAL_FINAL_SPACE="${{ matrix.final_space }}"
+          export TEST_RUNNER_EVAL_SETTLE_SECONDS="${{ matrix.settle }}"
           export TEST_RUNNER_EVAL_CASES_FILE="$PWD/$PARTS_DIR/$PART/cases.jsonl"
           export TEST_RUNNER_EVAL_OUTPUT_DIR="$PWD/$PARTS_DIR/$PART"
           xcodebuild test-without-building \
@@ -110,9 +122,12 @@ jobs:
             -destination "platform=iOS Simulator,id=$SIMULATOR_UDID" \
             -derivedDataPath build/apple-stock-keyboard-derived \
             -parallel-testing-enabled NO -test-timeouts-enabled NO 2>&1 | tee "$PARTS_DIR/$PART/xcodebuild-test.log"
-      - name: Show the outputs of this part
+      - name: Show the outputs and the scores of this part
         if: always()
-        run: python3 "$ENGINE_DIR/collect_outputs.py" --parts "$PARTS_DIR" --out build/typing-evaluation
+        run: |
+          set -euo pipefail
+          python3 "$ENGINE_DIR/collect_outputs.py" --parts "$PARTS_DIR" --out build/typing-evaluation
+          bash "$ENGINE_DIR/score_outputs.sh" build/typing-evaluation
       - uses: actions/upload-artifact@v7
         if: always()
         with:
