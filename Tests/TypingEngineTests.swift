@@ -1,0 +1,132 @@
+import XCTest
+
+@testable import DuoKeyboard
+
+/// Tests of the C typing engine through its Swift wrappers, on the lexicon files that ship.
+@MainActor
+final class TypingEngineTests: XCTestCase {
+    private static let english = EnglishTypingEngine(lexicon: TypingLexicon(resource: "lexicon-english", fullCheck: false))
+    private static let pinyin = PinyinTypingEngine(lexicon: TypingLexicon(resource: "lexicon-pinyin", fullCheck: false))
+
+    /// The app opens its lexicon files without the full check. This test runs the full check on
+    /// the same files, which proves that the engine cannot read outside them. A file that does
+    /// not pass stops the test process.
+    func testTheBundledLexiconsPassTheFullCheck() {
+        _ = TypingLexicon(resource: "lexicon-english", fullCheck: true)
+        _ = TypingLexicon(resource: "lexicon-pinyin", fullCheck: true)
+    }
+
+    func testEnglishKeepsAKnownWord() {
+        XCTAssertNil(Self.english.correction(previousWord: "", typed: "the"))
+        XCTAssertNil(Self.english.correction(previousWord: "", typed: "good morning"))
+    }
+
+    func testEnglishRepairsLetterSlips() {
+        XCTAssertEqual(Self.english.correction(previousWord: "", typed: "teh"), "the")
+        XCTAssertEqual(Self.english.correction(previousWord: "will", typed: "recieve"), "receive")
+        XCTAssertEqual(Self.english.correction(previousWord: "", typed: "hello wrold"), "hello world")
+        XCTAssertEqual(Self.english.correction(previousWord: "", typed: "dont"), "don't")
+    }
+
+    func testEnglishRepairsSlipsAroundTheSpaceBar() {
+        XCTAssertEqual(Self.english.correction(previousWord: "", typed: "thequick"), "the quick")
+        XCTAssertEqual(Self.english.correction(previousWord: "", typed: "th e"), "the")
+        XCTAssertEqual(Self.english.correction(previousWord: "", typed: "tob e"), "to be")
+        XCTAssertEqual(Self.english.correction(previousWord: "the", typed: "qu ick"), "quick")
+    }
+
+    func testEnglishKeepsTextItCannotRead() {
+        // A capital, a digit and a double space are outside the engine's input.
+        XCTAssertNil(Self.english.correction(previousWord: "", typed: "Teh"))
+        XCTAssertNil(Self.english.correction(previousWord: "", typed: "teh2"))
+        XCTAssertNil(Self.english.correction(previousWord: "", typed: "th  e"))
+        XCTAssertNil(Self.english.correction(previousWord: "", typed: ""))
+    }
+
+    func testPinyinReadsASentence() {
+        let readings = Self.pinyin.candidates(for: "jintiantianqizenmeyang", limit: 10)
+        XCTAssertEqual(readings.first?.text, "\u{4ECA}\u{5929}\u{5929}\u{6C14}\u{600E}\u{4E48}\u{6837}")
+        XCTAssertEqual(readings.first?.consumedLetters, 22)
+    }
+
+    func testPinyinRepairsSlipsInALongSentence() {
+        // "zenmyang" misses a letter, "shoujj" holds a wrong letter, and "nihsi" holds two swapped letters.
+        XCTAssertEqual(
+            Self.pinyin.candidates(for: "jintiantianqizenmyang", limit: 1).first?.text,
+            "\u{4ECA}\u{5929}\u{5929}\u{6C14}\u{600E}\u{4E48}\u{6837}")
+        XCTAssertEqual(
+            Self.pinyin.candidates(for: "woxiangmaiyigexindeshoujj", limit: 1).first?.text,
+            "\u{6211}\u{60F3}\u{4E70}\u{4E00}\u{4E2A}\u{65B0}\u{7684}\u{624B}\u{673A}")
+        XCTAssertEqual(Self.pinyin.candidates(for: "nihsi", limit: 1).first?.text, "\u{4F60}\u{662F}")
+    }
+
+    func testPinyinWordsThatMatchTheLettersComeBeforeRepairedWords() {
+        let readings = Self.pinyin.candidates(for: "nihao", limit: 6)
+        XCTAssertEqual(readings.first?.text, "\u{4F60}\u{597D}")
+        XCTAssertEqual(readings.first?.consumedLetters, 5)
+        // The words for "ni" follow the words for "nihao". A word for other letters, such as
+        // "bihao", does not stand between them.
+        XCTAssertTrue(readings.dropFirst(2).allSatisfy { $0.consumedLetters == 2 }, "\(readings)")
+        XCTAssertTrue(readings.contains { $0.text == "\u{4F60}" })
+    }
+
+    func testPinyinKeepsTextItCannotRead() {
+        XCTAssertTrue(Self.pinyin.candidates(for: "ni'hao", limit: 5).isEmpty)
+        XCTAssertTrue(Self.pinyin.candidates(for: "", limit: 5).isEmpty)
+        XCTAssertTrue(Self.pinyin.candidates(for: "nihao", limit: 0).isEmpty)
+    }
+
+    // MARK: The candidate list of the keyboard
+
+    private func bundledEngine() -> PinyinEngine {
+        let url = Bundle(for: PinyinEngine.self).url(forResource: "pinyin-dictionary", withExtension: "txt")!
+        let engine = PinyinEngine(dictionaryText: try! String(contentsOf: url, encoding: .utf8))
+        engine.decoder = Self.pinyin
+        return engine
+    }
+
+    func testALongSentenceWithASlipAtItsEndIsRepaired() {
+        let first = bundledEngine().candidates(for: "woxiangmaiyigexindeshoujj").first
+        XCTAssertEqual(first?.word, "\u{6211}\u{60F3}\u{4E70}\u{4E00}\u{4E2A}\u{65B0}\u{7684}\u{624B}\u{673A}")
+        XCTAssertEqual(first?.consumedLetters, 25)
+    }
+
+    func testLettersOfAnUnfinishedSyllableStayInTheBuffer() {
+        let engine = bundledEngine()
+        // "h" may start the next syllable, so the first candidate does not use the letter up.
+        XCTAssertEqual(engine.candidates(for: "nih").first, PinyinCandidate(word: "\u{4F60}", consumedLetters: 2, spelling: "ni"))
+        // "tq" are the first letters of the next word.
+        XCTAssertEqual(engine.candidates(for: "jintiantq").first, PinyinCandidate(word: "\u{4ECA}\u{5929}", consumedLetters: 7, spelling: "jintian"))
+    }
+
+    func testLettersAtTheEndThatChangeTheTextAreReadAsASlip() {
+        let engine = bundledEngine()
+        let wrongKey = engine.candidates(for: "nihap")
+        XCTAssertEqual(wrongKey.first?.word, "\u{4F60}\u{597D}")
+        XCTAssertEqual(wrongKey.first?.consumedLetters, 5)
+        // The reading of the whole syllables alone comes second, and it leaves "p" in the buffer.
+        XCTAssertEqual(wrongKey.dropFirst().first?.consumedLetters, 4)
+        let missingLetter = engine.candidates(for: "shouj").first
+        XCTAssertEqual(missingLetter?.word, "\u{624B}\u{673A}")
+        XCTAssertEqual(missingLetter?.consumedLetters, 5)
+    }
+
+    func testFirstLettersStillOfferTheirWords() {
+        let engine = bundledEngine()
+        XCTAssertEqual(engine.candidates(for: "nh").first?.word, "\u{4F60}\u{597D}")
+        XCTAssertEqual(engine.candidates(for: "zg").first?.word, "\u{8FD9}\u{4E2A}")
+    }
+
+    func testAnApostropheStillForcesASyllableBreak() {
+        let first = bundledEngine().candidates(for: "xi'an").first
+        XCTAssertEqual(first?.word, "\u{897F}\u{5B89}")
+        XCTAssertEqual(first?.consumedLetters, 5)
+    }
+
+    func testAPickIsRememberedUnderTheTypedLetters() {
+        let engine = bundledEngine()
+        engine.learn(spelling: "ni hao", word: "\u{62DF}\u{597D}")
+        XCTAssertEqual(engine.learnedWords["nihao"], ["\u{62DF}\u{597D}"])
+        XCTAssertEqual(engine.candidates(for: "nihao").first?.word, "\u{62DF}\u{597D}")
+    }
+}

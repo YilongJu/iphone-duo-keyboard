@@ -57,7 +57,8 @@ final class TypingEvaluationTests: XCTestCase {
         for half in ["dev", "test"] {
             let cases = try loadCases(EnglishCase.self, from: casesFolder.appendingPathComponent("english.\(half).jsonl"))
             var outputs: [Output] = []
-            let spellChecker = SystemSpellChecker()
+            let spellChecker = EngineSpellChecker(
+                engine: EnglishTypingEngine(lexicon: TypingLexicon(resource: "lexicon-english", fullCheck: false)))
             for item in cases {
                 let before = item.context.isEmpty ? "" : item.context + " "
                 let document = FakeDocument(before: before)

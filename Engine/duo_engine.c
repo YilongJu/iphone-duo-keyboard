@@ -72,7 +72,7 @@ static const char *word_text(const duo_lexicon *lexicon, uint32_t word) {
     return (const char *)lexicon->strings + read_u32(lexicon->words + WORD_BYTES * (size_t)word);
 }
 
-int duo_lexicon_open(duo_lexicon *lexicon, const void *data, size_t size) {
+int duo_lexicon_open_checked_before(duo_lexicon *lexicon, const void *data, size_t size) {
     const uint8_t *bytes = (const uint8_t *)data;
     if (lexicon == NULL || data == NULL || size < 32) return 0;
     if (read_u32(bytes) != DUO_MAGIC || read_u32(bytes + 4) != DUO_VERSION) return 0;
@@ -96,6 +96,15 @@ int duo_lexicon_open(duo_lexicon *lexicon, const void *data, size_t size) {
     lexicon->pair_index = lexicon->words + (size_t)word_count * WORD_BYTES;
     lexicon->pairs = lexicon->pair_index + ((size_t)word_count + 1) * 4;
     lexicon->strings = lexicon->pairs + (size_t)pair_count * 8;
+    return 1;
+}
+
+int duo_lexicon_open(duo_lexicon *lexicon, const void *data, size_t size) {
+    if (!duo_lexicon_open_checked_before(lexicon, data, size)) return 0;
+    uint32_t node_count = lexicon->node_count;
+    uint32_t word_count = lexicon->word_count;
+    uint32_t pair_count = lexicon->pair_count;
+    uint32_t strings_size = lexicon->strings_size;
 
     /* Every number that the search later uses as a position is checked here, once, so the
        search itself cannot read outside the file. */
@@ -782,13 +791,19 @@ int duo_correct_english(
 
 /* ---- Pinyin ---- */
 
-static int compare_edges_longest_first(const void *first, const void *second) {
+/* Order of the word candidates. The words that the typed letters spell exactly come first,
+   longest first. The words that assume a typing slip come after all of them, lowest slip cost
+   first, so a repaired reading never stands ahead of a word the person did type. */
+static int compare_edges_exact_then_longest(const void *first, const void *second) {
     const edge_t *a = (const edge_t *)first;
     const edge_t *b = (const edge_t *)second;
-    if (a->end != b->end) return b->end - a->end;
+    int a_exact = a->cost == 0.0f;
+    int b_exact = b->cost == 0.0f;
+    if (a_exact != b_exact) return b_exact - a_exact;
+    if (a_exact) return b->end - a->end;
     if (a->cost < b->cost) return -1;
     if (a->cost > b->cost) return 1;
-    return 0;
+    return b->end - a->end;
 }
 
 int duo_convert_pinyin(
@@ -804,11 +819,12 @@ int duo_convert_pinyin(
     int count = 0;
     if (decode(lexicon, params, typed, (int)length, NO_WORD, &results[0])) count = 1;
 
-    /* The words that stand for the first letters only, longest first. */
+    /* The words that stand for the first letters only: exact spellings longest first, then
+       the words that assume a slip. */
     edge_t *edges = (edge_t *)malloc(sizeof(edge_t) * MAX_EDGES);
     if (edges == NULL) return count;
     int edge_count = find_edges(lexicon, params, typed, (int)length, 0, edges);
-    qsort(edges, (size_t)edge_count, sizeof(edge_t), compare_edges_longest_first);
+    qsort(edges, (size_t)edge_count, sizeof(edge_t), compare_edges_exact_then_longest);
     for (int edge_index = 0; edge_index < edge_count && count < capacity; edge_index++) {
         node_t node = node_at(lexicon, edges[edge_index].node);
         for (uint32_t word = node.first_word; word < node.first_word + node.word_count && count < capacity; word++) {

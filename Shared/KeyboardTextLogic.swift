@@ -91,6 +91,47 @@ enum KeyboardTextLogic {
         return word
     }
 
+    /// The lower-case word that ends `text`, when one space follows it, or an empty string.
+    /// The typing engine reads this word as the context of the text typed after it.
+    static func wordBeforeSpace(at text: String) -> String {
+        guard text.hasSuffix(" ") else { return "" }
+        let head = text.dropLast()
+        var start = head.endIndex
+        while start > head.startIndex {
+            let previous = head.index(before: start)
+            let character = head[previous]
+            guard character.isASCII, character.isLetter || character == "'" else { break }
+            start = previous
+        }
+        return head[start...].lowercased()
+    }
+
+    /// Gives corrected lower-case words the capitals of the typed words. A typed word that
+    /// starts with a capital gives its capital to the word in the same place, or to the first
+    /// word when the correction changed the count of words. The word "i" and its contractions
+    /// always get their capital.
+    static func restoringCapitals(in corrected: String, from typed: String) -> String {
+        let typedWords = typed.split(separator: " ")
+        var words = corrected.split(separator: " ").map(String.init)
+        func capitalized(_ word: String) -> String {
+            word.prefix(1).uppercased() + word.dropFirst()
+        }
+        func startsWithCapital(_ word: Substring) -> Bool {
+            word.first?.isUppercase ?? false
+        }
+        if words.count == typedWords.count {
+            for index in words.indices where startsWithCapital(typedWords[index]) {
+                words[index] = capitalized(words[index])
+            }
+        } else if let first = typedWords.first, startsWithCapital(first), !words.isEmpty {
+            words[0] = capitalized(words[0])
+        }
+        for index in words.indices where words[index] == "i" || words[index].hasPrefix("i'") {
+            words[index] = capitalized(words[index])
+        }
+        return words.joined(separator: " ")
+    }
+
     /// Picks the first guess that is close to the typed word, and gives the guess the typed
     /// word's capital. A short word allows one edit, and a longer word allows two.
     static func bestGuess(for word: String, guesses: [String]) -> String? {

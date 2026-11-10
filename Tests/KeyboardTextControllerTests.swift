@@ -46,18 +46,31 @@ let testDictionary = [
     "men\t\u{4EEC}\t250", "xi\t\u{897F}\t200", "an\t\u{5B89}\t100", "n\t\u{55EF}\t10", "ni\t\u{5C3C}\t5",
 ].joined(separator: "\n")
 
-/// A spell checker with a fixed list of corrections.
+/// A spell checker with a fixed list of corrections. A key holds one word, or two typed words
+/// with one space between them. Text without its own key is corrected word by word.
 @MainActor
 final class FakeSpellChecker: SpellChecking {
-    var corrections: [String: String] = ["teh": "the", "Teh": "The", "recieve": "receive"]
+    var corrections: [String: String] = [
+        "teh": "the", "recieve": "receive", "th e": "the", "thequick": "the quick", "form teh": "from the",
+    ]
     var learned: [String] = []
+    /// Every call of `correction`, as "previous word|typed text".
+    var requests: [String] = []
 
-    func correction(for word: String) -> String? {
-        corrections[word]
+    func correction(previousWord: String, typed: String) -> String? {
+        requests.append("\(previousWord)|\(typed)")
+        if let whole = corrections[typed] { return whole }
+        let corrected = typed.split(separator: " ").map { corrections[String($0)] ?? String($0) }
+            .joined(separator: " ")
+        return corrected == typed ? nil : corrected
     }
 
     func learn(_ word: String) {
         learned.append(word)
+    }
+
+    func keeps(_ word: String) -> Bool {
+        learned.contains(word)
     }
 }
 
@@ -221,6 +234,94 @@ final class KeyboardTextControllerTests: XCTestCase {
         makeController(before: "then ")
         type("i ")
         XCTAssertEqual(document.text, "then I ")
+    }
+
+    func testASpaceTypedInsideAWordIsRepaired() {
+        makeController(before: "")
+        type("th e ")
+        XCTAssertEqual(document.text, "the ")
+    }
+
+    func testAJoinedWordKeepsTheCapitalOfItsFirstTypedLetter() {
+        makeController(before: "")
+        type("Th e ")
+        XCTAssertEqual(document.text, "The ")
+    }
+
+    func testAMissingSpaceIsRepaired() {
+        makeController(before: "")
+        type("thequick ")
+        XCTAssertEqual(document.text, "the quick ")
+    }
+
+    func testTheNextWordReadsTheTypedLettersOfTheWordBeforeIt() {
+        makeController(before: "")
+        type("teh cat ")
+        XCTAssertEqual(document.text, "the cat ")
+        // The second request holds the keys the person pressed, and the field holds "the".
+        XCTAssertEqual(spellChecker.requests, ["|teh", "|teh cat"])
+    }
+
+    func testTwoWordsReadTogetherCanChangeTheFirstWord() {
+        makeController(before: "")
+        type("form teh ")
+        XCTAssertEqual(document.text, "from the ")
+    }
+
+    func testBackspaceAfterAJoinBringsBackTheShownText() {
+        makeController(before: "")
+        type("th e ")
+        controller.keyboardViewDeleteBackward(keyboardView)
+        XCTAssertEqual(document.text, "th e")
+        type(" ")
+        XCTAssertEqual(document.text, "th e ")
+    }
+
+    func testAKeptWordDoesNotStopTheCorrectionOfTheNextWord() {
+        makeController(before: "")
+        type("teh ")
+        controller.keyboardViewDeleteBackward(keyboardView)
+        type(" recieve ")
+        XCTAssertEqual(document.text, "teh receive ")
+    }
+
+    func testTheCheckerGetsTheWordBeforeTheTypedTextAsContext() {
+        makeController(before: "I will ")
+        type("recieve ")
+        XCTAssertEqual(document.text, "I will receive ")
+        XCTAssertEqual(spellChecker.requests, ["will|recieve"])
+    }
+
+    func testAWordAfterACursorMoveIsReadAlone() {
+        makeController(before: "")
+        type("form ")
+        controller.keyboardView(keyboardView, moveCursorBy: 0)
+        type("teh ")
+        // "form teh" together would become "from the". After a cursor move the keyboard does
+        // not know that the person typed the two words one after the other.
+        XCTAssertEqual(document.text, "form the ")
+    }
+
+    func testOneLetterAloneDoesNotGoToTheChecker() {
+        makeController(before: "")
+        type("x ")
+        XCTAssertEqual(document.text, "x ")
+        XCTAssertEqual(spellChecker.requests, [])
+    }
+
+    func testRestoringCapitals() {
+        XCTAssertEqual(KeyboardTextLogic.restoringCapitals(in: "the", from: "Teh"), "The")
+        XCTAssertEqual(KeyboardTextLogic.restoringCapitals(in: "the quick", from: "Thequick"), "The quick")
+        XCTAssertEqual(KeyboardTextLogic.restoringCapitals(in: "from the", from: "form Teh"), "from The")
+        XCTAssertEqual(KeyboardTextLogic.restoringCapitals(in: "i think i'm", from: "i thnik im"), "I think I'm")
+        XCTAssertEqual(KeyboardTextLogic.restoringCapitals(in: "in", from: "in"), "in")
+    }
+
+    func testWordBeforeSpace() {
+        XCTAssertEqual(KeyboardTextLogic.wordBeforeSpace(at: "I Will "), "will")
+        XCTAssertEqual(KeyboardTextLogic.wordBeforeSpace(at: "end. "), "")
+        XCTAssertEqual(KeyboardTextLogic.wordBeforeSpace(at: "will"), "")
+        XCTAssertEqual(KeyboardTextLogic.wordBeforeSpace(at: ""), "")
     }
 
     func testAFieldWithoutAutocorrectionKeepsTheTypedWord() {
