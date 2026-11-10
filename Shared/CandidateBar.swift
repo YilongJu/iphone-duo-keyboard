@@ -80,10 +80,12 @@ final class CandidateBar: UIView {
 
     override func layoutSubviews() {
         super.layoutSubviews()
+        // The row is a capsule, so its ends follow the round top corners of the keyboard.
+        layer.cornerRadius = bounds.height / 2
         let labelWidth = min(compositionLabel.intrinsicContentSize.width, bounds.width * 0.4)
-        compositionLabel.frame = CGRect(x: 10, y: 0, width: labelWidth, height: bounds.height)
+        compositionLabel.frame = CGRect(x: 14, y: 0, width: labelWidth, height: bounds.height)
         let scrollX = compositionLabel.frame.maxX + 8
-        scrollView.frame = CGRect(x: scrollX, y: 0, width: max(bounds.width - scrollX, 0), height: bounds.height)
+        scrollView.frame = CGRect(x: scrollX, y: 0, width: max(bounds.width - scrollX - 10, 0), height: bounds.height)
         var x: CGFloat = 0
         for button in buttons {
             let width = max(button.intrinsicContentSize.width, 40)

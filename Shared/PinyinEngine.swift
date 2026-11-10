@@ -382,6 +382,34 @@ final class PinyinEngine {
         return result
     }
 
+    // MARK: Sounds of characters
+
+    /// The syllables of each character that the dictionary lists alone.
+    private lazy var readings: [String: Set<String>] = {
+        var result: [String: Set<String>] = [:]
+        for single in singles {
+            result[single.word, default: []].insert(single.syllable)
+        }
+        return result
+    }()
+
+    /// True when a fix of Chinese text replaces characters only by characters with the same
+    /// sound. A slip in Pinyin typing gives a wrong character with the right sound, so a new
+    /// character with another sound is the model's own idea, as in "\u{597D}\u{4ECE}" for
+    /// "\u{597D}\u{5403}". A fix that changes the count of characters, or a character that the
+    /// dictionary does not list, also gives false.
+    func keepsTheSounds(from original: String, to fixed: String) -> Bool {
+        let before = Array(original)
+        let after = Array(fixed)
+        guard before.count == after.count else { return false }
+        for (old, new) in zip(before, after) where old != new {
+            guard let oldReadings = readings[String(old)], let newReadings = readings[String(new)],
+                !oldReadings.isDisjoint(with: newReadings)
+            else { return false }
+        }
+        return true
+    }
+
     // MARK: Learning
 
     /// Remembers that the user picked `word` for `spelling`. The word then comes first for

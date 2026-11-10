@@ -117,6 +117,26 @@ final class KeyboardTextControllerTests: XCTestCase {
         XCTAssertEqual(document.text, "I came from the office. ")
     }
 
+    func testAChineseFixMustKeepTheSoundOfEachCharacter() async {
+        // "\u{5B89}" (an) for "\u{597D}" (hao) changes the sound, so the fix is the model's own idea.
+        let sentence = "\u{4F60}\u{597D}\u{4F60}\u{597D}\u{3002}"
+        _ = makeProofreadingController(before: "", answers: [sentence: "\u{4F60}\u{5B89}\u{4F60}\u{597D}\u{3002}"])
+        document.insertText(sentence.dropLast().description)
+        type("\u{3002}")
+        await controller.proofreadTask?.value
+        XCTAssertNil(controller.proofreadSuggestion)
+    }
+
+    func testAChineseFixWithTheSameSoundIsShown() async {
+        // "\u{5C3C}" and "\u{4F60}" are both "ni" in the test dictionary.
+        let sentence = "\u{5C3C}\u{597D}\u{4F60}\u{597D}\u{3002}"
+        _ = makeProofreadingController(before: "", answers: [sentence: "\u{4F60}\u{597D}\u{4F60}\u{597D}\u{3002}"])
+        document.insertText(sentence.dropLast().description)
+        type("\u{3002}")
+        await controller.proofreadTask?.value
+        XCTAssertEqual(controller.proofreadSuggestion?.corrected, "\u{4F60}\u{597D}\u{4F60}\u{597D}\u{3002}")
+    }
+
     func testACommaAlsoGetsAFix() async {
         let proofreader = makeProofreadingController(
             before: "", answers: ["I came form the office,": "I came from the office,"])

@@ -356,9 +356,15 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
             KeyboardTextLogic.finishedSentence(before: document.textBeforeCursor) == sentence,
             let corrected = KeyboardTextLogic.acceptedProofreading(of: sentence, answer: answer)
         else { return }
+        // In Chinese text a typing slip gives a character with the same sound, so a fix may
+        // only put a character with the same sound in its place.
+        let holdsChinese = sentence.unicodeScalars.contains { $0.value >= 0x4E00 && $0.value <= 0x9FFF }
+        if holdsChinese, !pinyinEngine.keepsTheSounds(from: sentence, to: corrected) { return }
         proofreadSuggestion = ProofreadSuggestion(original: sentence, corrected: corrected)
-        let label = String(format: "Fix %.1f s", result.seconds) + (result.source.isEmpty ? "" : " " + result.source)
-        keyboardView.showCandidates(composition: label, words: [corrected])
+        // A cloud marks the model on Apple's servers and a star the model on the device. The
+        // number is the time the model took.
+        let mark = result.source == "cloud" ? "\u{2601}\u{FE0E}" : "\u{2726}"
+        keyboardView.showCandidates(composition: String(format: "%@ %.1f s", mark, result.seconds), words: [corrected])
     }
 
     /// Replaces the sentence right before the cursor with the proposed fix.
