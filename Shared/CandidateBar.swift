@@ -1,5 +1,14 @@
 import UIKit
 
+/// A scroll view whose content is all buttons. UIKit by default lets a button keep a touch that
+/// starts on the button, so a drag across the candidates would not scroll. This subclass hands
+/// such a drag to the scroll view, and a plain tap still presses the button.
+final class CandidateScrollView: UIScrollView {
+    override func touchesShouldCancel(in view: UIView) -> Bool {
+        true
+    }
+}
+
 /// The row of Chinese candidates. The typed Pinyin sits at the left, and the candidate words
 /// scroll sideways to its right. The first word is the one the space bar types.
 final class CandidateBar: UIView {
@@ -7,7 +16,7 @@ final class CandidateBar: UIView {
     var onSelect: ((Int) -> Void)?
 
     private let compositionLabel = UILabel()
-    private let scrollView = UIScrollView()
+    private let scrollView = CandidateScrollView()
     private var buttons: [UIButton] = []
 
     override init(frame: CGRect) {
@@ -20,6 +29,8 @@ final class CandidateBar: UIView {
         addSubview(compositionLabel)
         scrollView.showsHorizontalScrollIndicator = false
         scrollView.delaysContentTouches = false
+        scrollView.canCancelContentTouches = true
+        scrollView.alwaysBounceHorizontal = true
         addSubview(scrollView)
     }
 
