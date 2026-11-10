@@ -1,0 +1,1035 @@
+{"id": "en-test-apostrophe_missing-0002", "split": "test", "category": "apostrophe_missing", "context": "could you speak up i", "typed": "cant", "intended": "can't", "source": "tatoeba:275519"}
+{"id": "en-test-apostrophe_missing-0003", "split": "test", "category": "apostrophe_missing", "context": "tom", "typed": "wont", "intended": "won't", "source": "tatoeba:1140835"}
+{"id": "en-test-apostrophe_missing-0012", "split": "test", "category": "apostrophe_missing", "context": "i doubt", "typed": "thatll", "intended": "that'll", "source": "tatoeba:8993909"}
+{"id": "en-test-apostrophe_missing-0013", "split": "test", "category": "apostrophe_missing", "context": "", "typed": "dont", "intended": "don't", "source": "tatoeba:11617653"}
+{"id": "en-test-apostrophe_missing-0018", "split": "test", "category": "apostrophe_missing", "context": "the ticket you've bought", "typed": "isnt", "intended": "isn't", "source": "tatoeba:9149677"}
+{"id": "en-test-apostrophe_missing-0022", "split": "test", "category": "apostrophe_missing", "context": "tom", "typed": "isnt", "intended": "isn't", "source": "tatoeba:7541691"}
+{"id": "en-test-apostrophe_missing-0025", "split": "test", "category": "apostrophe_missing", "context": "someone", "typed": "didnt", "intended": "didn't", "source": "tatoeba:10687251"}
+{"id": "en-test-apostrophe_missing-0027", "split": "test", "category": "apostrophe_missing", "context": "that isn't", "typed": "whats", "intended": "what's", "source": "tatoeba:10098457"}
+{"id": "en-test-apostrophe_missing-0028", "split": "test", "category": "apostrophe_missing", "context": "", "typed": "wont", "intended": "won't", "source": "tatoeba:2765263"}
+{"id": "en-test-apostrophe_missing-0031", "split": "test", "category": "apostrophe_missing", "context": "i wonder if", "typed": "theres", "intended": "there's", "source": "tatoeba:9505061"}
+{"id": "en-test-apostrophe_missing-0034", "split": "test", "category": "apostrophe_missing", "context": "i", "typed": "cant", "intended": "can't", "source": "tatoeba:10589561"}
+{"id": "en-test-apostrophe_missing-0042", "split": "test", "category": "apostrophe_missing", "context": "that", "typed": "isnt", "intended": "isn't", "source": "tatoeba:10141517"}
+{"id": "en-test-apostrophe_missing-0048", "split": "test", "category": "apostrophe_missing", "context": "i", "typed": "dont", "intended": "don't", "source": "tatoeba:2276223"}
+{"id": "en-test-apostrophe_missing-0058", "split": "test", "category": "apostrophe_missing", "context": "i", "typed": "didnt", "intended": "didn't", "source": "tatoeba:6348945"}
+{"id": "en-test-apostrophe_missing-0060", "split": "test", "category": "apostrophe_missing", "context": "tom realized that doing that", "typed": "wasnt", "intended": "wasn't", "source": "tatoeba:7505927"}
+{"id": "en-test-apostrophe_missing-0062", "split": "test", "category": "apostrophe_missing", "context": "you know how to explain it", "typed": "dont", "intended": "don't", "source": "tatoeba:7735641"}
+{"id": "en-test-apostrophe_missing-0069", "split": "test", "category": "apostrophe_missing", "context": "mary told me she", "typed": "didnt", "intended": "didn't", "source": "tatoeba:6425153"}
+{"id": "en-test-apostrophe_missing-0086", "split": "test", "category": "apostrophe_missing", "context": "", "typed": "im", "intended": "i'm", "source": "tatoeba:309489"}
+{"id": "en-test-apostrophe_missing-0089", "split": "test", "category": "apostrophe_missing", "context": "it", "typed": "wasnt", "intended": "wasn't", "source": "tatoeba:2547077"}
+{"id": "en-test-apostrophe_missing-0093", "split": "test", "category": "apostrophe_missing", "context": "work to live", "typed": "dont", "intended": "don't", "source": "tatoeba:4981363"}
+{"id": "en-test-apostrophe_missing-0097", "split": "test", "category": "apostrophe_missing", "context": "", "typed": "shes", "intended": "she's", "source": "tatoeba:8526751"}
+{"id": "en-test-apostrophe_missing-0105", "split": "test", "category": "apostrophe_missing", "context": "i", "typed": "didnt", "intended": "didn't", "source": "tatoeba:6665067"}
+{"id": "en-test-apostrophe_missing-0126", "split": "test", "category": "apostrophe_missing", "context": "if you go looking for trouble", "typed": "youll", "intended": "you'll", "source": "tatoeba:5259781"}
+{"id": "en-test-apostrophe_missing-0131", "split": "test", "category": "apostrophe_missing", "context": "", "typed": "wheres", "intended": "where's", "source": "tatoeba:4015689"}
+{"id": "en-test-apostrophe_missing-0133", "split": "test", "category": "apostrophe_missing", "context": "there", "typed": "wasnt", "intended": "wasn't", "source": "tatoeba:10230839"}
+{"id": "en-test-apostrophe_missing-0139", "split": "test", "category": "apostrophe_missing", "context": "without your help we", "typed": "wouldnt", "intended": "wouldn't", "source": "tatoeba:924413"}
+{"id": "en-test-apostrophe_missing-0141", "split": "test", "category": "apostrophe_missing", "context": "tom", "typed": "didnt", "intended": "didn't", "source": "tatoeba:6528765"}
+{"id": "en-test-apostrophe_missing-0147", "split": "test", "category": "apostrophe_missing", "context": "", "typed": "hes", "intended": "he's", "source": "tatoeba:8248869"}
+{"id": "en-test-apostrophe_missing-0148", "split": "test", "category": "apostrophe_missing", "context": "i", "typed": "dont", "intended": "don't", "source": "tatoeba:7183135"}
+{"id": "en-test-apostrophe_missing-0149", "split": "test", "category": "apostrophe_missing", "context": "", "typed": "hes", "intended": "he's", "source": "tatoeba:7388691"}
+{"id": "en-test-apostrophe_missing-0150", "split": "test", "category": "apostrophe_missing", "context": "", "typed": "weve", "intended": "we've", "source": "tatoeba:3310277"}
+{"id": "en-test-apostrophe_missing-0151", "split": "test", "category": "apostrophe_missing", "context": "", "typed": "dont", "intended": "don't", "source": "tatoeba:1148167"}
+{"id": "en-test-apostrophe_missing-0161", "split": "test", "category": "apostrophe_missing", "context": "", "typed": "im", "intended": "i'm", "source": "tatoeba:10936781"}
+{"id": "en-test-apostrophe_missing-0168", "split": "test", "category": "apostrophe_missing", "context": "", "typed": "im", "intended": "i'm", "source": "tatoeba:2548275"}
+{"id": "en-test-apostrophe_missing-0171", "split": "test", "category": "apostrophe_missing", "context": "tom", "typed": "didnt", "intended": "didn't", "source": "tatoeba:6355747"}
+{"id": "en-test-apostrophe_missing-0174", "split": "test", "category": "apostrophe_missing", "context": "", "typed": "hes", "intended": "he's", "source": "tatoeba:3862443"}
+{"id": "en-test-apostrophe_missing-0183", "split": "test", "category": "apostrophe_missing", "context": "i", "typed": "dont", "intended": "don't", "source": "tatoeba:6270839"}
+{"id": "en-test-apostrophe_missing-0187", "split": "test", "category": "apostrophe_missing", "context": "you", "typed": "havent", "intended": "haven't", "source": "tatoeba:3729441"}
+{"id": "en-test-apostrophe_missing-0192", "split": "test", "category": "apostrophe_missing", "context": "this damp match", "typed": "wont", "intended": "won't", "source": "tatoeba:60467"}
+{"id": "en-test-apostrophe_missing-0193", "split": "test", "category": "apostrophe_missing", "context": "tom", "typed": "didnt", "intended": "didn't", "source": "tatoeba:5739569"}
+{"id": "en-test-apostrophe_missing-0198", "split": "test", "category": "apostrophe_missing", "context": "", "typed": "im", "intended": "i'm", "source": "tatoeba:10958275"}
+{"id": "en-test-apostrophe_missing-0199", "split": "test", "category": "apostrophe_missing", "context": "tom and mary said that they", "typed": "werent", "intended": "weren't", "source": "tatoeba:6517951"}
+{"id": "en-test-apostrophe_missing-0206", "split": "test", "category": "apostrophe_missing", "context": "tom assumed everyone knew that", "typed": "hed", "intended": "he'd", "source": "tatoeba:7504151"}
+{"id": "en-test-apostrophe_missing-0210", "split": "test", "category": "apostrophe_missing", "context": "mary said she", "typed": "didnt", "intended": "didn't", "source": "tatoeba:7379519"}
+{"id": "en-test-apostrophe_missing-0211", "split": "test", "category": "apostrophe_missing", "context": "i", "typed": "dont", "intended": "don't", "source": "tatoeba:6976167"}
+{"id": "en-test-apostrophe_missing-0228", "split": "test", "category": "apostrophe_missing", "context": "", "typed": "im", "intended": "i'm", "source": "tatoeba:5903765"}
+{"id": "en-test-apostrophe_missing-0234", "split": "test", "category": "apostrophe_missing", "context": "", "typed": "thats", "intended": "that's", "source": "tatoeba:10456159"}
+{"id": "en-test-apostrophe_missing-0243", "split": "test", "category": "apostrophe_missing", "context": "you must think", "typed": "im", "intended": "i'm", "source": "tatoeba:3178303"}
+{"id": "en-test-apostrophe_missing-0245", "split": "test", "category": "apostrophe_missing", "context": "we", "typed": "dont", "intended": "don't", "source": "tatoeba:7991617"}
+{"id": "en-test-apostrophe_missing-0246", "split": "test", "category": "apostrophe_missing", "context": "i", "typed": "dont", "intended": "don't", "source": "tatoeba:7228503"}
+{"id": "en-test-apostrophe_missing-0247", "split": "test", "category": "apostrophe_missing", "context": "tom said he", "typed": "didnt", "intended": "didn't", "source": "tatoeba:3439583"}
+{"id": "en-test-apostrophe_missing-0248", "split": "test", "category": "apostrophe_missing", "context": "give it everything", "typed": "youve", "intended": "you've", "source": "tatoeba:3152563"}
+{"id": "en-test-apostrophe_missing-0262", "split": "test", "category": "apostrophe_missing", "context": "you", "typed": "havent", "intended": "haven't", "source": "tatoeba:13375939"}
+{"id": "en-test-apostrophe_missing-0269", "split": "test", "category": "apostrophe_missing", "context": "", "typed": "youre", "intended": "you're", "source": "tatoeba:12816749"}
+{"id": "en-test-apostrophe_missing-0271", "split": "test", "category": "apostrophe_missing", "context": "", "typed": "theyre", "intended": "they're", "source": "tatoeba:7406155"}
+{"id": "en-test-apostrophe_missing-0278", "split": "test", "category": "apostrophe_missing", "context": "tom", "typed": "doesnt", "intended": "doesn't", "source": "tatoeba:7543889"}
+{"id": "en-test-apostrophe_missing-0280", "split": "test", "category": "apostrophe_missing", "context": "i", "typed": "dont", "intended": "don't", "source": "tatoeba:6658535"}
+{"id": "en-test-apostrophe_missing-0281", "split": "test", "category": "apostrophe_missing", "context": "no one knew tom", "typed": "wasnt", "intended": "wasn't", "source": "tatoeba:7518747"}
+{"id": "en-test-apostrophe_missing-0282", "split": "test", "category": "apostrophe_missing", "context": "i", "typed": "dont", "intended": "don't", "source": "tatoeba:6665663"}
+{"id": "en-test-apostrophe_missing-0292", "split": "test", "category": "apostrophe_missing", "context": "tom", "typed": "didnt", "intended": "didn't", "source": "tatoeba:8755699"}
+{"id": "en-test-clean_common-0011", "split": "test", "category": "clean_common", "context": "you've got a", "typed": "wonderful", "intended": "wonderful", "source": "tatoeba:3737335"}
+{"id": "en-test-clean_common-0012", "split": "test", "category": "clean_common", "context": "i don't know", "typed": "what", "intended": "what", "source": "tatoeba:1598995"}
+{"id": "en-test-clean_common-0013", "split": "test", "category": "clean_common", "context": "i think", "typed": "that", "intended": "that", "source": "tatoeba:7169207"}
+{"id": "en-test-clean_common-0015", "split": "test", "category": "clean_common", "context": "you often bunk", "typed": "off", "intended": "off", "source": "tatoeba:10570829"}
+{"id": "en-test-clean_common-0021", "split": "test", "category": "clean_common", "context": "", "typed": "they", "intended": "they", "source": "tatoeba:2272115"}
+{"id": "en-test-clean_common-0022", "split": "test", "category": "clean_common", "context": "try", "typed": "doing", "intended": "doing", "source": "tatoeba:6357043"}
+{"id": "en-test-clean_common-0025", "split": "test", "category": "clean_common", "context": "i'll be right back with your", "typed": "order", "intended": "order", "source": "tatoeba:6896441"}
+{"id": "en-test-clean_common-0026", "split": "test", "category": "clean_common", "context": "tom", "typed": "thinks", "intended": "thinks", "source": "tatoeba:7175999"}
+{"id": "en-test-clean_common-0029", "split": "test", "category": "clean_common", "context": "sami came in", "typed": "the", "intended": "the", "source": "tatoeba:7230005"}
+{"id": "en-test-clean_common-0030", "split": "test", "category": "clean_common", "context": "strange events occurred", "typed": "that", "intended": "that", "source": "tatoeba:8251901"}
+{"id": "en-test-clean_common-0034", "split": "test", "category": "clean_common", "context": "the", "typed": "police", "intended": "police", "source": "tatoeba:6662657"}
+{"id": "en-test-clean_common-0035", "split": "test", "category": "clean_common", "context": "did", "typed": "tom", "intended": "tom", "source": "tatoeba:3202677"}
+{"id": "en-test-clean_common-0036", "split": "test", "category": "clean_common", "context": "tom dared", "typed": "not", "intended": "not", "source": "tatoeba:9286899"}
+{"id": "en-test-clean_common-0039", "split": "test", "category": "clean_common", "context": "what colour is her", "typed": "car", "intended": "car", "source": "tatoeba:11550475"}
+{"id": "en-test-clean_common-0047", "split": "test", "category": "clean_common", "context": "i", "typed": "can", "intended": "can", "source": "tatoeba:7118057"}
+{"id": "en-test-clean_common-0056", "split": "test", "category": "clean_common", "context": "he finally", "typed": "found", "intended": "found", "source": "tatoeba:291785"}
+{"id": "en-test-clean_common-0058", "split": "test", "category": "clean_common", "context": "i wasn't really", "typed": "paying", "intended": "paying", "source": "tatoeba:6499657"}
+{"id": "en-test-clean_common-0061", "split": "test", "category": "clean_common", "context": "", "typed": "the", "intended": "the", "source": "tatoeba:5820051"}
+{"id": "en-test-clean_common-0070", "split": "test", "category": "clean_common", "context": "i haven't told", "typed": "him", "intended": "him", "source": "tatoeba:3905317"}
+{"id": "en-test-clean_common-0073", "split": "test", "category": "clean_common", "context": "he kept in", "typed": "touch", "intended": "touch", "source": "tatoeba:8531415"}
+{"id": "en-test-clean_common-0088", "split": "test", "category": "clean_common", "context": "has anybody heard from", "typed": "her", "intended": "her", "source": "tatoeba:3916677"}
+{"id": "en-test-clean_common-0091", "split": "test", "category": "clean_common", "context": "have you ever heard", "typed": "tom", "intended": "tom", "source": "tatoeba:5849101"}
+{"id": "en-test-clean_common-0096", "split": "test", "category": "clean_common", "context": "i just heard", "typed": "something", "intended": "something", "source": "tatoeba:2372741"}
+{"id": "en-test-clean_common-0105", "split": "test", "category": "clean_common", "context": "we have a long", "typed": "day", "intended": "day", "source": "tatoeba:3312399"}
+{"id": "en-test-clean_common-0116", "split": "test", "category": "clean_common", "context": "we're", "typed": "waiting", "intended": "waiting", "source": "tatoeba:11872849"}
+{"id": "en-test-clean_common-0120", "split": "test", "category": "clean_common", "context": "santiago hates remedial", "typed": "classes", "intended": "classes", "source": "tatoeba:11788347"}
+{"id": "en-test-clean_common-0122", "split": "test", "category": "clean_common", "context": "did you really think that i wouldn't", "typed": "help", "intended": "help", "source": "tatoeba:8181909"}
+{"id": "en-test-clean_common-0124", "split": "test", "category": "clean_common", "context": "tom and mary weren't sure how they", "typed": "could", "intended": "could", "source": "tatoeba:6512327"}
+{"id": "en-test-clean_common-0125", "split": "test", "category": "clean_common", "context": "", "typed": "tom", "intended": "tom", "source": "tatoeba:12318499"}
+{"id": "en-test-clean_common-0127", "split": "test", "category": "clean_common", "context": "we need to", "typed": "think", "intended": "think", "source": "tatoeba:6855777"}
+{"id": "en-test-clean_common-0130", "split": "test", "category": "clean_common", "context": "mary said that she", "typed": "likes", "intended": "likes", "source": "tatoeba:6415371"}
+{"id": "en-test-clean_common-0131", "split": "test", "category": "clean_common", "context": "i've", "typed": "got", "intended": "got", "source": "tatoeba:3286817"}
+{"id": "en-test-clean_common-0135", "split": "test", "category": "clean_common", "context": "tom and", "typed": "mary", "intended": "mary", "source": "tatoeba:5481091"}
+{"id": "en-test-clean_common-0138", "split": "test", "category": "clean_common", "context": "do you speak turkish just a", "typed": "little", "intended": "little", "source": "tatoeba:14035153"}
+{"id": "en-test-clean_common-0142", "split": "test", "category": "clean_common", "context": "i will accomplish", "typed": "that", "intended": "that", "source": "tatoeba:1318741"}
+{"id": "en-test-clean_common-0144", "split": "test", "category": "clean_common", "context": "i've been worrying sick", "typed": "about", "intended": "about", "source": "tatoeba:1463079"}
+{"id": "en-test-clean_common-0170", "split": "test", "category": "clean_common", "context": "", "typed": "john", "intended": "john", "source": "tatoeba:807287"}
+{"id": "en-test-clean_common-0174", "split": "test", "category": "clean_common", "context": "nobody", "typed": "could", "intended": "could", "source": "tatoeba:6048275"}
+{"id": "en-test-clean_common-0184", "split": "test", "category": "clean_common", "context": "can", "typed": "you", "intended": "you", "source": "tatoeba:3328175"}
+{"id": "en-test-clean_common-0189", "split": "test", "category": "clean_common", "context": "tom no longer", "typed": "has", "intended": "has", "source": "tatoeba:6824023"}
+{"id": "en-test-clean_common-0190", "split": "test", "category": "clean_common", "context": "as a child i preferred basketball to", "typed": "playing", "intended": "playing", "source": "tatoeba:13123023"}
+{"id": "en-test-clean_common-0202", "split": "test", "category": "clean_common", "context": "i want", "typed": "children", "intended": "children", "source": "tatoeba:8043261"}
+{"id": "en-test-clean_common-0204", "split": "test", "category": "clean_common", "context": "it'll most probably be", "typed": "done", "intended": "done", "source": "tatoeba:8352143"}
+{"id": "en-test-clean_common-0209", "split": "test", "category": "clean_common", "context": "over my", "typed": "dead", "intended": "dead", "source": "tatoeba:7338049"}
+{"id": "en-test-clean_common-0217", "split": "test", "category": "clean_common", "context": "she", "typed": "built", "intended": "built", "source": "tatoeba:8536157"}
+{"id": "en-test-clean_common-0224", "split": "test", "category": "clean_common", "context": "she looks", "typed": "like", "intended": "like", "source": "tatoeba:12850955"}
+{"id": "en-test-clean_common-0229", "split": "test", "category": "clean_common", "context": "we're waiting for", "typed": "the", "intended": "the", "source": "tatoeba:12065779"}
+{"id": "en-test-clean_common-0233", "split": "test", "category": "clean_common", "context": "tom still has a few", "typed": "options", "intended": "options", "source": "tatoeba:5205129"}
+{"id": "en-test-clean_common-0247", "split": "test", "category": "clean_common", "context": "he plays chess very", "typed": "well", "intended": "well", "source": "tatoeba:772823"}
+{"id": "en-test-clean_common-0250", "split": "test", "category": "clean_common", "context": "did you", "typed": "buy", "intended": "buy", "source": "tatoeba:414579"}
+{"id": "en-test-clean_common-0254", "split": "test", "category": "clean_common", "context": "she reached for her", "typed": "hat", "intended": "hat", "source": "tatoeba:7385951"}
+{"id": "en-test-clean_common-0261", "split": "test", "category": "clean_common", "context": "i tried to be", "typed": "the", "intended": "the", "source": "tatoeba:5836323"}
+{"id": "en-test-clean_common-0262", "split": "test", "category": "clean_common", "context": "feel free to", "typed": "eat", "intended": "eat", "source": "tatoeba:8815193"}
+{"id": "en-test-clean_common-0274", "split": "test", "category": "clean_common", "context": "sea", "typed": "ice", "intended": "ice", "source": "tatoeba:5322633"}
+{"id": "en-test-clean_common-0275", "split": "test", "category": "clean_common", "context": "i", "typed": "was", "intended": "was", "source": "tatoeba:12010773"}
+{"id": "en-test-clean_common-0278", "split": "test", "category": "clean_common", "context": "tom", "typed": "pulled", "intended": "pulled", "source": "tatoeba:2547557"}
+{"id": "en-test-clean_common-0284", "split": "test", "category": "clean_common", "context": "layla", "typed": "worked", "intended": "worked", "source": "tatoeba:6107441"}
+{"id": "en-test-clean_common-0291", "split": "test", "category": "clean_common", "context": "", "typed": "she", "intended": "she", "source": "tatoeba:8536891"}
+{"id": "en-test-clean_common-0292", "split": "test", "category": "clean_common", "context": "there", "typed": "you", "intended": "you", "source": "tatoeba:3879655"}
+{"id": "en-test-clean_common-0297", "split": "test", "category": "clean_common", "context": "did you know", "typed": "anything", "intended": "anything", "source": "tatoeba:11952885"}
+{"id": "en-test-clean_names_and_terms-0020", "split": "test", "category": "clean_names_and_terms", "context": "", "typed": "oops", "intended": "oops", "source": "tatoeba:2952531"}
+{"id": "en-test-clean_names_and_terms-0023", "split": "test", "category": "clean_names_and_terms", "context": "", "typed": "pls", "intended": "pls", "source": "tatoeba:8221583"}
+{"id": "en-test-clean_names_and_terms-0027", "split": "test", "category": "clean_names_and_terms", "context": "come to the", "typed": "nginx", "intended": "nginx", "source": "tatoeba:9641179"}
+{"id": "en-test-clean_names_and_terms-0030", "split": "test", "category": "clean_names_and_terms", "context": "", "typed": "blockchain", "intended": "blockchain", "source": "tatoeba:6491523"}
+{"id": "en-test-clean_names_and_terms-0031", "split": "test", "category": "clean_names_and_terms", "context": "how do you know", "typed": "localhost", "intended": "localhost", "source": "tatoeba:7511951"}
+{"id": "en-test-clean_names_and_terms-0035", "split": "test", "category": "clean_names_and_terms", "context": "he has been", "typed": "uber", "intended": "uber", "source": "tatoeba:8481797"}
+{"id": "en-test-clean_names_and_terms-0038", "split": "test", "category": "clean_names_and_terms", "context": "tom and", "typed": "gimme", "intended": "gimme", "source": "tatoeba:6509975"}
+{"id": "en-test-clean_names_and_terms-0039", "split": "test", "category": "clean_names_and_terms", "context": "she", "typed": "podcast", "intended": "podcast", "source": "tatoeba:10627745"}
+{"id": "en-test-clean_names_and_terms-0046", "split": "test", "category": "clean_names_and_terms", "context": "", "typed": "redis", "intended": "redis", "source": "tatoeba:4913133"}
+{"id": "en-test-clean_names_and_terms-0048", "split": "test", "category": "clean_names_and_terms", "context": "tom only", "typed": "sriracha", "intended": "sriracha", "source": "tatoeba:5496395"}
+{"id": "en-test-clean_names_and_terms-0052", "split": "test", "category": "clean_names_and_terms", "context": "", "typed": "jk", "intended": "jk", "source": "tatoeba:2026409"}
+{"id": "en-test-clean_names_and_terms-0058", "split": "test", "category": "clean_names_and_terms", "context": "the flea robot is", "typed": "graphql", "intended": "graphql", "source": "tatoeba:6467779"}
+{"id": "en-test-clean_names_and_terms-0061", "split": "test", "category": "clean_names_and_terms", "context": "we need", "typed": "homescreen", "intended": "homescreen", "source": "tatoeba:6347677"}
+{"id": "en-test-clean_names_and_terms-0066", "split": "test", "category": "clean_names_and_terms", "context": "he fell so i", "typed": "tokenizer", "intended": "tokenizer", "source": "tatoeba:1778745"}
+{"id": "en-test-clean_names_and_terms-0070", "split": "test", "category": "clean_names_and_terms", "context": "you are walking", "typed": "szymanski", "intended": "szymanski", "source": "tatoeba:13144625"}
+{"id": "en-test-clean_rare-0001", "split": "test", "category": "clean_rare", "context": "use this function to", "typed": "internationalization", "intended": "internationalization", "source": "tatoeba:8279703"}
+{"id": "en-test-clean_rare-0008", "split": "test", "category": "clean_rare", "context": "i", "typed": "underwriting", "intended": "underwriting", "source": "tatoeba:12424753"}
+{"id": "en-test-clean_rare-0009", "split": "test", "category": "clean_rare", "context": "does", "typed": "clarissa", "intended": "clarissa", "source": "tatoeba:270311"}
+{"id": "en-test-clean_rare-0011", "split": "test", "category": "clean_rare", "context": "he finally quit", "typed": "momentary", "intended": "momentary", "source": "tatoeba:8508281"}
+{"id": "en-test-clean_rare-0018", "split": "test", "category": "clean_rare", "context": "i let my sister", "typed": "migrating", "intended": "migrating", "source": "tatoeba:261775"}
+{"id": "en-test-clean_rare-0026", "split": "test", "category": "clean_rare", "context": "tom", "typed": "tanned", "intended": "tanned", "source": "tatoeba:6221203"}
+{"id": "en-test-clean_rare-0040", "split": "test", "category": "clean_rare", "context": "i guess i'll", "typed": "bally", "intended": "bally", "source": "tatoeba:2330051"}
+{"id": "en-test-clean_rare-0047", "split": "test", "category": "clean_rare", "context": "we appreciate your", "typed": "arie", "intended": "arie", "source": "tatoeba:4263045"}
+{"id": "en-test-clean_rare-0048", "split": "test", "category": "clean_rare", "context": "oleg said", "typed": "whitten", "intended": "whitten", "source": "tatoeba:11850707"}
+{"id": "en-test-clean_rare-0052", "split": "test", "category": "clean_rare", "context": "tom is", "typed": "leniency", "intended": "leniency", "source": "tatoeba:4665899"}
+{"id": "en-test-clean_rare-0055", "split": "test", "category": "clean_rare", "context": "", "typed": "retrofitting", "intended": "retrofitting", "source": "tatoeba:3453147"}
+{"id": "en-test-clean_rare-0062", "split": "test", "category": "clean_rare", "context": "is the pope", "typed": "bassline", "intended": "bassline", "source": "tatoeba:1217501"}
+{"id": "en-test-clean_rare-0067", "split": "test", "category": "clean_rare", "context": "my", "typed": "coburg", "intended": "coburg", "source": "tatoeba:12058981"}
+{"id": "en-test-clean_rare-0076", "split": "test", "category": "clean_rare", "context": "tom", "typed": "ingrid", "intended": "ingrid", "source": "tatoeba:6124487"}
+{"id": "en-test-clean_rare-0086", "split": "test", "category": "clean_rare", "context": "i", "typed": "recharged", "intended": "recharged", "source": "tatoeba:6924079"}
+{"id": "en-test-clean_rare-0096", "split": "test", "category": "clean_rare", "context": "she", "typed": "decadence", "intended": "decadence", "source": "tatoeba:12849401"}
+{"id": "en-test-clean_rare-0106", "split": "test", "category": "clean_rare", "context": "", "typed": "agnew", "intended": "agnew", "source": "tatoeba:3315027"}
+{"id": "en-test-clean_rare-0109", "split": "test", "category": "clean_rare", "context": "he said", "typed": "verbose", "intended": "verbose", "source": "tatoeba:7384445"}
+{"id": "en-test-clean_rare-0111", "split": "test", "category": "clean_rare", "context": "tom didn't seem", "typed": "greenish", "intended": "greenish", "source": "tatoeba:2642685"}
+{"id": "en-test-clean_rare-0114", "split": "test", "category": "clean_rare", "context": "", "typed": "frightens", "intended": "frightens", "source": "tatoeba:12176719"}
+{"id": "en-test-clean_rare-0121", "split": "test", "category": "clean_rare", "context": "", "typed": "perforation", "intended": "perforation", "source": "tatoeba:13239603"}
+{"id": "en-test-clean_rare-0126", "split": "test", "category": "clean_rare", "context": "thanks for", "typed": "shepherds", "intended": "shepherds", "source": "tatoeba:3722669"}
+{"id": "en-test-clean_rare-0130", "split": "test", "category": "clean_rare", "context": "", "typed": "solidifies", "intended": "solidifies", "source": "tatoeba:8388681"}
+{"id": "en-test-clean_rare-0132", "split": "test", "category": "clean_rare", "context": "", "typed": "meso", "intended": "meso", "source": "tatoeba:11145631"}
+{"id": "en-test-clean_rare-0142", "split": "test", "category": "clean_rare", "context": "lorenzo was in one", "typed": "maarten", "intended": "maarten", "source": "tatoeba:11699185"}
+{"id": "en-test-clean_rare-0144", "split": "test", "category": "clean_rare", "context": "he'll", "typed": "deteriorate", "intended": "deteriorate", "source": "tatoeba:8535297"}
+{"id": "en-test-clean_rare-0145", "split": "test", "category": "clean_rare", "context": "that's where tom is", "typed": "wahoo", "intended": "wahoo", "source": "tatoeba:2262273"}
+{"id": "en-test-clean_rare-0149", "split": "test", "category": "clean_rare", "context": "mary likes to", "typed": "villanueva", "intended": "villanueva", "source": "tatoeba:1699337"}
+{"id": "en-test-clean_rare-0153", "split": "test", "category": "clean_rare", "context": "how often", "typed": "rearrange", "intended": "rearrange", "source": "tatoeba:8567487"}
+{"id": "en-test-clean_rare-0154", "split": "test", "category": "clean_rare", "context": "i", "typed": "weaponized", "intended": "weaponized", "source": "tatoeba:5078437"}
+{"id": "en-test-clean_rare-0155", "split": "test", "category": "clean_rare", "context": "she says", "typed": "moreton", "intended": "moreton", "source": "tatoeba:7405029"}
+{"id": "en-test-clean_rare-0160", "split": "test", "category": "clean_rare", "context": "we", "typed": "fronds", "intended": "fronds", "source": "tatoeba:6772507"}
+{"id": "en-test-clean_rare-0170", "split": "test", "category": "clean_rare", "context": "he's so smart", "typed": "iconography", "intended": "iconography", "source": "tatoeba:8053427"}
+{"id": "en-test-clean_rare-0177", "split": "test", "category": "clean_rare", "context": "", "typed": "aplenty", "intended": "aplenty", "source": "tatoeba:13807281"}
+{"id": "en-test-clean_rare-0178", "split": "test", "category": "clean_rare", "context": "i'm the", "typed": "inbreeding", "intended": "inbreeding", "source": "tatoeba:10832443"}
+{"id": "en-test-clean_rare-0187", "split": "test", "category": "clean_rare", "context": "tom", "typed": "gunderson", "intended": "gunderson", "source": "tatoeba:3735073"}
+{"id": "en-test-clean_rare-0194", "split": "test", "category": "clean_rare", "context": "i think", "typed": "phantoms", "intended": "phantoms", "source": "tatoeba:6245033"}
+{"id": "en-test-clean_rare-0197", "split": "test", "category": "clean_rare", "context": "", "typed": "etheridge", "intended": "etheridge", "source": "tatoeba:6577735"}
+{"id": "en-test-clean_rare-0198", "split": "test", "category": "clean_rare", "context": "tom", "typed": "chopsticks", "intended": "chopsticks", "source": "tatoeba:6260689"}
+{"id": "en-test-clean_rare-0199", "split": "test", "category": "clean_rare", "context": "", "typed": "embezzling", "intended": "embezzling", "source": "tatoeba:11034457"}
+{"id": "en-test-clean_rare-0209", "split": "test", "category": "clean_rare", "context": "", "typed": "disenfranchised", "intended": "disenfranchised", "source": "tatoeba:2921563"}
+{"id": "en-test-clean_rare-0214", "split": "test", "category": "clean_rare", "context": "tom", "typed": "archeologists", "intended": "archeologists", "source": "tatoeba:1868031"}
+{"id": "en-test-clean_rare-0215", "split": "test", "category": "clean_rare", "context": "she has", "typed": "sphincter", "intended": "sphincter", "source": "tatoeba:10671315"}
+{"id": "en-test-clean_rare-0227", "split": "test", "category": "clean_rare", "context": "the police", "typed": "bernhard", "intended": "bernhard", "source": "tatoeba:8034145"}
+{"id": "en-test-clean_rare-0233", "split": "test", "category": "clean_rare", "context": "", "typed": "nextgen", "intended": "nextgen", "source": "tatoeba:3903271"}
+{"id": "en-test-clean_rare-0235", "split": "test", "category": "clean_rare", "context": "you're all dear", "typed": "atonement", "intended": "atonement", "source": "tatoeba:12034011"}
+{"id": "en-test-clean_rare-0236", "split": "test", "category": "clean_rare", "context": "i", "typed": "julianna", "intended": "julianna", "source": "tatoeba:2429"}
+{"id": "en-test-clean_rare-0238", "split": "test", "category": "clean_rare", "context": "science", "typed": "subjugation", "intended": "subjugation", "source": "tatoeba:11737907"}
+{"id": "en-test-clean_rare-0246", "split": "test", "category": "clean_rare", "context": "do you", "typed": "flatbed", "intended": "flatbed", "source": "tatoeba:11215721"}
+{"id": "en-test-clean_rare-0249", "split": "test", "category": "clean_rare", "context": "who actually did that", "typed": "tamoxifen", "intended": "tamoxifen", "source": "tatoeba:6049315"}
+{"id": "en-test-clean_rare-0251", "split": "test", "category": "clean_rare", "context": "", "typed": "lobos", "intended": "lobos", "source": "tatoeba:2767797"}
+{"id": "en-test-clean_rare-0258", "split": "test", "category": "clean_rare", "context": "let's", "typed": "barbs", "intended": "barbs", "source": "tatoeba:2007501"}
+{"id": "en-test-clean_rare-0259", "split": "test", "category": "clean_rare", "context": "sami", "typed": "oberyn", "intended": "oberyn", "source": "tatoeba:6708109"}
+{"id": "en-test-clean_rare-0267", "split": "test", "category": "clean_rare", "context": "finally you're doing", "typed": "apologizes", "intended": "apologizes", "source": "tatoeba:2770043"}
+{"id": "en-test-clean_rare-0276", "split": "test", "category": "clean_rare", "context": "", "typed": "snorlax", "intended": "snorlax", "source": "tatoeba:322827"}
+{"id": "en-test-clean_rare-0278", "split": "test", "category": "clean_rare", "context": "", "typed": "dwells", "intended": "dwells", "source": "tatoeba:241735"}
+{"id": "en-test-clean_rare-0284", "split": "test", "category": "clean_rare", "context": "i know", "typed": "rian", "intended": "rian", "source": "tatoeba:7521955"}
+{"id": "en-test-clean_rare-0292", "split": "test", "category": "clean_rare", "context": "excuse me", "typed": "ethno", "intended": "ethno", "source": "tatoeba:51431"}
+{"id": "en-test-clean_rare-0293", "split": "test", "category": "clean_rare", "context": "the", "typed": "unwashed", "intended": "unwashed", "source": "tatoeba:1809401"}
+{"id": "en-test-clean_rare-0297", "split": "test", "category": "clean_rare", "context": "great fires are", "typed": "degeneracy", "intended": "degeneracy", "source": "tatoeba:12870261"}
+{"id": "en-test-clean_two_words-0000", "split": "test", "category": "clean_two_words", "context": "", "typed": "tell tom", "intended": "tell tom", "source": "tatoeba:3504281"}
+{"id": "en-test-clean_two_words-0001", "split": "test", "category": "clean_two_words", "context": "i bought", "typed": "new shoes", "intended": "new shoes", "source": "tatoeba:2331301"}
+{"id": "en-test-clean_two_words-0019", "split": "test", "category": "clean_two_words", "context": "my mother bought me", "typed": "two pairs", "intended": "two pairs", "source": "tatoeba:12084251"}
+{"id": "en-test-clean_two_words-0028", "split": "test", "category": "clean_two_words", "context": "you're not the only", "typed": "one with", "intended": "one with", "source": "tatoeba:2641559"}
+{"id": "en-test-clean_two_words-0029", "split": "test", "category": "clean_two_words", "context": "toss it into", "typed": "the trash", "intended": "the trash", "source": "tatoeba:5923953"}
+{"id": "en-test-clean_two_words-0030", "split": "test", "category": "clean_two_words", "context": "read such a book as will", "typed": "be useful", "intended": "be useful", "source": "tatoeba:71025"}
+{"id": "en-test-clean_two_words-0036", "split": "test", "category": "clean_two_words", "context": "i'm convinced", "typed": "that tom", "intended": "that tom", "source": "tatoeba:7212479"}
+{"id": "en-test-clean_two_words-0037", "split": "test", "category": "clean_two_words", "context": "tom let me know", "typed": "he needs", "intended": "he needs", "source": "tatoeba:7240339"}
+{"id": "en-test-clean_two_words-0039", "split": "test", "category": "clean_two_words", "context": "all of the men were dressed similarly", "typed": "to tom", "intended": "to tom", "source": "tatoeba:3110243"}
+{"id": "en-test-clean_two_words-0046", "split": "test", "category": "clean_two_words", "context": "power tends to corrupt and", "typed": "absolute power", "intended": "absolute power", "source": "tatoeba:12906551"}
+{"id": "en-test-clean_two_words-0047", "split": "test", "category": "clean_two_words", "context": "do you", "typed": "think this", "intended": "think this", "source": "tatoeba:7793735"}
+{"id": "en-test-clean_two_words-0067", "split": "test", "category": "clean_two_words", "context": "i don't", "typed": "know what", "intended": "know what", "source": "tatoeba:13736793"}
+{"id": "en-test-clean_two_words-0076", "split": "test", "category": "clean_two_words", "context": "mary says she'll", "typed": "never agree", "intended": "never agree", "source": "tatoeba:6419973"}
+{"id": "en-test-clean_two_words-0079", "split": "test", "category": "clean_two_words", "context": "the earth is small in", "typed": "comparison with", "intended": "comparison with", "source": "tatoeba:277135"}
+{"id": "en-test-clean_two_words-0086", "split": "test", "category": "clean_two_words", "context": "she", "typed": "lost her", "intended": "lost her", "source": "tatoeba:7385531"}
+{"id": "en-test-clean_two_words-0093", "split": "test", "category": "clean_two_words", "context": "", "typed": "tom does", "intended": "tom does", "source": "tatoeba:4664131"}
+{"id": "en-test-clean_two_words-0101", "split": "test", "category": "clean_two_words", "context": "", "typed": "gabriel went", "intended": "gabriel went", "source": "tatoeba:11764305"}
+{"id": "en-test-clean_two_words-0104", "split": "test", "category": "clean_two_words", "context": "it's a bit", "typed": "of a", "intended": "of a", "source": "tatoeba:8509587"}
+{"id": "en-test-clean_two_words-0106", "split": "test", "category": "clean_two_words", "context": "i realize i need", "typed": "more experience", "intended": "more experience", "source": "tatoeba:5658249"}
+{"id": "en-test-clean_two_words-0109", "split": "test", "category": "clean_two_words", "context": "why announce", "typed": "such a", "intended": "such a", "source": "tatoeba:10552639"}
+{"id": "en-test-clean_two_words-0110", "split": "test", "category": "clean_two_words", "context": "that's how we", "typed": "do it", "intended": "do it", "source": "tatoeba:3728391"}
+{"id": "en-test-clean_two_words-0111", "split": "test", "category": "clean_two_words", "context": "tom and", "typed": "mary were", "intended": "mary were", "source": "tatoeba:8473009"}
+{"id": "en-test-clean_two_words-0112", "split": "test", "category": "clean_two_words", "context": "tom wasn't a member of", "typed": "the choir", "intended": "the choir", "source": "tatoeba:9057859"}
+{"id": "en-test-clean_two_words-0117", "split": "test", "category": "clean_two_words", "context": "where would you like to", "typed": "go next", "intended": "go next", "source": "tatoeba:7118163"}
+{"id": "en-test-clean_two_words-0138", "split": "test", "category": "clean_two_words", "context": "tom and mary say they want to", "typed": "do that", "intended": "do that", "source": "tatoeba:6515763"}
+{"id": "en-test-clean_two_words-0148", "split": "test", "category": "clean_two_words", "context": "", "typed": "there are", "intended": "there are", "source": "tatoeba:9347369"}
+{"id": "en-test-clean_two_words-0149", "split": "test", "category": "clean_two_words", "context": "mark asked", "typed": "jessica to", "intended": "jessica to", "source": "tatoeba:11577023"}
+{"id": "en-test-clean_two_words-0150", "split": "test", "category": "clean_two_words", "context": "tom offered to", "typed": "write the", "intended": "write the", "source": "tatoeba:11145773"}
+{"id": "en-test-clean_two_words-0157", "split": "test", "category": "clean_two_words", "context": "", "typed": "did you", "intended": "did you", "source": "tatoeba:12218317"}
+{"id": "en-test-clean_two_words-0159", "split": "test", "category": "clean_two_words", "context": "i won't be able to", "typed": "do that", "intended": "do that", "source": "tatoeba:5904801"}
+{"id": "en-test-clean_two_words-0161", "split": "test", "category": "clean_two_words", "context": "i", "typed": "am too", "intended": "am too", "source": "tatoeba:5222267"}
+{"id": "en-test-clean_two_words-0164", "split": "test", "category": "clean_two_words", "context": "don't", "typed": "tell tom", "intended": "tell tom", "source": "tatoeba:2271351"}
+{"id": "en-test-clean_two_words-0171", "split": "test", "category": "clean_two_words", "context": "humans are too violent for world peace to ever become", "typed": "a reality", "intended": "a reality", "source": "tatoeba:6609467"}
+{"id": "en-test-clean_two_words-0174", "split": "test", "category": "clean_two_words", "context": "tom is", "typed": "wearing a", "intended": "wearing a", "source": "tatoeba:3735601"}
+{"id": "en-test-clean_two_words-0175", "split": "test", "category": "clean_two_words", "context": "you said you were going", "typed": "to help", "intended": "to help", "source": "tatoeba:3415365"}
+{"id": "en-test-clean_two_words-0184", "split": "test", "category": "clean_two_words", "context": "you don't", "typed": "need to", "intended": "need to", "source": "tatoeba:8457025"}
+{"id": "en-test-clean_two_words-0188", "split": "test", "category": "clean_two_words", "context": "i can't fix", "typed": "every problem", "intended": "every problem", "source": "tatoeba:4908399"}
+{"id": "en-test-clean_two_words-0204", "split": "test", "category": "clean_two_words", "context": "there's", "typed": "something i", "intended": "something i", "source": "tatoeba:2064889"}
+{"id": "en-test-clean_two_words-0206", "split": "test", "category": "clean_two_words", "context": "i don't think that tom will", "typed": "agree with", "intended": "agree with", "source": "tatoeba:7228891"}
+{"id": "en-test-clean_two_words-0219", "split": "test", "category": "clean_two_words", "context": "we went", "typed": "shopping in", "intended": "shopping in", "source": "tatoeba:247757"}
+{"id": "en-test-clean_two_words-0220", "split": "test", "category": "clean_two_words", "context": "", "typed": "do you", "intended": "do you", "source": "tatoeba:6814403"}
+{"id": "en-test-clean_two_words-0222", "split": "test", "category": "clean_two_words", "context": "i think that", "typed": "tom is", "intended": "tom is", "source": "tatoeba:7169087"}
+{"id": "en-test-clean_two_words-0232", "split": "test", "category": "clean_two_words", "context": "you had better go", "typed": "there in", "intended": "there in", "source": "tatoeba:70005"}
+{"id": "en-test-clean_two_words-0234", "split": "test", "category": "clean_two_words", "context": "do you really think", "typed": "tom is", "intended": "tom is", "source": "tatoeba:6346599"}
+{"id": "en-test-clean_two_words-0235", "split": "test", "category": "clean_two_words", "context": "i've already", "typed": "made the", "intended": "made the", "source": "tatoeba:2358897"}
+{"id": "en-test-clean_two_words-0239", "split": "test", "category": "clean_two_words", "context": "we didn't", "typed": "take our", "intended": "take our", "source": "tatoeba:10039987"}
+{"id": "en-test-clean_two_words-0248", "split": "test", "category": "clean_two_words", "context": "", "typed": "and you", "intended": "and you", "source": "tatoeba:14077155"}
+{"id": "en-test-clean_two_words-0255", "split": "test", "category": "clean_two_words", "context": "", "typed": "they look", "intended": "they look", "source": "tatoeba:7475415"}
+{"id": "en-test-clean_two_words-0259", "split": "test", "category": "clean_two_words", "context": "they", "typed": "never said", "intended": "never said", "source": "tatoeba:7475853"}
+{"id": "en-test-clean_two_words-0260", "split": "test", "category": "clean_two_words", "context": "what", "typed": "shall we", "intended": "shall we", "source": "tatoeba:2270137"}
+{"id": "en-test-clean_two_words-0263", "split": "test", "category": "clean_two_words", "context": "the news", "typed": "overwhelmed her", "intended": "overwhelmed her", "source": "tatoeba:2364875"}
+{"id": "en-test-clean_two_words-0274", "split": "test", "category": "clean_two_words", "context": "what country is beirut the capital", "typed": "of lebanon", "intended": "of lebanon", "source": "tatoeba:12258823"}
+{"id": "en-test-clean_two_words-0276", "split": "test", "category": "clean_two_words", "context": "do you really", "typed": "want to", "intended": "want to", "source": "tatoeba:5300593"}
+{"id": "en-test-clean_two_words-0278", "split": "test", "category": "clean_two_words", "context": "i", "typed": "know that", "intended": "know that", "source": "tatoeba:7511609"}
+{"id": "en-test-clean_two_words-0287", "split": "test", "category": "clean_two_words", "context": "i had", "typed": "a bad", "intended": "a bad", "source": "tatoeba:12883729"}
+{"id": "en-test-clean_two_words-0290", "split": "test", "category": "clean_two_words", "context": "sit", "typed": "wherever you", "intended": "wherever you", "source": "tatoeba:7847357"}
+{"id": "en-test-clean_two_words-0292", "split": "test", "category": "clean_two_words", "context": "sami handled the bike", "typed": "with care", "intended": "with care", "source": "tatoeba:7991675"}
+{"id": "en-test-clean_two_words-0295", "split": "test", "category": "clean_two_words", "context": "why didn't he", "typed": "see tom", "intended": "see tom", "source": "tatoeba:8698967"}
+{"id": "en-test-clean_two_words-0297", "split": "test", "category": "clean_two_words", "context": "this", "typed": "is not", "intended": "is not", "source": "tatoeba:2077787"}
+{"id": "en-test-clean_two_words-0299", "split": "test", "category": "clean_two_words", "context": "i can provide you with some statistical predictions", "typed": "of expected", "intended": "of expected", "source": "tatoeba:280083"}
+{"id": "en-test-deletion-0004", "split": "test", "category": "deletion", "context": "what we need is a little more", "typed": "mony", "intended": "money", "source": "tatoeba:4529329"}
+{"id": "en-test-deletion-0005", "split": "test", "category": "deletion", "context": "looks like i", "typed": "ight", "intended": "might", "source": "tatoeba:36149"}
+{"id": "en-test-deletion-0007", "split": "test", "category": "deletion", "context": "buy it for", "typed": "ourself", "intended": "yourself", "source": "tatoeba:14102873"}
+{"id": "en-test-deletion-0017", "split": "test", "category": "deletion", "context": "he", "typed": "lovs", "intended": "loves", "source": "tatoeba:302899"}
+{"id": "en-test-deletion-0018", "split": "test", "category": "deletion", "context": "we are on a small", "typed": "plaet", "intended": "planet", "source": "tatoeba:10671613"}
+{"id": "en-test-deletion-0022", "split": "test", "category": "deletion", "context": "i'm counting on your", "typed": "presece", "intended": "presence", "source": "tatoeba:3206287"}
+{"id": "en-test-deletion-0033", "split": "test", "category": "deletion", "context": "we won't go back to normality", "typed": "beause", "intended": "because", "source": "tatoeba:8729983"}
+{"id": "en-test-deletion-0035", "split": "test", "category": "deletion", "context": "let's meet at the", "typed": "usal", "intended": "usual", "source": "tatoeba:13214171"}
+{"id": "en-test-deletion-0045", "split": "test", "category": "deletion", "context": "does anyone know what", "typed": "hapened", "intended": "happened", "source": "tatoeba:5881887"}
+{"id": "en-test-deletion-0058", "split": "test", "category": "deletion", "context": "boris thanked", "typed": "melssa", "intended": "melissa", "source": "tatoeba:11799261"}
+{"id": "en-test-deletion-0059", "split": "test", "category": "deletion", "context": "mary says she's thinking", "typed": "aout", "intended": "about", "source": "tatoeba:6413959"}
+{"id": "en-test-deletion-0067", "split": "test", "category": "deletion", "context": "sami was trapped", "typed": "nder", "intended": "under", "source": "tatoeba:6575117"}
+{"id": "en-test-deletion-0086", "split": "test", "category": "deletion", "context": "if", "typed": "oting", "intended": "voting", "source": "tatoeba:13296385"}
+{"id": "en-test-deletion-0094", "split": "test", "category": "deletion", "context": "let me get you", "typed": "smething", "intended": "something", "source": "tatoeba:6829911"}
+{"id": "en-test-deletion-0099", "split": "test", "category": "deletion", "context": "", "typed": "finall", "intended": "finally", "source": "tatoeba:2950087"}
+{"id": "en-test-deletion-0105", "split": "test", "category": "deletion", "context": "it was too", "typed": "epensive", "intended": "expensive", "source": "tatoeba:1304603"}
+{"id": "en-test-deletion-0112", "split": "test", "category": "deletion", "context": "portia", "typed": "temered", "intended": "tempered", "source": "tatoeba:33743"}
+{"id": "en-test-deletion-0116", "split": "test", "category": "deletion", "context": "i'm sometimes", "typed": "ccused", "intended": "accused", "source": "tatoeba:8397781"}
+{"id": "en-test-deletion-0120", "split": "test", "category": "deletion", "context": "the whole place was", "typed": "shakng", "intended": "shaking", "source": "tatoeba:11890585"}
+{"id": "en-test-deletion-0122", "split": "test", "category": "deletion", "context": "do you know why tom kept", "typed": "oing", "intended": "doing", "source": "tatoeba:6245573"}
+{"id": "en-test-deletion-0123", "split": "test", "category": "deletion", "context": "i don't often argue", "typed": "wth", "intended": "with", "source": "tatoeba:6663423"}
+{"id": "en-test-deletion-0132", "split": "test", "category": "deletion", "context": "", "typed": "tht", "intended": "that", "source": "tatoeba:1228335"}
+{"id": "en-test-deletion-0134", "split": "test", "category": "deletion", "context": "tom sat down", "typed": "facin", "intended": "facing", "source": "tatoeba:9988825"}
+{"id": "en-test-deletion-0137", "split": "test", "category": "deletion", "context": "tom pointed out", "typed": "soe", "intended": "some", "source": "tatoeba:9337269"}
+{"id": "en-test-deletion-0150", "split": "test", "category": "deletion", "context": "this table is", "typed": "vey", "intended": "very", "source": "tatoeba:12933891"}
+{"id": "en-test-deletion-0156", "split": "test", "category": "deletion", "context": "tom is", "typed": "retty", "intended": "pretty", "source": "tatoeba:2273355"}
+{"id": "en-test-deletion-0164", "split": "test", "category": "deletion", "context": "tom says he heard", "typed": "ary", "intended": "mary", "source": "tatoeba:6267765"}
+{"id": "en-test-deletion-0165", "split": "test", "category": "deletion", "context": "elderly", "typed": "peopl", "intended": "people", "source": "tatoeba:10147401"}
+{"id": "en-test-deletion-0172", "split": "test", "category": "deletion", "context": "he was", "typed": "sient", "intended": "silent", "source": "tatoeba:5366417"}
+{"id": "en-test-deletion-0179", "split": "test", "category": "deletion", "context": "tom has a lot of", "typed": "homeork", "intended": "homework", "source": "tatoeba:8560149"}
+{"id": "en-test-deletion-0181", "split": "test", "category": "deletion", "context": "algeria could become a", "typed": "regioal", "intended": "regional", "source": "tatoeba:10092093"}
+{"id": "en-test-deletion-0189", "split": "test", "category": "deletion", "context": "i dozed off on the", "typed": "couh", "intended": "couch", "source": "tatoeba:13050287"}
+{"id": "en-test-deletion-0193", "split": "test", "category": "deletion", "context": "they leave their", "typed": "ooks", "intended": "books", "source": "tatoeba:11150599"}
+{"id": "en-test-deletion-0197", "split": "test", "category": "deletion", "context": "tom opened his", "typed": "lapto", "intended": "laptop", "source": "tatoeba:2646335"}
+{"id": "en-test-deletion-0198", "split": "test", "category": "deletion", "context": "my", "typed": "mothe", "intended": "mother", "source": "tatoeba:13907057"}
+{"id": "en-test-deletion-0201", "split": "test", "category": "deletion", "context": "this requires", "typed": "additonal", "intended": "additional", "source": "tatoeba:11567293"}
+{"id": "en-test-deletion-0207", "split": "test", "category": "deletion", "context": "does he have", "typed": "ack", "intended": "back", "source": "tatoeba:13132027"}
+{"id": "en-test-deletion-0216", "split": "test", "category": "deletion", "context": "she", "typed": "promisd", "intended": "promised", "source": "tatoeba:314271"}
+{"id": "en-test-deletion-0217", "split": "test", "category": "deletion", "context": "my friends are", "typed": "ery", "intended": "very", "source": "tatoeba:3832023"}
+{"id": "en-test-deletion-0218", "split": "test", "category": "deletion", "context": "", "typed": "lstening", "intended": "listening", "source": "tatoeba:11879371"}
+{"id": "en-test-deletion-0220", "split": "test", "category": "deletion", "context": "did you", "typed": "pologize", "intended": "apologize", "source": "tatoeba:3521827"}
+{"id": "en-test-deletion-0223", "split": "test", "category": "deletion", "context": "i'll", "typed": "ake", "intended": "take", "source": "tatoeba:3722381"}
+{"id": "en-test-deletion-0224", "split": "test", "category": "deletion", "context": "let's", "typed": "wpe", "intended": "wipe", "source": "tatoeba:12990897"}
+{"id": "en-test-deletion-0227", "split": "test", "category": "deletion", "context": "you must bring", "typed": "proeedings", "intended": "proceedings", "source": "tatoeba:13328585"}
+{"id": "en-test-deletion-0232", "split": "test", "category": "deletion", "context": "you're a lot better at guessing", "typed": "answrs", "intended": "answers", "source": "tatoeba:12069561"}
+{"id": "en-test-deletion-0241", "split": "test", "category": "deletion", "context": "i live in a", "typed": "ather", "intended": "rather", "source": "tatoeba:11609065"}
+{"id": "en-test-deletion-0246", "split": "test", "category": "deletion", "context": "put the", "typed": "rubish", "intended": "rubbish", "source": "tatoeba:6172183"}
+{"id": "en-test-deletion-0256", "split": "test", "category": "deletion", "context": "i accuse the politicians of starting a war without plausible", "typed": "motie", "intended": "motive", "source": "tatoeba:9836093"}
+{"id": "en-test-deletion-0259", "split": "test", "category": "deletion", "context": "look at the", "typed": "bautiful", "intended": "beautiful", "source": "tatoeba:12148499"}
+{"id": "en-test-deletion-0261", "split": "test", "category": "deletion", "context": "tom is", "typed": "gettng", "intended": "getting", "source": "tatoeba:7127123"}
+{"id": "en-test-deletion-0264", "split": "test", "category": "deletion", "context": "", "typed": "arogant", "intended": "arrogant", "source": "tatoeba:9571821"}
+{"id": "en-test-deletion-0272", "split": "test", "category": "deletion", "context": "it's not natural for a mother to outlive her", "typed": "chid", "intended": "child", "source": "tatoeba:1841263"}
+{"id": "en-test-deletion-0273", "split": "test", "category": "deletion", "context": "they", "typed": "ook", "intended": "took", "source": "tatoeba:11440679"}
+{"id": "en-test-deletion-0275", "split": "test", "category": "deletion", "context": "she came across a video of mom's on", "typed": "outube", "intended": "youtube", "source": "tatoeba:12846723"}
+{"id": "en-test-deletion-0278", "split": "test", "category": "deletion", "context": "someone was calling my", "typed": "nae", "intended": "name", "source": "tatoeba:276157"}
+{"id": "en-test-deletion-0280", "split": "test", "category": "deletion", "context": "get to", "typed": "ork", "intended": "work", "source": "tatoeba:2648841"}
+{"id": "en-test-deletion-0281", "split": "test", "category": "deletion", "context": "we", "typed": "subscibe", "intended": "subscribe", "source": "tatoeba:878479"}
+{"id": "en-test-deletion-0292", "split": "test", "category": "deletion", "context": "tom stepped", "typed": "asde", "intended": "aside", "source": "tatoeba:3411025"}
+{"id": "en-test-deletion-0295", "split": "test", "category": "deletion", "context": "the", "typed": "oor", "intended": "door", "source": "tatoeba:3730023"}
+{"id": "en-test-deletion-0298", "split": "test", "category": "deletion", "context": "wine gets better", "typed": "oer", "intended": "over", "source": "tatoeba:11817603"}
+{"id": "en-test-double_letter-0001", "split": "test", "category": "double_letter", "context": "i like this", "typed": "cclub", "intended": "club", "source": "tatoeba:4500145"}
+{"id": "en-test-double_letter-0002", "split": "test", "category": "double_letter", "context": "a person is a person through", "typed": "otherr", "intended": "other", "source": "tatoeba:1783257"}
+{"id": "en-test-double_letter-0008", "split": "test", "category": "double_letter", "context": "trust requires both time and", "typed": "trransparency", "intended": "transparency", "source": "tatoeba:12767859"}
+{"id": "en-test-double_letter-0012", "split": "test", "category": "double_letter", "context": "tom doesn't", "typed": "knnow", "intended": "know", "source": "tatoeba:6238265"}
+{"id": "en-test-double_letter-0021", "split": "test", "category": "double_letter", "context": "what a pleasure to be in my home", "typed": "agaiin", "intended": "again", "source": "tatoeba:6373923"}
+{"id": "en-test-double_letter-0030", "split": "test", "category": "double_letter", "context": "as i reached the", "typed": "stationn", "intended": "station", "source": "tatoeba:246613"}
+{"id": "en-test-double_letter-0031", "split": "test", "category": "double_letter", "context": "i hope that", "typed": "helpped", "intended": "helped", "source": "tatoeba:3396627"}
+{"id": "en-test-double_letter-0038", "split": "test", "category": "double_letter", "context": "take this medicine when you have a", "typed": "colld", "intended": "cold", "source": "tatoeba:63731"}
+{"id": "en-test-double_letter-0040", "split": "test", "category": "double_letter", "context": "are you the runner who", "typed": "eescaped", "intended": "escaped", "source": "tatoeba:4980447"}
+{"id": "en-test-double_letter-0042", "split": "test", "category": "double_letter", "context": "tom", "typed": "ceertainly", "intended": "certainly", "source": "tatoeba:5739699"}
+{"id": "en-test-double_letter-0043", "split": "test", "category": "double_letter", "context": "what was robert getting", "typed": "hhimself", "intended": "himself", "source": "tatoeba:11596617"}
+{"id": "en-test-double_letter-0046", "split": "test", "category": "double_letter", "context": "prove to me", "typed": "thhat", "intended": "that", "source": "tatoeba:11524593"}
+{"id": "en-test-double_letter-0047", "split": "test", "category": "double_letter", "context": "tom won't", "typed": "liikely", "intended": "likely", "source": "tatoeba:7113021"}
+{"id": "en-test-double_letter-0049", "split": "test", "category": "double_letter", "context": "let's", "typed": "liist", "intended": "list", "source": "tatoeba:5181155"}
+{"id": "en-test-double_letter-0052", "split": "test", "category": "double_letter", "context": "sami", "typed": "wentt", "intended": "went", "source": "tatoeba:7248769"}
+{"id": "en-test-double_letter-0056", "split": "test", "category": "double_letter", "context": "", "typed": "neveer", "intended": "never", "source": "tatoeba:5836259"}
+{"id": "en-test-double_letter-0062", "split": "test", "category": "double_letter", "context": "did you eat", "typed": "ricee", "intended": "rice", "source": "tatoeba:9736625"}
+{"id": "en-test-double_letter-0063", "split": "test", "category": "double_letter", "context": "tom", "typed": "coompleted", "intended": "completed", "source": "tatoeba:7965417"}
+{"id": "en-test-double_letter-0084", "split": "test", "category": "double_letter", "context": "i don't have as much money in the", "typed": "bannk", "intended": "bank", "source": "tatoeba:6663113"}
+{"id": "en-test-double_letter-0087", "split": "test", "category": "double_letter", "context": "that is actually very", "typed": "siimple", "intended": "simple", "source": "tatoeba:5311827"}
+{"id": "en-test-double_letter-0092", "split": "test", "category": "double_letter", "context": "the new trade regulations have led to delays in the supply", "typed": "cchain", "intended": "chain", "source": "tatoeba:13483303"}
+{"id": "en-test-double_letter-0095", "split": "test", "category": "double_letter", "context": "he always", "typed": "walkks", "intended": "walks", "source": "tatoeba:289083"}
+{"id": "en-test-double_letter-0109", "split": "test", "category": "double_letter", "context": "dinner should be", "typed": "reeady", "intended": "ready", "source": "tatoeba:8341459"}
+{"id": "en-test-double_letter-0114", "split": "test", "category": "double_letter", "context": "the typhoon led to the", "typed": "schooll", "intended": "school", "source": "tatoeba:504363"}
+{"id": "en-test-double_letter-0115", "split": "test", "category": "double_letter", "context": "tom said that he thought mary might", "typed": "havee", "intended": "have", "source": "tatoeba:6648807"}
+{"id": "en-test-double_letter-0123", "split": "test", "category": "double_letter", "context": "he decided to", "typed": "movee", "intended": "move", "source": "tatoeba:2266147"}
+{"id": "en-test-double_letter-0127", "split": "test", "category": "double_letter", "context": "i went there", "typed": "threee", "intended": "three", "source": "tatoeba:5745053"}
+{"id": "en-test-double_letter-0128", "split": "test", "category": "double_letter", "context": "sami", "typed": "knoows", "intended": "knows", "source": "tatoeba:6387501"}
+{"id": "en-test-double_letter-0129", "split": "test", "category": "double_letter", "context": "the four sisters are wonderful the eldest is the", "typed": "mostt", "intended": "most", "source": "tatoeba:12992993"}
+{"id": "en-test-double_letter-0143", "split": "test", "category": "double_letter", "context": "tom isn't willing to do that unless", "typed": "mmary", "intended": "mary", "source": "tatoeba:6432153"}
+{"id": "en-test-double_letter-0149", "split": "test", "category": "double_letter", "context": "help me move the", "typed": "coucch", "intended": "couch", "source": "tatoeba:3635985"}
+{"id": "en-test-double_letter-0150", "split": "test", "category": "double_letter", "context": "the", "typed": "goverrnor", "intended": "governor", "source": "tatoeba:2255677"}
+{"id": "en-test-double_letter-0155", "split": "test", "category": "double_letter", "context": "", "typed": "havve", "intended": "have", "source": "tatoeba:6713423"}
+{"id": "en-test-double_letter-0157", "split": "test", "category": "double_letter", "context": "tom", "typed": "wiill", "intended": "will", "source": "tatoeba:10336019"}
+{"id": "en-test-double_letter-0160", "split": "test", "category": "double_letter", "context": "sami was offered", "typed": "anoother", "intended": "another", "source": "tatoeba:6806785"}
+{"id": "en-test-double_letter-0163", "split": "test", "category": "double_letter", "context": "they hope this time things will", "typed": "wwork", "intended": "work", "source": "tatoeba:9809665"}
+{"id": "en-test-double_letter-0171", "split": "test", "category": "double_letter", "context": "the girl continued to", "typed": "tallk", "intended": "talk", "source": "tatoeba:9281007"}
+{"id": "en-test-double_letter-0174", "split": "test", "category": "double_letter", "context": "tom is", "typed": "needyy", "intended": "needy", "source": "tatoeba:6898655"}
+{"id": "en-test-double_letter-0176", "split": "test", "category": "double_letter", "context": "is it a real", "typed": "treee", "intended": "tree", "source": "tatoeba:10579455"}
+{"id": "en-test-double_letter-0182", "split": "test", "category": "double_letter", "context": "the", "typed": "statioon", "intended": "station", "source": "tatoeba:12569685"}
+{"id": "en-test-double_letter-0192", "split": "test", "category": "double_letter", "context": "i", "typed": "juust", "intended": "just", "source": "tatoeba:7167575"}
+{"id": "en-test-double_letter-0202", "split": "test", "category": "double_letter", "context": "she goes to", "typed": "hosppital", "intended": "hospital", "source": "tatoeba:11064019"}
+{"id": "en-test-double_letter-0213", "split": "test", "category": "double_letter", "context": "i regret", "typed": "thaat", "intended": "that", "source": "tatoeba:50585"}
+{"id": "en-test-double_letter-0214", "split": "test", "category": "double_letter", "context": "", "typed": "whhere", "intended": "where", "source": "tatoeba:7061767"}
+{"id": "en-test-double_letter-0225", "split": "test", "category": "double_letter", "context": "do you know why tom isn't", "typed": "heree", "intended": "here", "source": "tatoeba:4889955"}
+{"id": "en-test-double_letter-0227", "split": "test", "category": "double_letter", "context": "i agree with", "typed": "tthat", "intended": "that", "source": "tatoeba:8878871"}
+{"id": "en-test-double_letter-0236", "split": "test", "category": "double_letter", "context": "tom", "typed": "ttold", "intended": "told", "source": "tatoeba:7513549"}
+{"id": "en-test-double_letter-0238", "split": "test", "category": "double_letter", "context": "you've got a flat", "typed": "ttyre", "intended": "tyre", "source": "tatoeba:12070369"}
+{"id": "en-test-double_letter-0240", "split": "test", "category": "double_letter", "context": "tom promised me that he'd", "typed": "findd", "intended": "find", "source": "tatoeba:11860141"}
+{"id": "en-test-double_letter-0249", "split": "test", "category": "double_letter", "context": "bring her in", "typed": "heree", "intended": "here", "source": "tatoeba:5833845"}
+{"id": "en-test-double_letter-0261", "split": "test", "category": "double_letter", "context": "yesterday was much hotter than", "typed": "tooday", "intended": "today", "source": "tatoeba:10858121"}
+{"id": "en-test-double_letter-0265", "split": "test", "category": "double_letter", "context": "tom worked all", "typed": "nightt", "intended": "night", "source": "tatoeba:5553221"}
+{"id": "en-test-double_letter-0267", "split": "test", "category": "double_letter", "context": "", "typed": "everyoone", "intended": "everyone", "source": "tatoeba:7521375"}
+{"id": "en-test-double_letter-0285", "split": "test", "category": "double_letter", "context": "i was arrested", "typed": "llast", "intended": "last", "source": "tatoeba:2545571"}
+{"id": "en-test-double_letter-0286", "split": "test", "category": "double_letter", "context": "try to have a happy", "typed": "carreer", "intended": "career", "source": "tatoeba:10808105"}
+{"id": "en-test-double_letter-0287", "split": "test", "category": "double_letter", "context": "is that", "typed": "suppposed", "intended": "supposed", "source": "tatoeba:7290391"}
+{"id": "en-test-double_letter-0289", "split": "test", "category": "double_letter", "context": "be safe out", "typed": "theree", "intended": "there", "source": "tatoeba:12389977"}
+{"id": "en-test-double_letter-0293", "split": "test", "category": "double_letter", "context": "are you more sore feet or", "typed": "haands", "intended": "hands", "source": "tatoeba:10201441"}
+{"id": "en-test-double_letter-0296", "split": "test", "category": "double_letter", "context": "the meeting", "typed": "wwill", "intended": "will", "source": "tatoeba:13929729"}
+{"id": "en-test-double_letter-0299", "split": "test", "category": "double_letter", "context": "do you", "typed": "enjoyy", "intended": "enjoy", "source": "tatoeba:3007285"}
+{"id": "en-test-extra_adjacent-0001", "split": "test", "category": "extra_adjacent", "context": "kalman asked olivia", "typed": "againj", "intended": "again", "source": "tatoeba:12036233"}
+{"id": "en-test-extra_adjacent-0008", "split": "test", "category": "extra_adjacent", "context": "is it", "typed": "xcold", "intended": "cold", "source": "tatoeba:10457511"}
+{"id": "en-test-extra_adjacent-0015", "split": "test", "category": "extra_adjacent", "context": "", "typed": "theyt", "intended": "they", "source": "tatoeba:7439779"}
+{"id": "en-test-extra_adjacent-0021", "split": "test", "category": "extra_adjacent", "context": "his consolation", "typed": "prizew", "intended": "prize", "source": "tatoeba:10367281"}
+{"id": "en-test-extra_adjacent-0022", "split": "test", "category": "extra_adjacent", "context": "dan didn't know anything about linda's", "typed": "paast", "intended": "past", "source": "tatoeba:3932515"}
+{"id": "en-test-extra_adjacent-0027", "split": "test", "category": "extra_adjacent", "context": "they move", "typed": "thurough", "intended": "through", "source": "tatoeba:12769403"}
+{"id": "en-test-extra_adjacent-0028", "split": "test", "category": "extra_adjacent", "context": "we have", "typed": "enouygh", "intended": "enough", "source": "tatoeba:4493663"}
+{"id": "en-test-extra_adjacent-0029", "split": "test", "category": "extra_adjacent", "context": "we won't be staying in", "typed": "vboston", "intended": "boston", "source": "tatoeba:6237891"}
+{"id": "en-test-extra_adjacent-0045", "split": "test", "category": "extra_adjacent", "context": "our priorities are", "typed": "wrkong", "intended": "wrong", "source": "tatoeba:4494265"}
+{"id": "en-test-extra_adjacent-0046", "split": "test", "category": "extra_adjacent", "context": "they", "typed": "refussed", "intended": "refused", "source": "tatoeba:12467227"}
+{"id": "en-test-extra_adjacent-0050", "split": "test", "category": "extra_adjacent", "context": "tom doesn't know the", "typed": "differencxe", "intended": "difference", "source": "tatoeba:1320881"}
+{"id": "en-test-extra_adjacent-0052", "split": "test", "category": "extra_adjacent", "context": "mary", "typed": "pojured", "intended": "poured", "source": "tatoeba:7376401"}
+{"id": "en-test-extra_adjacent-0068", "split": "test", "category": "extra_adjacent", "context": "i'll buy the", "typed": "beedr", "intended": "beer", "source": "tatoeba:5757913"}
+{"id": "en-test-extra_adjacent-0077", "split": "test", "category": "extra_adjacent", "context": "he's washing his", "typed": "facxe", "intended": "face", "source": "tatoeba:7386833"}
+{"id": "en-test-extra_adjacent-0080", "split": "test", "category": "extra_adjacent", "context": "i could see the tension in their", "typed": "shoulpders", "intended": "shoulders", "source": "tatoeba:13668585"}
+{"id": "en-test-extra_adjacent-0081", "split": "test", "category": "extra_adjacent", "context": "you need to be more positive about", "typed": "yohur", "intended": "your", "source": "tatoeba:7787359"}
+{"id": "en-test-extra_adjacent-0082", "split": "test", "category": "extra_adjacent", "context": "he has", "typed": "darkl", "intended": "dark", "source": "tatoeba:8824803"}
+{"id": "en-test-extra_adjacent-0086", "split": "test", "category": "extra_adjacent", "context": "you're", "typed": "havijng", "intended": "having", "source": "tatoeba:6898809"}
+{"id": "en-test-extra_adjacent-0100", "split": "test", "category": "extra_adjacent", "context": "sami", "typed": "wantexd", "intended": "wanted", "source": "tatoeba:7287635"}
+{"id": "en-test-extra_adjacent-0101", "split": "test", "category": "extra_adjacent", "context": "tom doesn't", "typed": "havce", "intended": "have", "source": "tatoeba:2279395"}
+{"id": "en-test-extra_adjacent-0106", "split": "test", "category": "extra_adjacent", "context": "they said that they", "typed": "ftelt", "intended": "felt", "source": "tatoeba:7440213"}
+{"id": "en-test-extra_adjacent-0123", "split": "test", "category": "extra_adjacent", "context": "i know that you love your", "typed": "hhusband", "intended": "husband", "source": "tatoeba:10458945"}
+{"id": "en-test-extra_adjacent-0126", "split": "test", "category": "extra_adjacent", "context": "do not give", "typed": "thisw", "intended": "this", "source": "tatoeba:7748387"}
+{"id": "en-test-extra_adjacent-0132", "split": "test", "category": "extra_adjacent", "context": "we are", "typed": "lookijng", "intended": "looking", "source": "tatoeba:23287"}
+{"id": "en-test-extra_adjacent-0136", "split": "test", "category": "extra_adjacent", "context": "", "typed": "thuey", "intended": "they", "source": "tatoeba:10766983"}
+{"id": "en-test-extra_adjacent-0137", "split": "test", "category": "extra_adjacent", "context": "to read books is", "typed": "ikmportant", "intended": "important", "source": "tatoeba:322099"}
+{"id": "en-test-extra_adjacent-0139", "split": "test", "category": "extra_adjacent", "context": "that pesky imp must be", "typed": "punisherd", "intended": "punished", "source": "tatoeba:5288751"}
+{"id": "en-test-extra_adjacent-0142", "split": "test", "category": "extra_adjacent", "context": "the", "typed": "lifdt", "intended": "lift", "source": "tatoeba:3699555"}
+{"id": "en-test-extra_adjacent-0150", "split": "test", "category": "extra_adjacent", "context": "tom is probably not going to do that", "typed": "thijs", "intended": "this", "source": "tatoeba:8988587"}
+{"id": "en-test-extra_adjacent-0155", "split": "test", "category": "extra_adjacent", "context": "it's only a", "typed": "pplay", "intended": "play", "source": "tatoeba:3446889"}
+{"id": "en-test-extra_adjacent-0157", "split": "test", "category": "extra_adjacent", "context": "why don't we", "typed": "qujit", "intended": "quit", "source": "tatoeba:10148095"}
+{"id": "en-test-extra_adjacent-0159", "split": "test", "category": "extra_adjacent", "context": "i know", "typed": "thaft", "intended": "that", "source": "tatoeba:7510703"}
+{"id": "en-test-extra_adjacent-0164", "split": "test", "category": "extra_adjacent", "context": "tom is", "typed": "wrkong", "intended": "wrong", "source": "tatoeba:3736339"}
+{"id": "en-test-extra_adjacent-0165", "split": "test", "category": "extra_adjacent", "context": "i don't think it's a perfect", "typed": "scoience", "intended": "science", "source": "tatoeba:13449661"}
+{"id": "en-test-extra_adjacent-0173", "split": "test", "category": "extra_adjacent", "context": "", "typed": "trhey", "intended": "they", "source": "tatoeba:7408647"}
+{"id": "en-test-extra_adjacent-0174", "split": "test", "category": "extra_adjacent", "context": "tell me what tom and mary", "typed": "gtook", "intended": "took", "source": "tatoeba:6518419"}
+{"id": "en-test-extra_adjacent-0175", "split": "test", "category": "extra_adjacent", "context": "i", "typed": "suppoase", "intended": "suppose", "source": "tatoeba:5852189"}
+{"id": "en-test-extra_adjacent-0179", "split": "test", "category": "extra_adjacent", "context": "this is what i really like", "typed": "abouyt", "intended": "about", "source": "tatoeba:10860949"}
+{"id": "en-test-extra_adjacent-0182", "split": "test", "category": "extra_adjacent", "context": "tom has been staying", "typed": "witgh", "intended": "with", "source": "tatoeba:7163845"}
+{"id": "en-test-extra_adjacent-0184", "split": "test", "category": "extra_adjacent", "context": "my", "typed": "grandmnother", "intended": "grandmother", "source": "tatoeba:250267"}
+{"id": "en-test-extra_adjacent-0186", "split": "test", "category": "extra_adjacent", "context": "", "typed": "mwary", "intended": "mary", "source": "tatoeba:7380083"}
+{"id": "en-test-extra_adjacent-0188", "split": "test", "category": "extra_adjacent", "context": "tom doesn't want", "typed": "dinmner", "intended": "dinner", "source": "tatoeba:1025925"}
+{"id": "en-test-extra_adjacent-0189", "split": "test", "category": "extra_adjacent", "context": "tony", "typed": "missede", "intended": "missed", "source": "tatoeba:8788593"}
+{"id": "en-test-extra_adjacent-0196", "split": "test", "category": "extra_adjacent", "context": "have the children", "typed": "eatebn", "intended": "eaten", "source": "tatoeba:1830627"}
+{"id": "en-test-extra_adjacent-0199", "split": "test", "category": "extra_adjacent", "context": "you really should've left", "typed": "eartly", "intended": "early", "source": "tatoeba:6349147"}
+{"id": "en-test-extra_adjacent-0201", "split": "test", "category": "extra_adjacent", "context": "tom can't understand", "typed": "fremnch", "intended": "french", "source": "tatoeba:7543159"}
+{"id": "en-test-extra_adjacent-0210", "split": "test", "category": "extra_adjacent", "context": "there are", "typed": "sevberal", "intended": "several", "source": "tatoeba:11176189"}
+{"id": "en-test-extra_adjacent-0217", "split": "test", "category": "extra_adjacent", "context": "he", "typed": "triked", "intended": "tried", "source": "tatoeba:8514433"}
+{"id": "en-test-extra_adjacent-0219", "split": "test", "category": "extra_adjacent", "context": "i'll choose duck", "typed": "todayh", "intended": "today", "source": "tatoeba:2192213"}
+{"id": "en-test-extra_adjacent-0228", "split": "test", "category": "extra_adjacent", "context": "", "typed": "felidx", "intended": "felix", "source": "tatoeba:11628197"}
+{"id": "en-test-extra_adjacent-0235", "split": "test", "category": "extra_adjacent", "context": "do you", "typed": "limke", "intended": "like", "source": "tatoeba:4696551"}
+{"id": "en-test-extra_adjacent-0236", "split": "test", "category": "extra_adjacent", "context": "that play had good", "typed": "rqatings", "intended": "ratings", "source": "tatoeba:3144251"}
+{"id": "en-test-extra_adjacent-0243", "split": "test", "category": "extra_adjacent", "context": "tom couldn't believe", "typed": "ewhat", "intended": "what", "source": "tatoeba:6997243"}
+{"id": "en-test-extra_adjacent-0247", "split": "test", "category": "extra_adjacent", "context": "he speaks", "typed": "brolken", "intended": "broken", "source": "tatoeba:2258457"}
+{"id": "en-test-extra_adjacent-0252", "split": "test", "category": "extra_adjacent", "context": "tom's wife", "typed": "keepes", "intended": "keeps", "source": "tatoeba:5733103"}
+{"id": "en-test-extra_adjacent-0264", "split": "test", "category": "extra_adjacent", "context": "tom offered a different", "typed": "perspectivew", "intended": "perspective", "source": "tatoeba:5728833"}
+{"id": "en-test-extra_adjacent-0269", "split": "test", "category": "extra_adjacent", "context": "tom and mary said", "typed": "thqat", "intended": "that", "source": "tatoeba:7437161"}
+{"id": "en-test-extra_adjacent-0275", "split": "test", "category": "extra_adjacent", "context": "tom and i don't", "typed": "liuke", "intended": "like", "source": "tatoeba:6241959"}
+{"id": "en-test-extra_adjacent-0277", "split": "test", "category": "extra_adjacent", "context": "the dog tucked its", "typed": "tailo", "intended": "tail", "source": "tatoeba:7948673"}
+{"id": "en-test-extra_adjacent-0298", "split": "test", "category": "extra_adjacent", "context": "mark was physically", "typed": "abvused", "intended": "abused", "source": "tatoeba:11543303"}
+{"id": "en-test-letter_to_space-0000", "split": "test", "category": "letter_to_space", "context": "what are you still not", "typed": "con inced", "intended": "convinced", "source": "tatoeba:12216103"}
+{"id": "en-test-letter_to_space-0002", "split": "test", "category": "letter_to_space", "context": "travelling was much more", "typed": "diffi ult", "intended": "difficult", "source": "tatoeba:279933"}
+{"id": "en-test-letter_to_space-0004", "split": "test", "category": "letter_to_space", "context": "eat fresh eat", "typed": "fren h", "intended": "french", "source": "tatoeba:863169"}
+{"id": "en-test-letter_to_space-0005", "split": "test", "category": "letter_to_space", "context": "the girl", "typed": "waiti g", "intended": "waiting", "source": "tatoeba:5941349"}
+{"id": "en-test-letter_to_space-0021", "split": "test", "category": "letter_to_space", "context": "i've got some", "typed": "thi gs", "intended": "things", "source": "tatoeba:5897261"}
+{"id": "en-test-letter_to_space-0030", "split": "test", "category": "letter_to_space", "context": "what makes you think tom is still a high school", "typed": "stude t", "intended": "student", "source": "tatoeba:6122879"}
+{"id": "en-test-letter_to_space-0031", "split": "test", "category": "letter_to_space", "context": "i think tom thinks i", "typed": "thi k", "intended": "think", "source": "tatoeba:10001907"}
+{"id": "en-test-letter_to_space-0035", "split": "test", "category": "letter_to_space", "context": "please don't make us do", "typed": "anythi g", "intended": "anything", "source": "tatoeba:6922441"}
+{"id": "en-test-letter_to_space-0040", "split": "test", "category": "letter_to_space", "context": "where are the", "typed": "si gers", "intended": "singers", "source": "tatoeba:3820809"}
+{"id": "en-test-letter_to_space-0041", "split": "test", "category": "letter_to_space", "context": "lukas apologized to", "typed": "everyo e", "intended": "everyone", "source": "tatoeba:11647073"}
+{"id": "en-test-letter_to_space-0043", "split": "test", "category": "letter_to_space", "context": "this summer i'm", "typed": "goi g", "intended": "going", "source": "tatoeba:3756569"}
+{"id": "en-test-letter_to_space-0046", "split": "test", "category": "letter_to_space", "context": "some people", "typed": "can ot", "intended": "cannot", "source": "tatoeba:4892057"}
+{"id": "en-test-letter_to_space-0048", "split": "test", "category": "letter_to_space", "context": "in fact it's not as i", "typed": "imagi ed", "intended": "imagined", "source": "tatoeba:12584753"}
+{"id": "en-test-letter_to_space-0051", "split": "test", "category": "letter_to_space", "context": "i'm", "typed": "worki g", "intended": "working", "source": "tatoeba:2545257"}
+{"id": "en-test-letter_to_space-0056", "split": "test", "category": "letter_to_space", "context": "how did noah keep the", "typed": "a imals", "intended": "animals", "source": "tatoeba:3154857"}
+{"id": "en-test-letter_to_space-0061", "split": "test", "category": "letter_to_space", "context": "that's the only", "typed": "thi g", "intended": "thing", "source": "tatoeba:10561145"}
+{"id": "en-test-letter_to_space-0065", "split": "test", "category": "letter_to_space", "context": "", "typed": "bru e", "intended": "bruce", "source": "tatoeba:1153875"}
+{"id": "en-test-letter_to_space-0069", "split": "test", "category": "letter_to_space", "context": "tom", "typed": "wat hed", "intended": "watched", "source": "tatoeba:6115313"}
+{"id": "en-test-letter_to_space-0074", "split": "test", "category": "letter_to_space", "context": "the", "typed": "i stitution", "intended": "institution", "source": "tatoeba:46707"}
+{"id": "en-test-letter_to_space-0081", "split": "test", "category": "letter_to_space", "context": "", "typed": "guideli es", "intended": "guidelines", "source": "tatoeba:9265477"}
+{"id": "en-test-letter_to_space-0083", "split": "test", "category": "letter_to_space", "context": "tom", "typed": "li es", "intended": "lives", "source": "tatoeba:12297367"}
+{"id": "en-test-letter_to_space-0084", "split": "test", "category": "letter_to_space", "context": "do you have a fishing", "typed": "lice se", "intended": "license", "source": "tatoeba:1553519"}
+{"id": "en-test-letter_to_space-0100", "split": "test", "category": "letter_to_space", "context": "you walk with the", "typed": "dig ity", "intended": "dignity", "source": "tatoeba:12769455"}
+{"id": "en-test-letter_to_space-0101", "split": "test", "category": "letter_to_space", "context": "all is going", "typed": "accordi g", "intended": "according", "source": "tatoeba:12264537"}
+{"id": "en-test-letter_to_space-0105", "split": "test", "category": "letter_to_space", "context": "tom was worried that mary might do", "typed": "so ething", "intended": "something", "source": "tatoeba:4051595"}
+{"id": "en-test-letter_to_space-0111", "split": "test", "category": "letter_to_space", "context": "the glass fell from the table and shattered into a", "typed": "thousa d", "intended": "thousand", "source": "tatoeba:13765249"}
+{"id": "en-test-letter_to_space-0115", "split": "test", "category": "letter_to_space", "context": "a pity it", "typed": "e ded", "intended": "ended", "source": "tatoeba:1546933"}
+{"id": "en-test-letter_to_space-0119", "split": "test", "category": "letter_to_space", "context": "after", "typed": "losi g", "intended": "losing", "source": "tatoeba:10827843"}
+{"id": "en-test-letter_to_space-0123", "split": "test", "category": "letter_to_space", "context": "it's not wheat that i", "typed": "pla ted", "intended": "planted", "source": "tatoeba:12651621"}
+{"id": "en-test-letter_to_space-0128", "split": "test", "category": "letter_to_space", "context": "who cares how you", "typed": "thi k", "intended": "think", "source": "tatoeba:10103023"}
+{"id": "en-test-letter_to_space-0133", "split": "test", "category": "letter_to_space", "context": "i just", "typed": "recei ed", "intended": "received", "source": "tatoeba:13428739"}
+{"id": "en-test-letter_to_space-0136", "split": "test", "category": "letter_to_space", "context": "we don't have any extra", "typed": "mo ey", "intended": "money", "source": "tatoeba:2766903"}
+{"id": "en-test-letter_to_space-0144", "split": "test", "category": "letter_to_space", "context": "older generations also", "typed": "cele rate", "intended": "celebrate", "source": "tatoeba:10471473"}
+{"id": "en-test-letter_to_space-0153", "split": "test", "category": "letter_to_space", "context": "tom", "typed": "ad itted", "intended": "admitted", "source": "tatoeba:7129815"}
+{"id": "en-test-letter_to_space-0161", "split": "test", "category": "letter_to_space", "context": "obviously tom and mary don't like", "typed": "doi g", "intended": "doing", "source": "tatoeba:6507709"}
+{"id": "en-test-letter_to_space-0162", "split": "test", "category": "letter_to_space", "context": "he left soon after our", "typed": "arri al", "intended": "arrival", "source": "tatoeba:297407"}
+{"id": "en-test-letter_to_space-0171", "split": "test", "category": "letter_to_space", "context": "tom and mary", "typed": "pro ised", "intended": "promised", "source": "tatoeba:6509699"}
+{"id": "en-test-letter_to_space-0174", "split": "test", "category": "letter_to_space", "context": "she's", "typed": "reno ated", "intended": "renovated", "source": "tatoeba:11931089"}
+{"id": "en-test-letter_to_space-0181", "split": "test", "category": "letter_to_space", "context": "i've been", "typed": "taki g", "intended": "taking", "source": "tatoeba:5832819"}
+{"id": "en-test-letter_to_space-0189", "split": "test", "category": "letter_to_space", "context": "tom heard mary", "typed": "yelli g", "intended": "yelling", "source": "tatoeba:6124755"}
+{"id": "en-test-letter_to_space-0193", "split": "test", "category": "letter_to_space", "context": "there are few", "typed": "wo en", "intended": "women", "source": "tatoeba:12646747"}
+{"id": "en-test-letter_to_space-0205", "split": "test", "category": "letter_to_space", "context": "they promised me", "typed": "everythi g", "intended": "everything", "source": "tatoeba:5736387"}
+{"id": "en-test-letter_to_space-0212", "split": "test", "category": "letter_to_space", "context": "i", "typed": "stu bled", "intended": "stumbled", "source": "tatoeba:7035329"}
+{"id": "en-test-letter_to_space-0215", "split": "test", "category": "letter_to_space", "context": "i", "typed": "thi k", "intended": "think", "source": "tatoeba:9118229"}
+{"id": "en-test-letter_to_space-0217", "split": "test", "category": "letter_to_space", "context": "he", "typed": "pu ched", "intended": "punched", "source": "tatoeba:11566515"}
+{"id": "en-test-letter_to_space-0228", "split": "test", "category": "letter_to_space", "context": "are you still", "typed": "havi g", "intended": "having", "source": "tatoeba:6345221"}
+{"id": "en-test-letter_to_space-0244", "split": "test", "category": "letter_to_space", "context": "do you often take", "typed": "after oon", "intended": "afternoon", "source": "tatoeba:9736121"}
+{"id": "en-test-letter_to_space-0252", "split": "test", "category": "letter_to_space", "context": "you should've", "typed": "ac epted", "intended": "accepted", "source": "tatoeba:12284565"}
+{"id": "en-test-letter_to_space-0253", "split": "test", "category": "letter_to_space", "context": "tom", "typed": "ope ed", "intended": "opened", "source": "tatoeba:2957611"}
+{"id": "en-test-letter_to_space-0254", "split": "test", "category": "letter_to_space", "context": "the next", "typed": "meeti g", "intended": "meeting", "source": "tatoeba:2959155"}
+{"id": "en-test-letter_to_space-0266", "split": "test", "category": "letter_to_space", "context": "i don't", "typed": "thi k", "intended": "think", "source": "tatoeba:6884723"}
+{"id": "en-test-letter_to_space-0272", "split": "test", "category": "letter_to_space", "context": "i", "typed": "can ot", "intended": "cannot", "source": "tatoeba:12923151"}
+{"id": "en-test-letter_to_space-0273", "split": "test", "category": "letter_to_space", "context": "tom", "typed": "wat hed", "intended": "watched", "source": "tatoeba:7539337"}
+{"id": "en-test-letter_to_space-0276", "split": "test", "category": "letter_to_space", "context": "both french and english are spoken in", "typed": "ca ada", "intended": "canada", "source": "tatoeba:63651"}
+{"id": "en-test-letter_to_space-0279", "split": "test", "category": "letter_to_space", "context": "i don't", "typed": "thi k", "intended": "think", "source": "tatoeba:6733491"}
+{"id": "en-test-letter_to_space-0287", "split": "test", "category": "letter_to_space", "context": "i", "typed": "thi k", "intended": "think", "source": "tatoeba:6521913"}
+{"id": "en-test-letter_to_space-0288", "split": "test", "category": "letter_to_space", "context": "i didn't", "typed": "thi k", "intended": "think", "source": "tatoeba:6235683"}
+{"id": "en-test-letter_to_space-0292", "split": "test", "category": "letter_to_space", "context": "i don't", "typed": "thi k", "intended": "think", "source": "tatoeba:7235797"}
+{"id": "en-test-letter_to_space-0293", "split": "test", "category": "letter_to_space", "context": "there's no", "typed": "expla ation", "intended": "explanation", "source": "tatoeba:12191489"}
+{"id": "en-test-letter_to_space-0297", "split": "test", "category": "letter_to_space", "context": "the", "typed": "offi e", "intended": "office", "source": "tatoeba:3721741"}
+{"id": "en-test-real_word_slip-0001", "split": "test", "category": "real_word_slip", "context": "i", "typed": "ha", "intended": "had", "source": "tatoeba:9237497"}
+{"id": "en-test-real_word_slip-0008", "split": "test", "category": "real_word_slip", "context": "tom was awake", "typed": "bit", "intended": "but", "source": "tatoeba:8123361"}
+{"id": "en-test-real_word_slip-0010", "split": "test", "category": "real_word_slip", "context": "are you sure that tom wasn't the one", "typed": "ho", "intended": "who", "source": "tatoeba:7754375"}
+{"id": "en-test-real_word_slip-0011", "split": "test", "category": "real_word_slip", "context": "there are no less than two hundred trees in", "typed": "te", "intended": "the", "source": "tatoeba:48031"}
+{"id": "en-test-real_word_slip-0013", "split": "test", "category": "real_word_slip", "context": "that bicycle isn't", "typed": "is", "intended": "his", "source": "tatoeba:726369"}
+{"id": "en-test-real_word_slip-0017", "split": "test", "category": "real_word_slip", "context": "i couldn't talk to", "typed": "here", "intended": "her", "source": "tatoeba:7887383"}
+{"id": "en-test-real_word_slip-0023", "split": "test", "category": "real_word_slip", "context": "were tom and", "typed": "mar", "intended": "mary", "source": "tatoeba:6523311"}
+{"id": "en-test-real_word_slip-0025", "split": "test", "category": "real_word_slip", "context": "we had to put off", "typed": "he", "intended": "the", "source": "tatoeba:248495"}
+{"id": "en-test-real_word_slip-0033", "split": "test", "category": "real_word_slip", "context": "who does he work", "typed": "or", "intended": "for", "source": "tatoeba:285905"}
+{"id": "en-test-real_word_slip-0037", "split": "test", "category": "real_word_slip", "context": "tom said he's glad that you", "typed": "on", "intended": "won", "source": "tatoeba:7180287"}
+{"id": "en-test-real_word_slip-0039", "split": "test", "category": "real_word_slip", "context": "he has the illusion that he is", "typed": "he", "intended": "the", "source": "tatoeba:289727"}
+{"id": "en-test-real_word_slip-0041", "split": "test", "category": "real_word_slip", "context": "", "typed": "thy", "intended": "they", "source": "tatoeba:7406287"}
+{"id": "en-test-real_word_slip-0050", "split": "test", "category": "real_word_slip", "context": "shall we", "typed": "tale", "intended": "take", "source": "tatoeba:12773575"}
+{"id": "en-test-real_word_slip-0053", "split": "test", "category": "real_word_slip", "context": "", "typed": "to", "intended": "tom", "source": "tatoeba:3419843"}
+{"id": "en-test-real_word_slip-0054", "split": "test", "category": "real_word_slip", "context": "are you sure that was", "typed": "to", "intended": "tom", "source": "tatoeba:12128559"}
+{"id": "en-test-real_word_slip-0056", "split": "test", "category": "real_word_slip", "context": "tom said mary thought", "typed": "se", "intended": "she", "source": "tatoeba:6255663"}
+{"id": "en-test-real_word_slip-0060", "split": "test", "category": "real_word_slip", "context": "", "typed": "to", "intended": "tom", "source": "tatoeba:3563731"}
+{"id": "en-test-real_word_slip-0064", "split": "test", "category": "real_word_slip", "context": "i didn't know tom used that app", "typed": "top", "intended": "too", "source": "tatoeba:9471871"}
+{"id": "en-test-real_word_slip-0069", "split": "test", "category": "real_word_slip", "context": "he warned us to", "typed": "case", "intended": "cease", "source": "tatoeba:289415"}
+{"id": "en-test-real_word_slip-0071", "split": "test", "category": "real_word_slip", "context": "he has the berber keyboard on", "typed": "hi", "intended": "his", "source": "tatoeba:7670637"}
+{"id": "en-test-real_word_slip-0073", "split": "test", "category": "real_word_slip", "context": "look out", "typed": "hat", "intended": "that", "source": "tatoeba:319761"}
+{"id": "en-test-real_word_slip-0074", "split": "test", "category": "real_word_slip", "context": "i like", "typed": "te", "intended": "the", "source": "tatoeba:2377475"}
+{"id": "en-test-real_word_slip-0078", "split": "test", "category": "real_word_slip", "context": "sami", "typed": "wa", "intended": "was", "source": "tatoeba:6312683"}
+{"id": "en-test-real_word_slip-0080", "split": "test", "category": "real_word_slip", "context": "tom is", "typed": "quiet", "intended": "quite", "source": "tatoeba:6900817"}
+{"id": "en-test-real_word_slip-0081", "split": "test", "category": "real_word_slip", "context": "", "typed": "te", "intended": "the", "source": "tatoeba:2840419"}
+{"id": "en-test-real_word_slip-0091", "split": "test", "category": "real_word_slip", "context": "you should", "typed": "si", "intended": "sit", "source": "tatoeba:5559605"}
+{"id": "en-test-real_word_slip-0097", "split": "test", "category": "real_word_slip", "context": "he has", "typed": "is", "intended": "his", "source": "tatoeba:5845239"}
+{"id": "en-test-real_word_slip-0099", "split": "test", "category": "real_word_slip", "context": "tom and mary", "typed": "ar", "intended": "are", "source": "tatoeba:6919027"}
+{"id": "en-test-real_word_slip-0102", "split": "test", "category": "real_word_slip", "context": "", "typed": "tim", "intended": "tom", "source": "tatoeba:12205619"}
+{"id": "en-test-real_word_slip-0105", "split": "test", "category": "real_word_slip", "context": "igor", "typed": "an", "intended": "and", "source": "tatoeba:11829015"}
+{"id": "en-test-real_word_slip-0106", "split": "test", "category": "real_word_slip", "context": "tom and mary", "typed": "way", "intended": "say", "source": "tatoeba:6505005"}
+{"id": "en-test-real_word_slip-0141", "split": "test", "category": "real_word_slip", "context": "i wash my face every evening to get my makeup", "typed": "of", "intended": "off", "source": "tatoeba:1182113"}
+{"id": "en-test-real_word_slip-0147", "split": "test", "category": "real_word_slip", "context": "matthew has a", "typed": "pot", "intended": "lot", "source": "tatoeba:11590269"}
+{"id": "en-test-real_word_slip-0150", "split": "test", "category": "real_word_slip", "context": "i didn't stay in australia as long as tom", "typed": "di", "intended": "did", "source": "tatoeba:7158969"}
+{"id": "en-test-real_word_slip-0165", "split": "test", "category": "real_word_slip", "context": "does", "typed": "may", "intended": "mary", "source": "tatoeba:6411257"}
+{"id": "en-test-real_word_slip-0168", "split": "test", "category": "real_word_slip", "context": "is there a bus that goes to", "typed": "he", "intended": "the", "source": "tatoeba:52853"}
+{"id": "en-test-real_word_slip-0171", "split": "test", "category": "real_word_slip", "context": "", "typed": "id", "intended": "did", "source": "tatoeba:12264071"}
+{"id": "en-test-real_word_slip-0174", "split": "test", "category": "real_word_slip", "context": "", "typed": "he", "intended": "the", "source": "tatoeba:4500353"}
+{"id": "en-test-real_word_slip-0184", "split": "test", "category": "real_word_slip", "context": "we're keeping an", "typed": "ye", "intended": "eye", "source": "tatoeba:5522779"}
+{"id": "en-test-real_word_slip-0187", "split": "test", "category": "real_word_slip", "context": "tom wasn't at", "typed": "he", "intended": "the", "source": "tatoeba:8955249"}
+{"id": "en-test-real_word_slip-0188", "split": "test", "category": "real_word_slip", "context": "the airport is over", "typed": "thee", "intended": "there", "source": "tatoeba:403055"}
+{"id": "en-test-real_word_slip-0193", "split": "test", "category": "real_word_slip", "context": "you should call your", "typed": "gather", "intended": "father", "source": "tatoeba:39533"}
+{"id": "en-test-real_word_slip-0202", "split": "test", "category": "real_word_slip", "context": "but you", "typed": "now", "intended": "know", "source": "tatoeba:53635"}
+{"id": "en-test-real_word_slip-0204", "split": "test", "category": "real_word_slip", "context": "", "typed": "to", "intended": "tom", "source": "tatoeba:1095901"}
+{"id": "en-test-real_word_slip-0209", "split": "test", "category": "real_word_slip", "context": "", "typed": "te", "intended": "the", "source": "tatoeba:12463857"}
+{"id": "en-test-real_word_slip-0220", "split": "test", "category": "real_word_slip", "context": "where", "typed": "di", "intended": "did", "source": "tatoeba:7494005"}
+{"id": "en-test-real_word_slip-0222", "split": "test", "category": "real_word_slip", "context": "i could not possibly accept", "typed": "hat", "intended": "that", "source": "tatoeba:9714355"}
+{"id": "en-test-real_word_slip-0229", "split": "test", "category": "real_word_slip", "context": "", "typed": "to", "intended": "tom", "source": "tatoeba:9765665"}
+{"id": "en-test-real_word_slip-0239", "split": "test", "category": "real_word_slip", "context": "i'm not planning to meet", "typed": "ton", "intended": "tom", "source": "tatoeba:7544747"}
+{"id": "en-test-real_word_slip-0246", "split": "test", "category": "real_word_slip", "context": "i found this in", "typed": "thee", "intended": "the", "source": "tatoeba:5916119"}
+{"id": "en-test-real_word_slip-0247", "split": "test", "category": "real_word_slip", "context": "", "typed": "to", "intended": "tom", "source": "tatoeba:3922927"}
+{"id": "en-test-real_word_slip-0258", "split": "test", "category": "real_word_slip", "context": "how did", "typed": "yo", "intended": "you", "source": "tatoeba:3730981"}
+{"id": "en-test-real_word_slip-0259", "split": "test", "category": "real_word_slip", "context": "", "typed": "ton", "intended": "tom", "source": "tatoeba:7167803"}
+{"id": "en-test-real_word_slip-0264", "split": "test", "category": "real_word_slip", "context": "how does tom fit into", "typed": "al", "intended": "all", "source": "tatoeba:3731585"}
+{"id": "en-test-real_word_slip-0266", "split": "test", "category": "real_word_slip", "context": "don't", "typed": "mi", "intended": "mix", "source": "tatoeba:2833877"}
+{"id": "en-test-real_word_slip-0269", "split": "test", "category": "real_word_slip", "context": "because american dramas are very bloody he doesn't like watching", "typed": "then", "intended": "them", "source": "tatoeba:7851985"}
+{"id": "en-test-real_word_slip-0282", "split": "test", "category": "real_word_slip", "context": "i'm sorry i didn't", "typed": "heat", "intended": "hear", "source": "tatoeba:2361911"}
+{"id": "en-test-real_word_slip-0286", "split": "test", "category": "real_word_slip", "context": "which shelf should i", "typed": "out", "intended": "put", "source": "tatoeba:8208549"}
+{"id": "en-test-real_word_slip-0288", "split": "test", "category": "real_word_slip", "context": "the aroma of fresh coffee", "typed": "hug", "intended": "hung", "source": "tatoeba:10091691"}
+{"id": "en-test-real_word_slip-0298", "split": "test", "category": "real_word_slip", "context": "mary is lucky she didn't get", "typed": "shit", "intended": "shot", "source": "tatoeba:7378303"}
+{"id": "en-test-short_word_slip-0000", "split": "test", "category": "short_word_slip", "context": "layla said", "typed": "syhe", "intended": "she", "source": "tatoeba:7286227"}
+{"id": "en-test-short_word_slip-0003", "split": "test", "category": "short_word_slip", "context": "do you know how to speak either french", "typed": "ior", "intended": "or", "source": "tatoeba:8332735"}
+{"id": "en-test-short_word_slip-0006", "split": "test", "category": "short_word_slip", "context": "tom", "typed": "gor", "intended": "got", "source": "tatoeba:1046549"}
+{"id": "en-test-short_word_slip-0020", "split": "test", "category": "short_word_slip", "context": "where", "typed": "iis", "intended": "is", "source": "tatoeba:11911343"}
+{"id": "en-test-short_word_slip-0021", "split": "test", "category": "short_word_slip", "context": "what can i do to shift", "typed": "thw", "intended": "the", "source": "tatoeba:13011067"}
+{"id": "en-test-short_word_slip-0030", "split": "test", "category": "short_word_slip", "context": "tom works hard every", "typed": "ady", "intended": "day", "source": "tatoeba:10565363"}
+{"id": "en-test-short_word_slip-0033", "split": "test", "category": "short_word_slip", "context": "i'm", "typed": "npt", "intended": "not", "source": "tatoeba:2537491"}
+{"id": "en-test-short_word_slip-0038", "split": "test", "category": "short_word_slip", "context": "the court declared", "typed": "hhim", "intended": "him", "source": "tatoeba:10303277"}
+{"id": "en-test-short_word_slip-0040", "split": "test", "category": "short_word_slip", "context": "you need", "typed": "gto", "intended": "to", "source": "tatoeba:11888739"}
+{"id": "en-test-short_word_slip-0041", "split": "test", "category": "short_word_slip", "context": "i'm asking", "typed": "yuo", "intended": "you", "source": "tatoeba:1356831"}
+{"id": "en-test-short_word_slip-0050", "split": "test", "category": "short_word_slip", "context": "", "typed": "shee", "intended": "she", "source": "tatoeba:315409"}
+{"id": "en-test-short_word_slip-0054", "split": "test", "category": "short_word_slip", "context": "", "typed": "hje", "intended": "he", "source": "tatoeba:5226565"}
+{"id": "en-test-short_word_slip-0056", "split": "test", "category": "short_word_slip", "context": "tom said he thought", "typed": "myy", "intended": "my", "source": "tatoeba:6909941"}
+{"id": "en-test-short_word_slip-0062", "split": "test", "category": "short_word_slip", "context": "have", "typed": "yoy", "intended": "you", "source": "tatoeba:11176267"}
+{"id": "en-test-short_word_slip-0065", "split": "test", "category": "short_word_slip", "context": "he said that", "typed": "ghe", "intended": "he", "source": "tatoeba:7398663"}
+{"id": "en-test-short_word_slip-0070", "split": "test", "category": "short_word_slip", "context": "i have no great love", "typed": "ffor", "intended": "for", "source": "tatoeba:12026293"}
+{"id": "en-test-short_word_slip-0073", "split": "test", "category": "short_word_slip", "context": "things", "typed": "aer", "intended": "are", "source": "tatoeba:8509077"}
+{"id": "en-test-short_word_slip-0074", "split": "test", "category": "short_word_slip", "context": "tom's the only one", "typed": "woh", "intended": "who", "source": "tatoeba:6869995"}
+{"id": "en-test-short_word_slip-0084", "split": "test", "category": "short_word_slip", "context": "sami was alone", "typed": "oin", "intended": "in", "source": "tatoeba:6771051"}
+{"id": "en-test-short_word_slip-0092", "split": "test", "category": "short_word_slip", "context": "he took the empty glass", "typed": "nad", "intended": "and", "source": "tatoeba:13678235"}
+{"id": "en-test-short_word_slip-0094", "split": "test", "category": "short_word_slip", "context": "it isn't funny it", "typed": "isw", "intended": "is", "source": "tatoeba:13745549"}
+{"id": "en-test-short_word_slip-0095", "split": "test", "category": "short_word_slip", "context": "what do you want me", "typed": "fto", "intended": "to", "source": "tatoeba:3920039"}
+{"id": "en-test-short_word_slip-0097", "split": "test", "category": "short_word_slip", "context": "the company decided", "typed": "tok", "intended": "to", "source": "tatoeba:9765383"}
+{"id": "en-test-short_word_slip-0100", "split": "test", "category": "short_word_slip", "context": "", "typed": "hed", "intended": "he", "source": "tatoeba:7392317"}
+{"id": "en-test-short_word_slip-0107", "split": "test", "category": "short_word_slip", "context": "tom kept saying that", "typed": "ypu", "intended": "you", "source": "tatoeba:12235405"}
+{"id": "en-test-short_word_slip-0111", "split": "test", "category": "short_word_slip", "context": "tom", "typed": "didx", "intended": "did", "source": "tatoeba:8101761"}
+{"id": "en-test-short_word_slip-0112", "split": "test", "category": "short_word_slip", "context": "she'll do that only", "typed": "iif", "intended": "if", "source": "tatoeba:8535189"}
+{"id": "en-test-short_word_slip-0118", "split": "test", "category": "short_word_slip", "context": "she's in trouble isn't", "typed": "hse", "intended": "she", "source": "tatoeba:8526827"}
+{"id": "en-test-short_word_slip-0119", "split": "test", "category": "short_word_slip", "context": "", "typed": "igt", "intended": "it", "source": "tatoeba:5746587"}
+{"id": "en-test-short_word_slip-0128", "split": "test", "category": "short_word_slip", "context": "tom likes", "typed": "tyo", "intended": "to", "source": "tatoeba:11052863"}
+{"id": "en-test-short_word_slip-0129", "split": "test", "category": "short_word_slip", "context": "bringing up politics can", "typed": "bde", "intended": "be", "source": "tatoeba:5939859"}
+{"id": "en-test-short_word_slip-0137", "split": "test", "category": "short_word_slip", "context": "tom phoned to say he's", "typed": "nnot", "intended": "not", "source": "tatoeba:6348083"}
+{"id": "en-test-short_word_slip-0142", "split": "test", "category": "short_word_slip", "context": "tom told us that we could", "typed": "bjy", "intended": "buy", "source": "tatoeba:1092673"}
+{"id": "en-test-short_word_slip-0143", "split": "test", "category": "short_word_slip", "context": "", "typed": "fdo", "intended": "do", "source": "tatoeba:11180677"}
+{"id": "en-test-short_word_slip-0148", "split": "test", "category": "short_word_slip", "context": "i'm not laughing i'm telling you", "typed": "hte", "intended": "the", "source": "tatoeba:12972463"}
+{"id": "en-test-short_word_slip-0149", "split": "test", "category": "short_word_slip", "context": "the cost of building the railroad", "typed": "waz", "intended": "was", "source": "tatoeba:807629"}
+{"id": "en-test-short_word_slip-0161", "split": "test", "category": "short_word_slip", "context": "why would anybody kidnap", "typed": "hiim", "intended": "him", "source": "tatoeba:3914279"}
+{"id": "en-test-short_word_slip-0162", "split": "test", "category": "short_word_slip", "context": "your car's too loud you need to", "typed": "gget", "intended": "get", "source": "tatoeba:14079047"}
+{"id": "en-test-short_word_slip-0172", "split": "test", "category": "short_word_slip", "context": "this could", "typed": "geg", "intended": "get", "source": "tatoeba:6392849"}
+{"id": "en-test-short_word_slip-0174", "split": "test", "category": "short_word_slip", "context": "", "typed": "onne", "intended": "one", "source": "tatoeba:6661693"}
+{"id": "en-test-short_word_slip-0175", "split": "test", "category": "short_word_slip", "context": "tom's apartment", "typed": "iws", "intended": "is", "source": "tatoeba:6530923"}
+{"id": "en-test-short_word_slip-0181", "split": "test", "category": "short_word_slip", "context": "demand for occupational therapy", "typed": "hsa", "intended": "has", "source": "tatoeba:422353"}
+{"id": "en-test-short_word_slip-0184", "split": "test", "category": "short_word_slip", "context": "", "typed": "itr", "intended": "it", "source": "tatoeba:3226419"}
+{"id": "en-test-short_word_slip-0185", "split": "test", "category": "short_word_slip", "context": "i've done all i need to", "typed": "dko", "intended": "do", "source": "tatoeba:8405245"}
+{"id": "en-test-short_word_slip-0187", "split": "test", "category": "short_word_slip", "context": "", "typed": "ths", "intended": "the", "source": "tatoeba:12227367"}
+{"id": "en-test-short_word_slip-0205", "split": "test", "category": "short_word_slip", "context": "tom is afraid to go into", "typed": "ghe", "intended": "the", "source": "tatoeba:6667079"}
+{"id": "en-test-short_word_slip-0210", "split": "test", "category": "short_word_slip", "context": "mary pays for", "typed": "hte", "intended": "the", "source": "tatoeba:10769827"}
+{"id": "en-test-short_word_slip-0211", "split": "test", "category": "short_word_slip", "context": "tom was the one who taught me how to", "typed": "dol", "intended": "do", "source": "tatoeba:6433319"}
+{"id": "en-test-short_word_slip-0213", "split": "test", "category": "short_word_slip", "context": "where do", "typed": "oyu", "intended": "you", "source": "tatoeba:2283617"}
+{"id": "en-test-short_word_slip-0216", "split": "test", "category": "short_word_slip", "context": "tom and mary said they did that", "typed": "aat", "intended": "at", "source": "tatoeba:6508597"}
+{"id": "en-test-short_word_slip-0217", "split": "test", "category": "short_word_slip", "context": "the", "typed": "jpb", "intended": "job", "source": "tatoeba:245379"}
+{"id": "en-test-short_word_slip-0220", "split": "test", "category": "short_word_slip", "context": "sami", "typed": "ahs", "intended": "has", "source": "tatoeba:7987545"}
+{"id": "en-test-short_word_slip-0221", "split": "test", "category": "short_word_slip", "context": "tom", "typed": "ies", "intended": "is", "source": "tatoeba:8988719"}
+{"id": "en-test-short_word_slip-0235", "split": "test", "category": "short_word_slip", "context": "tom", "typed": "wqas", "intended": "was", "source": "tatoeba:7196703"}
+{"id": "en-test-short_word_slip-0237", "split": "test", "category": "short_word_slip", "context": "tom will always find time", "typed": "fpor", "intended": "for", "source": "tatoeba:12924471"}
+{"id": "en-test-short_word_slip-0274", "split": "test", "category": "short_word_slip", "context": "since you're", "typed": "trhe", "intended": "the", "source": "tatoeba:7544845"}
+{"id": "en-test-short_word_slip-0275", "split": "test", "category": "short_word_slip", "context": "the situation has now got", "typed": "otu", "intended": "out", "source": "tatoeba:12476655"}
+{"id": "en-test-short_word_slip-0278", "split": "test", "category": "short_word_slip", "context": "this splinter is harder", "typed": "tgo", "intended": "to", "source": "tatoeba:11200897"}
+{"id": "en-test-short_word_slip-0282", "split": "test", "category": "short_word_slip", "context": "where", "typed": "aare", "intended": "are", "source": "tatoeba:69567"}
+{"id": "en-test-short_word_slip-0283", "split": "test", "category": "short_word_slip", "context": "he", "typed": "putg", "intended": "put", "source": "tatoeba:4426145"}
+{"id": "en-test-space_extra-0000", "split": "test", "category": "space_extra", "context": "be", "typed": "care ful", "intended": "careful", "source": "tatoeba:11886631"}
+{"id": "en-test-space_extra-0012", "split": "test", "category": "space_extra", "context": "tom", "typed": "w orks", "intended": "works", "source": "tatoeba:5502119"}
+{"id": "en-test-space_extra-0019", "split": "test", "category": "space_extra", "context": "gabriel destroyed the", "typed": "r adio", "intended": "radio", "source": "tatoeba:11757807"}
+{"id": "en-test-space_extra-0024", "split": "test", "category": "space_extra", "context": "tom's", "typed": "inf luence", "intended": "influence", "source": "tatoeba:12082929"}
+{"id": "en-test-space_extra-0029", "split": "test", "category": "space_extra", "context": "they", "typed": "g rabbed", "intended": "grabbed", "source": "tatoeba:12974923"}
+{"id": "en-test-space_extra-0031", "split": "test", "category": "space_extra", "context": "claudio has a very large", "typed": "cl oset", "intended": "closet", "source": "tatoeba:11689469"}
+{"id": "en-test-space_extra-0044", "split": "test", "category": "space_extra", "context": "i found an", "typed": "interes ting", "intended": "interesting", "source": "tatoeba:14075223"}
+{"id": "en-test-space_extra-0045", "split": "test", "category": "space_extra", "context": "everyone thinks your cousin is an", "typed": "idi ot", "intended": "idiot", "source": "tatoeba:12388553"}
+{"id": "en-test-space_extra-0050", "split": "test", "category": "space_extra", "context": "", "typed": "alge ria", "intended": "algeria", "source": "tatoeba:10088305"}
+{"id": "en-test-space_extra-0055", "split": "test", "category": "space_extra", "context": "sami was not", "typed": "comfo rtable", "intended": "comfortable", "source": "tatoeba:6690657"}
+{"id": "en-test-space_extra-0056", "split": "test", "category": "space_extra", "context": "it's hard to speak", "typed": "engl ish", "intended": "english", "source": "tatoeba:400391"}
+{"id": "en-test-space_extra-0057", "split": "test", "category": "space_extra", "context": "we ate an early", "typed": "l unch", "intended": "lunch", "source": "tatoeba:9860899"}
+{"id": "en-test-space_extra-0083", "split": "test", "category": "space_extra", "context": "dr jackson's office is on the third", "typed": "f loor", "intended": "floor", "source": "tatoeba:12511911"}
+{"id": "en-test-space_extra-0091", "split": "test", "category": "space_extra", "context": "the", "typed": "countr y", "intended": "country", "source": "tatoeba:13976987"}
+{"id": "en-test-space_extra-0092", "split": "test", "category": "space_extra", "context": "one hot", "typed": "sum mer", "intended": "summer", "source": "tatoeba:67225"}
+{"id": "en-test-space_extra-0100", "split": "test", "category": "space_extra", "context": "they saw", "typed": "the ir", "intended": "their", "source": "tatoeba:7475365"}
+{"id": "en-test-space_extra-0103", "split": "test", "category": "space_extra", "context": "he yielded to", "typed": "press ure", "intended": "pressure", "source": "tatoeba:293491"}
+{"id": "en-test-space_extra-0104", "split": "test", "category": "space_extra", "context": "oh woman you are the best", "typed": "wiza rd", "intended": "wizard", "source": "tatoeba:4131193"}
+{"id": "en-test-space_extra-0119", "split": "test", "category": "space_extra", "context": "the teacher would only allow us to speak french in the", "typed": "cla ssroom", "intended": "classroom", "source": "tatoeba:2451075"}
+{"id": "en-test-space_extra-0120", "split": "test", "category": "space_extra", "context": "more than thirty percent of our students go on to", "typed": "univer sity", "intended": "university", "source": "tatoeba:9806923"}
+{"id": "en-test-space_extra-0121", "split": "test", "category": "space_extra", "context": "which do you think", "typed": "lo oks", "intended": "looks", "source": "tatoeba:12468995"}
+{"id": "en-test-space_extra-0133", "split": "test", "category": "space_extra", "context": "i also digitized it and made a", "typed": "deskto p", "intended": "desktop", "source": "tatoeba:327177"}
+{"id": "en-test-space_extra-0135", "split": "test", "category": "space_extra", "context": "mary kept her opinion to", "typed": "hersel f", "intended": "herself", "source": "tatoeba:6425501"}
+{"id": "en-test-space_extra-0136", "split": "test", "category": "space_extra", "context": "this is the", "typed": "o ldest", "intended": "oldest", "source": "tatoeba:6676859"}
+{"id": "en-test-space_extra-0145", "split": "test", "category": "space_extra", "context": "", "typed": "r ecently", "intended": "recently", "source": "tatoeba:12673263"}
+{"id": "en-test-space_extra-0149", "split": "test", "category": "space_extra", "context": "what he's saying is not", "typed": "n ecessarily", "intended": "necessarily", "source": "tatoeba:10540315"}
+{"id": "en-test-space_extra-0150", "split": "test", "category": "space_extra", "context": "does anyone", "typed": "spea k", "intended": "speak", "source": "tatoeba:1926237"}
+{"id": "en-test-space_extra-0153", "split": "test", "category": "space_extra", "context": "tom was injured quite badly in an automobile", "typed": "a ccident", "intended": "accident", "source": "tatoeba:7539455"}
+{"id": "en-test-space_extra-0154", "split": "test", "category": "space_extra", "context": "tom looks", "typed": "pleas ed", "intended": "pleased", "source": "tatoeba:3723675"}
+{"id": "en-test-space_extra-0156", "split": "test", "category": "space_extra", "context": "that was our", "typed": "thinkin g", "intended": "thinking", "source": "tatoeba:5748189"}
+{"id": "en-test-space_extra-0164", "split": "test", "category": "space_extra", "context": "clogs are a", "typed": "sy mbol", "intended": "symbol", "source": "tatoeba:2653123"}
+{"id": "en-test-space_extra-0165", "split": "test", "category": "space_extra", "context": "tom has three older", "typed": "si blings", "intended": "siblings", "source": "tatoeba:5737309"}
+{"id": "en-test-space_extra-0166", "split": "test", "category": "space_extra", "context": "i know", "typed": "someon e", "intended": "someone", "source": "tatoeba:2376107"}
+{"id": "en-test-space_extra-0167", "split": "test", "category": "space_extra", "context": "typhoons generally head for", "typed": "japa n", "intended": "japan", "source": "tatoeba:275449"}
+{"id": "en-test-space_extra-0168", "split": "test", "category": "space_extra", "context": "rye was called the", "typed": "gr ain", "intended": "grain", "source": "tatoeba:1533"}
+{"id": "en-test-space_extra-0182", "split": "test", "category": "space_extra", "context": "tom", "typed": "forgo t", "intended": "forgot", "source": "tatoeba:1028919"}
+{"id": "en-test-space_extra-0187", "split": "test", "category": "space_extra", "context": "mary has lung", "typed": "c ancer", "intended": "cancer", "source": "tatoeba:10819671"}
+{"id": "en-test-space_extra-0190", "split": "test", "category": "space_extra", "context": "she's sharpening her", "typed": "pe ncil", "intended": "pencil", "source": "tatoeba:7389195"}
+{"id": "en-test-space_extra-0191", "split": "test", "category": "space_extra", "context": "algeria is", "typed": "losin g", "intended": "losing", "source": "tatoeba:7866425"}
+{"id": "en-test-space_extra-0196", "split": "test", "category": "space_extra", "context": "tell him it's not my", "typed": "f ault", "intended": "fault", "source": "tatoeba:3908037"}
+{"id": "en-test-space_extra-0198", "split": "test", "category": "space_extra", "context": "the", "typed": "m otel", "intended": "motel", "source": "tatoeba:11826045"}
+{"id": "en-test-space_extra-0200", "split": "test", "category": "space_extra", "context": "i've got two kids in", "typed": "sch ool", "intended": "school", "source": "tatoeba:3359699"}
+{"id": "en-test-space_extra-0206", "split": "test", "category": "space_extra", "context": "sami must have", "typed": "kno wn", "intended": "known", "source": "tatoeba:6807353"}
+{"id": "en-test-space_extra-0211", "split": "test", "category": "space_extra", "context": "there's a death", "typed": "pena lty", "intended": "penalty", "source": "tatoeba:10191097"}
+{"id": "en-test-space_extra-0212", "split": "test", "category": "space_extra", "context": "she isn't", "typed": "buy ing", "intended": "buying", "source": "tatoeba:8521561"}
+{"id": "en-test-space_extra-0219", "split": "test", "category": "space_extra", "context": "it's the first time i'm touching a", "typed": "dolph in", "intended": "dolphin", "source": "tatoeba:8614061"}
+{"id": "en-test-space_extra-0222", "split": "test", "category": "space_extra", "context": "mary knew she was in", "typed": "ser ious", "intended": "serious", "source": "tatoeba:6422593"}
+{"id": "en-test-space_extra-0223", "split": "test", "category": "space_extra", "context": "i", "typed": "shou ld", "intended": "should", "source": "tatoeba:6869153"}
+{"id": "en-test-space_extra-0237", "split": "test", "category": "space_extra", "context": "", "typed": "n icole", "intended": "nicole", "source": "tatoeba:6393191"}
+{"id": "en-test-space_extra-0239", "split": "test", "category": "space_extra", "context": "it was the least", "typed": "d addy", "intended": "daddy", "source": "tatoeba:10923549"}
+{"id": "en-test-space_extra-0244", "split": "test", "category": "space_extra", "context": "this can literally", "typed": "c hange", "intended": "change", "source": "tatoeba:8445397"}
+{"id": "en-test-space_extra-0250", "split": "test", "category": "space_extra", "context": "cross over the", "typed": "bridg e", "intended": "bridge", "source": "tatoeba:12184203"}
+{"id": "en-test-space_extra-0254", "split": "test", "category": "space_extra", "context": "he", "typed": "showe d", "intended": "showed", "source": "tatoeba:12903221"}
+{"id": "en-test-space_extra-0259", "split": "test", "category": "space_extra", "context": "you'll just have to be", "typed": "pati ent", "intended": "patient", "source": "tatoeba:6438075"}
+{"id": "en-test-space_extra-0260", "split": "test", "category": "space_extra", "context": "i know tom might not want to do that", "typed": "ag ain", "intended": "again", "source": "tatoeba:7513197"}
+{"id": "en-test-space_extra-0263", "split": "test", "category": "space_extra", "context": "tom is", "typed": "sh ady", "intended": "shady", "source": "tatoeba:12277859"}
+{"id": "en-test-space_extra-0274", "split": "test", "category": "space_extra", "context": "i could tell", "typed": "someth ing", "intended": "something", "source": "tatoeba:3726205"}
+{"id": "en-test-space_extra-0276", "split": "test", "category": "space_extra", "context": "may your", "typed": "co nscience", "intended": "conscience", "source": "tatoeba:9462919"}
+{"id": "en-test-space_extra-0278", "split": "test", "category": "space_extra", "context": "i'm required to wear", "typed": "glas ses", "intended": "glasses", "source": "tatoeba:11922715"}
+{"id": "en-test-space_extra-0282", "split": "test", "category": "space_extra", "context": "", "typed": "wint ers", "intended": "winters", "source": "tatoeba:9488963"}
+{"id": "en-test-space_missing-0001", "split": "test", "category": "space_missing", "context": "tom loves", "typed": "goingto", "intended": "going to", "source": "tatoeba:7542185"}
+{"id": "en-test-space_missing-0009", "split": "test", "category": "space_missing", "context": "tom and", "typed": "maryexpect", "intended": "mary expect", "source": "tatoeba:6513065"}
+{"id": "en-test-space_missing-0011", "split": "test", "category": "space_missing", "context": "we've had", "typed": "alot", "intended": "a lot", "source": "tatoeba:243139"}
+{"id": "en-test-space_missing-0015", "split": "test", "category": "space_missing", "context": "", "typed": "tomkilled", "intended": "tom killed", "source": "tatoeba:10346679"}
+{"id": "en-test-space_missing-0018", "split": "test", "category": "space_missing", "context": "hydrogen", "typed": "isthe", "intended": "is the", "source": "tatoeba:6075543"}
+{"id": "en-test-space_missing-0019", "split": "test", "category": "space_missing", "context": "did you read", "typed": "thewhole", "intended": "the whole", "source": "tatoeba:12272749"}
+{"id": "en-test-space_missing-0022", "split": "test", "category": "space_missing", "context": "", "typed": "tomis", "intended": "tom is", "source": "tatoeba:3818441"}
+{"id": "en-test-space_missing-0029", "split": "test", "category": "space_missing", "context": "there are a", "typed": "lotof", "intended": "lot of", "source": "tatoeba:3619119"}
+{"id": "en-test-space_missing-0035", "split": "test", "category": "space_missing", "context": "i really can't figure", "typed": "itout", "intended": "it out", "source": "tatoeba:2390791"}
+{"id": "en-test-space_missing-0037", "split": "test", "category": "space_missing", "context": "his", "typed": "dickis", "intended": "dick is", "source": "tatoeba:12877229"}
+{"id": "en-test-space_missing-0039", "split": "test", "category": "space_missing", "context": "i guess", "typed": "tomreally", "intended": "tom really", "source": "tatoeba:12063871"}
+{"id": "en-test-space_missing-0043", "split": "test", "category": "space_missing", "context": "she isn't as stupid as", "typed": "shelooks", "intended": "she looks", "source": "tatoeba:2755947"}
+{"id": "en-test-space_missing-0049", "split": "test", "category": "space_missing", "context": "i don't have", "typed": "aweapon", "intended": "a weapon", "source": "tatoeba:2276027"}
+{"id": "en-test-space_missing-0067", "split": "test", "category": "space_missing", "context": "", "typed": "japanesereally", "intended": "japanese really", "source": "tatoeba:10556579"}
+{"id": "en-test-space_missing-0070", "split": "test", "category": "space_missing", "context": "", "typed": "asbestosis", "intended": "asbestos is", "source": "tatoeba:12378903"}
+{"id": "en-test-space_missing-0071", "split": "test", "category": "space_missing", "context": "how many hours do you think", "typed": "ittook", "intended": "it took", "source": "tatoeba:6432235"}
+{"id": "en-test-space_missing-0085", "split": "test", "category": "space_missing", "context": "you didn't have enough energy to", "typed": "dothat", "intended": "do that", "source": "tatoeba:6232779"}
+{"id": "en-test-space_missing-0090", "split": "test", "category": "space_missing", "context": "tom and mary", "typed": "alreadyknow", "intended": "already know", "source": "tatoeba:6512153"}
+{"id": "en-test-space_missing-0091", "split": "test", "category": "space_missing", "context": "i had", "typed": "awonderful", "intended": "a wonderful", "source": "tatoeba:7183167"}
+{"id": "en-test-space_missing-0098", "split": "test", "category": "space_missing", "context": "now's not the time to talk", "typed": "aboutthat", "intended": "about that", "source": "tatoeba:10509063"}
+{"id": "en-test-space_missing-0110", "split": "test", "category": "space_missing", "context": "tom", "typed": "mustbe", "intended": "must be", "source": "tatoeba:2713581"}
+{"id": "en-test-space_missing-0112", "split": "test", "category": "space_missing", "context": "i'd", "typed": "liketo", "intended": "like to", "source": "tatoeba:1936447"}
+{"id": "en-test-space_missing-0114", "split": "test", "category": "space_missing", "context": "they wet their", "typed": "lipswith", "intended": "lips with", "source": "tatoeba:7442029"}
+{"id": "en-test-space_missing-0124", "split": "test", "category": "space_missing", "context": "corporate media have largely ignored the problems of", "typed": "capitalismat", "intended": "capitalism at", "source": "tatoeba:14040201"}
+{"id": "en-test-space_missing-0132", "split": "test", "category": "space_missing", "context": "i", "typed": "cannotsmoke", "intended": "cannot smoke", "source": "tatoeba:1688791"}
+{"id": "en-test-space_missing-0136", "split": "test", "category": "space_missing", "context": "the", "typed": "newfilm", "intended": "new film", "source": "tatoeba:11960243"}
+{"id": "en-test-space_missing-0139", "split": "test", "category": "space_missing", "context": "how long has it", "typed": "beensince", "intended": "been since", "source": "tatoeba:10019643"}
+{"id": "en-test-space_missing-0140", "split": "test", "category": "space_missing", "context": "i would like", "typed": "totry", "intended": "to try", "source": "tatoeba:258067"}
+{"id": "en-test-space_missing-0144", "split": "test", "category": "space_missing", "context": "tom will be", "typed": "backin", "intended": "back in", "source": "tatoeba:12994413"}
+{"id": "en-test-space_missing-0147", "split": "test", "category": "space_missing", "context": "i've told", "typed": "youa", "intended": "you a", "source": "tatoeba:5226991"}
+{"id": "en-test-space_missing-0148", "split": "test", "category": "space_missing", "context": "how wide", "typed": "isit", "intended": "is it", "source": "tatoeba:319821"}
+{"id": "en-test-space_missing-0155", "split": "test", "category": "space_missing", "context": "they said they didn't want", "typed": "aparty", "intended": "a party", "source": "tatoeba:7406489"}
+{"id": "en-test-space_missing-0158", "split": "test", "category": "space_missing", "context": "tom knew mary was going", "typed": "tobe", "intended": "to be", "source": "tatoeba:6125831"}
+{"id": "en-test-space_missing-0160", "split": "test", "category": "space_missing", "context": "i didn't think that tom would be", "typed": "interestedin", "intended": "interested in", "source": "tatoeba:7144065"}
+{"id": "en-test-space_missing-0161", "split": "test", "category": "space_missing", "context": "tom said he couldn't leave without saying goodbye", "typed": "tomary", "intended": "to mary", "source": "tatoeba:5210207"}
+{"id": "en-test-space_missing-0166", "split": "test", "category": "space_missing", "context": "getting rich made", "typed": "himarrogant", "intended": "him arrogant", "source": "tatoeba:12382091"}
+{"id": "en-test-space_missing-0167", "split": "test", "category": "space_missing", "context": "tomorrow we'll organise a demonstration against", "typed": "theabuse", "intended": "the abuse", "source": "tatoeba:7345621"}
+{"id": "en-test-space_missing-0169", "split": "test", "category": "space_missing", "context": "matthew knew exactly what", "typed": "hewas", "intended": "he was", "source": "tatoeba:11584881"}
+{"id": "en-test-space_missing-0180", "split": "test", "category": "space_missing", "context": "i've", "typed": "neverhad", "intended": "never had", "source": "tatoeba:691453"}
+{"id": "en-test-space_missing-0188", "split": "test", "category": "space_missing", "context": "we were", "typed": "alllittle", "intended": "all little", "source": "tatoeba:4904645"}
+{"id": "en-test-space_missing-0189", "split": "test", "category": "space_missing", "context": "that's", "typed": "notworth", "intended": "not worth", "source": "tatoeba:10083229"}
+{"id": "en-test-space_missing-0198", "split": "test", "category": "space_missing", "context": "i", "typed": "cameto", "intended": "came to", "source": "tatoeba:3906385"}
+{"id": "en-test-space_missing-0216", "split": "test", "category": "space_missing", "context": "we enjoyed the quiz", "typed": "showon", "intended": "show on", "source": "tatoeba:248751"}
+{"id": "en-test-space_missing-0220", "split": "test", "category": "space_missing", "context": "that", "typed": "wasa", "intended": "was a", "source": "tatoeba:4502083"}
+{"id": "en-test-space_missing-0225", "split": "test", "category": "space_missing", "context": "i'll do it by", "typed": "allmeans", "intended": "all means", "source": "tatoeba:318237"}
+{"id": "en-test-space_missing-0227", "split": "test", "category": "space_missing", "context": "help me", "typed": "finda", "intended": "find a", "source": "tatoeba:11129437"}
+{"id": "en-test-space_missing-0232", "split": "test", "category": "space_missing", "context": "i thought you were", "typed": "donewith", "intended": "done with", "source": "tatoeba:2540673"}
+{"id": "en-test-space_missing-0243", "split": "test", "category": "space_missing", "context": "his mother", "typed": "isin", "intended": "is in", "source": "tatoeba:9725057"}
+{"id": "en-test-space_missing-0245", "split": "test", "category": "space_missing", "context": "layla", "typed": "wantedto", "intended": "wanted to", "source": "tatoeba:6376549"}
+{"id": "en-test-space_missing-0251", "split": "test", "category": "space_missing", "context": "i ran to", "typed": "thegarage", "intended": "the garage", "source": "tatoeba:8887003"}
+{"id": "en-test-space_missing-0253", "split": "test", "category": "space_missing", "context": "he's a", "typed": "manof", "intended": "man of", "source": "tatoeba:1205607"}
+{"id": "en-test-space_missing-0263", "split": "test", "category": "space_missing", "context": "ivy", "typed": "canlook", "intended": "can look", "source": "tatoeba:10860099"}
+{"id": "en-test-space_missing-0267", "split": "test", "category": "space_missing", "context": "tom would be hurt if", "typed": "yousaid", "intended": "you said", "source": "tatoeba:3408945"}
+{"id": "en-test-space_missing-0271", "split": "test", "category": "space_missing", "context": "i'm not just reading", "typed": "anybook", "intended": "any book", "source": "tatoeba:13717499"}
+{"id": "en-test-space_missing-0280", "split": "test", "category": "space_missing", "context": "everybody is", "typed": "afraidof", "intended": "afraid of", "source": "tatoeba:12297761"}
+{"id": "en-test-space_missing-0283", "split": "test", "category": "space_missing", "context": "in front of my aunt's", "typed": "housea", "intended": "house a", "source": "tatoeba:12827323"}
+{"id": "en-test-space_missing-0288", "split": "test", "category": "space_missing", "context": "", "typed": "afterthat", "intended": "after that", "source": "tatoeba:9419709"}
+{"id": "en-test-space_missing-0291", "split": "test", "category": "space_missing", "context": "john will take", "typed": "jessicathere", "intended": "jessica there", "source": "tatoeba:11530263"}
+{"id": "en-test-space_missing-0292", "split": "test", "category": "space_missing", "context": "leave", "typed": "theengine", "intended": "the engine", "source": "tatoeba:65215"}
+{"id": "en-test-space_missing-0297", "split": "test", "category": "space_missing", "context": "yesterday it rained", "typed": "theentire", "intended": "the entire", "source": "tatoeba:4559553"}
+{"id": "en-test-space_to_letter-0004", "split": "test", "category": "space_to_letter", "context": "the himalayas are", "typed": "higherbthan", "intended": "higher than", "source": "tatoeba:719349"}
+{"id": "en-test-space_to_letter-0005", "split": "test", "category": "space_to_letter", "context": "we rolled", "typed": "upbthe", "intended": "up the", "source": "tatoeba:2985333"}
+{"id": "en-test-space_to_letter-0008", "split": "test", "category": "space_to_letter", "context": "sami saw the ghost going up", "typed": "innthe", "intended": "in the", "source": "tatoeba:7185829"}
+{"id": "en-test-space_to_letter-0018", "split": "test", "category": "space_to_letter", "context": "i", "typed": "lostvmy", "intended": "lost my", "source": "tatoeba:436777"}
+{"id": "en-test-space_to_letter-0019", "split": "test", "category": "space_to_letter", "context": "tom", "typed": "encouragedvmary", "intended": "encouraged mary", "source": "tatoeba:6271147"}
+{"id": "en-test-space_to_letter-0020", "split": "test", "category": "space_to_letter", "context": "i listened to some cds", "typed": "lastbnight", "intended": "last night", "source": "tatoeba:257821"}
+{"id": "en-test-space_to_letter-0021", "split": "test", "category": "space_to_letter", "context": "i don't have the strength", "typed": "tobdo", "intended": "to do", "source": "tatoeba:6248517"}
+{"id": "en-test-space_to_letter-0023", "split": "test", "category": "space_to_letter", "context": "my father is much stronger", "typed": "thannyours", "intended": "than yours", "source": "tatoeba:9623329"}
+{"id": "en-test-space_to_letter-0024", "split": "test", "category": "space_to_letter", "context": "the station", "typed": "isnthree", "intended": "is three", "source": "tatoeba:6108413"}
+{"id": "en-test-space_to_letter-0026", "split": "test", "category": "space_to_letter", "context": "i", "typed": "knowbthat", "intended": "know that", "source": "tatoeba:7514583"}
+{"id": "en-test-space_to_letter-0038", "split": "test", "category": "space_to_letter", "context": "", "typed": "hebis", "intended": "he is", "source": "tatoeba:301761"}
+{"id": "en-test-space_to_letter-0040", "split": "test", "category": "space_to_letter", "context": "", "typed": "wherenis", "intended": "where is", "source": "tatoeba:544611"}
+{"id": "en-test-space_to_letter-0041", "split": "test", "category": "space_to_letter", "context": "she was", "typed": "givenva", "intended": "given a", "source": "tatoeba:12871433"}
+{"id": "en-test-space_to_letter-0042", "split": "test", "category": "space_to_letter", "context": "that cat", "typed": "reallyvwas", "intended": "really was", "source": "tatoeba:1572807"}
+{"id": "en-test-space_to_letter-0044", "split": "test", "category": "space_to_letter", "context": "i've turned email notifications", "typed": "backmon", "intended": "back on", "source": "tatoeba:11113039"}
+{"id": "en-test-space_to_letter-0054", "split": "test", "category": "space_to_letter", "context": "mary locked herself in", "typed": "herbroom", "intended": "her room", "source": "tatoeba:6418657"}
+{"id": "en-test-space_to_letter-0057", "split": "test", "category": "space_to_letter", "context": "let's cross the", "typed": "bridgevtogether", "intended": "bridge together", "source": "tatoeba:12159765"}
+{"id": "en-test-space_to_letter-0058", "split": "test", "category": "space_to_letter", "context": "tom should", "typed": "tellnmary", "intended": "tell mary", "source": "tatoeba:6253773"}
+{"id": "en-test-space_to_letter-0062", "split": "test", "category": "space_to_letter", "context": "the crafty thief hid in", "typed": "antool", "intended": "a tool", "source": "tatoeba:3093997"}
+{"id": "en-test-space_to_letter-0063", "split": "test", "category": "space_to_letter", "context": "what could you possibly add", "typed": "tovthe", "intended": "to the", "source": "tatoeba:5789265"}
+{"id": "en-test-space_to_letter-0069", "split": "test", "category": "space_to_letter", "context": "do you have any", "typed": "friendsnin", "intended": "friends in", "source": "tatoeba:7192217"}
+{"id": "en-test-space_to_letter-0072", "split": "test", "category": "space_to_letter", "context": "a dictionary is an important aid", "typed": "innlanguage", "intended": "in language", "source": "tatoeba:264899"}
+{"id": "en-test-space_to_letter-0074", "split": "test", "category": "space_to_letter", "context": "the orange", "typed": "ismorange", "intended": "is orange", "source": "tatoeba:5257025"}
+{"id": "en-test-space_to_letter-0075", "split": "test", "category": "space_to_letter", "context": "haha", "typed": "hebcries", "intended": "he cries", "source": "tatoeba:9189847"}
+{"id": "en-test-space_to_letter-0086", "split": "test", "category": "space_to_letter", "context": "i had no", "typed": "difficultymdoing", "intended": "difficulty doing", "source": "tatoeba:6789919"}
+{"id": "en-test-space_to_letter-0088", "split": "test", "category": "space_to_letter", "context": "i was so excited that i", "typed": "couldbnot", "intended": "could not", "source": "tatoeba:18937"}
+{"id": "en-test-space_to_letter-0095", "split": "test", "category": "space_to_letter", "context": "", "typed": "tomnis", "intended": "tom is", "source": "tatoeba:7137127"}
+{"id": "en-test-space_to_letter-0113", "split": "test", "category": "space_to_letter", "context": "put", "typed": "onvyour", "intended": "on your", "source": "tatoeba:8645645"}
+{"id": "en-test-space_to_letter-0114", "split": "test", "category": "space_to_letter", "context": "", "typed": "pleasevhelp", "intended": "please help", "source": "tatoeba:38589"}
+{"id": "en-test-space_to_letter-0117", "split": "test", "category": "space_to_letter", "context": "tom thinks mary will do that", "typed": "byvherself", "intended": "by herself", "source": "tatoeba:6267019"}
+{"id": "en-test-space_to_letter-0133", "split": "test", "category": "space_to_letter", "context": "", "typed": "hownis", "intended": "how is", "source": "tatoeba:4500953"}
+{"id": "en-test-space_to_letter-0136", "split": "test", "category": "space_to_letter", "context": "don't be afraid", "typed": "tonraise", "intended": "to raise", "source": "tatoeba:8254583"}
+{"id": "en-test-space_to_letter-0141", "split": "test", "category": "space_to_letter", "context": "believing everything", "typed": "isnweakness", "intended": "is weakness", "source": "tatoeba:6100193"}
+{"id": "en-test-space_to_letter-0161", "split": "test", "category": "space_to_letter", "context": "tom doesn't", "typed": "knownwhy", "intended": "know why", "source": "tatoeba:6356585"}
+{"id": "en-test-space_to_letter-0167", "split": "test", "category": "space_to_letter", "context": "the two of us", "typed": "collectedvthem", "intended": "collected them", "source": "tatoeba:12971875"}
+{"id": "en-test-space_to_letter-0170", "split": "test", "category": "space_to_letter", "context": "it's a pity you can't", "typed": "joinbus", "intended": "join us", "source": "tatoeba:9754919"}
+{"id": "en-test-space_to_letter-0197", "split": "test", "category": "space_to_letter", "context": "i will help you from the beginning", "typed": "tobthe", "intended": "to the", "source": "tatoeba:13090485"}
+{"id": "en-test-space_to_letter-0198", "split": "test", "category": "space_to_letter", "context": "", "typed": "theyvknew", "intended": "they knew", "source": "tatoeba:12891609"}
+{"id": "en-test-space_to_letter-0203", "split": "test", "category": "space_to_letter", "context": "i doubt very seriously tom", "typed": "willnbe", "intended": "will be", "source": "tatoeba:7184093"}
+{"id": "en-test-space_to_letter-0207", "split": "test", "category": "space_to_letter", "context": "stop", "typed": "staringvat", "intended": "staring at", "source": "tatoeba:9186401"}
+{"id": "en-test-space_to_letter-0208", "split": "test", "category": "space_to_letter", "context": "", "typed": "wenmiss", "intended": "we miss", "source": "tatoeba:5736241"}
+{"id": "en-test-space_to_letter-0212", "split": "test", "category": "space_to_letter", "context": "am i", "typed": "oncthat", "intended": "on that", "source": "tatoeba:3393033"}
+{"id": "en-test-space_to_letter-0219", "split": "test", "category": "space_to_letter", "context": "tom pulled back the curtains and looked out", "typed": "thenwindow", "intended": "the window", "source": "tatoeba:3023403"}
+{"id": "en-test-space_to_letter-0222", "split": "test", "category": "space_to_letter", "context": "what's it like to", "typed": "benthe", "intended": "be the", "source": "tatoeba:8469927"}
+{"id": "en-test-space_to_letter-0230", "split": "test", "category": "space_to_letter", "context": "these are", "typed": "verycpowerful", "intended": "very powerful", "source": "tatoeba:7120351"}
+{"id": "en-test-space_to_letter-0235", "split": "test", "category": "space_to_letter", "context": "i'd like to talk to", "typed": "tomvalone", "intended": "tom alone", "source": "tatoeba:1936329"}
+{"id": "en-test-space_to_letter-0238", "split": "test", "category": "space_to_letter", "context": "a host of", "typed": "friendsncame", "intended": "friends came", "source": "tatoeba:40993"}
+{"id": "en-test-space_to_letter-0240", "split": "test", "category": "space_to_letter", "context": "her father", "typed": "isbsad", "intended": "is sad", "source": "tatoeba:11720947"}
+{"id": "en-test-space_to_letter-0242", "split": "test", "category": "space_to_letter", "context": "tom said he spoke", "typed": "tonmary", "intended": "to mary", "source": "tatoeba:6270291"}
+{"id": "en-test-space_to_letter-0255", "split": "test", "category": "space_to_letter", "context": "", "typed": "tomvtold", "intended": "tom told", "source": "tatoeba:6260237"}
+{"id": "en-test-space_to_letter-0259", "split": "test", "category": "space_to_letter", "context": "now", "typed": "everythingnis", "intended": "everything is", "source": "tatoeba:12576465"}
+{"id": "en-test-space_to_letter-0262", "split": "test", "category": "space_to_letter", "context": "you", "typed": "needcnot", "intended": "need not", "source": "tatoeba:8332953"}
+{"id": "en-test-space_to_letter-0267", "split": "test", "category": "space_to_letter", "context": "tom was holding", "typed": "amsmall", "intended": "a small", "source": "tatoeba:2537353"}
+{"id": "en-test-space_to_letter-0269", "split": "test", "category": "space_to_letter", "context": "do you need me", "typed": "tobmove", "intended": "to move", "source": "tatoeba:11039971"}
+{"id": "en-test-space_to_letter-0276", "split": "test", "category": "space_to_letter", "context": "tom is coming in on the next", "typed": "flightmfrom", "intended": "flight from", "source": "tatoeba:3011037"}
+{"id": "en-test-space_to_letter-0279", "split": "test", "category": "space_to_letter", "context": "i", "typed": "swimna", "intended": "swim a", "source": "tatoeba:5576753"}
+{"id": "en-test-space_to_letter-0282", "split": "test", "category": "space_to_letter", "context": "", "typed": "youbtake", "intended": "you take", "source": "tatoeba:12894951"}
+{"id": "en-test-space_to_letter-0290", "split": "test", "category": "space_to_letter", "context": "boston is", "typed": "verybbeautiful", "intended": "very beautiful", "source": "tatoeba:8588327"}
+{"id": "en-test-space_to_letter-0295", "split": "test", "category": "space_to_letter", "context": "is that", "typed": "blueccar", "intended": "blue car", "source": "tatoeba:8184009"}
+{"id": "en-test-space_to_letter-0297", "split": "test", "category": "space_to_letter", "context": "i decided to", "typed": "textcher", "intended": "text her", "source": "tatoeba:7961577"}
+{"id": "en-test-space_transposed-0009", "split": "test", "category": "space_transposed", "context": "tom expects", "typed": "maryt o", "intended": "mary to", "source": "tatoeba:1028959"}
+{"id": "en-test-space_transposed-0023", "split": "test", "category": "space_transposed", "context": "he provided", "typed": "foo dand", "intended": "food and", "source": "tatoeba:294441"}
+{"id": "en-test-space_transposed-0024", "split": "test", "category": "space_transposed", "context": "we ought to look the", "typed": "worl dstraight", "intended": "world straight", "source": "tatoeba:58251"}
+{"id": "en-test-space_transposed-0036", "split": "test", "category": "space_transposed", "context": "", "typed": "to mprobably", "intended": "tom probably", "source": "tatoeba:7542439"}
+{"id": "en-test-space_transposed-0037", "split": "test", "category": "space_transposed", "context": "we could", "typed": "writ ea", "intended": "write a", "source": "tatoeba:3313147"}
+{"id": "en-test-space_transposed-0043", "split": "test", "category": "space_transposed", "context": "tom", "typed": "wil lbe", "intended": "will be", "source": "tatoeba:8376691"}
+{"id": "en-test-space_transposed-0058", "split": "test", "category": "space_transposed", "context": "tom", "typed": "wrot ehis", "intended": "wrote his", "source": "tatoeba:1877587"}
+{"id": "en-test-space_transposed-0071", "split": "test", "category": "space_transposed", "context": "mary told me that you", "typed": "twow ent", "intended": "two went", "source": "tatoeba:3118255"}
+{"id": "en-test-space_transposed-0074", "split": "test", "category": "space_transposed", "context": "i was detained for burning the turkish flag", "typed": "ini stanbul", "intended": "in istanbul", "source": "tatoeba:11492567"}
+{"id": "en-test-space_transposed-0076", "split": "test", "category": "space_transposed", "context": "the", "typed": "onl ysolution", "intended": "only solution", "source": "tatoeba:1724711"}
+{"id": "en-test-space_transposed-0078", "split": "test", "category": "space_transposed", "context": "i need to get", "typed": "ou tof", "intended": "out of", "source": "tatoeba:13262851"}
+{"id": "en-test-space_transposed-0084", "split": "test", "category": "space_transposed", "context": "a tv crew from algiers", "typed": "willc ome", "intended": "will come", "source": "tatoeba:11506165"}
+{"id": "en-test-space_transposed-0093", "split": "test", "category": "space_transposed", "context": "the noises were coming", "typed": "fro mthe", "intended": "from the", "source": "tatoeba:11748685"}
+{"id": "en-test-space_transposed-0101", "split": "test", "category": "space_transposed", "context": "", "typed": "h eis", "intended": "he is", "source": "tatoeba:297077"}
+{"id": "en-test-space_transposed-0109", "split": "test", "category": "space_transposed", "context": "sami", "typed": "wass leeping", "intended": "was sleeping", "source": "tatoeba:7218119"}
+{"id": "en-test-space_transposed-0114", "split": "test", "category": "space_transposed", "context": "i know tom", "typed": "hasd one", "intended": "has done", "source": "tatoeba:7516051"}
+{"id": "en-test-space_transposed-0116", "split": "test", "category": "space_transposed", "context": "it's just a", "typed": "mil dstroke", "intended": "mild stroke", "source": "tatoeba:9752461"}
+{"id": "en-test-space_transposed-0122", "split": "test", "category": "space_transposed", "context": "a lot has already improved", "typed": "her ein", "intended": "here in", "source": "tatoeba:8575013"}
+{"id": "en-test-space_transposed-0135", "split": "test", "category": "space_transposed", "context": "sami needed", "typed": "t oinvestigate", "intended": "to investigate", "source": "tatoeba:7267569"}
+{"id": "en-test-space_transposed-0137", "split": "test", "category": "space_transposed", "context": "tom", "typed": "defeate dhis", "intended": "defeated his", "source": "tatoeba:7734069"}
+{"id": "en-test-space_transposed-0144", "split": "test", "category": "space_transposed", "context": "", "typed": "tomt hinks", "intended": "tom thinks", "source": "tatoeba:6269307"}
+{"id": "en-test-space_transposed-0153", "split": "test", "category": "space_transposed", "context": "i'm", "typed": "ridin gwith", "intended": "riding with", "source": "tatoeba:3903497"}
+{"id": "en-test-space_transposed-0156", "split": "test", "category": "space_transposed", "context": "were tom and mary in", "typed": "bosto nyesterday", "intended": "boston yesterday", "source": "tatoeba:6515537"}
+{"id": "en-test-space_transposed-0159", "split": "test", "category": "space_transposed", "context": "everybody", "typed": "herek nows", "intended": "here knows", "source": "tatoeba:7512739"}
+{"id": "en-test-space_transposed-0160", "split": "test", "category": "space_transposed", "context": "he is absorbed", "typed": "int he", "intended": "in the", "source": "tatoeba:292577"}
+{"id": "en-test-space_transposed-0162", "split": "test", "category": "space_transposed", "context": "tom told", "typed": "maryj ohn", "intended": "mary john", "source": "tatoeba:8183975"}
+{"id": "en-test-space_transposed-0163", "split": "test", "category": "space_transposed", "context": "i had", "typed": "shortso n", "intended": "shorts on", "source": "tatoeba:5850583"}
+{"id": "en-test-space_transposed-0167", "split": "test", "category": "space_transposed", "context": "", "typed": "iw onder", "intended": "i wonder", "source": "tatoeba:13843213"}
+{"id": "en-test-space_transposed-0170", "split": "test", "category": "space_transposed", "context": "i don't", "typed": "hates chool", "intended": "hate school", "source": "tatoeba:3969369"}
+{"id": "en-test-space_transposed-0173", "split": "test", "category": "space_transposed", "context": "today practically all the national newspapers", "typed": "aret alking", "intended": "are talking", "source": "tatoeba:11816167"}
+{"id": "en-test-space_transposed-0180", "split": "test", "category": "space_transposed", "context": "", "typed": "its eems", "intended": "it seems", "source": "tatoeba:12770939"}
+{"id": "en-test-space_transposed-0183", "split": "test", "category": "space_transposed", "context": "", "typed": "th eboss", "intended": "the boss", "source": "tatoeba:1358657"}
+{"id": "en-test-space_transposed-0189", "split": "test", "category": "space_transposed", "context": "tom and mary", "typed": "thoughtt hat", "intended": "thought that", "source": "tatoeba:6504935"}
+{"id": "en-test-space_transposed-0193", "split": "test", "category": "space_transposed", "context": "in this city", "typed": "therea re", "intended": "there are", "source": "tatoeba:12302153"}
+{"id": "en-test-space_transposed-0202", "split": "test", "category": "space_transposed", "context": "look at the boy and the dog", "typed": "tha tare", "intended": "that are", "source": "tatoeba:240635"}
+{"id": "en-test-space_transposed-0203", "split": "test", "category": "space_transposed", "context": "tom", "typed": "andm ary", "intended": "and mary", "source": "tatoeba:7441121"}
+{"id": "en-test-space_transposed-0209", "split": "test", "category": "space_transposed", "context": "i didn't think tom would really do", "typed": "tha tby", "intended": "that by", "source": "tatoeba:7145949"}
+{"id": "en-test-space_transposed-0211", "split": "test", "category": "space_transposed", "context": "we don't really have", "typed": "tod o", "intended": "to do", "source": "tatoeba:3472783"}
+{"id": "en-test-space_transposed-0219", "split": "test", "category": "space_transposed", "context": "the thought of", "typed": "losingh er", "intended": "losing her", "source": "tatoeba:11578025"}
+{"id": "en-test-space_transposed-0223", "split": "test", "category": "space_transposed", "context": "i know as", "typed": "mucha s", "intended": "much as", "source": "tatoeba:2375863"}
+{"id": "en-test-space_transposed-0225", "split": "test", "category": "space_transposed", "context": "if it's too hard for", "typed": "yout o", "intended": "you to", "source": "tatoeba:6338099"}
+{"id": "en-test-space_transposed-0227", "split": "test", "category": "space_transposed", "context": "i received a fine", "typed": "i nthe", "intended": "in the", "source": "tatoeba:13043315"}
+{"id": "en-test-space_transposed-0230", "split": "test", "category": "space_transposed", "context": "a proposal has", "typed": "alway san", "intended": "always an", "source": "tatoeba:2806993"}
+{"id": "en-test-space_transposed-0231", "split": "test", "category": "space_transposed", "context": "", "typed": "jame swas", "intended": "james was", "source": "tatoeba:11506753"}
+{"id": "en-test-space_transposed-0232", "split": "test", "category": "space_transposed", "context": "we wish", "typed": "tog o", "intended": "to go", "source": "tatoeba:12582557"}
+{"id": "en-test-space_transposed-0236", "split": "test", "category": "space_transposed", "context": "i'd", "typed": "liket o", "intended": "like to", "source": "tatoeba:11317325"}
+{"id": "en-test-space_transposed-0239", "split": "test", "category": "space_transposed", "context": "are you planning", "typed": "tos tay", "intended": "to stay", "source": "tatoeba:2821517"}
+{"id": "en-test-space_transposed-0241", "split": "test", "category": "space_transposed", "context": "i communicate with my friends", "typed": "ont he", "intended": "on the", "source": "tatoeba:436499"}
+{"id": "en-test-space_transposed-0248", "split": "test", "category": "space_transposed", "context": "i don't drink", "typed": "howd are", "intended": "how dare", "source": "tatoeba:10105469"}
+{"id": "en-test-space_transposed-0252", "split": "test", "category": "space_transposed", "context": "my plan was to", "typed": "leavee arly", "intended": "leave early", "source": "tatoeba:8382753"}
+{"id": "en-test-space_transposed-0259", "split": "test", "category": "space_transposed", "context": "the", "typed": "atomicb omb", "intended": "atomic bomb", "source": "tatoeba:239479"}
+{"id": "en-test-space_transposed-0266", "split": "test", "category": "space_transposed", "context": "our parents live right", "typed": "acrosst he", "intended": "across the", "source": "tatoeba:325693"}
+{"id": "en-test-space_transposed-0271", "split": "test", "category": "space_transposed", "context": "a", "typed": "bananai s", "intended": "banana is", "source": "tatoeba:6698243"}
+{"id": "en-test-space_transposed-0283", "split": "test", "category": "space_transposed", "context": "tom and mary told", "typed": "joh nthat", "intended": "john that", "source": "tatoeba:6496831"}
+{"id": "en-test-space_transposed-0284", "split": "test", "category": "space_transposed", "context": "tom is about as tall", "typed": "a smary", "intended": "as mary", "source": "tatoeba:5640511"}
+{"id": "en-test-space_transposed-0286", "split": "test", "category": "space_transposed", "context": "is it true that", "typed": "yo umoved", "intended": "you moved", "source": "tatoeba:13803275"}
+{"id": "en-test-space_transposed-0291", "split": "test", "category": "space_transposed", "context": "why don't you guys go home and", "typed": "ge tsome", "intended": "get some", "source": "tatoeba:2210753"}
+{"id": "en-test-space_transposed-0293", "split": "test", "category": "space_transposed", "context": "layla deserted her husband", "typed": "andc hildren", "intended": "and children", "source": "tatoeba:6375285"}
+{"id": "en-test-space_transposed-0298", "split": "test", "category": "space_transposed", "context": "mary told", "typed": "m ethat", "intended": "me that", "source": "tatoeba:6414515"}
+{"id": "en-test-space_transposed-0299", "split": "test", "category": "space_transposed", "context": "robert", "typed": "wasb uried", "intended": "was buried", "source": "tatoeba:11596753"}
+{"id": "en-test-substitution_adjacent-0001", "split": "test", "category": "substitution_adjacent", "context": "i ought to have made a hotel reservation", "typed": "earlirr", "intended": "earlier", "source": "tatoeba:30415"}
+{"id": "en-test-substitution_adjacent-0004", "split": "test", "category": "substitution_adjacent", "context": "tom", "typed": "sqid", "intended": "said", "source": "tatoeba:4134237"}
+{"id": "en-test-substitution_adjacent-0014", "split": "test", "category": "substitution_adjacent", "context": "we slept through the", "typed": "lecthre", "intended": "lecture", "source": "tatoeba:12882531"}
+{"id": "en-test-substitution_adjacent-0015", "split": "test", "category": "substitution_adjacent", "context": "that's what i'm", "typed": "goiny", "intended": "going", "source": "tatoeba:3378905"}
+{"id": "en-test-substitution_adjacent-0020", "split": "test", "category": "substitution_adjacent", "context": "let's play a", "typed": "gamd", "intended": "game", "source": "tatoeba:6110311"}
+{"id": "en-test-substitution_adjacent-0024", "split": "test", "category": "substitution_adjacent", "context": "he", "typed": "capculated", "intended": "calculated", "source": "tatoeba:12774931"}
+{"id": "en-test-substitution_adjacent-0029", "split": "test", "category": "substitution_adjacent", "context": "frank zappa was an american", "typed": "kusician", "intended": "musician", "source": "tatoeba:2563623"}
+{"id": "en-test-substitution_adjacent-0031", "split": "test", "category": "substitution_adjacent", "context": "i'll bet you can do", "typed": "begter", "intended": "better", "source": "tatoeba:2539519"}
+{"id": "en-test-substitution_adjacent-0037", "split": "test", "category": "substitution_adjacent", "context": "don't talk about", "typed": "yiurself", "intended": "yourself", "source": "tatoeba:10843305"}
+{"id": "en-test-substitution_adjacent-0042", "split": "test", "category": "substitution_adjacent", "context": "tom's", "typed": "doster", "intended": "foster", "source": "tatoeba:12155793"}
+{"id": "en-test-substitution_adjacent-0050", "split": "test", "category": "substitution_adjacent", "context": "sami had his phone on during the", "typed": "tedt", "intended": "test", "source": "tatoeba:7190223"}
+{"id": "en-test-substitution_adjacent-0056", "split": "test", "category": "substitution_adjacent", "context": "what's the name of the restaurant where tom", "typed": "woros", "intended": "works", "source": "tatoeba:6662959"}
+{"id": "en-test-substitution_adjacent-0064", "split": "test", "category": "substitution_adjacent", "context": "tom didn't want mary to get", "typed": "intk", "intended": "into", "source": "tatoeba:6528115"}
+{"id": "en-test-substitution_adjacent-0069", "split": "test", "category": "substitution_adjacent", "context": "i walked", "typed": "sround", "intended": "around", "source": "tatoeba:262015"}
+{"id": "en-test-substitution_adjacent-0074", "split": "test", "category": "substitution_adjacent", "context": "keep your", "typed": "hesd", "intended": "head", "source": "tatoeba:6742783"}
+{"id": "en-test-substitution_adjacent-0075", "split": "test", "category": "substitution_adjacent", "context": "ukraine's economy has", "typed": "crasged", "intended": "crashed", "source": "tatoeba:10894839"}
+{"id": "en-test-substitution_adjacent-0077", "split": "test", "category": "substitution_adjacent", "context": "how", "typed": "glod", "intended": "good", "source": "tatoeba:4380501"}
+{"id": "en-test-substitution_adjacent-0079", "split": "test", "category": "substitution_adjacent", "context": "why isn't", "typed": "wlgeria", "intended": "algeria", "source": "tatoeba:9453769"}
+{"id": "en-test-substitution_adjacent-0085", "split": "test", "category": "substitution_adjacent", "context": "this is", "typed": "completdly", "intended": "completely", "source": "tatoeba:8307721"}
+{"id": "en-test-substitution_adjacent-0090", "split": "test", "category": "substitution_adjacent", "context": "our plane was flying", "typed": "wbove", "intended": "above", "source": "tatoeba:28871"}
+{"id": "en-test-substitution_adjacent-0092", "split": "test", "category": "substitution_adjacent", "context": "tom said", "typed": "thqt", "intended": "that", "source": "tatoeba:6648367"}
+{"id": "en-test-substitution_adjacent-0097", "split": "test", "category": "substitution_adjacent", "context": "what are you", "typed": "thdee", "intended": "three", "source": "tatoeba:12084019"}
+{"id": "en-test-substitution_adjacent-0129", "split": "test", "category": "substitution_adjacent", "context": "we shouldn't spend money on things we don't", "typed": "newd", "intended": "need", "source": "tatoeba:8779453"}
+{"id": "en-test-substitution_adjacent-0133", "split": "test", "category": "substitution_adjacent", "context": "you didn't do", "typed": "tgat", "intended": "that", "source": "tatoeba:5903807"}
+{"id": "en-test-substitution_adjacent-0135", "split": "test", "category": "substitution_adjacent", "context": "are you quite satisfied with", "typed": "ypur", "intended": "your", "source": "tatoeba:269273"}
+{"id": "en-test-substitution_adjacent-0136", "split": "test", "category": "substitution_adjacent", "context": "", "typed": "pizzw", "intended": "pizza", "source": "tatoeba:11996875"}
+{"id": "en-test-substitution_adjacent-0138", "split": "test", "category": "substitution_adjacent", "context": "the threat is", "typed": "reao", "intended": "real", "source": "tatoeba:4502615"}
+{"id": "en-test-substitution_adjacent-0142", "split": "test", "category": "substitution_adjacent", "context": "tom has", "typed": "finalpy", "intended": "finally", "source": "tatoeba:6256579"}
+{"id": "en-test-substitution_adjacent-0144", "split": "test", "category": "substitution_adjacent", "context": "tom", "typed": "biys", "intended": "buys", "source": "tatoeba:3150591"}
+{"id": "en-test-substitution_adjacent-0146", "split": "test", "category": "substitution_adjacent", "context": "tom rented a", "typed": "mocie", "intended": "movie", "source": "tatoeba:5387925"}
+{"id": "en-test-substitution_adjacent-0149", "split": "test", "category": "substitution_adjacent", "context": "it seems tom got", "typed": "offdnded", "intended": "offended", "source": "tatoeba:9188265"}
+{"id": "en-test-substitution_adjacent-0152", "split": "test", "category": "substitution_adjacent", "context": "i don't think that tom will tell", "typed": "ajyone", "intended": "anyone", "source": "tatoeba:6848991"}
+{"id": "en-test-substitution_adjacent-0154", "split": "test", "category": "substitution_adjacent", "context": "i'll", "typed": "neithed", "intended": "neither", "source": "tatoeba:11864349"}
+{"id": "en-test-substitution_adjacent-0156", "split": "test", "category": "substitution_adjacent", "context": "i don't know", "typed": "whqt", "intended": "what", "source": "tatoeba:8200321"}
+{"id": "en-test-substitution_adjacent-0159", "split": "test", "category": "substitution_adjacent", "context": "apparently tom didn't do anything", "typed": "yestedday", "intended": "yesterday", "source": "tatoeba:9419491"}
+{"id": "en-test-substitution_adjacent-0161", "split": "test", "category": "substitution_adjacent", "context": "sami and layla", "typed": "agfee", "intended": "agree", "source": "tatoeba:7361199"}
+{"id": "en-test-substitution_adjacent-0168", "split": "test", "category": "substitution_adjacent", "context": "i don't think", "typed": "tbat", "intended": "that", "source": "tatoeba:7236163"}
+{"id": "en-test-substitution_adjacent-0173", "split": "test", "category": "substitution_adjacent", "context": "tom works for a big advertising", "typed": "firk", "intended": "firm", "source": "tatoeba:3315261"}
+{"id": "en-test-substitution_adjacent-0182", "split": "test", "category": "substitution_adjacent", "context": "tom vehemently denied he'd", "typed": "rone", "intended": "done", "source": "tatoeba:7217797"}
+{"id": "en-test-substitution_adjacent-0185", "split": "test", "category": "substitution_adjacent", "context": "i'm thinking", "typed": "aboht", "intended": "about", "source": "tatoeba:10096077"}
+{"id": "en-test-substitution_adjacent-0199", "split": "test", "category": "substitution_adjacent", "context": "purge your head of", "typed": "moraks", "intended": "morals", "source": "tatoeba:9241137"}
+{"id": "en-test-substitution_adjacent-0201", "split": "test", "category": "substitution_adjacent", "context": "it certainly", "typed": "lookz", "intended": "looks", "source": "tatoeba:4720185"}
+{"id": "en-test-substitution_adjacent-0206", "split": "test", "category": "substitution_adjacent", "context": "", "typed": "tbey", "intended": "they", "source": "tatoeba:10716893"}
+{"id": "en-test-substitution_adjacent-0207", "split": "test", "category": "substitution_adjacent", "context": "i just don't", "typed": "tdust", "intended": "trust", "source": "tatoeba:3905099"}
+{"id": "en-test-substitution_adjacent-0224", "split": "test", "category": "substitution_adjacent", "context": "", "typed": "truty", "intended": "truth", "source": "tatoeba:6993277"}
+{"id": "en-test-substitution_adjacent-0235", "split": "test", "category": "substitution_adjacent", "context": "they weren't fighting were", "typed": "tyey", "intended": "they", "source": "tatoeba:7442185"}
+{"id": "en-test-substitution_adjacent-0244", "split": "test", "category": "substitution_adjacent", "context": "what's the most valuable lesson you've", "typed": "learnrd", "intended": "learned", "source": "tatoeba:11893001"}
+{"id": "en-test-substitution_adjacent-0261", "split": "test", "category": "substitution_adjacent", "context": "in half an hour the", "typed": "villqge", "intended": "village", "source": "tatoeba:10524531"}
+{"id": "en-test-substitution_adjacent-0262", "split": "test", "category": "substitution_adjacent", "context": "diego was", "typed": "completepy", "intended": "completely", "source": "tatoeba:11751069"}
+{"id": "en-test-substitution_adjacent-0264", "split": "test", "category": "substitution_adjacent", "context": "janos and olivia were clutching each", "typed": "otber", "intended": "other", "source": "tatoeba:12033575"}
+{"id": "en-test-substitution_adjacent-0265", "split": "test", "category": "substitution_adjacent", "context": "we value", "typed": "youf", "intended": "your", "source": "tatoeba:11696451"}
+{"id": "en-test-substitution_adjacent-0269", "split": "test", "category": "substitution_adjacent", "context": "sami", "typed": "enjoydd", "intended": "enjoyed", "source": "tatoeba:6807073"}
+{"id": "en-test-substitution_adjacent-0270", "split": "test", "category": "substitution_adjacent", "context": "there are some pretty", "typed": "flowwrs", "intended": "flowers", "source": "tatoeba:44967"}
+{"id": "en-test-substitution_adjacent-0271", "split": "test", "category": "substitution_adjacent", "context": "i think that tom would", "typed": "kbow", "intended": "know", "source": "tatoeba:7169663"}
+{"id": "en-test-substitution_adjacent-0273", "split": "test", "category": "substitution_adjacent", "context": "the united states has a large trade", "typed": "deficig", "intended": "deficit", "source": "tatoeba:5992777"}
+{"id": "en-test-substitution_adjacent-0276", "split": "test", "category": "substitution_adjacent", "context": "we need to find a place to hide this", "typed": "noney", "intended": "money", "source": "tatoeba:13148509"}
+{"id": "en-test-substitution_adjacent-0278", "split": "test", "category": "substitution_adjacent", "context": "let's", "typed": "recreafe", "intended": "recreate", "source": "tatoeba:10690413"}
+{"id": "en-test-substitution_adjacent-0280", "split": "test", "category": "substitution_adjacent", "context": "they", "typed": "wdmit", "intended": "admit", "source": "tatoeba:7408933"}
+{"id": "en-test-substitution_adjacent-0289", "split": "test", "category": "substitution_adjacent", "context": "where does the", "typed": "rruth", "intended": "truth", "source": "tatoeba:3382741"}
+{"id": "en-test-substitution_adjacent-0298", "split": "test", "category": "substitution_adjacent", "context": "", "typed": "rhey", "intended": "they", "source": "tatoeba:12891499"}
+{"id": "en-test-transposition-0003", "split": "test", "category": "transposition", "context": "everybody did", "typed": "thta", "intended": "that", "source": "tatoeba:6524763"}
+{"id": "en-test-transposition-0005", "split": "test", "category": "transposition", "context": "your children are", "typed": "ctue", "intended": "cute", "source": "tatoeba:6356031"}
+{"id": "en-test-transposition-0016", "split": "test", "category": "transposition", "context": "tom is probably not out", "typed": "iwth", "intended": "with", "source": "tatoeba:8988269"}
+{"id": "en-test-transposition-0017", "split": "test", "category": "transposition", "context": "it isn't time to", "typed": "stpo", "intended": "stop", "source": "tatoeba:7197333"}
+{"id": "en-test-transposition-0026", "split": "test", "category": "transposition", "context": "you find these", "typed": "poeple", "intended": "people", "source": "tatoeba:10864637"}
+{"id": "en-test-transposition-0034", "split": "test", "category": "transposition", "context": "the country perished", "typed": "nuder", "intended": "under", "source": "tatoeba:9471849"}
+{"id": "en-test-transposition-0036", "split": "test", "category": "transposition", "context": "our school adopted his", "typed": "teachnig", "intended": "teaching", "source": "tatoeba:23561"}
+{"id": "en-test-transposition-0046", "split": "test", "category": "transposition", "context": "tom wasn't", "typed": "surpriesd", "intended": "surprised", "source": "tatoeba:6334863"}
+{"id": "en-test-transposition-0048", "split": "test", "category": "transposition", "context": "tom was killed the same way", "typed": "mayr", "intended": "mary", "source": "tatoeba:7537821"}
+{"id": "en-test-transposition-0052", "split": "test", "category": "transposition", "context": "he", "typed": "broguht", "intended": "brought", "source": "tatoeba:8536993"}
+{"id": "en-test-transposition-0056", "split": "test", "category": "transposition", "context": "for once media hyperbole matches", "typed": "reailty", "intended": "reality", "source": "tatoeba:11502485"}
+{"id": "en-test-transposition-0060", "split": "test", "category": "transposition", "context": "i think we've already wasted too", "typed": "muhc", "intended": "much", "source": "tatoeba:2408509"}
+{"id": "en-test-transposition-0066", "split": "test", "category": "transposition", "context": "i", "typed": "wnat", "intended": "want", "source": "tatoeba:12916387"}
+{"id": "en-test-transposition-0071", "split": "test", "category": "transposition", "context": "tom can't do", "typed": "thta", "intended": "that", "source": "tatoeba:5938509"}
+{"id": "en-test-transposition-0077", "split": "test", "category": "transposition", "context": "that hasn't happened", "typed": "snice", "intended": "since", "source": "tatoeba:10782765"}
+{"id": "en-test-transposition-0092", "split": "test", "category": "transposition", "context": "", "typed": "smoebody", "intended": "somebody", "source": "tatoeba:12320661"}
+{"id": "en-test-transposition-0096", "split": "test", "category": "transposition", "context": "the", "typed": "loclas", "intended": "locals", "source": "tatoeba:6453815"}
+{"id": "en-test-transposition-0103", "split": "test", "category": "transposition", "context": "eat", "typed": "rbead", "intended": "bread", "source": "tatoeba:12971769"}
+{"id": "en-test-transposition-0109", "split": "test", "category": "transposition", "context": "we'll be", "typed": "aeting", "intended": "eating", "source": "tatoeba:10597155"}
+{"id": "en-test-transposition-0112", "split": "test", "category": "transposition", "context": "the", "typed": "leaedr", "intended": "leader", "source": "tatoeba:9846109"}
+{"id": "en-test-transposition-0127", "split": "test", "category": "transposition", "context": "the teacher", "typed": "callde", "intended": "called", "source": "tatoeba:273007"}
+{"id": "en-test-transposition-0129", "split": "test", "category": "transposition", "context": "what was she doing in", "typed": "yuor", "intended": "your", "source": "tatoeba:2483407"}
+{"id": "en-test-transposition-0134", "split": "test", "category": "transposition", "context": "i didn't", "typed": "noitce", "intended": "notice", "source": "tatoeba:6413723"}
+{"id": "en-test-transposition-0137", "split": "test", "category": "transposition", "context": "", "typed": "siaac", "intended": "isaac", "source": "tatoeba:3464297"}
+{"id": "en-test-transposition-0141", "split": "test", "category": "transposition", "context": "is tom going to testify", "typed": "againts", "intended": "against", "source": "tatoeba:10031121"}
+{"id": "en-test-transposition-0143", "split": "test", "category": "transposition", "context": "don't grow too", "typed": "ofnd", "intended": "fond", "source": "tatoeba:3725027"}
+{"id": "en-test-transposition-0149", "split": "test", "category": "transposition", "context": "i'm not going to", "typed": "dacne", "intended": "dance", "source": "tatoeba:6809867"}
+{"id": "en-test-transposition-0150", "split": "test", "category": "transposition", "context": "i didn't think tom and mary were", "typed": "abesnt", "intended": "absent", "source": "tatoeba:6514145"}
+{"id": "en-test-transposition-0156", "split": "test", "category": "transposition", "context": "did you add anything", "typed": "esle", "intended": "else", "source": "tatoeba:13044309"}
+{"id": "en-test-transposition-0158", "split": "test", "category": "transposition", "context": "his face blew up", "typed": "ilke", "intended": "like", "source": "tatoeba:8373871"}
+{"id": "en-test-transposition-0164", "split": "test", "category": "transposition", "context": "tom", "typed": "sono", "intended": "soon", "source": "tatoeba:6124277"}
+{"id": "en-test-transposition-0169", "split": "test", "category": "transposition", "context": "i hope you", "typed": "konw", "intended": "know", "source": "tatoeba:11573827"}
+{"id": "en-test-transposition-0177", "split": "test", "category": "transposition", "context": "he bored us with his long", "typed": "tsories", "intended": "stories", "source": "tatoeba:287163"}
+{"id": "en-test-transposition-0186", "split": "test", "category": "transposition", "context": "look at this", "typed": "brid", "intended": "bird", "source": "tatoeba:2708697"}
+{"id": "en-test-transposition-0187", "split": "test", "category": "transposition", "context": "sami is madly in love", "typed": "wiht", "intended": "with", "source": "tatoeba:6698213"}
+{"id": "en-test-transposition-0191", "split": "test", "category": "transposition", "context": "sami", "typed": "tsarted", "intended": "started", "source": "tatoeba:7978335"}
+{"id": "en-test-transposition-0195", "split": "test", "category": "transposition", "context": "most", "typed": "obys", "intended": "boys", "source": "tatoeba:41173"}
+{"id": "en-test-transposition-0200", "split": "test", "category": "transposition", "context": "tom", "typed": "explianed", "intended": "explained", "source": "tatoeba:1094157"}
+{"id": "en-test-transposition-0204", "split": "test", "category": "transposition", "context": "arabic is a", "typed": "ncie", "intended": "nice", "source": "tatoeba:8737457"}
+{"id": "en-test-transposition-0207", "split": "test", "category": "transposition", "context": "i had to make up for the", "typed": "olss", "intended": "loss", "source": "tatoeba:259255"}
+{"id": "en-test-transposition-0209", "split": "test", "category": "transposition", "context": "mary was surprised", "typed": "whne", "intended": "when", "source": "tatoeba:6417473"}
+{"id": "en-test-transposition-0210", "split": "test", "category": "transposition", "context": "ghosts can", "typed": "posesss", "intended": "possess", "source": "tatoeba:2818873"}
+{"id": "en-test-transposition-0211", "split": "test", "category": "transposition", "context": "was tom the one who", "typed": "rwote", "intended": "wrote", "source": "tatoeba:7812901"}
+{"id": "en-test-transposition-0212", "split": "test", "category": "transposition", "context": "let's do this again", "typed": "sono", "intended": "soon", "source": "tatoeba:6710755"}
+{"id": "en-test-transposition-0223", "split": "test", "category": "transposition", "context": "algeria needs to", "typed": "addrses", "intended": "address", "source": "tatoeba:10925621"}
+{"id": "en-test-transposition-0235", "split": "test", "category": "transposition", "context": "he's an algerian", "typed": "lbogger", "intended": "blogger", "source": "tatoeba:8605067"}
+{"id": "en-test-transposition-0241", "split": "test", "category": "transposition", "context": "he knows he made the right", "typed": "cohice", "intended": "choice", "source": "tatoeba:7394885"}
+{"id": "en-test-transposition-0243", "split": "test", "category": "transposition", "context": "am i being", "typed": "childsih", "intended": "childish", "source": "tatoeba:11877581"}
+{"id": "en-test-transposition-0244", "split": "test", "category": "transposition", "context": "he handed his", "typed": "kesy", "intended": "keys", "source": "tatoeba:7388123"}
+{"id": "en-test-transposition-0245", "split": "test", "category": "transposition", "context": "tom mary and", "typed": "jonh", "intended": "john", "source": "tatoeba:2537249"}
+{"id": "en-test-transposition-0259", "split": "test", "category": "transposition", "context": "tom has been extremely", "typed": "dsirespectful", "intended": "disrespectful", "source": "tatoeba:8371663"}
+{"id": "en-test-transposition-0269", "split": "test", "category": "transposition", "context": "tom", "typed": "otld", "intended": "told", "source": "tatoeba:7214751"}
+{"id": "en-test-transposition-0274", "split": "test", "category": "transposition", "context": "tom told me that he thought that mary was", "typed": "nervuos", "intended": "nervous", "source": "tatoeba:7212397"}
+{"id": "en-test-transposition-0276", "split": "test", "category": "transposition", "context": "i'm very busy getting", "typed": "erady", "intended": "ready", "source": "tatoeba:3737595"}
+{"id": "en-test-transposition-0280", "split": "test", "category": "transposition", "context": "tomorrow morning", "typed": "wlil", "intended": "will", "source": "tatoeba:323191"}
+{"id": "en-test-transposition-0284", "split": "test", "category": "transposition", "context": "there were", "typed": "osme", "intended": "some", "source": "tatoeba:3125315"}
+{"id": "en-test-transposition-0286", "split": "test", "category": "transposition", "context": "who else came to the", "typed": "patry", "intended": "party", "source": "tatoeba:33623"}
+{"id": "en-test-transposition-0291", "split": "test", "category": "transposition", "context": "tom said he", "typed": "tohught", "intended": "thought", "source": "tatoeba:6239891"}
+{"id": "en-test-transposition-0293", "split": "test", "category": "transposition", "context": "tom is in the mess", "typed": "hlal", "intended": "hall", "source": "tatoeba:1453501"}
+{"id": "en-test-transposition-0296", "split": "test", "category": "transposition", "context": "tom", "typed": "esems", "intended": "seems", "source": "tatoeba:10630327"}
+{"id": "en-test-two_errors-0003", "split": "test", "category": "two_errors", "context": "in english there are some words borrowed from", "typed": "jpaajese", "intended": "japanese", "source": "tatoeba:236899"}
+{"id": "en-test-two_errors-0009", "split": "test", "category": "two_errors", "context": "i wanted to explain", "typed": "eeverythign", "intended": "everything", "source": "tatoeba:8344981"}
+{"id": "en-test-two_errors-0012", "split": "test", "category": "two_errors", "context": "", "typed": "hgappinesss", "intended": "happiness", "source": "tatoeba:13185527"}
+{"id": "en-test-two_errors-0015", "split": "test", "category": "two_errors", "context": "they will wash the", "typed": "potaqtoess", "intended": "potatoes", "source": "tatoeba:9037303"}
+{"id": "en-test-two_errors-0017", "split": "test", "category": "two_errors", "context": "tom failed his", "typed": "druiviing", "intended": "driving", "source": "tatoeba:10110327"}
+{"id": "en-test-two_errors-0019", "split": "test", "category": "two_errors", "context": "admire how", "typed": "dplendiid", "intended": "splendid", "source": "tatoeba:12668539"}
+{"id": "en-test-two_errors-0024", "split": "test", "category": "two_errors", "context": "will tom be coming", "typed": "toorroww", "intended": "tomorrow", "source": "tatoeba:10803973"}
+{"id": "en-test-two_errors-0025", "split": "test", "category": "two_errors", "context": "in this village only four families live", "typed": "hroughoutt", "intended": "throughout", "source": "tatoeba:8780545"}
+{"id": "en-test-two_errors-0028", "split": "test", "category": "two_errors", "context": "", "typed": "wehreer", "intended": "wherever", "source": "tatoeba:9855569"}
+{"id": "en-test-two_errors-0033", "split": "test", "category": "two_errors", "context": "you have high", "typed": "poyentail", "intended": "potential", "source": "tatoeba:10856801"}
+{"id": "en-test-two_errors-0036", "split": "test", "category": "two_errors", "context": "", "typed": "lparenmts", "intended": "parents", "source": "tatoeba:4665293"}
+{"id": "en-test-two_errors-0039", "split": "test", "category": "two_errors", "context": "the conversation switched to", "typed": "poitivs", "intended": "politics", "source": "tatoeba:2788447"}
+{"id": "en-test-two_errors-0046", "split": "test", "category": "two_errors", "context": "please let us know if", "typed": "anyythingg", "intended": "anything", "source": "tatoeba:12751653"}
+{"id": "en-test-two_errors-0048", "split": "test", "category": "two_errors", "context": "they opened a bank account in", "typed": "algira", "intended": "algeria", "source": "tatoeba:8547665"}
+{"id": "en-test-two_errors-0052", "split": "test", "category": "two_errors", "context": "the only", "typed": "pfobem", "intended": "problem", "source": "tatoeba:2662697"}
+{"id": "en-test-two_errors-0054", "split": "test", "category": "two_errors", "context": "i wonder why tom and mary were", "typed": "artetsed", "intended": "arrested", "source": "tatoeba:6513837"}
+{"id": "en-test-two_errors-0078", "split": "test", "category": "two_errors", "context": "tom wants mary to learn how to play the", "typed": "rumpeet", "intended": "trumpet", "source": "tatoeba:3736395"}
+{"id": "en-test-two_errors-0083", "split": "test", "category": "two_errors", "context": "tokyo was really", "typed": "wojdercful", "intended": "wonderful", "source": "tatoeba:279773"}
+{"id": "en-test-two_errors-0085", "split": "test", "category": "two_errors", "context": "he", "typed": "adimttwd", "intended": "admitted", "source": "tatoeba:7400431"}
+{"id": "en-test-two_errors-0086", "split": "test", "category": "two_errors", "context": "i", "typed": "aplogiez", "intended": "apologize", "source": "tatoeba:680223"}
+{"id": "en-test-two_errors-0087", "split": "test", "category": "two_errors", "context": "mary", "typed": "relasded", "intended": "released", "source": "tatoeba:1495195"}
+{"id": "en-test-two_errors-0092", "split": "test", "category": "two_errors", "context": "tom has finally", "typed": "ddecuded", "intended": "decided", "source": "tatoeba:6247363"}
+{"id": "en-test-two_errors-0097", "split": "test", "category": "two_errors", "context": "please let me know the results by", "typed": "gelegraam", "intended": "telegram", "source": "tatoeba:238611"}
+{"id": "en-test-two_errors-0103", "split": "test", "category": "two_errors", "context": "", "typed": "alggeeia", "intended": "algeria", "source": "tatoeba:8122891"}
+{"id": "en-test-two_errors-0109", "split": "test", "category": "two_errors", "context": "we had to postpone the picnic", "typed": "bcauuse", "intended": "because", "source": "tatoeba:10585637"}
+{"id": "en-test-two_errors-0113", "split": "test", "category": "two_errors", "context": "the party's going to be at my", "typed": "faoritte", "intended": "favorite", "source": "tatoeba:13328887"}
+{"id": "en-test-two_errors-0119", "split": "test", "category": "two_errors", "context": "he recently completed his college", "typed": "stfudiesd", "intended": "studies", "source": "tatoeba:13004121"}
+{"id": "en-test-two_errors-0120", "split": "test", "category": "two_errors", "context": "lukas prepared to hang", "typed": "huimserlf", "intended": "himself", "source": "tatoeba:11647015"}
+{"id": "en-test-two_errors-0123", "split": "test", "category": "two_errors", "context": "i'll do my", "typed": "homwoork", "intended": "homework", "source": "tatoeba:6347857"}
+{"id": "en-test-two_errors-0125", "split": "test", "category": "two_errors", "context": "tom told", "typed": "eeryody", "intended": "everybody", "source": "tatoeba:6647281"}
+{"id": "en-test-two_errors-0140", "split": "test", "category": "two_errors", "context": "i actually", "typed": "apprfeciaet", "intended": "appreciate", "source": "tatoeba:4495693"}
+{"id": "en-test-two_errors-0145", "split": "test", "category": "two_errors", "context": "did you notice the", "typed": "ifferences", "intended": "difference", "source": "tatoeba:10719007"}
+{"id": "en-test-two_errors-0151", "split": "test", "category": "two_errors", "context": "antonio joined our", "typed": "ocmppany", "intended": "company", "source": "tatoeba:11775015"}
+{"id": "en-test-two_errors-0153", "split": "test", "category": "two_errors", "context": "tom turns thirteen", "typed": "tommortow", "intended": "tomorrow", "source": "tatoeba:12285715"}
+{"id": "en-test-two_errors-0154", "split": "test", "category": "two_errors", "context": "you've", "typed": "arivedd", "intended": "arrived", "source": "tatoeba:274033"}
+{"id": "en-test-two_errors-0164", "split": "test", "category": "two_errors", "context": "tom will be thirty years old", "typed": "toomorrw", "intended": "tomorrow", "source": "tatoeba:4132507"}
+{"id": "en-test-two_errors-0173", "split": "test", "category": "two_errors", "context": "she is a", "typed": "teasvher", "intended": "teacher", "source": "tatoeba:7035423"}
+{"id": "en-test-two_errors-0178", "split": "test", "category": "two_errors", "context": "only a few of my", "typed": "rfieends", "intended": "friends", "source": "tatoeba:9797597"}
+{"id": "en-test-two_errors-0192", "split": "test", "category": "two_errors", "context": "i'll hang up the", "typed": "laubnry", "intended": "laundry", "source": "tatoeba:8597045"}
+{"id": "en-test-two_errors-0196", "split": "test", "category": "two_errors", "context": "the speaker can talk", "typed": "quuivckly", "intended": "quickly", "source": "tatoeba:6736591"}
+{"id": "en-test-two_errors-0197", "split": "test", "category": "two_errors", "context": "boris tried to get the", "typed": "solkdeir", "intended": "soldier", "source": "tatoeba:11799139"}
+{"id": "en-test-two_errors-0203", "split": "test", "category": "two_errors", "context": "i took a cab from the bus", "typed": "teerminap", "intended": "terminal", "source": "tatoeba:1887857"}
+{"id": "en-test-two_errors-0207", "split": "test", "category": "two_errors", "context": "it's important that you know exactly what you're", "typed": "getinf", "intended": "getting", "source": "tatoeba:9765653"}
+{"id": "en-test-two_errors-0222", "split": "test", "category": "two_errors", "context": "esther", "typed": "ssurvives", "intended": "survived", "source": "tatoeba:8099221"}
+{"id": "en-test-two_errors-0223", "split": "test", "category": "two_errors", "context": "a", "typed": "icturs", "intended": "picture", "source": "tatoeba:12566291"}
+{"id": "en-test-two_errors-0230", "split": "test", "category": "two_errors", "context": "here's a", "typed": "ipctuure", "intended": "picture", "source": "tatoeba:6657139"}
+{"id": "en-test-two_errors-0238", "split": "test", "category": "two_errors", "context": "he", "typed": "succceede", "intended": "succeeded", "source": "tatoeba:289369"}
+{"id": "en-test-two_errors-0241", "split": "test", "category": "two_errors", "context": "the ice may drift considerable", "typed": "dostajnces", "intended": "distances", "source": "tatoeba:318333"}
+{"id": "en-test-two_errors-0242", "split": "test", "category": "two_errors", "context": "isn't that tom's", "typed": "umbtellq", "intended": "umbrella", "source": "tatoeba:6666639"}
+{"id": "en-test-two_errors-0249", "split": "test", "category": "two_errors", "context": "she knows my friends without", "typed": "exceeptioon", "intended": "exception", "source": "tatoeba:12677045"}
+{"id": "en-test-two_errors-0253", "split": "test", "category": "two_errors", "context": "", "typed": "hustie", "intended": "justice", "source": "tatoeba:13364905"}
+{"id": "en-test-two_errors-0254", "split": "test", "category": "two_errors", "context": "the", "typed": "nistructo", "intended": "instructor", "source": "tatoeba:2745395"}
+{"id": "en-test-two_errors-0256", "split": "test", "category": "two_errors", "context": "sami was", "typed": "wathign", "intended": "watching", "source": "tatoeba:6700597"}
+{"id": "en-test-two_errors-0259", "split": "test", "category": "two_errors", "context": "it is still possible to make a profit when prices are", "typed": "fallking", "intended": "falling", "source": "tatoeba:350645"}
+{"id": "en-test-two_errors-0273", "split": "test", "category": "two_errors", "context": "tom was very surprised that", "typed": "hpapenefd", "intended": "happened", "source": "tatoeba:7196839"}
+{"id": "en-test-two_errors-0285", "split": "test", "category": "two_errors", "context": "he injured", "typed": "hmisdelf", "intended": "himself", "source": "tatoeba:7383139"}
+{"id": "en-test-two_errors-0287", "split": "test", "category": "two_errors", "context": "tom and i raised three", "typed": "chilldfren", "intended": "children", "source": "tatoeba:6264091"}
+{"id": "en-test-two_errors-0291", "split": "test", "category": "two_errors", "context": "i'm", "typed": "watsiing", "intended": "wasting", "source": "tatoeba:2548191"}
+{"id": "en-test-two_errors-0293", "split": "test", "category": "two_errors", "context": "he employed a new", "typed": "secrsetayr", "intended": "secretary", "source": "tatoeba:11926767"}
+{"id": "en-test-two_errors-0298", "split": "test", "category": "two_errors", "context": "tom kept on", "typed": "owroing", "intended": "working", "source": "tatoeba:3174755"}

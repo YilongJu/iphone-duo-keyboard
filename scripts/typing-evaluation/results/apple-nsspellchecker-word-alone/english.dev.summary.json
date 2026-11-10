@@ -1,0 +1,160 @@
+{
+  "categories": {
+    "clean_common": {
+      "cases": 300,
+      "right": 300,
+      "missing": 0,
+      "accuracy": 1.0
+    },
+    "clean_rare": {
+      "cases": 300,
+      "right": 274,
+      "missing": 0,
+      "accuracy": 0.9133333333333333
+    },
+    "clean_names_and_terms": {
+      "cases": 73,
+      "right": 67,
+      "missing": 0,
+      "accuracy": 0.9178082191780822
+    },
+    "clean_two_words": {
+      "cases": 300,
+      "right": 300,
+      "missing": 0,
+      "accuracy": 1.0
+    },
+    "substitution_adjacent": {
+      "cases": 300,
+      "right": 260,
+      "missing": 0,
+      "accuracy": 0.8666666666666667
+    },
+    "deletion": {
+      "cases": 300,
+      "right": 169,
+      "missing": 0,
+      "accuracy": 0.5633333333333334
+    },
+    "double_letter": {
+      "cases": 300,
+      "right": 273,
+      "missing": 0,
+      "accuracy": 0.91
+    },
+    "extra_adjacent": {
+      "cases": 300,
+      "right": 266,
+      "missing": 0,
+      "accuracy": 0.8866666666666667
+    },
+    "transposition": {
+      "cases": 300,
+      "right": 271,
+      "missing": 0,
+      "accuracy": 0.9033333333333333
+    },
+    "two_errors": {
+      "cases": 300,
+      "right": 226,
+      "missing": 0,
+      "accuracy": 0.7533333333333333
+    },
+    "short_word_slip": {
+      "cases": 300,
+      "right": 163,
+      "missing": 0,
+      "accuracy": 0.5433333333333333
+    },
+    "space_missing": {
+      "cases": 300,
+      "right": 158,
+      "missing": 0,
+      "accuracy": 0.5266666666666666
+    },
+    "space_to_letter": {
+      "cases": 300,
+      "right": 0,
+      "missing": 0,
+      "accuracy": 0.0
+    },
+    "space_transposed": {
+      "cases": 300,
+      "right": 26,
+      "missing": 0,
+      "accuracy": 0.08666666666666667
+    },
+    "space_extra": {
+      "cases": 300,
+      "right": 0,
+      "missing": 0,
+      "accuracy": 0.0
+    },
+    "letter_to_space": {
+      "cases": 300,
+      "right": 0,
+      "missing": 0,
+      "accuracy": 0.0
+    },
+    "apostrophe_missing": {
+      "cases": 300,
+      "right": 292,
+      "missing": 0,
+      "accuracy": 0.9733333333333334
+    },
+    "real_word_slip": {
+      "cases": 300,
+      "right": 12,
+      "missing": 0,
+      "accuracy": 0.04
+    }
+  },
+  "groups": {
+    "clean": {
+      "cases": 973,
+      "right": 941,
+      "missing": 0,
+      "accuracy": 0.9671120246659815,
+      "categories": [
+        "clean_common",
+        "clean_rare",
+        "clean_names_and_terms",
+        "clean_two_words"
+      ]
+    },
+    "letter_slips": {
+      "cases": 2100,
+      "right": 1628,
+      "missing": 0,
+      "accuracy": 0.7752380952380953,
+      "categories": [
+        "substitution_adjacent",
+        "deletion",
+        "double_letter",
+        "extra_adjacent",
+        "transposition",
+        "two_errors",
+        "short_word_slip"
+      ]
+    },
+    "space_slips": {
+      "cases": 1500,
+      "right": 184,
+      "missing": 0,
+      "accuracy": 0.12266666666666666,
+      "categories": [
+        "space_missing",
+        "space_to_letter",
+        "space_transposed",
+        "space_extra",
+        "letter_to_space"
+      ]
+    }
+  },
+  "strata": {},
+  "engine": "apple-nsspellchecker-word-alone",
+  "task": "english",
+  "cases_files": [
+    "english.dev.jsonl"
+  ]
+}

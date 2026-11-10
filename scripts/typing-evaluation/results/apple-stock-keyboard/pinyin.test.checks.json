@@ -1,0 +1,27 @@
+{
+  "sampled cases": 692,
+  "typed cases": 692,
+  "parts": 8,
+  "attempts": 692,
+  "attempts that ended with an error": 0,
+  "cases typed in more than one pass": 0,
+  "cases whose counted attempt has a key gap above 1.5 times the key interval": 135,
+  "cases whose counted attempt is not complete": 0,
+  "cases where a key tap did not arrive": 2,
+  "right cases": 247,
+  "cases with every key gap inside the limit": 557,
+  "right cases among the cases with every key gap inside the limit": 202,
+  "cases that took more than one space tap": 0,
+  "key interval asked for, ms": 330,
+  "time between two key arrivals in the counted attempts, ms": {
+    "median": 334,
+    "10th percentile": 315,
+    "90th percentile": 355,
+    "99th percentile": 1354,
+    "gaps": 13495
+  },
+  "seconds per counted attempt": {
+    "median": 10.84,
+    "sum": 8905
+  }
+}
