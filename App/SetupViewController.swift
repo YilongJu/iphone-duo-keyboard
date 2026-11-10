@@ -68,6 +68,7 @@ final class SetupViewController: UIViewController, UITextViewDelegate {
         diagnosticsLabel.accessibilityIdentifier = "diagnostics"
         stack.addArrangedSubview(diagnosticsLabel)
 
+        textController.proofreader = SystemModelProofreader()
         textController.onDismiss = { [weak self] in
             self?.previewField.resignFirstResponder()
         }

@@ -19,6 +19,7 @@ final class KeyboardViewController: UIInputViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        textController.proofreader = SystemModelProofreader()
         textController.onDismiss = { [weak self] in
             self?.dismissKeyboard()
         }

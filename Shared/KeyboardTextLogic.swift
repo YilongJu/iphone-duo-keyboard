@@ -132,6 +132,73 @@ enum KeyboardTextLogic {
         return words.joined(separator: " ")
     }
 
+    // MARK: Proofreading of a finished sentence
+
+    /// The marks that end a sentence, in English and in Chinese.
+    static let sentenceEnds: Set<Character> = [".", "?", "!", "\u{3002}", "\u{FF1F}", "\u{FF01}"]
+
+    /// The sentence that ends right before the cursor, or nil. Spaces after the sentence's last
+    /// mark do not count. The sentence needs three words, or four characters when it holds
+    /// Chinese text, because a shorter one does not give a proofreader enough to read.
+    static func finishedSentence(before text: String) -> String? {
+        var body = Substring(text)
+        while body.last == " " { body = body.dropLast() }
+        guard let last = body.last, sentenceEnds.contains(last) else { return nil }
+        let inner = body.dropLast()
+        var start = inner.endIndex
+        while start > inner.startIndex {
+            let previous = inner.index(before: start)
+            if sentenceEnds.contains(inner[previous]) || inner[previous].isNewline { break }
+            start = previous
+        }
+        var sentence = body[start...]
+        while sentence.first == " " { sentence = sentence.dropFirst() }
+        guard sentence.count <= 300 else { return nil }
+        let holdsChinese = sentence.unicodeScalars.contains { $0.value >= 0x4E00 && $0.value <= 0x9FFF }
+        let longEnough = holdsChinese ? sentence.count >= 4 : sentence.split(separator: " ").count >= 3
+        return longEnough ? String(sentence) : nil
+    }
+
+    /// The proofreader's answer when it is a small fix of the sentence, or nil.
+    ///
+    /// A language model can rephrase a sentence or answer it in place of fixing it. This check
+    /// keeps an answer only when it is the same sentence with a few words or characters
+    /// changed: at most two units, or one unit in four for a longer sentence. A unit is a
+    /// word, or a character in a sentence without spaces, as in Chinese.
+    static func acceptedProofreading(of original: String, answer: String) -> String? {
+        var fixed = answer.trimmingCharacters(in: .whitespacesAndNewlines)
+        for (open, close) in [("\"", "\""), ("\u{201C}", "\u{201D}")] where fixed.count >= 2
+            && fixed.hasPrefix(open) && fixed.hasSuffix(close) && !original.hasPrefix(open) {
+            fixed = String(fixed.dropFirst().dropLast())
+        }
+        guard !fixed.isEmpty, fixed != original, !fixed.contains(where: { $0.isNewline }) else { return nil }
+        func units(_ text: String) -> [String] {
+            let words = text.split(separator: " ").map(String.init)
+            return words.count >= 3 ? words : text.map(String.init)
+        }
+        let before = units(original)
+        let after = units(fixed)
+        let allowed = max(2, before.count / 4)
+        return changedUnits(before, after) <= allowed ? fixed : nil
+    }
+
+    /// Count of units that differ between two lists: the fewest single changes, each one a
+    /// unit put in, taken out or replaced, that turn the first list into the second.
+    static func changedUnits(_ first: [String], _ second: [String]) -> Int {
+        if first.isEmpty { return second.count }
+        if second.isEmpty { return first.count }
+        var previous = Array(0...second.count)
+        for i in 1...first.count {
+            var current = [i] + Array(repeating: 0, count: second.count)
+            for j in 1...second.count {
+                let replace = previous[j - 1] + (first[i - 1] == second[j - 1] ? 0 : 1)
+                current[j] = min(replace, previous[j] + 1, current[j - 1] + 1)
+            }
+            previous = current
+        }
+        return previous[second.count]
+    }
+
     static func returnKeyTitle(for type: UIReturnKeyType) -> String {
         switch type {
         case .go: return "go"

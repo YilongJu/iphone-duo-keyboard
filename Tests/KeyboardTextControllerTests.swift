@@ -73,8 +73,103 @@ final class FakeSpellChecker: SpellChecking {
     }
 }
 
+/// A proofreader with fixed answers. A sentence without an answer comes back unchanged.
+@MainActor
+final class FakeProofreader: SentenceProofreading {
+    var answers: [String: String] = [:]
+    var requests: [String] = []
+
+    func proofread(_ sentence: String) async -> ProofreadResult {
+        requests.append(sentence)
+        return ProofreadResult(text: answers[sentence] ?? sentence, seconds: 0.5, note: nil)
+    }
+}
+
 @MainActor
 final class KeyboardTextControllerTests: XCTestCase {
+    private func makeProofreadingController(before: String, answers: [String: String]) -> FakeProofreader {
+        makeController(before: before)
+        let proofreader = FakeProofreader()
+        proofreader.answers = answers
+        controller.proofreader = proofreader
+        return proofreader
+    }
+
+    func testAFinishedSentenceGetsAFixThatATapApplies() async {
+        let proofreader = makeProofreadingController(
+            before: "Hi there. ", answers: ["I came form the office.": "I came from the office."])
+        type("I came form the office.")
+        await controller.proofreadTask?.value
+        XCTAssertEqual(proofreader.requests, ["I came form the office."])
+        XCTAssertEqual(controller.proofreadSuggestion?.corrected, "I came from the office.")
+        // The text changes only on a tap.
+        XCTAssertEqual(document.text, "Hi there. I came form the office.")
+        controller.keyboardView(keyboardView, didSelectCandidateAt: 0)
+        XCTAssertEqual(document.text, "Hi there. I came from the office.")
+        XCTAssertNil(controller.proofreadSuggestion)
+    }
+
+    func testAFixKeepsTheSpaceTypedAfterTheSentence() async {
+        _ = makeProofreadingController(before: "", answers: ["I came form the office.": "I came from the office."])
+        type("I came form the office. ")
+        await controller.proofreadTask?.value
+        controller.keyboardView(keyboardView, didSelectCandidateAt: 0)
+        XCTAssertEqual(document.text, "I came from the office. ")
+    }
+
+    func testTheNextKeyTakesTheFixAway() async {
+        _ = makeProofreadingController(before: "", answers: ["I came form the office.": "I came from the office."])
+        type("I came form the office.")
+        await controller.proofreadTask?.value
+        XCTAssertNotNil(controller.proofreadSuggestion)
+        type(" N")
+        XCTAssertNil(controller.proofreadSuggestion)
+        XCTAssertEqual(document.text, "I came form the office. N")
+    }
+
+    func testAnAnswerThatRewritesTheSentenceIsNotShown() async {
+        _ = makeProofreadingController(
+            before: "", answers: ["I came form the office.": "Sure! Here is a better sentence: I arrived from work."])
+        type("I came form the office.")
+        await controller.proofreadTask?.value
+        XCTAssertNil(controller.proofreadSuggestion)
+    }
+
+    func testAnUnchangedSentenceAndAShortOneGetNoFix() async {
+        let proofreader = makeProofreadingController(before: "", answers: [:])
+        type("All is well here.")
+        await controller.proofreadTask?.value
+        XCTAssertNil(controller.proofreadSuggestion)
+        type(" Ok.")
+        await controller.proofreadTask?.value
+        // "Ok." has one word, so the keyboard does not ask.
+        XCTAssertEqual(proofreader.requests, ["All is well here."])
+    }
+
+    func testFinishedSentence() {
+        XCTAssertEqual(KeyboardTextLogic.finishedSentence(before: "One. Two three four.  "), "Two three four.")
+        XCTAssertEqual(KeyboardTextLogic.finishedSentence(before: "a\nIs it so here?"), "Is it so here?")
+        XCTAssertNil(KeyboardTextLogic.finishedSentence(before: "Two three four"))
+        XCTAssertNil(KeyboardTextLogic.finishedSentence(before: "Two three."))
+        XCTAssertEqual(
+            KeyboardTextLogic.finishedSentence(before: "\u{4F60}\u{597D}\u{3002}\u{4ECA}\u{5929}\u{5929}\u{6C14}\u{597D}\u{3002}"),
+            "\u{4ECA}\u{5929}\u{5929}\u{6C14}\u{597D}\u{3002}")
+    }
+
+    func testAcceptedProofreading() {
+        let sentence = "I came form the office."
+        XCTAssertEqual(KeyboardTextLogic.acceptedProofreading(of: sentence, answer: " I came from the office.\n"), "I came from the office.")
+        XCTAssertEqual(KeyboardTextLogic.acceptedProofreading(of: sentence, answer: "\"I came from the office.\""), "I came from the office.")
+        XCTAssertNil(KeyboardTextLogic.acceptedProofreading(of: sentence, answer: sentence))
+        XCTAssertNil(KeyboardTextLogic.acceptedProofreading(of: sentence, answer: "I arrived here from my place of work today."))
+        XCTAssertNil(KeyboardTextLogic.acceptedProofreading(of: sentence, answer: ""))
+        // Chinese has no spaces, so the count is by character: one wrong character is a small fix.
+        XCTAssertEqual(
+            KeyboardTextLogic.acceptedProofreading(of: "\u{6211}\u{5728}\u{5BB6}\u{91CC}\u{3002}", answer: "\u{6211}\u{518D}\u{5BB6}\u{91CC}\u{3002}"),
+            "\u{6211}\u{518D}\u{5BB6}\u{91CC}\u{3002}")
+        XCTAssertEqual(KeyboardTextLogic.changedUnits(["a", "b", "c"], ["a", "x", "c", "d"]), 2)
+    }
+
     private var keyboardView: KeyboardView!
     private var document: FakeDocument!
     private var spellChecker: FakeSpellChecker!
