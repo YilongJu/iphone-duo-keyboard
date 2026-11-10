@@ -10,7 +10,7 @@ Google Pinyin and libpinyin repair under 2 percent of [slip cases](#terms-of-the
 4. Get the output files of the last run with `gh`, the GitHub command-line tool. The first command prints the run number, and the second command takes that number as `RUN_ID`:
    `gh run list --workflow eval-googlepinyin-libpinyin.yml --branch eval/googlepinyin-libpinyin --limit 1`
    `gh run download RUN_ID -n typing-evaluation-googlepinyin-libpinyin`
-5. Start a new run with a push to the branch `eval/googlepinyin-libpinyin`.
+5. Start a new run with a push to the branch `eval/googlepinyin-libpinyin`. Merge `main` into the branch first. The scores here use the case files of commit `e997c39`, and `main` rebuilt the case files in commit `26cdf17`.
 
 Open point: the document does not compare these engines with the other groups' engines or with real typing.
 
@@ -96,7 +96,7 @@ libpinyin-correction-incomplete-fuzzy  ███▋ 7.2%
 
 Figure 1. Shares of right cases on the test half, all bars on one scale. The more libpinyin options are on, the more slip cases libpinyin repairs. The fuzzy sounds also lower libpinyin's clean share by 11.4 points. The task allows a setting that keeps the clean share within 1 point of the comparison line.
 
-Table 4. Right cases and their shares from `score.py`, with 900 clean cases and 2,100 slip cases in each half. The last column is the clean share minus the clean share of the comparison line, in points.
+Table 4. Right cases and their shares from `score.py` on the case files of commit `e997c39`. Each half has 900 clean cases and 2,100 slip cases. The last column is the clean share minus the clean share of the comparison line, in points.
 
 | Engine name | Dev clean | Dev slips | Test clean | Test slips | Clean change, dev and test |
 | --- | --- | --- | --- | --- | --- |
