@@ -84,7 +84,7 @@ jobs:
         run: |
           set -euo pipefail
           python3 "$ADAPTER_DIR/run_libime.py" --adapter build/libime-apt/adapter/libime_adapter \
-            --dict "$APT_DICT" --lm "$APT_LM" --halves dev test --jobs 4 \
+            --dict "$APT_DICT" --lm "$APT_LM" --halves dev test --jobs 4 --address-layout fixed \
             --engine libime-none=none --engine libime-commontypo=commontypo \
             --engine libime-advancedtypo=advancedtypo
           for name in libime-none libime-commontypo libime-advancedtypo; do
@@ -206,7 +206,7 @@ jobs:
           set -euo pipefail
           export LD_LIBRARY_PATH="$SRC_PREFIX/lib"
           python3 "$ADAPTER_DIR/run_libime.py" --adapter build/libime-source/adapter/libime_adapter \
-            --dict "$SRC_DICT" --lm "$SRC_LM" --halves dev test --jobs 4 \
+            --dict "$SRC_DICT" --lm "$SRC_LM" --halves dev test --jobs 4 --address-layout fixed \
             --engine libime-src-none=none --engine libime-src-commontypo=commontypo \
             --engine libime-src-advancedtypo=advancedtypo --engine libime-correction=correction \
             --engine libime-fcitx5-desktop=fcitx5-desktop --engine libime-fcitx5-mobile=fcitx5-mobile \
@@ -230,13 +230,29 @@ jobs:
           export LD_LIBRARY_PATH="$SRC_PREFIX/lib"
           name=libime-src-none-packaged-data
           python3 "$ADAPTER_DIR/run_libime.py" --adapter build/libime-source/adapter/libime_adapter \
-            --dict "$APT_DICT" --lm "$APT_LM" --halves dev test --jobs 4 --engine "$name=none"
+            --dict "$APT_DICT" --lm "$APT_LM" --halves dev test --jobs 4 --address-layout fixed \
+            --engine "$name=none"
           for half in dev test; do
             python3 scripts/typing-evaluation/score.py --task pinyin --engine "$name" \
               --cases "scripts/typing-evaluation/cases/pinyin.$half.jsonl" \
               --predictions "build/typing-evaluation/$name/pinyin.$half.jsonl" \
               --json "build/typing-evaluation/$name/pinyin.$half.summary.json"
           done
+
+      # libime 1.1.17 with its 2026 language model gives a different first sentence for a few cases
+      # when the memory addresses of the process change. This step counts those cases on the dev
+      # half, with the normal random address layout and with the fixed layout of the scored runs.
+      - name: Count the outputs that differ between two adapter processes
+        if: ${{ !cancelled() && steps.source_adapter.outcome == 'success' }}
+        run: |
+          set -euo pipefail
+          echo "libime 1.1.5 from the Ubuntu packages"
+          python3 "$ADAPTER_DIR/check_repeatability.py" --adapter build/libime-apt/adapter/libime_adapter \
+            --dict "$APT_DICT" --lm "$APT_LM" --mode none --half dev --jobs 4
+          echo "libime 1.1.17 from source"
+          export LD_LIBRARY_PATH="$SRC_PREFIX/lib"
+          python3 "$ADAPTER_DIR/check_repeatability.py" --adapter build/libime-source/adapter/libime_adapter \
+            --dict "$SRC_DICT" --lm "$SRC_LM" --mode none --mode fcitx5-mobile --half dev --jobs 4
 
       # ---------------------------------------------------------------- Results
       - name: Print the score tables
