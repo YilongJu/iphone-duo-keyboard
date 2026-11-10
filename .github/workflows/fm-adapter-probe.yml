@@ -1,0 +1,24 @@
+name: Foundation Models adapter API probe
+
+# Reads the iOS SDK of Xcode 27 to see whether the Foundation Models framework still
+# declares the adapter API (SystemLanguageModel.Adapter) and what it says about it.
+on:
+  push:
+    branches: [probe/fm-adapter]
+
+jobs:
+  probe:
+    runs-on: xcode-27
+    timeout-minutes: 15
+    steps:
+      - name: Find the adapter API in the SDK
+        run: |
+          set -euo pipefail
+          xcodebuild -version
+          SDK="$(xcrun --sdk iphoneos --show-sdk-path)"
+          echo "SDK: $SDK"
+          FILES="$(find "$SDK/System/Library/Frameworks/FoundationModels.framework" -name '*.swiftinterface' | grep arm64e-apple-ios | head -1)"
+          echo "Interface: $FILES"
+          grep -n -i -B2 -A6 'adapter' "$FILES" | head -300
+          echo "--- availability lines near Adapter ---"
+          grep -n -i -E '@available.*(deprecated|obsoleted|unavailable)' "$FILES" | head -50
