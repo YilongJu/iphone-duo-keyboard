@@ -203,6 +203,10 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
         self.makePinyinEngine = pinyinEngine
         super.init()
         keyboardView.delegate = self
+        // A tap on the typed Pinyin letters types them as plain letters.
+        keyboardView.onSelectComposition = { [weak self] in
+            self?.commitPinyinLetters()
+        }
     }
 
     /// The owner calls this when the app's text or cursor changed.
