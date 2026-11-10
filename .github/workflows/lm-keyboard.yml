@@ -1,0 +1,180 @@
+name: Language model in the keyboard
+
+# Types the dev cases through the keyboard's own code with distilgpt2 on the macOS simulator,
+# and through the Linux harness of scripts/lm-rerank with the same tuned rule, and compares the
+# two case by case and correction by correction. scripts/lm-keyboard/README.md describes the
+# check. Only the dev half is typed and scored. Every unit test runs as well.
+on:
+  push:
+    branches: [engine/lm-keyboard]
+  workflow_dispatch:
+
+concurrency:
+  group: lm-keyboard-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  harness:
+    name: Linux harness with the tuned rule, and the keyboard's scorer against lm_score
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v7
+      - name: Build llama.cpp b4846, lm_score, the engine shim, and the keyboard's scorer
+        run: |
+          set -euo pipefail
+          bash scripts/lm-rerank/build_on_linux.sh llama
+          mkdir -p build/lm-keyboard
+          gcc -std=c11 -O2 -Wall -Wextra -Werror -I build/lm-rerank/llama/include -I LanguageModel \
+            LanguageModel/duo_lm_scorer.c scripts/lm-keyboard/scorer_cli.c \
+            -L build/lm-rerank/llama/lib -lllama -lggml -lggml-cpu -lggml-base -lm -o build/lm-keyboard/scorer_cli
+      - name: Fetch distilgpt2 Q3_K_M
+        run: bash scripts/lm-rerank/fetch_models.sh distilgpt2-q3 | tail -n 1 > build/lm-keyboard/model-path.txt
+      - name: Type the dev cases through the harness with the tuned rule
+        run: |
+          set -euo pipefail
+          export LD_LIBRARY_PATH="$PWD/build/lm-rerank/llama/lib"
+          mkdir -p build/lm-keyboard/harness
+          # The processor of the runner, because the products of llama.cpp differ in their last
+          # digits between processor families.
+          lscpu | grep -E 'Model name|Flags' | cut -c 1-400 | tee build/lm-keyboard/harness/runner.txt
+          python3 scripts/lm-keyboard/harness_trace.py --shim build/lm-rerank/libduo_shim.so \
+            --lm build/lm-rerank/lm_score --model "$(cat build/lm-keyboard/model-path.txt)" --out build/lm-keyboard/harness
+      - name: Score the harness requests with lm_score at 4 threads and the keyboard's scorer at 2 threads
+        run: |
+          set -euo pipefail
+          export LD_LIBRARY_PATH="$PWD/build/lm-rerank/llama/lib"
+          out=build/lm-keyboard/harness
+          model="$(cat build/lm-keyboard/model-path.txt)"
+          # lm_score writes a line that starts with "ready" before its answers.
+          build/lm-rerank/lm_score "$model" 4 < "$out/requests.tsv" 2> "$out/lm_score.log" | tail -n +2 > "$out/lm_score.answers"
+          build/lm-keyboard/scorer_cli "$model" 2 < "$out/requests.tsv" > "$out/scorer_cli.answers" 2> "$out/scorer_cli.log"
+          {
+            echo "requests: $(wc -l < "$out/requests.tsv")"
+            echo "lm_score answers: $(wc -l < "$out/lm_score.answers"), scorer_cli answers: $(wc -l < "$out/scorer_cli.answers")"
+            if cmp -s "$out/lm_score.answers" "$out/scorer_cli.answers"; then
+              echo "the answers are the same byte for byte, 5 decimals each"
+            else
+              echo "the answers differ in $(diff "$out/lm_score.answers" "$out/scorer_cli.answers" | grep -c '^<') lines"
+            fi
+            cat "$out/scorer_cli.log"
+          } | tee "$out/scorer-check.txt"
+          cmp "$out/lm_score.answers" "$out/scorer_cli.answers"
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: harness
+          path: build/lm-keyboard/harness
+          if-no-files-found: error
+
+  keyboard:
+    name: Unit tests, and the dev cases through the keyboard code with the model
+    runs-on: xcode-27
+    timeout-minutes: 150
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install XcodeGen
+        run: brew install xcodegen
+      - name: Fetch the llama.cpp framework and the language model
+        run: bash scripts/ci/fetch_language_model.sh
+      - name: Generate the Xcode project
+        run: xcodegen generate
+      - name: Run every unit test in a simulator, with the typing evaluation on the dev half
+        env:
+          # xcodebuild hands a variable to the test process when its name starts with TEST_RUNNER_.
+          TEST_RUNNER_TYPING_CASES_DIR: ${{ github.workspace }}/scripts/typing-evaluation/cases
+          TEST_RUNNER_TYPING_OUTPUT_DIR: ${{ github.workspace }}/build/lm-keyboard/keyboard
+          TEST_RUNNER_TYPING_HALVES: dev
+          TEST_RUNNER_LANGUAGE_MODEL_OUTPUT_DIR: ${{ github.workspace }}/build/language-model-test
+        run: |
+          set -o pipefail
+          udid=$(xcrun simctl list devices available -j | python3 -c '
+          import json, sys
+          devices = json.load(sys.stdin)["devices"]
+          for runtime in sorted(devices, reverse=True):
+              for device in devices[runtime]:
+                  if device["name"].startswith("iPhone 17"):
+                      print(device["udid"])
+                      sys.exit(0)
+          sys.exit("simulator not found: iPhone 17")
+          ')
+          xcodebuild test \
+            -project DuoKeyboard.xcodeproj \
+            -scheme DuoKeyboard \
+            -destination "platform=iOS Simulator,id=$udid" \
+            -derivedDataPath build-test | xcbeautify
+      - name: Check that only dev-half files exist, and score the English and symbol dev outputs
+        if: always()
+        run: |
+          set -euo pipefail
+          out=build/lm-keyboard/keyboard
+          ls -l "$out"
+          if ls "$out" | grep -q '\.test\.'; then
+            echo "error: the evaluation wrote test-half files" >&2
+            exit 1
+          fi
+          cases=scripts/typing-evaluation/cases
+          for task in english english-symbols; do
+            for run in "" ".engine-only"; do
+              python3 scripts/typing-evaluation/score.py --task english --engine "keyboard$run" \
+                --cases "$cases/$task.dev.jsonl" --predictions "$out/$task.dev$run.jsonl" \
+                --json "$out/$task.dev$run.summary.json"
+            done
+          done
+          cp build/language-model-test/simulator.txt "$out/language-model-test-simulator.txt"
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: keyboard
+          path: build/lm-keyboard/keyboard
+          if-no-files-found: error
+
+  device-build:
+    name: Release build for the device
+    runs-on: xcode-27
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install XcodeGen
+        run: brew install xcodegen
+      - name: Fetch the llama.cpp framework and the language model
+        run: bash scripts/ci/fetch_language_model.sh
+      - name: Generate the Xcode project
+        run: xcodegen generate
+      - name: Build for the device with signing off
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project DuoKeyboard.xcodeproj \
+            -scheme DuoKeyboard \
+            -configuration Release \
+            -sdk iphoneos \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
+            build | xcbeautify
+
+  compare:
+    name: Keyboard against the harness, case by case
+    needs: [harness, keyboard]
+    if: always()
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v7
+        with:
+          path: build/lm-keyboard/artifacts
+      - name: Compare
+        run: |
+          set -euo pipefail
+          status=0
+          python3 scripts/lm-keyboard/compare.py --harness build/lm-keyboard/artifacts/harness \
+            --keyboard build/lm-keyboard/artifacts/keyboard --out build/lm-keyboard/compare || status=$?
+          cat build/lm-keyboard/compare/report.md >> "$GITHUB_STEP_SUMMARY"
+          exit $status
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: compare
+          path: build/lm-keyboard/compare
+          if-no-files-found: error

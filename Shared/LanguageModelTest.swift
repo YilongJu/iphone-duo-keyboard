@@ -11,18 +11,40 @@ protocol LanguageModelMeasuring: AnyObject {
 /// The language model test on the model file of the bundle. LanguageModel/duo_lm_probe.h
 /// describes the test and each of its result lines.
 ///
-/// The test only measures. The model does not take part in what the keyboard types. The
-/// model is loaded when a run starts and freed when the run ends, so a keyboard that never
-/// runs the test never loads the model.
+/// The test only measures. It loads its own copy of the model when a run starts and frees it
+/// when the run ends, beside the model that re-ranks the English corrections.
+///
+/// Before the test's own lines come the lines of `keyboardLines`, which describe that model in
+/// this process. Each starts with "reranker" or "memory":
+///
+///   reranker    the model, its threads, and its state: loaded with the time of the load, not
+///               loaded, loading, freed with the reason, or "load failed" with the reason
+///   reranker    the footprint right before the load, right after it, and right after the first
+///               correction that the model read, when the model's buffers for scores exist
+///   reranker    the corrections the model read and the time each one added to its space
+///               press, from the start of the model's text to the choice: mean, median, 95th
+///               percentile of the last 2,000, and worst
+///   reranker    how often the model changed the engine's choice, and the corrections that kept
+///               the engine's choice because the model was not ready, because the text was
+///               outside the model's limits, or because of a model error
+///   reranker    the requests, the tokens the model read, and the tokens put in place of -1
+///   memory      the memory of the process right before the test loads its own copy
 @MainActor
 final class BundledLanguageModelTest: LanguageModelMeasuring {
     /// Name of the model file in the bundle, without ".gguf". scripts/ci/fetch_language_model.sh
     /// downloads the file before the build.
     static let modelResource = "distilgpt2.Q3_K_M"
 
+    /// Lines about the model that re-ranks the English corrections in this process. Without
+    /// it the result holds the test's own lines only.
+    var keyboardLines: (@MainActor () -> [String])?
+
     func resultLines() -> AsyncStream<String> {
         let (stream, continuation) = AsyncStream.makeStream(of: String.self)
         for line in Self.deviceLines() {
+            continuation.yield(line)
+        }
+        for line in keyboardLines?() ?? [] {
             continuation.yield(line)
         }
         guard let path = Bundle(for: BundledLanguageModelTest.self)

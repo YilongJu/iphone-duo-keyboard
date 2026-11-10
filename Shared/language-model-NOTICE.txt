@@ -1,4 +1,5 @@
-The language model test of Duo Keyboard uses one model file and one framework of other projects.
+The English corrections and the language model test of Duo Keyboard use one model file and one
+framework of other projects.
 The repository does not hold either file. scripts/ci/fetch_language_model.sh downloads both
 before a build, each from a fixed address, and checks each against a fixed SHA-256 value.
 
