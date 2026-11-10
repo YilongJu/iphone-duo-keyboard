@@ -248,6 +248,11 @@ function paint(el, key, style) {
     if (key.name === "symbols" && style === "compact") label = "123";
     if (key.name === "shift" && state.shift === "locked") label = "⇪";
     main.textContent = label;
+    if (key.name === "language") {
+      // Both languages in a fixed order. The active one is large and bold, the other small and gray.
+      // The preview types English only, so "A" is the active one here.
+      main.innerHTML = '<span style="font-size:15px;opacity:.6">\u4E2D/</span><span style="font-size:20px;font-weight:700">A</span>';
+    }
     const small = (key.name === "space" && caption) || key.name === "selectAll";
     main.style.fontSize = small ? "13px" : label.length > 2 ? "16px" : "20px";
     const on = (key.name === "shift" && state.shift !== "off")

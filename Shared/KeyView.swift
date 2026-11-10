@@ -3,6 +3,8 @@ import UIKit
 /// The text or icon one key shows.
 struct KeyDisplay {
     var primary: String?
+    /// Text with its own fonts and colors. The key draws this text in place of `primary`.
+    var styledPrimary: NSAttributedString?
     var secondary: String?
     var symbolName: String?
     var primaryFontSize: CGFloat = 22
@@ -68,8 +70,13 @@ final class KeyView: UIView {
     }
 
     func apply(_ display: KeyDisplay) {
-        primaryLabel.text = display.primary
         primaryLabel.font = .systemFont(ofSize: display.primaryFontSize)
+        if let styled = display.styledPrimary {
+            primaryLabel.attributedText = styled
+        } else {
+            primaryLabel.attributedText = nil
+            primaryLabel.text = display.primary
+        }
         secondaryLabel.text = display.secondary
         secondaryLabel.font = .systemFont(ofSize: 14)
         if let symbolName = display.symbolName {
