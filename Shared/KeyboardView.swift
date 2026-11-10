@@ -203,9 +203,9 @@ final class KeyboardView: UIView {
         case .cursorDown:
             return KeyDisplay(symbolName: "arrow.down")
         case .home:
-            return KeyDisplay(primary: "home", primaryFontSize: wordSize)
+            return KeyDisplay(primary: "Home", primaryFontSize: wordSize)
         case .end:
-            return KeyDisplay(primary: "end", primaryFontSize: wordSize)
+            return KeyDisplay(primary: "End", primaryFontSize: wordSize)
         case .selectAll:
             return KeyDisplay(symbolName: "selection.pin.in.out", emphasized: selectAllActive)
         case .forwardDelete:

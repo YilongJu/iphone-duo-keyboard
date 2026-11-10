@@ -218,9 +218,10 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
     // MARK: KeyboardViewDelegate
 
     func keyboardView(_ keyboardView: KeyboardView, insert text: String) {
-        if pending != nil {
+        if var replacement = pending {
             // A replacement is still running. The typed text joins the text that waits for insertion.
-            pending?.insert = (pending?.insert ?? "") + text
+            replacement.insert = (replacement.insert ?? "") + text
+            pending = replacement
             return
         }
         if let snapshot = confirmedAllText() {
