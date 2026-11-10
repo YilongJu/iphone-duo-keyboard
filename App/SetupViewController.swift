@@ -140,7 +140,12 @@ final class SetupViewController: UIViewController, UITextViewDelegate {
     private func updateDiagnostics() {
         let screen = view.window?.windowScene?.screen
         let screenSize = screen?.bounds.size ?? .zero
-        let layout = KeyboardView.style(forWidth: view.bounds.width) == .wide ? "wide" : "compact"
+        let layout: String
+        switch KeyboardView.style(forWidth: view.bounds.width) {
+        case .compact: layout = "compact"
+        case .wide: layout = "wide"
+        case .split: layout = "split"
+        }
         let idiom = traitCollection.userInterfaceIdiom == .pad ? "pad" : "phone"
         let sizeClass = traitCollection.horizontalSizeClass == .regular ? "regular" : "compact"
         let heightClass = traitCollection.verticalSizeClass == .regular ? "regular" : "compact"

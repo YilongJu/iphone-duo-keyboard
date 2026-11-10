@@ -563,6 +563,36 @@ final class KeyboardLayoutTests: XCTestCase {
 
     func testTheWideLayoutStartsAtItsMinimumWidth() {
         XCTAssertEqual(KeyboardView.style(forWidth: 669), .wide)
+        XCTAssertEqual(KeyboardView.style(forWidth: 678), .wide)
         XCTAssertEqual(KeyboardView.style(forWidth: 466), .compact)
+    }
+
+    func testTheOpenPhoneInLandscapeGetsTheSplitLayout() {
+        XCTAssertEqual(KeyboardView.style(forWidth: 951), .split)
+    }
+
+    func testEverySplitRowHasOneEmptyMiddleAndTheSameWidth() {
+        for layer in [KeyboardLayer.letters, .symbols, .more] {
+            let layout = KeyboardLayout.make(style: .split, layer: layer, showsGlobe: true)
+            XCTAssertEqual(layout.units, 20.5)
+            for row in layout.rows {
+                XCTAssertEqual(row.filter { $0.kind == .gap }.count, 1)
+                XCTAssertEqual(row.reduce(0) { $0 + $1.weight }, 20.5, accuracy: 0.0001)
+            }
+        }
+    }
+
+    func testTheSplitLettersKeepEachHandsKeysTogether() {
+        let layout = KeyboardLayout.make(style: .split, layer: .letters, showsGlobe: true)
+        func leftHalf(_ row: Int) -> [KeyKind] {
+            Array(layout.rows[row].prefix { $0.kind != .gap }.map { $0.kind })
+        }
+        XCTAssertEqual(leftHalf(1).last, .dual("5", "%"))
+        XCTAssertEqual(leftHalf(2).last, .character("t"))
+        XCTAssertEqual(leftHalf(3).last, .character("g"))
+        XCTAssertEqual(leftHalf(4).last, .character("b"))
+        // The bottom row has a space bar on each side of the middle.
+        XCTAssertEqual(layout.rows[5].filter { $0.kind == .space }.count, 2)
+        XCTAssertEqual(leftHalf(5).last, .space)
     }
 }

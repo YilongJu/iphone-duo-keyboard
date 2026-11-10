@@ -11,6 +11,7 @@ The script exits with an error and lists every broken rule. The rules:
 4. A character is the main character of at most one key in a layer. The upper character of a
    two-character key does not count, because the compact number row repeats those on purpose.
 5. Each layout style reaches all 32 ASCII punctuation characters and all 10 digits.
+6. Every wide row names the key where the split layout puts its empty middle.
 """
 import json
 import string
@@ -63,6 +64,10 @@ def check(layout):
                     if main is not None:
                         main_characters.append(main)
                     reachable.update(typed)
+                if style_name == "wide":
+                    split = row.get("split")
+                    if not isinstance(split, int) or not 0 < split < len(row["keys"]):
+                        problems.append(f"{where} row {row_index}: the split value {split!r} is not a key position")
                 if width > units + 1e-9:
                     problems.append(f"{where} row {row_index}: width {width:g} is over {units:g} units")
             for required in ("space", "backspace", "return"):

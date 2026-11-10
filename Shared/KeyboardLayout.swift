@@ -10,9 +10,12 @@ enum KeyboardLayer {
 
 /// `compact` is the phone-width layout (10 key units per row).
 /// `wide` is the iPad-style layout (14.5 key units per row) for the unfolded display.
+/// `split` is the wide layout cut into a left half and a right half, with an empty middle.
+/// The open phone in landscape uses the split layout, so each thumb reaches its half.
 enum LayoutStyle {
     case compact
     case wide
+    case split
 }
 
 enum ShiftState {
@@ -59,6 +62,8 @@ enum KeyKind: Equatable {
     case cut
     case copy
     case paste
+    /// The empty middle of the split layout. The view does not draw this key.
+    case gap
     /// Switches between English and Simplified Chinese (Pinyin).
     case language
     case switchLayer(KeyboardLayer)
@@ -168,6 +173,10 @@ struct Key: Decodable {
 struct KeyboardSpec: Decodable {
     struct Metrics: Decodable {
         let wideMinimumWidth: CGFloat
+        /// The split layout appears at this width in points and above.
+        let splitMinimumWidth: CGFloat
+        /// Width of the empty middle of the split layout, in key units.
+        let splitGapUnits: CGFloat
         let topPadding: CGFloat
         let bottomPadding: CGFloat
         let horizontalPadding: CGFloat
@@ -187,6 +196,9 @@ struct KeyboardSpec: Decodable {
     struct Row: Decodable {
         /// Row height as a fraction of a letter row.
         let height: CGFloat
+        /// Count of keys in the left half of the split layout. A space bar at this place is
+        /// cut in two, so each half gets a space bar. Only the wide rows carry this value.
+        let split: Int?
         let keys: [Key]
     }
 
@@ -224,7 +236,7 @@ struct KeyboardSpec: Decodable {
 
     func style(_ style: LayoutStyle) -> Style {
         switch style {
-        case .wide: return wide
+        case .wide, .split: return wide
         case .compact: return compact
         }
     }
@@ -240,8 +252,38 @@ struct KeyboardLayout {
     static func make(style: LayoutStyle, layer: KeyboardLayer, showsGlobe: Bool) -> KeyboardLayout {
         let styleSpec = KeyboardSpec.shared.style(style)
         let rowSpecs = styleSpec.rows(for: layer)
-        let rows = rowSpecs.map { row in showsGlobe ? row.keys : withoutGlobe(row.keys) }
-        return KeyboardLayout(rows: rows, rowHeights: rowSpecs.map { $0.height }, units: styleSpec.units)
+        let gap = KeyboardSpec.shared.metrics.splitGapUnits
+        let rows = rowSpecs.map { row -> [Key] in
+            let keys = style == .split ? splitRow(row, gap: gap) : row.keys
+            return showsGlobe ? keys : withoutGlobe(keys)
+        }
+        let units = style == .split ? styleSpec.units + gap : styleSpec.units
+        return KeyboardLayout(rows: rows, rowHeights: rowSpecs.map { $0.height }, units: units)
+    }
+
+    /// Width of a style's widest row in key units.
+    static func units(style: LayoutStyle) -> CGFloat {
+        let spec = KeyboardSpec.shared
+        return style == .split ? spec.wide.units + spec.metrics.splitGapUnits : spec.style(style).units
+    }
+
+    /// Puts the empty middle into a row at the row's split point.
+    private static func splitRow(_ row: KeyboardSpec.Row, gap: CGFloat) -> [Key] {
+        guard let split = row.split, row.keys.indices.contains(split) else {
+            fatalError("A wide row in keyboard-layout.json needs a valid split value")
+        }
+        var keys = Array(row.keys[..<split])
+        let middle = row.keys[split]
+        if middle.kind == .space {
+            // The two space bars meet the middle of the row from both sides.
+            let total = row.keys.reduce(0) { $0 + $1.weight }
+            let before = keys.reduce(0) { $0 + $1.weight }
+            let left = min(max(total / 2 - before, 1), middle.weight - 1)
+            keys += [Key(.space, left), Key(.gap, gap), Key(.space, middle.weight - left)]
+        } else {
+            keys += [Key(.gap, gap), middle]
+        }
+        return keys + row.keys[(split + 1)...]
     }
 
     /// Sum of the row heights of a style, in letter rows.
@@ -252,10 +294,14 @@ struct KeyboardLayout {
     /// Removes the globe key and gives its width to the space bar in the same row.
     private static func withoutGlobe(_ keys: [Key]) -> [Key] {
         guard let globe = keys.first(where: { $0.kind == .globe }) else { return keys }
+        var gaveGlobeWidth = false
         return keys.compactMap { key in
             switch key.kind {
             case .globe: return nil
-            case .space: return Key(.space, key.weight + globe.weight)
+            // In the split layout the globe sits in the left half, so the first space bar grows.
+            case .space where !gaveGlobeWidth:
+                gaveGlobeWidth = true
+                return Key(.space, key.weight + globe.weight)
             default: return key
             }
         }
