@@ -92,7 +92,11 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
     /// A replacement of all text that waits for the document to confirm a cursor move.
     private struct PendingReplacement {
         let snapshot: AllText
-        var insert: String?
+        /// Text that goes in as it is after the delete, such as pasted text.
+        var rawInsert: String?
+        /// Typed characters that wait for the delete. They then take the normal typing path, so
+        /// a Pinyin letter reaches the Pinyin buffer and an English word gets autocorrection.
+        var typed: [String]
         let documentIdentifier: UUID
         var attempts = 0
     }
@@ -189,15 +193,17 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
         return nil
     }
 
-    /// Deletes the stored text and then inserts `text`, if any.
+    /// Deletes the stored text. After the delete, `rawInsert` goes in as it is, and `typed`
+    /// goes through the normal typing path.
     /// The caller passes a snapshot that `confirmedAllText()` just returned.
-    private func replaceAllText(_ snapshot: AllText, with text: String?) {
+    private func replaceAllText(_ snapshot: AllText, typed: String? = nil, rawInsert: String? = nil) {
         setAllText(nil)
         previousInsertWasSpace = false
+        let typedCharacters = typed.map { [$0] } ?? []
         guard !snapshot.after.isEmpty else {
             // The cursor is at the end of the text, so the delete needs no cursor move.
             deleteBackward(count: snapshot.before.count)
-            finishReplacement(insert: text)
+            finishReplacement(typed: typedCharacters, rawInsert: rawInsert)
             return
         }
         // A keyboard can delete backward only. The cursor moves to the end of the text first.
@@ -205,7 +211,8 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
         // did not happen as expected does not delete any text.
         document.moveCursor(byUTF16Offset: snapshot.after.utf16.count)
         pending = PendingReplacement(
-            snapshot: snapshot, insert: text, documentIdentifier: document.documentIdentifier)
+            snapshot: snapshot, rawInsert: rawInsert, typed: typedCharacters,
+            documentIdentifier: document.documentIdentifier)
         scheduleReplacementCheck()
     }
 
@@ -220,7 +227,7 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
         if sameDocument, document.selectedText == nil, document.textBeforeCursor.hasSuffix(after) {
             pending = nil
             deleteBackward(count: after.count + replacement.snapshot.before.count)
-            finishReplacement(insert: replacement.insert)
+            finishReplacement(typed: replacement.typed, rawInsert: replacement.rawInsert)
         } else if sameDocument, replacement.attempts < 5 {
             // The document reports a cursor move with a delay, so the check runs again.
             replacement.attempts += 1
@@ -348,11 +355,24 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
         }
     }
 
-    private func finishReplacement(insert text: String?) {
-        if let text {
-            document.insertText(text)
+    private func finishReplacement(typed: [String], rawInsert: String?) {
+        if let rawInsert {
+            document.insertText(rawInsert)
+        }
+        for character in typed {
+            typeCharacter(character)
         }
         updateAutoShift()
+    }
+
+    /// Types one character from a key: through the Pinyin buffer while the keyboard types
+    /// Chinese, and through the English typing rules otherwise.
+    private func typeCharacter(_ text: String) {
+        if chineseMode, handleChineseInput(text) {
+            updateAutoShift()
+            return
+        }
+        insert(text)
     }
 
     // MARK: Typing
@@ -424,20 +444,16 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
 
     func keyboardView(_ keyboardView: KeyboardView, insert text: String) {
         if var replacement = pending {
-            // A replacement is still running. The typed text joins the text that waits for insertion.
-            replacement.insert = (replacement.insert ?? "") + text
+            // A replacement is still running. The typed character joins the ones that wait for the delete.
+            replacement.typed.append(text)
             pending = replacement
             return
         }
-        if chineseMode, allText == nil, handleChineseInput(text) {
-            updateAutoShift()
-            return
-        }
         if let snapshot = confirmedAllText() {
-            replaceAllText(snapshot, with: text)
+            replaceAllText(snapshot, typed: text)
             return
         }
-        insert(text)
+        typeCharacter(text)
     }
 
     func keyboardView(_ keyboardView: KeyboardView, didSelectCandidateAt index: Int) {
@@ -452,7 +468,7 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
             return
         }
         if let snapshot = confirmedAllText() {
-            replaceAllText(snapshot, with: nil)
+            replaceAllText(snapshot)
             return
         }
         previousInsertWasSpace = false
@@ -516,7 +532,7 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
             if let snapshot = confirmedAllText() {
                 UIPasteboard.general.string = snapshot.text
                 if command == .cut {
-                    replaceAllText(snapshot, with: nil)
+                    replaceAllText(snapshot)
                     showNotice("Cut all text")
                 } else {
                     showNotice("Copied all text")
@@ -542,13 +558,13 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
                 return
             }
             if let snapshot = confirmedAllText() {
-                replaceAllText(snapshot, with: text)
+                replaceAllText(snapshot, rawInsert: text)
             } else {
                 document.insertText(text)
             }
         case .deleteForward:
             if let snapshot = confirmedAllText() {
-                replaceAllText(snapshot, with: nil)
+                replaceAllText(snapshot)
                 return
             }
             // Apple's keyboard guide gives this pattern: move one character right, then delete backward.
