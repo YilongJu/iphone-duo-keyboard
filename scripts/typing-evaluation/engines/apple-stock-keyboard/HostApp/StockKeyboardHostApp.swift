@@ -3,6 +3,13 @@ import UIKit
 
 /// Host app for the stock-keyboard measurement. The app shows one text view with the default
 /// text input traits, so the system keyboard treats the text view like any other text field.
+///
+/// The UI test sets two environment variables at launch.
+/// - `EVAL_CONTEXTS_JSON`: a JSON array with the context string of each case, in typing order.
+/// - `EVAL_TASK`: `english` or `pinyin`. The task decides which text changes count as key arrivals.
+/// `EVAL_INLINE_PREDICTION` is optional. The value `no` turns inline predictions off in the text view.
+/// `EVAL_CONTROL` is optional. The value `yes` turns every correction of the text view off, so
+/// the text view holds exactly the characters of the keys that arrived.
 @main
 struct StockKeyboardHostApp: App {
     var body: some Scene {
@@ -37,6 +44,10 @@ struct FieldStatus: Codable {
     /// Number of times since the case was loaded that the text without the marked text gained a
     /// space at its end. Each space tap of the English keyboard adds one.
     let e: Int
+    /// The longest time between two key arrivals since the case was loaded, in milliseconds.
+    /// A key arrival is a moment the typed text grew: for English the text without the marked
+    /// text, and for Pinyin the letters a to z of the text.
+    let g: Int
     /// Every state of the text since the case was loaded, oldest first. Each entry is the text
     /// with the marked text between the two marks of `FieldViewController.markedBrackets`.
     let h: [String]
@@ -49,17 +60,24 @@ struct FieldStatus: Codable {
 final class FieldViewController: UIViewController, UITextViewDelegate {
     /// The marks around marked text in a history entry: the white square brackets U+27E6 and U+27E7.
     static let markedBrackets = (open: "\u{27E6}", close: "\u{27E7}")
+    /// Two growths of the typed text closer than this many milliseconds come from one tap, as
+    /// when the keyboard replaces a word and then adds the space.
+    static let sameTapMilliseconds = 20
 
     private let statusLabel = UILabel()
     private let nextButton = UIButton(type: .system)
     private let field = UITextView()
     private var contexts: [String] = []
+    private var countsPinyinLetters = false
     private var caseIndex = -1
     private var history: [String] = []
     private var historyTimes: [Int] = []
     private var loadTime = Date()
     private var spaceArrivals = 0
     private var lastCommitted = ""
+    private var typedLength = 0
+    private var lastKeyArrival: Date?
+    private var longestKeyGap = 0
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -71,6 +89,11 @@ final class FieldViewController: UIViewController, UITextViewDelegate {
             fatalError("EVAL_CONTEXTS_JSON must hold a JSON array with one context string per case")
         }
         contexts = decoded
+        switch environment["EVAL_TASK"] {
+        case "english": countsPinyinLetters = false
+        case "pinyin": countsPinyinLetters = true
+        default: fatalError("EVAL_TASK must be english or pinyin")
+        }
 
         statusLabel.numberOfLines = 0
         statusLabel.font = .monospacedSystemFont(ofSize: 8, weight: .regular)
@@ -85,8 +108,9 @@ final class FieldViewController: UIViewController, UITextViewDelegate {
         nextButton.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(nextButton)
 
-        // The text view keeps every text input trait at its default: autocorrection, spell
-        // checking, capitalization of sentences and smart punctuation follow the system settings.
+        // In a measurement run the text view keeps every text input trait at its default:
+        // autocorrection, spell checking, capitalization of sentences and smart punctuation
+        // follow the system settings.
         field.font = .systemFont(ofSize: 20)
         field.layer.borderWidth = 1
         field.layer.borderColor = UIColor.separator.cgColor
@@ -94,9 +118,18 @@ final class FieldViewController: UIViewController, UITextViewDelegate {
         field.delegate = self
         field.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(field)
-        // A run that measures the keyboard without inline predictions sets this variable to "no".
         if environment["EVAL_INLINE_PREDICTION"] == "no" {
             field.inlinePredictionType = .no
+        }
+        if environment["EVAL_CONTROL"] == "yes" {
+            // The control run: the keyboard must not change a typed character.
+            field.autocorrectionType = .no
+            field.spellCheckingType = .no
+            field.autocapitalizationType = .none
+            field.inlinePredictionType = .no
+            field.smartQuotesType = .no
+            field.smartDashesType = .no
+            field.smartInsertDeleteType = .no
         }
 
         let safeArea = view.safeAreaLayoutGuide
@@ -137,6 +170,9 @@ final class FieldViewController: UIViewController, UITextViewDelegate {
         loadTime = Date()
         spaceArrivals = 0
         lastCommitted = field.text ?? ""
+        typedLength = typedText(text: lastCommitted, committed: lastCommitted).count
+        lastKeyArrival = nil
+        longestKeyGap = 0
         updateStatus()
     }
 
@@ -146,6 +182,14 @@ final class FieldViewController: UIViewController, UITextViewDelegate {
 
     func textViewDidChangeSelection(_ textView: UITextView) {
         updateStatus()
+    }
+
+    /// The text whose growth marks a key arrival.
+    private func typedText(text: String, committed: String) -> String {
+        if countsPinyinLetters {
+            return text.filter({ $0.isASCII && $0.isLetter })
+        }
+        return committed
     }
 
     private func updateStatus() {
@@ -159,17 +203,31 @@ final class FieldViewController: UIViewController, UITextViewDelegate {
             committed = text.replacingCharacters(in: range, with: "")
             annotated = text.replacingCharacters(in: range, with: brackets.open + text.substring(with: range) + brackets.close)
         }
+        let now = Date()
         if committed.hasSuffix(" ") && !lastCommitted.hasSuffix(" ") {
             spaceArrivals += 1
         }
         lastCommitted = committed
+        let newTypedLength = typedText(text: text as String, committed: committed).count
+        if newTypedLength > typedLength {
+            if let last = lastKeyArrival {
+                let gap = Int((now.timeIntervalSince(last) * 1000).rounded())
+                if gap >= FieldViewController.sameTapMilliseconds {
+                    longestKeyGap = max(longestKeyGap, gap)
+                    lastKeyArrival = now
+                }
+            } else {
+                lastKeyArrival = now
+            }
+        }
+        typedLength = newTypedLength
         if history.last != annotated {
             history.append(annotated)
-            historyTimes.append(Int((Date().timeIntervalSince(loadTime) * 1000).rounded()))
+            historyTimes.append(Int((now.timeIntervalSince(loadTime) * 1000).rounded()))
         }
         let status = FieldStatus(
             i: caseIndex, m: field.markedTextRange != nil, t: text as String, c: committed,
-            e: spaceArrivals, h: history, ht: historyTimes)
+            e: spaceArrivals, g: longestKeyGap, h: history, ht: historyTimes)
         guard let data = try? JSONEncoder().encode(status) else {
             fatalError("the field status did not encode as JSON")
         }

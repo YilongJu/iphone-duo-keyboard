@@ -29,9 +29,9 @@ static NSError *EvalError(NSString *message) {
     return [NSError errorWithDomain:@"EventSynthesis" code:1 userInfo:@{NSLocalizedDescriptionKey: message}];
 }
 
-/// Builds one event record with a tap at each point. Returns nil with an error when XCTest does
-/// not hold the event classes.
-static id<EvalEventRecord> EvalRecord(NSArray<NSValue *> *points, NSArray<NSNumber *> *starts, double hold, NSError **error) {
+/// Builds the event record of one tap. Returns nil with an error when XCTest does not hold the
+/// event classes.
+static id<EvalEventRecord> EvalTapRecord(CGPoint point, double hold, NSError **error) {
     Class pathClass = NSClassFromString(@"XCPointerEventPath");
     Class recordClass = NSClassFromString(@"XCSynthesizedEventRecord");
     if (pathClass == Nil || recordClass == Nil) {
@@ -46,15 +46,11 @@ static id<EvalEventRecord> EvalRecord(NSArray<NSValue *> *points, NSArray<NSNumb
         return nil;
     }
     // Orientation 1 is portrait. The host app supports portrait only.
-    id<EvalEventRecord> record = [(id<EvalEventRecord>)[recordClass alloc] initWithName:@"typing evaluation taps"
+    id<EvalEventRecord> record = [(id<EvalEventRecord>)[recordClass alloc] initWithName:@"typing evaluation tap"
                                                                     interfaceOrientation:1];
-    for (NSUInteger index = 0; index < points.count; index++) {
-        double start = starts[index].doubleValue;
-        id<EvalPointerEventPath> path = [(id<EvalPointerEventPath>)[pathClass alloc] initForTouchAtPoint:points[index].CGPointValue
-                                                                                                    offset:start];
-        [path liftUpAtOffset:start + hold];
-        [record addPointerEventPath:path];
-    }
+    id<EvalPointerEventPath> path = [(id<EvalPointerEventPath>)[pathClass alloc] initForTouchAtPoint:point offset:0.0];
+    [path liftUpAtOffset:hold];
+    [record addPointerEventPath:path];
     return record;
 }
 
@@ -70,22 +66,11 @@ static id<EvalEventSynthesizer> EvalSynthesizer(NSError **error) {
     return nil;
 }
 
-/// Runs the run loop of this thread until the block returns YES or the time runs out. A
-/// completion block of the synthesizer can arrive on the main queue, so the thread must not block.
-static void EvalRunLoopUntil(BOOL (^done)(void), NSTimeInterval timeout) {
-    NSDate *deadline = [NSDate dateWithTimeIntervalSinceNow:timeout];
-    while (!done() && deadline.timeIntervalSinceNow > 0) {
-        [NSRunLoop.currentRunLoop runMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:0.005]];
-        usleep(1000);
-    }
-}
-
 @implementation EventSynthesis
 
 + (NSArray<NSNumber *> *)tapPointsPaced:(NSArray<NSValue *> *)points
                                interval:(double)interval
                                    hold:(double)hold
-                      waitForCompletion:(BOOL)waitForCompletion
                                   error:(NSError **)error {
     if (points.count == 0) {
         if (error) { *error = EvalError(@"points must hold at least one value"); }
@@ -95,80 +80,50 @@ static void EvalRunLoopUntil(BOOL (^done)(void), NSTimeInterval timeout) {
     if (synthesizer == nil) {
         return nil;
     }
-    __block NSInteger finished = 0;
-    __block NSError *firstError = nil;
     NSMutableArray<NSNumber *> *times = [NSMutableArray arrayWithCapacity:points.count];
-    NSDate *begin = [NSDate date];
-    for (NSUInteger index = 0; index < points.count; index++) {
-        NSDate *due = [begin dateByAddingTimeInterval:index * interval];
-        if (due.timeIntervalSinceNow > 0) {
-            [NSThread sleepUntilDate:due];
+    NSDate *begin = nil;
+    NSDate *lastSend = nil;
+    for (NSValue *value in points) {
+        // Each tap is due one interval after the tap before it was sent.
+        if (lastSend != nil) {
+            NSDate *due = [lastSend dateByAddingTimeInterval:interval];
+            if (due.timeIntervalSinceNow > 0) {
+                [NSThread sleepUntilDate:due];
+            }
         }
-        id<EvalEventRecord> record = EvalRecord(@[points[index]], @[@0.0], hold, error);
+        id<EvalEventRecord> record = EvalTapRecord(value.CGPointValue, hold, error);
         if (record == nil) {
             return nil;
         }
-        [times addObject:@(-begin.timeIntervalSinceNow)];
+        __block BOOL finished = NO;
+        __block NSError *synthesisError = nil;
+        lastSend = [NSDate date];
+        if (begin == nil) {
+            begin = lastSend;
+        }
+        [times addObject:@([lastSend timeIntervalSinceDate:begin])];
         [synthesizer synthesizeEvent:record completion:^(BOOL result, NSError *invokeError) {
-            if (invokeError != nil && firstError == nil) {
-                firstError = invokeError;
-            }
-            finished += 1;
+            synthesisError = invokeError;
+            finished = YES;
         }];
-        if (waitForCompletion) {
-            NSInteger needed = (NSInteger)index + 1;
-            EvalRunLoopUntil(^BOOL { return finished >= needed; }, 30.0);
-            if (finished < needed) {
-                if (error) { *error = EvalError(@"the event synthesizer did not finish a tap in 30 seconds"); }
-                return nil;
-            }
+        // The test daemon performs one gesture at a time, so the next tap waits for this one.
+        // The completion block can arrive on the main queue, so this thread runs its run loop
+        // while it waits.
+        NSDate *deadline = [NSDate dateWithTimeIntervalSinceNow:30.0];
+        while (!finished && deadline.timeIntervalSinceNow > 0) {
+            [NSRunLoop.currentRunLoop runMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:0.005]];
+            usleep(1000);
+        }
+        if (!finished) {
+            if (error) { *error = EvalError(@"the event synthesizer did not finish a tap in 30 seconds"); }
+            return nil;
+        }
+        if (synthesisError != nil) {
+            if (error) { *error = synthesisError; }
+            return nil;
         }
     }
-    NSInteger total = (NSInteger)points.count;
-    EvalRunLoopUntil(^BOOL { return finished >= total; }, 30.0);
-    if (finished < total) {
-        if (error) { *error = EvalError(@"the event synthesizer did not finish every tap in 30 seconds"); }
-        return nil;
-    }
-    if (firstError != nil) {
-        if (error) { *error = firstError; }
-        return nil;
-    }
     return times;
-}
-
-+ (BOOL)tapPoints:(NSArray<NSValue *> *)points
-           starts:(NSArray<NSNumber *> *)starts
-             hold:(double)hold
-            error:(NSError **)error {
-    if (points.count == 0 || points.count != starts.count) {
-        if (error) { *error = EvalError(@"points and starts must hold the same number of values, at least one"); }
-        return NO;
-    }
-    id<EvalEventSynthesizer> synthesizer = EvalSynthesizer(error);
-    if (synthesizer == nil) {
-        return NO;
-    }
-    id<EvalEventRecord> record = EvalRecord(points, starts, hold, error);
-    if (record == nil) {
-        return NO;
-    }
-    __block BOOL finished = NO;
-    __block NSError *synthesisError = nil;
-    [synthesizer synthesizeEvent:record completion:^(BOOL result, NSError *invokeError) {
-        synthesisError = invokeError;
-        finished = YES;
-    }];
-    EvalRunLoopUntil(^BOOL { return finished; }, starts.lastObject.doubleValue + hold + 30.0);
-    if (!finished) {
-        if (error) { *error = EvalError(@"the event synthesizer did not finish in time"); }
-        return NO;
-    }
-    if (synthesisError != nil) {
-        if (error) { *error = synthesisError; }
-        return NO;
-    }
-    return YES;
 }
 
 @end

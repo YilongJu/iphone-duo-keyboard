@@ -4,11 +4,13 @@ name: Typing evaluation of the Apple stock keyboard
 # engines. The keyboard jobs tap the keys of the software keyboard in the iOS Simulator. The
 # nsspellchecker job asks the spell checker of macOS for its corrections. The collect job merges
 # the parts of the other jobs and runs score.py for each engine name and half.
+# The README of scripts/typing-evaluation/engines/apple-stock-keyboard explains the measurement.
 on:
   push:
     branches: ['eval/apple-stock-keyboard']
     paths-ignore:
       - '**/README.md'
+      - 'scripts/typing-evaluation/results/**'
   workflow_dispatch:
 
 permissions:
@@ -27,34 +29,29 @@ env:
   ENGINE_DIR: scripts/typing-evaluation/engines/apple-stock-keyboard
   PARTS_DIR: build/typing-evaluation-parts
   SAMPLE_SEED: '20261109'
+  # The number of cases each simulator types. 0 types the whole shard, and a small number gives a short trial.
+  SHARD_LIMIT: '12'
 
 jobs:
   keyboard:
-    name: ${{ matrix.engine }} ${{ matrix.half }} part ${{ matrix.shard }}
+    name: ${{ matrix.engine }} ${{ matrix.task }} ${{ matrix.half }} shards ${{ matrix.shard_list }}
     runs-on: xcode-27
-    timeout-minutes: 75
+    timeout-minutes: 60
     strategy:
       fail-fast: false
+      max-parallel: 4
       matrix:
-        # per_category is the size of the fixed-seed sample of each category. first keeps the
-        # first cases of each sampled category for a short trial, and 0 keeps all of them.
-        # key_interval is the time between two touch-downs in seconds, and tap_mode is the way
-        # the test sends the taps. UITests/StockKeyboardTests.swift explains both at its top.
+        # share is the share of each stratum that sample_cases.py draws. shards is the number of
+        # shards of the sample, and shard_list names the shards this job types. The job types
+        # each shard on its own new simulator. A Pinyin sample has 8 shards, so one simulator
+        # types each clause one time. control: 'yes' turns every correction of the text view off.
         include:
-          - {engine: apple-english, task: english, half: dev, per_category: 40, first: 0, shard: 0, shards: 2, tap_mode: paced, key_interval: '0.33'}
-          - {engine: apple-english, task: english, half: dev, per_category: 40, first: 0, shard: 1, shards: 2, tap_mode: paced, key_interval: '0.33'}
-          - {engine: apple-pinyin, task: pinyin, half: dev, per_category: 30, first: 0, shard: 0, shards: 2, tap_mode: paced, key_interval: '0.33'}
-          - {engine: apple-pinyin, task: pinyin, half: dev, per_category: 30, first: 0, shard: 1, shards: 2, tap_mode: paced, key_interval: '0.33'}
-          - {engine: trial-english-paced-330, task: english, half: dev, per_category: 40, first: 5, shard: 0, shards: 1, tap_mode: paced, key_interval: '0.33'}
-          - {engine: trial-english-paced-250, task: english, half: dev, per_category: 40, first: 5, shard: 0, shards: 1, tap_mode: paced, key_interval: '0.25'}
-          - {engine: trial-english-paced-500, task: english, half: dev, per_category: 40, first: 5, shard: 0, shards: 1, tap_mode: paced, key_interval: '0.50'}
-          - {engine: trial-english-open-160, task: english, half: dev, per_category: 40, first: 5, shard: 0, shards: 1, tap_mode: paced-open, key_interval: '0.16'}
-          - {engine: trial-english-batch-160, task: english, half: dev, per_category: 40, first: 5, shard: 0, shards: 1, tap_mode: batch, key_interval: '0.16'}
-          - {engine: trial-pinyin-paced-250, task: pinyin, half: dev, per_category: 30, first: 3, shard: 0, shards: 1, tap_mode: paced, key_interval: '0.25'}
-          - {engine: trial-pinyin-paced-500, task: pinyin, half: dev, per_category: 30, first: 3, shard: 0, shards: 1, tap_mode: paced, key_interval: '0.50'}
-          - {engine: trial-pinyin-open-160, task: pinyin, half: dev, per_category: 30, first: 3, shard: 0, shards: 1, tap_mode: paced-open, key_interval: '0.16'}
+          - {engine: apple-stock-keyboard, task: english, half: dev, share: '0.2', shards: 2, shard_list: '0', control: 'no'}
+          - {engine: apple-stock-keyboard, task: pinyin, half: dev, share: '0.15', shards: 8, shard_list: '0 1', control: 'no'}
+          - {engine: apple-stock-keyboard-control, task: english, half: dev, share: '0.2', shards: 4, shard_list: '0', control: 'yes'}
     env:
-      PART: apple-stock-keyboard-part-${{ matrix.engine }}-${{ matrix.half }}-${{ matrix.shard }}
+      PART_PREFIX: apple-stock-keyboard-part-${{ matrix.engine }}-${{ matrix.task }}-${{ matrix.half }}
+      KEY_INTERVAL: '0.33'
     steps:
       - uses: actions/checkout@v7
       - name: Print the versions of macOS, Xcode and the simulator runtimes
@@ -70,32 +67,35 @@ jobs:
       - name: Sample the cases with a fixed seed
         run: |
           set -euo pipefail
-          part="$PARTS_DIR/$PART"
-          mkdir -p "$part"
-          python3 "$ENGINE_DIR/sample_cases.py" \
-            --cases "scripts/typing-evaluation/cases/${{ matrix.task }}.${{ matrix.half }}.jsonl" \
-            --per-category ${{ matrix.per_category }} --first ${{ matrix.first }} --seed "$SAMPLE_SEED" \
-            --shard ${{ matrix.shard }} --shards ${{ matrix.shards }} \
-            --sample-out "$part/sample.jsonl" --shard-out "$part/cases.jsonl"
-          printf '{"kind": "keyboard", "engine": "%s", "task": "%s", "half": "%s", "shard": %s, "shards": %s, "tap_mode": "%s", "key_interval": %s, "per_category": %s, "first": %s, "seed": %s}\n' \
-            "${{ matrix.engine }}" "${{ matrix.task }}" "${{ matrix.half }}" "${{ matrix.shard }}" "${{ matrix.shards }}" \
-            "${{ matrix.tap_mode }}" "${{ matrix.key_interval }}" \
-            "${{ matrix.per_category }}" "${{ matrix.first }}" "$SAMPLE_SEED" > "$part/part.json"
-          cat "$part/part.json"
+          for shard in ${{ matrix.shard_list }}; do
+            part="$PARTS_DIR/$PART_PREFIX-$shard"
+            mkdir -p "$part"
+            python3 "$ENGINE_DIR/sample_cases.py" --task "${{ matrix.task }}" \
+              --cases "scripts/typing-evaluation/cases/${{ matrix.task }}.${{ matrix.half }}.jsonl" \
+              --share ${{ matrix.share }} --limit "$SHARD_LIMIT" --seed "$SAMPLE_SEED" \
+              --shard "$shard" --shards ${{ matrix.shards }} \
+              --sample-out "$part/sample.jsonl" --shard-out "$part/cases.jsonl"
+            if [ "${{ matrix.control }}" = yes ]; then control=true; else control=false; fi
+            printf '{"kind": "keyboard", "engine": "%s", "task": "%s", "half": "%s", "shard": %s, "shards": %s, "key_interval": %s, "share": %s, "limit": %s, "seed": %s, "control": %s}\n' \
+              "${{ matrix.engine }}" "${{ matrix.task }}" "${{ matrix.half }}" "$shard" "${{ matrix.shards }}" \
+              "$KEY_INTERVAL" "${{ matrix.share }}" "$SHARD_LIMIT" "$SAMPLE_SEED" "$control" > "$part/part.json"
+            cat "$part/part.json"
+          done
       - name: Generate the Xcode project
         run: |
           cd "$ENGINE_DIR"
           xcodegen generate
-      - name: Create a new simulator
+      - name: Create the simulator of the first shard
         run: |
           set -euo pipefail
-          udid=$(bash "$ENGINE_DIR/simulator.sh" create "typing-evaluation-${{ matrix.engine }}")
+          udid=$(bash "$ENGINE_DIR/simulator.sh" create "typing-evaluation-first")
           echo "simulator $udid"
           echo "SIMULATOR_UDID=$udid" >> "$GITHUB_ENV"
       - name: Build the host app and the UI test
         run: |
           set -euo pipefail
-          log="$PARTS_DIR/$PART/xcodebuild-build.log"
+          mkdir -p build/apple-stock-keyboard-logs
+          log=build/apple-stock-keyboard-logs/xcodebuild-build.log
           if ! xcodebuild build-for-testing \
               -project "$ENGINE_DIR/StockKeyboardHost.xcodeproj" -scheme StockKeyboardHost \
               -destination "platform=iOS Simulator,id=$SIMULATOR_UDID" \
@@ -106,37 +106,75 @@ jobs:
           fi
           grep -E "warning: " "$log" | sort -u | head -n 40 || true
           tail -n 4 "$log"
-      - name: Boot the simulator and set its keyboard
-        run: bash "$ENGINE_DIR/simulator.sh" configure "$SIMULATOR_UDID" "${{ matrix.task }}" 2>&1 | tee "$PARTS_DIR/$PART/simulator.log"
-      - name: Type the cases on the stock keyboard
+      - name: Type each shard on the stock keyboard of its own new simulator
         run: |
-          set -euo pipefail
-          # xcodebuild hands a variable to the test process when its name starts with TEST_RUNNER_.
-          export TEST_RUNNER_EVAL_TASK="${{ matrix.task }}"
-          export TEST_RUNNER_EVAL_TAP_MODE="${{ matrix.tap_mode }}"
-          export TEST_RUNNER_EVAL_KEY_INTERVAL="${{ matrix.key_interval }}"
-          export TEST_RUNNER_EVAL_CASES_FILE="$PWD/$PARTS_DIR/$PART/cases.jsonl"
-          export TEST_RUNNER_EVAL_OUTPUT_DIR="$PWD/$PARTS_DIR/$PART"
-          xcodebuild test-without-building \
-            -project "$ENGINE_DIR/StockKeyboardHost.xcodeproj" -scheme StockKeyboardHost \
-            -destination "platform=iOS Simulator,id=$SIMULATOR_UDID" \
-            -derivedDataPath build/apple-stock-keyboard-derived \
-            -parallel-testing-enabled NO -test-timeouts-enabled NO 2>&1 | tee "$PARTS_DIR/$PART/xcodebuild-test.log"
-      - name: Show the outputs and the scores of this part
+          set -uo pipefail
+          failed=0
+          udid="$SIMULATOR_UDID"
+          for shard in ${{ matrix.shard_list }}; do
+            part="$PARTS_DIR/$PART_PREFIX-$shard"
+            if [ -z "$udid" ]; then
+              udid=$(bash "$ENGINE_DIR/simulator.sh" create "typing-evaluation-shard-$shard") || exit 1
+            fi
+            echo "== shard $shard on simulator $udid"
+            bash "$ENGINE_DIR/simulator.sh" configure "$udid" "${{ matrix.task }}" > "$part/simulator.log" 2>&1
+            configured=$?
+            grep -v -E "RequiredAssets|\.lm$|^[A-Za-z_-]{2,6}$|\.plist$" "$part/simulator.log"
+            if [ "$configured" != 0 ]; then
+              echo "::error::the simulator of shard $shard did not take its settings"
+              exit 1
+            fi
+            # xcodebuild hands a variable to the test process when its name starts with TEST_RUNNER_.
+            export TEST_RUNNER_EVAL_TASK="${{ matrix.task }}"
+            export TEST_RUNNER_EVAL_KEY_INTERVAL="$KEY_INTERVAL"
+            export TEST_RUNNER_EVAL_CONTROL="${{ matrix.control }}"
+            export TEST_RUNNER_EVAL_CASES_FILE="$PWD/$part/cases.jsonl"
+            export TEST_RUNNER_EVAL_OUTPUT_DIR="$PWD/$part"
+            xcodebuild test-without-building \
+              -project "$ENGINE_DIR/StockKeyboardHost.xcodeproj" -scheme StockKeyboardHost \
+              -destination "platform=iOS Simulator,id=$udid" \
+              -derivedDataPath build/apple-stock-keyboard-derived \
+              -parallel-testing-enabled NO -test-timeouts-enabled NO > "$part/xcodebuild-test.log" 2>&1
+            status=$?
+            grep -E "^EVAL_(START|PASS|KEYS|WARMUP|NOTE|DONE)|error:|\*\* TEST" "$part/xcodebuild-test.log"
+            # The shard passes when the text view was read for every case. XCTest can report a
+            # failure for a read that the test repeated with success.
+            total=$(grep -c . "$part/cases.jsonl")
+            if [ -f "$part/attempts.jsonl" ]; then
+              typed=$(python3 -c 'import json, sys; print(len({json.loads(line)["id"] for line in open(sys.argv[1], encoding="utf-8") if "after" in json.loads(line)}))' "$part/attempts.jsonl")
+            else
+              typed="no attempts file"
+            fi
+            echo "shard $shard: xcodebuild exit status $status, text view read for $typed of $total cases"
+            if [ "$status" != 0 ]; then echo "::warning::xcodebuild exit status $status in shard $shard"; fi
+            if [ "$typed" != "$total" ]; then
+              echo "::error::shard $shard: text view read for $typed of $total cases"
+              failed=1
+            fi
+            xcrun simctl shutdown "$udid" || echo "::warning::the simulator $udid did not shut down"
+            xcrun simctl delete "$udid" || echo "::warning::the simulator $udid was not deleted"
+            udid=""
+          done
+          exit "$failed"
+      - name: Show the outputs and the checks of the shards of this job
         if: always()
         run: |
           set -euo pipefail
           python3 "$ENGINE_DIR/collect_outputs.py" --parts "$PARTS_DIR" --out build/typing-evaluation
-          bash "$ENGINE_DIR/score_outputs.sh" build/typing-evaluation
       - uses: actions/upload-artifact@v7
         if: always()
         with:
-          name: ${{ env.PART }}
-          path: build/typing-evaluation-parts/${{ env.PART }}
+          name: ${{ env.PART_PREFIX }}-job-${{ strategy.job-index }}
+          path: |
+            build/typing-evaluation-parts
+            build/apple-stock-keyboard-logs
           if-no-files-found: error
 
   nsspellchecker:
     name: apple-nsspellchecker on all English cases
+    # The job waits for the keyboard jobs, so the workflow holds at most four runners at a time.
+    needs: [keyboard]
+    if: ${{ !cancelled() }}
     runs-on: xcode-27
     timeout-minutes: 30
     env:
