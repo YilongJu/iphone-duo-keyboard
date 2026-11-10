@@ -20,6 +20,11 @@ final class KeyboardViewController: UIInputViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         textController.proofreader = SystemModelProofreader()
+        // iPadOS draws undo, redo and paste buttons over the keyboard's top left corner. This
+        // request to drop them is honored for a text field's own input view. For a keyboard
+        // extension the documentation does not say, so the first row also leaves that corner free.
+        inputAssistantItem.leadingBarButtonGroups = []
+        inputAssistantItem.trailingBarButtonGroups = []
         textController.onDismiss = { [weak self] in
             self?.dismissKeyboard()
         }

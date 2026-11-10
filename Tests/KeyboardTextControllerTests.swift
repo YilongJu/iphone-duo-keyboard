@@ -867,6 +867,25 @@ final class KeyboardLayoutTests: XCTestCase {
         XCTAssertEqual(KeyboardView.style(forWidth: 320, device: .pad, landscape: true), .compact)
     }
 
+    func testTheFirstRowOfAnIPadLeavesTheCornerOfTheSystemButtons() {
+        XCTAssertEqual(KeyboardView.shortcutButtonsWidth(style: .wide, device: .pad), 140)
+        XCTAssertEqual(KeyboardView.shortcutButtonsWidth(style: .split, device: .pad), 140)
+        XCTAssertEqual(KeyboardView.shortcutButtonsWidth(style: .compact, device: .pad), 0)
+        for style in [LayoutStyle.compact, .wide, .split] {
+            XCTAssertEqual(KeyboardView.shortcutButtonsWidth(style: style, device: .phone), 0)
+        }
+        // Three keys of 100 points, then the empty middle, then one key.
+        let row = [0, 100, 200, 300, 700].map { CGRect(x: CGFloat($0), y: 0, width: 100, height: 40) }
+        let moved = KeyboardView.cells(row, leftGroupCount: 3, movedRightBy: 150)
+        XCTAssertEqual(moved[0].minX, 150, accuracy: 0.001)
+        XCTAssertEqual(moved[0].width, 50, accuracy: 0.001)
+        XCTAssertEqual(moved[2].maxX, 300, accuracy: 0.001)
+        XCTAssertEqual(moved[3], row[3])
+        XCTAssertEqual(moved[4], row[4])
+        // Without a reserve, as on an iPhone, every cell stays.
+        XCTAssertEqual(KeyboardView.cells(row, leftGroupCount: 3, movedRightBy: 0), row)
+    }
+
     func testTheIPadRulesDoNotChangeTheIPhoneLayouts() {
         // The iPhone rules read the width only, so the screen's orientation changes nothing.
         for landscape in [false, true] {
