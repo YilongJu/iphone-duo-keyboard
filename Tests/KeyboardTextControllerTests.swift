@@ -186,6 +186,16 @@ final class KeyboardTextControllerTests: XCTestCase {
             KeyboardTextLogic.acceptedProofreading(of: "\u{6211}\u{5728}\u{5BB6}\u{91CC}\u{3002}", answer: "\u{6211}\u{518D}\u{5BB6}\u{91CC}\u{3002}"),
             "\u{6211}\u{518D}\u{5BB6}\u{91CC}\u{3002}")
         XCTAssertEqual(KeyboardTextLogic.changedUnits(["a", "b", "c"], ["a", "x", "c", "d"]), 2)
+        // A new word must look like the word it replaces. The first answer puts two unrelated
+        // words in place of a misspelled one, and the second answer spells that word right.
+        let long = "Right now not just period will trigger the all mautocoorection, it seems so."
+        XCTAssertNil(KeyboardTextLogic.acceptedProofreading(
+            of: long, answer: "Right now not just period will trigger the all from correction, it seems so."))
+        XCTAssertNotNil(KeyboardTextLogic.acceptedProofreading(
+            of: long, answer: "Right now not just period will trigger the all autocorrection, it seems so."))
+        XCTAssertNotNil(KeyboardTextLogic.acceptedProofreading(of: "I saw teh quik fox.", answer: "I saw the quick fox."))
+        XCTAssertNotNil(KeyboardTextLogic.acceptedProofreading(of: "I saw thequick fox today.", answer: "I saw the quick fox today."))
+        XCTAssertNil(KeyboardTextLogic.acceptedProofreading(of: "I saw the quick fox.", answer: "I saw the lazy fox."))
     }
 
     private var keyboardView: KeyboardView!

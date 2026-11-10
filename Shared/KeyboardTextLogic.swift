@@ -175,6 +175,10 @@ enum KeyboardTextLogic {
     /// keeps an answer only when it is the same sentence with a few words or characters
     /// changed: at most two units, or one unit in four for a longer sentence. A unit is a
     /// word, or a character in a sentence without spaces, as in Chinese.
+    ///
+    /// Each new word must also look like the word it replaces, as "from" looks like "form". A
+    /// model that does not know a word can put an unrelated word in its place, as in "from
+    /// correction" for "mautocoorection", and this check drops such an answer.
     static func acceptedProofreading(of original: String, answer: String) -> String? {
         var fixed = answer.trimmingCharacters(in: .whitespacesAndNewlines)
         for (open, close) in [("\"", "\""), ("\u{201C}", "\u{201D}")] where fixed.count >= 2
@@ -189,7 +193,31 @@ enum KeyboardTextLogic {
         let before = units(original)
         let after = units(fixed)
         let allowed = max(2, before.count / 4)
-        return changedUnits(before, after) <= allowed ? fixed : nil
+        guard changedUnits(before, after) <= allowed else { return nil }
+        return newWordsResembleOldWords(before, after) ? fixed : nil
+    }
+
+    /// True when the words that `after` adds look like the words it takes out of `before`.
+    /// With the same count on both sides, each new word is compared with the old word at its
+    /// place and may differ in two letters, or in a third of its letters. With different counts,
+    /// as when one word becomes two, the words of each side are joined and compared the same way.
+    static func newWordsResembleOldWords(_ before: [String], _ after: [String]) -> Bool {
+        var removed: [String] = []
+        var added: [String] = []
+        for change in after.difference(from: before) {
+            switch change {
+            case .remove(_, let word, _): removed.append(word)
+            case .insert(_, let word, _): added.append(word)
+            }
+        }
+        func resembles(_ old: String, _ new: String) -> Bool {
+            let limit = max(2, max(old.count, new.count) / 3)
+            return changedUnits(old.map(String.init), new.map(String.init)) <= limit
+        }
+        if removed.count == added.count {
+            return zip(removed, added).allSatisfy { resembles($0, $1) }
+        }
+        return resembles(removed.joined(), added.joined())
     }
 
     /// Count of units that differ between two lists: the fewest single changes, each one a
