@@ -456,13 +456,13 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
 
         let followedBySpace = terminator == " "
         // A word the person brought back after a correction stays as typed.
-        guard !spellChecker.keeps(word) else {
+        guard !keepsAsTyped(word) else {
             if followedBySpace { recentWord = RecentWord(typed: word, shown: word, context: contextAfterSpace()) }
             return
         }
         var typedSpan = word
         var shownSpan = word
-        if let earlier, !spellChecker.keeps(earlier.typed), !spellChecker.keeps(earlier.shown),
+        if let earlier, !keepsAsTyped(earlier.typed), !keepsAsTyped(earlier.shown),
             before.hasSuffix(earlier.context + word),
             KeyboardTextLogic.correctableWord(before: String(before.dropLast(word.count + 1))) == earlier.shown {
             typedSpan = earlier.typed + " " + word
@@ -499,6 +499,14 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
             recentWord = RecentWord(
                 typed: sameCount ? word : String(last), shown: String(last), context: contextAfterSpace())
         }
+    }
+
+    /// True for a word the person brought back after a correction. A kept word also stays as
+    /// typed right after a symbol key, as "teh" does in "[teh".
+    private func keepsAsTyped(_ word: String) -> Bool {
+        if spellChecker.keeps(word) { return true }
+        guard let first = word.first, KeyboardTextLogic.symbolsBesideLetters.contains(first) else { return false }
+        return spellChecker.keeps(String(word.dropFirst()))
     }
 
     /// The end of the text before the cursor, with the space that the keyboard types next.

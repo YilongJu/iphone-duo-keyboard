@@ -101,7 +101,15 @@ enum KeyboardTextLogic {
                 start = previous
             }
         }
-        let word = String(before[start...])
+        var word = String(before[start...])
+        // A capital right after a symbol key shows that the person typed the key on purpose:
+        // automatic shift turns off at a symbol key, so the person asked for that capital.
+        // The word then starts after the key, as "Teh" does in "[Teh".
+        if let symbol = word.first, symbolsBesideLetters.contains(symbol),
+            let second = word.dropFirst().first, second.isUppercase {
+            start = before.index(after: start)
+            word = String(before[start...])
+        }
         guard let first = word.first, word.last != "'" else { return nil }
         let symbolCount = word.filter { symbolsBesideLetters.contains($0) }.count
         if symbolCount == 0 {
@@ -113,6 +121,8 @@ enum KeyboardTextLogic {
         if start > before.startIndex {
             let preceding = before[before.index(before: start)]
             guard preceding.isWhitespace || "([{\"".contains(preceding) else { return nil }
+            // A word with a symbol key does not follow another symbol key, as in "[;ike".
+            guard symbolCount == 0 || !symbolsBesideLetters.contains(preceding) else { return nil }
         }
         guard word.dropFirst().allSatisfy({ !$0.isUppercase }) else { return nil }
         return word

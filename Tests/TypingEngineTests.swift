@@ -72,9 +72,12 @@ final class TypingEngineTests: XCTestCase {
 
     func testEnglishNeverDropsATypedSymbol() {
         // "[please" without the bracket is "please", and the engine does not read it that way.
-        XCTAssertEqual(Self.english.reading(previousWord: "", typed: "[please"), "[please")
-        XCTAssertEqual(Self.english.reading(previousWord: "", typed: "p[lease"), "p[lease")
-        XCTAssertEqual(Self.english.reading(previousWord: "", typed: "0open"), "0open")
+        for typed in ["[please", "p[lease", "pp[lease", "a[pple", "app[le", "0open", "to0o"] {
+            XCTAssertEqual(Self.english.reading(previousWord: "", typed: typed), typed)
+        }
+        // The same letters with the symbol key in place of one of them are repaired.
+        XCTAssertEqual(Self.english.reading(previousWord: "", typed: "a[ple"), "apple")
+        XCTAssertEqual(Self.english.reading(previousWord: "", typed: "ap[le"), "apple")
     }
 
     func testEnglishRefusesTextWithOtherSymbols() {

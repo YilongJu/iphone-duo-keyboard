@@ -133,9 +133,11 @@ word: part over art is 0.49. The generator leaves out the text between the two l
 with a digit is judged as a whole by the rule for letter slips, because wordfreq lists real
 tokens such as 5pm.
 
-Our engine (`Engine/duo_engine.c`) reads a symbol or digit key only as a letter beside it, and
-it never drops the key. Its 7 costs for symbol keys are chosen on the dev half by the share of
-symbol slips repaired, with the clean symbol cases kept at 99 percent or more. Run it with
+Our engine (`Engine/duo_engine.c`) reads a symbol or digit key only as a letter beside it. It
+never takes the key for an extra key, and it leaves out the readings that give the text without
+the key, so `[please` and `a[pple` stay as typed. Its 7 costs for symbol keys are chosen on the
+dev half by the share of symbol slips repaired, with the clean symbol cases kept at 99 percent
+or more. Run it with
 `python3 scripts/typing-evaluation/run_duo_engine.py --task english-symbols --half dev`.
 
 A comma, a period or a semicolon typed inside or after a word ends that word, and the keyboard
@@ -158,6 +160,9 @@ from the engine's vocabulary and word choice.
 - The symbol cases do not say how often a person types a symbol in front of a word on purpose.
   The two frequency limits above set which text counts as a slip, and a different limit would
   move the scores of the symbol groups.
+- Our engine refuses a word with more than one symbol or digit, or with fewer than two letters,
+  and such a word stays as typed whatever the costs are. 66 of the 129 dev cases of
+  `clean_symbol_token` are of that kind, so the costs decide only the other 63.
 - The Pinyin targets come from pypinyin readings, and a wrong reading gives an unreachable target.
 
 ## Engine outputs
