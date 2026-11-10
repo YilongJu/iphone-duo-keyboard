@@ -12,10 +12,10 @@ Each --engine argument is ENGINE_NAME=ADAPTER_MODE. For each engine name and hal
     build/typing-evaluation/ENGINE_NAME/pinyin.HALF.run.json   the adapter's run statistics
 The script starts one adapter process per engine name and half, and runs --jobs of them at a time.
 
---address-layout fixed starts the adapter through "setarch -R" with a fixed environment, so the
-process gets the same memory addresses in every run. --address-layout random starts the adapter
-the normal way. check_repeatability.py measures the outputs that differ between two processes
-under each layout.
+--address-layout fixed starts the adapter through "setarch -R", so the process gets the same
+memory addresses in every run. --address-layout random starts the adapter the normal way. Both
+layouts get the same small environment. check_repeatability.py measures the outputs that differ
+between two processes under each layout.
 """
 import argparse
 import hashlib
@@ -51,14 +51,14 @@ def run_adapter(adapter: Path, dictionary: Path, language_model: Path, mode: str
     Returns the outputs by case id, the adapter's statistics, and the other lines the adapter wrote to stderr.
     """
     command = [str(adapter), "--dict", str(dictionary), "--lm", str(language_model), "--mode", mode]
-    environment = None
+    # Both layouts get the same small environment, because the size of the environment moves the
+    # stack. The two layouts then differ in address randomization only.
+    environment = {"PATH": "/usr/bin:/bin", "LANG": "C.UTF-8"}
+    if "LD_LIBRARY_PATH" in os.environ:
+        environment["LD_LIBRARY_PATH"] = os.environ["LD_LIBRARY_PATH"]
     if address_layout == "fixed":
-        # setarch -R switches address randomization off for this one process. The environment is
-        # fixed too, because its size moves the stack.
+        # setarch -R switches address randomization off for this one process.
         command = ["setarch", platform.machine(), "-R", *command]
-        environment = {"PATH": "/usr/bin:/bin", "LANG": "C.UTF-8"}
-        if "LD_LIBRARY_PATH" in os.environ:
-            environment["LD_LIBRARY_PATH"] = os.environ["LD_LIBRARY_PATH"]
     elif address_layout != "random":
         raise ValueError(f"address layout must be fixed or random, got {address_layout!r}")
     lines = "".join(f"{case['id']}\t{case['typed']}\n" for case in cases)
