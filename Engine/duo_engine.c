@@ -290,6 +290,16 @@ duo_params duo_english_params(void) {
     params.extra_space = 5.0f;
     params.space_for_letter = 5.0f;
     params.shifted_space = 4.0f;
+    /* The seven costs of a symbol or digit key typed on purpose come from a sweep on the dev
+       half of the cases in scripts/typing-evaluation/cases/english-symbols.dev.jsonl. Each
+       value sits inside the range that repairs the most slips and still keeps the clean text. */
+    params.bracket_before_word = 8.0f;
+    params.dot_before_word = 8.0f;
+    params.comma_before_word = 10.0f;
+    params.semicolon_before_word = 10.0f;
+    params.dash_before_word = 9.0f;
+    params.digit_before_word = 12.0f;
+    params.digit_after_word = 13.0f;
     params.pair_weight = 0.6f;
     params.unknown_word = -13.0f;
     params.unknown_letter = -1.2f;
@@ -344,6 +354,13 @@ int duo_params_set(duo_params *params, const char *name, float value) {
     FIELD(extra_space)
     FIELD(space_for_letter)
     FIELD(shifted_space)
+    FIELD(bracket_before_word)
+    FIELD(dot_before_word)
+    FIELD(comma_before_word)
+    FIELD(semicolon_before_word)
+    FIELD(dash_before_word)
+    FIELD(digit_before_word)
+    FIELD(digit_after_word)
     FIELD(pair_weight)
     FIELD(unknown_word)
     FIELD(unknown_letter)
@@ -387,10 +404,53 @@ static int is_above_space(char letter) {
     return letter != 0 && strchr("cvbnm", letter) != NULL;
 }
 
+static int is_letter(char character) {
+    return character >= 'a' && character <= 'z';
+}
+
+static int is_digit(char character) {
+    return character >= '0' && character <= '9';
+}
+
+/* The letters beside a symbol or digit key, or NULL for any other byte. The table holds the
+   keys of the wide layout and of the compact layout in Shared/keyboard-layout.json together.
+   scripts/typing-evaluation/symbol_keys.py derives it from the key positions, and its check
+   fails when this copy differs. */
+static const char *symbol_neighbors(char symbol) {
+    switch (symbol) {
+    case '1': return "q";
+    case '2': return "qw";
+    case '3': return "ew";
+    case '4': return "er";
+    case '5': return "rt";
+    case '6': return "ty";
+    case '7': return "uy";
+    case '8': return "iu";
+    case '9': return "io";
+    case '0': return "op";
+    case '-': return "p";
+    case '[': return "p";
+    case ';': return "lp";
+    case ',': return "klm";
+    case '.': return "ln";
+    default: return NULL;
+    }
+}
+
+/* Whether a symbol or digit key can stand for a letter: the letter's key is beside it. */
+static int symbol_is_beside(char symbol, char letter) {
+    const char *letters = symbol_neighbors(symbol);
+    return letters != NULL && letter != 0 && strchr(letters, letter) != NULL;
+}
+
 static float substitution_cost(const duo_params *params, char typed, char intended) {
     if (typed == intended) return 0.0f;
     if (typed == ' ') return is_above_space(intended) ? params->space_for_letter : BIG;
     if (typed == '\'' || intended == '\'') return BIG;
+    /* A symbol or digit key stands only for a letter beside it, never for a letter farther away. */
+    if (!is_letter(typed) && symbol_neighbors(typed) != NULL) {
+        return symbol_is_beside(typed, intended) ? params->adjacent_substitution : BIG;
+    }
     return keys_are_neighbors(typed, intended) ? params->adjacent_substitution : params->far_substitution;
 }
 
@@ -420,6 +480,15 @@ typedef struct {
 static float insertion_cost(const walk_t *walk, int index) {
     char typed = walk->typed[index];
     if (typed == ' ') return walk->params->extra_space;
+    if (!is_letter(typed)) {
+        /* A symbol or digit key is never an extra key: a person may have typed it on purpose. */
+        if (symbol_neighbors(typed) != NULL) return BIG;
+    } else if (index + 1 < walk->length && symbol_is_beside(walk->typed[index + 1], typed)) {
+        /* A letter right before a symbol key that can stand for the same letter is not extra
+           either. With "p" as an extra key and "[" as "p", the text "p[lease" would read as
+           "please", which drops the bracket. */
+        return BIG;
+    }
     if (index > 0 && walk->typed[index - 1] == typed) return walk->params->insertion_of_double;
     return walk->params->insertion;
 }
@@ -464,8 +533,11 @@ static void walk_node(walk_t *walk, uint32_t node_index, int depth) {
                     /* The typed byte stands for this letter: a match, or a wrong key. */
                     float cost = above[b] + substitution_cost(params, walk->typed[consumed - 1], letter);
                     if (cost < best) best = cost;
-                    /* The typed byte is extra. */
-                    if (b >= 1) {
+                    /* The typed byte is extra. A symbol key that stands for this letter, with the
+                       same letter typed right after it, is the other way to drop the symbol
+                       ("[please" as "please"), so that reading is left out. */
+                    if (b >= 1 && !(consumed >= 2 && walk->typed[consumed - 1] == letter
+                                    && symbol_is_beside(walk->typed[consumed - 2], letter))) {
                         cost = row[b - 1] + insertion_cost(walk, consumed - 1);
                         if (cost < best) best = cost;
                     }
@@ -791,7 +863,7 @@ static int add_state(cell_t *cell, int beam, state_t state) {
 
 /* Writes the reading that ends in `state` into `text`. Returns 0 when the text does not fit. */
 static int write_reading(
-    const duo_lexicon *lexicon, const duo_params *params, const char *typed,
+    const duo_lexicon *lexicon, const duo_params *params, const char *typed, int length,
     const cell_t *cells, int position, int state_index, char *text) {
     /* Follow the reading back to its start, then write its words front to back. */
     int positions[DUO_MAX_TYPED + 2];
@@ -807,26 +879,77 @@ static int write_reading(
         state_index = state->from_state;
     }
     size_t used = 0;
+    /* Set after a symbol kept right before a word: the word follows it without a space. */
+    int joined = 0;
     text[0] = 0;
     for (int index = count - 1; index >= 0; index--) {
         const state_t *state = &cells[positions[index]].states[states[index]];
         const char *piece;
         size_t piece_length;
-        if (state->word != NO_WORD) {
-            piece = word_text(lexicon, state->word);
-            piece_length = strlen(piece);
-        } else {
+        if (state->kept_start >= 0) {
             piece = typed + state->kept_start;
             piece_length = (size_t)(state->kept_end - state->kept_start);
+        } else {
+            piece = word_text(lexicon, state->word);
+            piece_length = strlen(piece);
         }
-        int needs_space = params->spaces_between_words && used > 0;
+        int needs_space = params->spaces_between_words && used > 0 && !joined;
         if (used + piece_length + (needs_space ? 1 : 0) + 1 > DUO_TEXT_SIZE) return 0;
         if (needs_space) text[used++] = ' ';
         memcpy(text + used, piece, piece_length);
         used += piece_length;
         text[used] = 0;
+        joined = state->kept_start >= 0 && state->kept_end < length && typed[state->kept_end] != ' ';
     }
     return 1;
+}
+
+/* The cost of a symbol or digit key that a person typed on purpose right before a word.
+   Returns 0 for a byte that is not such a key. */
+static int cost_before_word(const duo_params *params, char symbol, float *cost) {
+    if (is_digit(symbol)) {
+        *cost = params->digit_before_word;
+        return 1;
+    }
+    switch (symbol) {
+    case '[': *cost = params->bracket_before_word; return 1;
+    case '.': *cost = params->dot_before_word; return 1;
+    case ',': *cost = params->comma_before_word; return 1;
+    case ';': *cost = params->semicolon_before_word; return 1;
+    case '-': *cost = params->dash_before_word; return 1;
+    default: return 0;
+    }
+}
+
+/* Reads a typed word with a symbol or digit key as text typed on purpose: a key right before
+   a known word, as in "[note", or a digit right after a known word, as in "mp3". Returns the
+   node of the word and the cost of the key, or NO_WORD for any other text. */
+static uint32_t word_beside_symbol(
+    const duo_lexicon *lexicon, const duo_params *params, const char *letters, int length, float *cost) {
+    if (length < 2) return NO_WORD;
+    if (cost_before_word(params, letters[0], cost)) return find_exact_node(lexicon, letters + 1, length - 1);
+    if (is_digit(letters[length - 1])) {
+        *cost = params->digit_after_word;
+        return find_exact_node(lexicon, letters, length - 1);
+    }
+    return NO_WORD;
+}
+
+/* The log probability of a typed word that holds a known word with a symbol or digit key
+   beside it, after the word `previous`. The typed word has two readings. Typed on purpose, it
+   is the known word at the cost of the key. It can also be unknown text. A reading that takes
+   the key for a slip must beat the first one by margin_known, as for any known word, and the
+   second one by margin_unknown. The typed text as a whole gets margin_known, so the unknown
+   text counts that much lower here. `node` and `symbol_cost` come from word_beside_symbol. */
+static float score_beside_symbol(
+    const duo_lexicon *lexicon, const duo_params *params, uint32_t previous, uint32_t node,
+    float symbol_cost, int length, uint32_t *word) {
+    float log_probability;
+    best_word(lexicon, params, previous, node, word, &log_probability);
+    float on_purpose = log_probability - symbol_cost;
+    float unknown = params->unknown_word + params->unknown_letter * (float)length
+        - (params->margin_known - params->margin_unknown);
+    return on_purpose > unknown ? on_purpose : unknown;
 }
 
 /* A cell that a reading reaches with its next word, and the cost of reaching it. */
@@ -863,24 +986,54 @@ static int decode(
            unknown word. Pinyin keeps one letter, so the letters around it can still be read. */
         int kept_end = start + 1;
         int keep = 1;
+        int word_start = 0;
         if (params->spaces_between_words) {
-            keep = start == 0 || typed[start - 1] == ' ';
+            word_start = start == 0 || typed[start - 1] == ' ';
+            keep = word_start;
             while (kept_end < length && typed[kept_end] != ' ') kept_end++;
             if (keep && find_exact_node(lexicon, typed + start, kept_end - start) != NO_WORD) keep = 0;
         }
         if (keep && typed[start] != ' ') {
             int next = kept_end < length && typed[kept_end] == ' ' ? kept_end + 1 : kept_end;
+            /* A known word with a symbol or digit key beside it, as in ".net" and "mp3", is
+               text typed on purpose: the word at the cost of the key. Any other text is unknown. */
+            uint32_t word_node = NO_WORD;
+            float symbol_cost = 0.0f;
+            if (params->spaces_between_words) {
+                word_node = word_beside_symbol(lexicon, params, typed + start, kept_end - start, &symbol_cost);
+            }
             for (int index = 0; index < cell->count; index++) {
                 state_t state;
-                state.score = cell->states[index].score + params->unknown_word
-                    + params->unknown_letter * (float)(kept_end - start);
-                state.word = NO_WORD;
+                if (word_node != NO_WORD) {
+                    state.score = cell->states[index].score + score_beside_symbol(
+                        lexicon, params, cell->states[index].word, word_node, symbol_cost, kept_end - start, &state.word);
+                } else {
+                    state.score = cell->states[index].score + params->unknown_word
+                        + params->unknown_letter * (float)(kept_end - start);
+                    state.word = NO_WORD;
+                }
                 state.pair = NO_PAIR;
                 state.from_position = start;
                 state.from_state = index;
                 state.kept_start = start;
                 state.kept_end = kept_end;
                 add_state(&cells[next > length ? length : next], beam, state);
+            }
+        }
+
+        /* An opening bracket typed on purpose right before a word: the bracket stays at its
+           cost, and the search reads the word after it, with or without slips, so "[teh"
+           becomes "[the". The other symbol keys do not get this reading, because the short
+           tokens that follow them, as in "1st" and ".js", are seldom slips. */
+        if (word_start && typed[start] == '[' && start + 1 < length && typed[start + 1] != ' ') {
+            for (int index = 0; index < cell->count; index++) {
+                state_t state = cell->states[index];
+                state.score -= params->bracket_before_word;
+                state.from_position = start;
+                state.from_state = index;
+                state.kept_start = start;
+                state.kept_end = start + 1;
+                add_state(&cells[start + 1], beam, state);
             }
         }
 
@@ -958,7 +1111,7 @@ static int decode(
         }
         result->score = best_score;
         result->consumed = length;
-        ok = write_reading(lexicon, params, typed, cells, length, best, result->text);
+        ok = write_reading(lexicon, params, typed, length, cells, length, best, result->text);
     }
     free(cells);
     free(edges);
@@ -967,22 +1120,30 @@ static int decode(
 
 /* ---- Input checks ---- */
 
-static int is_letter(char character) {
-    return character >= 'a' && character <= 'z';
-}
-
-/* English input: letters, apostrophes and single spaces, with a letter or apostrophe at both ends. */
+/* English input: letters, apostrophes and single spaces, with a letter, an apostrophe or a
+   symbol key at both ends. A word may hold one symbol or digit key that sits beside a letter
+   key, when the word has two or more letters: a digit or "[" at any place, or another such key
+   in front of the word. Any other text is outside the engine's input, so it stays as typed. */
 static int english_input_length(const char *typed) {
     size_t length = strlen(typed);
     if (length == 0 || length > DUO_MAX_TYPED) return 0;
+    int letters = 0, symbols = 0;
     for (size_t index = 0; index < length; index++) {
         char character = typed[index];
         if (character == ' ') {
             if (index == 0 || index + 1 == length || typed[index - 1] == ' ') return 0;
-        } else if (!is_letter(character) && character != '\'') {
-            return 0;
+            if (symbols > 0 && letters < 2) return 0;
+            letters = 0;
+            symbols = 0;
+        } else if (is_letter(character)) {
+            letters++;
+        } else if (character != '\'') {
+            int in_front = index == 0 || typed[index - 1] == ' ';
+            int allowed = is_digit(character) || character == '[' || (in_front && symbol_neighbors(character) != NULL);
+            if (!allowed || ++symbols > 1) return 0;
         }
     }
+    if (symbols > 0 && letters < 2) return 0;
     return (int)length;
 }
 
@@ -993,7 +1154,8 @@ static uint32_t find_word(const duo_lexicon *lexicon, const char *letters, int l
 
 /* ---- English ---- */
 
-/* Log probability of the typed text read exactly as typed, and whether every typed word is known. */
+/* Log probability of the typed text read exactly as typed, and whether every typed word is
+   known. A known word with a symbol or digit key beside it counts as known. */
 static float score_as_typed(
     const duo_lexicon *lexicon, const duo_params *params, const char *typed, int length,
     uint32_t previous_word, int *all_known) {
@@ -1005,11 +1167,18 @@ static float score_as_typed(
         int end = start;
         while (end < length && typed[end] != ' ') end++;
         uint32_t node = find_exact_node(lexicon, typed + start, end - start);
+        float symbol_cost = 0.0f;
+        uint32_t beside = node == NO_WORD
+            ? word_beside_symbol(lexicon, params, typed + start, end - start, &symbol_cost) : NO_WORD;
         if (node != NO_WORD) {
             uint32_t word;
             float log_probability;
             best_word(lexicon, params, previous, node, &word, &log_probability);
             score += log_probability;
+            previous = word;
+        } else if (beside != NO_WORD) {
+            uint32_t word;
+            score += score_beside_symbol(lexicon, params, previous, beside, symbol_cost, end - start, &word);
             previous = word;
         } else {
             score += params->unknown_word + params->unknown_letter * (float)(end - start);
