@@ -14,6 +14,8 @@ final class CandidateScrollView: UIScrollView {
 final class CandidateBar: UIView {
     /// Called with the index of the word the user tapped.
     var onSelect: ((Int) -> Void)?
+    /// Called when the user tapped the typed letters at the row's left end.
+    var onSelectComposition: (() -> Void)?
 
     private let compositionLabel = UILabel()
     private let scrollView = CandidateScrollView()
@@ -26,6 +28,9 @@ final class CandidateBar: UIView {
         clipsToBounds = true
         compositionLabel.font = .systemFont(ofSize: 15)
         compositionLabel.textColor = .secondaryLabel
+        compositionLabel.isUserInteractionEnabled = true
+        compositionLabel.addGestureRecognizer(
+            UITapGestureRecognizer(target: self, action: #selector(compositionTapped)))
         addSubview(compositionLabel)
         scrollView.showsHorizontalScrollIndicator = false
         scrollView.delaysContentTouches = false
@@ -63,6 +68,10 @@ final class CandidateBar: UIView {
         }
         scrollView.contentOffset = .zero
         setNeedsLayout()
+    }
+
+    @objc private func compositionTapped() {
+        onSelectComposition?()
     }
 
     @objc private func candidateTapped(_ sender: UIButton) {

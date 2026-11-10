@@ -267,6 +267,19 @@ final class KeyboardTextControllerTests: XCTestCase {
         XCTAssertEqual(controller.pinyinBuffer, "")
     }
 
+    func testATapOnTheTypedPinyinTypesTheLettersAndSelectsNothing() {
+        makeController(before: "\u{4F60}\u{597D}")
+        controller.keyboardView(keyboardView, edit: .toggleLanguage)
+        type("nihao")
+        keyboardView.onSelectComposition()
+        XCTAssertEqual(document.text, "\u{4F60}\u{597D}nihao")
+        XCTAssertEqual(controller.pinyinBuffer, "")
+        XCTAssertFalse(keyboardView.selectAllActive)
+        // The next letter joins the text. It does not replace the text.
+        type("w ")
+        XCTAssertEqual(document.text, "\u{4F60}\u{597D}nihao\u{6211}")
+    }
+
     func testPinyinLettersWaitInTheBufferAndSpaceTypesTheFirstCandidate() {
         makeController(before: "")
         controller.keyboardView(keyboardView, edit: .toggleLanguage)

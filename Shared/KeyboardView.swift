@@ -84,6 +84,9 @@ final class KeyboardView: UIView {
         }
     }
 
+    /// Called when the user tapped the typed Pinyin letters at the left end of the candidate row.
+    var onSelectComposition: @MainActor () -> Void = {}
+
     /// The moment the candidate row last left the screen, on the clock of `UITouch.timestamp`.
     private var candidatesHiddenTime: TimeInterval = -1
 
@@ -157,6 +160,9 @@ final class KeyboardView: UIView {
         candidateBar.onSelect = { [weak self] index in
             guard let self else { return }
             self.delegate?.keyboardView(self, didSelectCandidateAt: index)
+        }
+        candidateBar.onSelectComposition = { [weak self] in
+            self?.onSelectComposition()
         }
         addSubview(candidateBar)
         rebuild()
