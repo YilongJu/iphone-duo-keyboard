@@ -23,6 +23,7 @@ enum ShiftState {
 
 /// An editing action that the owner of the keyboard carries out on the text field.
 enum EditCommand {
+    case toggleLanguage
     case selectAll
     case deleteForward
     case cut
@@ -58,6 +59,8 @@ enum KeyKind: Equatable {
     case cut
     case copy
     case paste
+    /// Switches between English and Simplified Chinese (Pinyin).
+    case language
     case switchLayer(KeyboardLayer)
 
     /// Text keys commit on finger lift, and a finger can slide between them before lifting.
@@ -106,6 +109,7 @@ enum KeyKind: Equatable {
         case "cut": return .cut
         case "copy": return .copy
         case "paste": return .paste
+        case "language": return .language
         case "symbols": return .switchLayer(.symbols)
         case "letters": return .switchLayer(.letters)
         case "more": return .switchLayer(.more)
