@@ -58,6 +58,8 @@ jobs:
       - uses: actions/checkout@v7
       - name: Check the layout file against the layout rules
         run: python3 scripts/keyboard-preview/check_layout.py
+      - name: Check the symbol keys beside each letter against the layout file
+        run: python3 scripts/typing-evaluation/symbol_keys.py --check
       - name: Install XcodeGen
         run: brew install xcodegen
       - name: Generate the Xcode project
@@ -96,6 +98,12 @@ jobs:
                 --cases "$cases/$task.$half.jsonl" --predictions "$outputs/$task.$half.jsonl" \
                 --json "$outputs/$task.$half.summary.json"
             done
+          done
+          # The cases with a symbol or digit key in place of a letter, scored by the English rules.
+          for half in dev test; do
+            python3 scripts/typing-evaluation/score.py --task english --engine shipping-keyboard \
+              --cases "$cases/english-symbols.$half.jsonl" --predictions "$outputs/english-symbols.$half.jsonl" \
+              --json "$outputs/english-symbols.$half.summary.json"
           done
       - uses: actions/upload-artifact@v7
         if: always()

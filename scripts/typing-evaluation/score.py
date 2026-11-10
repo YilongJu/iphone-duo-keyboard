@@ -17,6 +17,8 @@ The script reports each category, then groups of categories:
 - `letter_slips` (English) and `finger_slips` (Pinyin): a wrong, missing, extra or swapped letter.
 - `space_slips` (English): slips around the space bar. An engine that corrects one word at a
   time cannot repair these, so they stay apart from the letter slips.
+- `symbol_slips` and `clean_symbols` (English, the files english-symbols.*.jsonl): a symbol or
+  digit key in place of a letter, and real text with a symbol or digit that must stay as typed.
 - Every other category is reported alone.
 
 A slip case can name its clean twin (`twin`): the same text typed without the slip. For those
@@ -31,6 +33,8 @@ GROUPS = {
     "english": {
         "letter_slips": ["substitution_adjacent", "deletion", "double_letter", "extra_adjacent", "transposition", "two_errors", "short_word_slip"],
         "space_slips": ["space_missing", "space_to_letter", "space_transposed", "space_extra", "letter_to_space"],
+        "symbol_slips": ["symbol_first_letter", "symbol_inner_letter", "symbol_first_letter_two_words", "symbol_plus_letter_slip"],
+        "clean_symbols": ["clean_symbol_token", "clean_bracket_or_dot_word"],
     },
     "pinyin": {
         "finger_slips": ["substitution_adjacent", "deletion", "double_letter", "extra_adjacent", "transposition", "two_errors"],
@@ -87,7 +91,9 @@ def score(task: str, cases: list[dict], predictions: dict[str, str]) -> dict:
         by_category.setdefault(row["case"]["category"], []).append(row)
     summary = {"categories": {name: _tally(task, rows) for name, rows in by_category.items()}, "groups": {}, "strata": {}}
 
-    groups = {"clean": [name for name in by_category if name.startswith("clean")]}
+    # A clean category that a named group lists stays out of the group `clean`.
+    named = {category for members in GROUPS[task].values() for category in members}
+    groups = {"clean": [name for name in by_category if name.startswith("clean") and name not in named]}
     groups.update({name: [category for category in members if category in by_category] for name, members in GROUPS[task].items()})
     for name, members in groups.items():
         rows = [row for category in members for row in by_category[category]]

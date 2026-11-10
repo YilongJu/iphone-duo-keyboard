@@ -69,23 +69,61 @@ enum KeyboardTextLogic {
     /// A character that ends a word. Autocorrection looks at the word when one of these arrives.
     static let wordTerminators: Set<String> = [" ", ".", ",", "!", "?", ";", ":", "\n"]
 
+    /// The symbol and digit keys that sit beside a letter key, in the wide layout or the compact
+    /// layout of keyboard-layout.json. A finger that aims at the letter can land on one of them,
+    /// as in "[lease" for "please" and "2hat" for "what". The script
+    /// scripts/typing-evaluation/symbol_keys.py derives both sets from the key positions, and
+    /// its check fails when a set here differs.
+    static let symbolsBesideLetters: Set<Character> = Set(",-.0123456789;[")
+    /// The keys of that set that autocorrection reads as a slip at any place in a word. The
+    /// others end a word or join two words, so they count as a slip only in front of a word.
+    static let symbolsInsideWords: Set<Character> = Set("0123456789[")
+
     /// The word right before the cursor, when autocorrection may change that word.
+    /// The word may hold one symbol or digit key that sits beside a letter key, because that
+    /// key can be a slip for the letter: a digit or "[" at any place, or one of "-", ";", ","
+    /// and "." in front of the word. Such a word has two letters or more.
     /// The function returns nil for text that is probably not plain prose: a word with a capital
-    /// after its first letter, a word with a digit or symbol in it, and a word that follows a
-    /// character such as "@", "/" or "." with no space between.
+    /// after its first character, a word with any other digit or symbol in it, and a word that
+    /// follows a character such as "@", "/" or "." with no space between.
     static func correctableWord(before: String) -> String? {
         var start = before.endIndex
         while start > before.startIndex {
             let previous = before.index(before: start)
             let character = before[previous]
-            guard character.isASCII, character.isLetter || character == "'" else { break }
+            guard character.isASCII, character.isLetter || character == "'" || symbolsInsideWords.contains(character)
+            else { break }
             start = previous
         }
-        let word = String(before[start...])
-        guard let first = word.first, first.isLetter, word.last != "'" else { return nil }
+        if start > before.startIndex, start < before.endIndex {
+            let previous = before.index(before: start)
+            if symbolsBesideLetters.contains(before[previous]) {
+                start = previous
+            }
+        }
+        var word = String(before[start...])
+        // A capital right after a symbol key: the key is not read as a slip for the first
+        // letter, and the word starts after the key, as "Teh" does in "[Teh". In a field that
+        // capitalizes sentences or words, automatic shift turns off at a symbol key, so the
+        // person asked for that capital and typed the key on purpose.
+        if let symbol = word.first, symbolsBesideLetters.contains(symbol),
+            let second = word.dropFirst().first, second.isUppercase {
+            start = before.index(after: start)
+            word = String(before[start...])
+        }
+        guard let first = word.first, word.last != "'" else { return nil }
+        let symbolCount = word.filter { symbolsBesideLetters.contains($0) }.count
+        if symbolCount == 0 {
+            guard first.isLetter else { return nil }
+        } else {
+            let letterCount = word.filter { $0.isLetter }.count
+            guard symbolCount == 1, letterCount >= 2, first != "'" else { return nil }
+        }
         if start > before.startIndex {
             let preceding = before[before.index(before: start)]
             guard preceding.isWhitespace || "([{\"".contains(preceding) else { return nil }
+            // A word with a symbol key does not follow another symbol key, as in "[;ike".
+            guard symbolCount == 0 || !symbolsBesideLetters.contains(preceding) else { return nil }
         }
         guard word.dropFirst().allSatisfy({ !$0.isUppercase }) else { return nil }
         return word
@@ -235,6 +273,29 @@ enum KeyboardTextLogic {
             previous = current
         }
         return previous[second.count]
+    }
+
+    /// Gives a corrected word its capital when a symbol key took the place of its first letter
+    /// at a place where the keyboard types a capital by itself, such as the start of a sentence.
+    /// Automatic shift leaves a symbol key on its base character and then turns off, so the
+    /// typed text "[lease" does not show that the person meant "Please".
+    /// `textBefore` is the text of the field before `typed`.
+    static func capitalizingRepairedFirstLetters(
+        in corrected: String, from typed: String, textBefore: String, type: UITextAutocapitalizationType
+    ) -> String {
+        let typedWords = typed.split(separator: " ")
+        var words = corrected.split(separator: " ").map(String.init)
+        guard words.count == typedWords.count else { return corrected }
+        var before = textBefore
+        for index in words.indices {
+            if let typedFirst = typedWords[index].first, symbolsBesideLetters.contains(typedFirst),
+                let first = words[index].first, first.isLetter,
+                shouldAutoCapitalize(before: before, type: type) {
+                words[index] = words[index].prefix(1).uppercased() + words[index].dropFirst()
+            }
+            before += words[index] + " "
+        }
+        return words.joined(separator: " ")
     }
 
     static func returnKeyTitle(for type: UIReturnKeyType) -> String {

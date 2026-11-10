@@ -92,7 +92,7 @@ int main(int argc, char **argv) {
                 fprintf(stderr, "duo_cli: expected 3 fields: %s\n", line);
                 return 1;
             }
-            /* Text the engine does not accept, such as text with a digit, stays as typed. */
+            /* Text the engine does not accept, such as text with a capital, stays as typed. */
             if (duo_correct_english(&lexicon, &params, fields[1], fields[2], &results[0])) {
                 printf("%s\t%s\n", fields[0], results[0].text);
             } else {

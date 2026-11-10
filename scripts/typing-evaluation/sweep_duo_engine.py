@@ -11,13 +11,13 @@ import argparse
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
-from run_duo_engine import LEXICON, ROOT, case_files, run_timed
+from run_duo_engine import ENGINE_TASK, LEXICON, ROOT, case_files, run_timed
 from score import load_cases, score
 
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--task", choices=["english", "pinyin"], required=True)
+    parser.add_argument("--task", choices=sorted(ENGINE_TASK), required=True)
     parser.add_argument("--cli", type=Path, default=ROOT / "build" / "engine" / "duo_cli")
     parser.add_argument("--lexicon", type=Path)
     parser.add_argument("--categories", action="store_true", help="also print each category")
@@ -26,11 +26,12 @@ def main():
     arguments = parser.parse_args()
 
     cases = load_cases(case_files(arguments.task, "dev"))
-    lexicon = arguments.lexicon or LEXICON[arguments.task]
+    engine_task = ENGINE_TASK[arguments.task]
+    lexicon = arguments.lexicon or LEXICON[engine_task]
 
     def one(settings: str):
-        predictions, time_report = run_timed(arguments.task, cases, settings.split(), arguments.cli, lexicon)
-        return settings, score(arguments.task, cases, predictions), time_report
+        predictions, time_report = run_timed(engine_task, cases, settings.split(), arguments.cli, lexicon)
+        return settings, score(engine_task, cases, predictions), time_report
 
     # Each run is its own process, so threads are enough to use every core.
     with ThreadPoolExecutor(max_workers=arguments.jobs) as pool:

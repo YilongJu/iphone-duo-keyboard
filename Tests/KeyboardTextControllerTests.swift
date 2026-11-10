@@ -534,6 +534,195 @@ final class KeyboardTextControllerTests: XCTestCase {
         XCTAssertEqual(document.text, "teh ")
     }
 
+    // MARK: A symbol or digit key in place of a letter
+
+    func testASymbolKeyInPlaceOfTheFirstLetterIsRepaired() {
+        makeController(before: "Hello ")
+        spellChecker.corrections["[lease"] = "please"
+        type("[lease ")
+        XCTAssertEqual(document.text, "Hello please ")
+        XCTAssertEqual(spellChecker.requests, ["hello|[lease"])
+    }
+
+    func testBackspaceBringsBackAWordWithASymbolKeyAndKeepsIt() {
+        makeController(before: "Hello ")
+        spellChecker.corrections["[lease"] = "please"
+        type("[lease ")
+        controller.keyboardViewDeleteBackward(keyboardView)
+        XCTAssertEqual(document.text, "Hello [lease")
+        XCTAssertEqual(spellChecker.learned, ["[lease"])
+        type(" ")
+        XCTAssertEqual(document.text, "Hello [lease ")
+    }
+
+    func testAPunctuationKeyInPlaceOfTheFirstLetterIsRepaired() {
+        // The semicolon, the comma and the period end a word, and each can also be a slip.
+        for (typed, meant) in [(";ike", "like"), (",ore", "more"), (".ike", "like"), ("-lease", "please")] {
+            makeController(before: "I ")
+            spellChecker.corrections[typed] = meant
+            type(typed + " ")
+            XCTAssertEqual(document.text, "I \(meant) ")
+            XCTAssertEqual(spellChecker.requests, ["i|\(typed)"])
+        }
+    }
+
+    func testADigitKeyInPlaceOfALetterIsRepaired() {
+        makeController(before: "")
+        spellChecker.corrections = ["2hat": "what", "wh3n": "when", "sho2": "show"]
+        type("2hat ")
+        XCTAssertEqual(document.text, "what ")
+        type("Wh3n ")
+        XCTAssertEqual(document.text, "what When ")
+        type("sho2.")
+        XCTAssertEqual(document.text, "what When show.")
+    }
+
+    func testAWordAfterAPunctuationSlipIsStillReadWithTheWordBeforeIt() {
+        makeController(before: "")
+        spellChecker.corrections[";ike"] = "like"
+        type("tell ;ike ")
+        XCTAssertEqual(document.text, "tell like ")
+        // The semicolon ends a word, and it does not end the reading of the two words together.
+        XCTAssertEqual(spellChecker.requests, ["|tell", "|tell ;ike"])
+        type("yuo ")
+        XCTAssertEqual(spellChecker.requests.last, "tell|;ike yuo")
+    }
+
+    func testAWordAfterABracketSlipIsReadWithTheKeysThePersonPressed() {
+        makeController(before: "")
+        spellChecker.corrections["[lease"] = "please"
+        type("[lease send ")
+        XCTAssertEqual(document.text, "please send ")
+        XCTAssertEqual(spellChecker.requests, ["|[lease", "|[lease send"])
+    }
+
+    func testASymbolTypedOnPurposeStaysWhenTheCheckerReadsTheTextAsTyped() {
+        for typed in ["[note", ".net", ",and", "2nd", "mp3"] {
+            makeController(before: "see ")
+            type(typed + " ")
+            XCTAssertEqual(document.text, "see \(typed) ")
+            XCTAssertEqual(spellChecker.requests, ["see|\(typed)"])
+        }
+    }
+
+    func testAWordAfterABracketIsStillCorrected() {
+        makeController(before: "")
+        spellChecker.corrections["[teh"] = "[the"
+        type("[teh ")
+        XCTAssertEqual(document.text, "[the ")
+    }
+
+    func testAWordWithACapitalAfterABracketIsCorrectedWithoutTheBracket() {
+        // The capital shows that the person typed the bracket on purpose.
+        makeController(before: "")
+        type("[Teh ")
+        XCTAssertEqual(document.text, "[The ")
+        XCTAssertEqual(spellChecker.requests, ["|teh"])
+    }
+
+    func testAKeptWordStaysAsTypedAfterASymbolKey() {
+        makeController(before: "")
+        spellChecker.corrections["[teh"] = "[the"
+        type("teh ")
+        controller.keyboardViewDeleteBackward(keyboardView)
+        XCTAssertEqual(spellChecker.learned, ["teh"])
+        type(" [teh ")
+        XCTAssertEqual(document.text, "teh [teh ")
+    }
+
+    func testTextWithASymbolThatIsNotProseDoesNotGoToTheChecker() {
+        // More than one symbol or digit, one letter only, a capital after a digit, a symbol key
+        // that is not beside a letter, and a word inside an address.
+        for text in ["abc123", "x86", "[a", "4k", "[;ike", "2Hat", "#teh", "te_h", "name@[lease", "www.[lease", "a;ike"] {
+            // The field already holds the text, and the space asks for a correction of its end.
+            makeController(before: text)
+            spellChecker.corrections = ["[lease": "please", ";ike": "like", "teh": "the"]
+            type(" ")
+            XCTAssertEqual(document.text, text + " ", text)
+            XCTAssertEqual(spellChecker.requests, [], text)
+        }
+    }
+
+    func testASymbolSlipAtTheStartOfASentenceGetsTheCapital() {
+        makeController(before: "")
+        document.autocapitalizationType = .sentences
+        spellChecker.corrections["[lease"] = "please"
+        type("[lease ")
+        XCTAssertEqual(document.text, "Please ")
+        // The reading of the two words together keeps that capital.
+        type("send ")
+        XCTAssertEqual(document.text, "Please send ")
+        type("it. ")
+        type("[lease ")
+        XCTAssertEqual(document.text, "Please send it. Please ")
+    }
+
+    func testASymbolSlipInsideASentenceGetsNoCapital() {
+        makeController(before: "Then ")
+        document.autocapitalizationType = .sentences
+        spellChecker.corrections["[lease"] = "please"
+        type("[lease ")
+        XCTAssertEqual(document.text, "Then please ")
+    }
+
+    func testCorrectableWordTakesOneSymbolKeyBesideALetter() {
+        XCTAssertEqual(KeyboardTextLogic.correctableWord(before: "say [lease"), "[lease")
+        XCTAssertEqual(KeyboardTextLogic.correctableWord(before: "say ;ike"), ";ike")
+        XCTAssertEqual(KeyboardTextLogic.correctableWord(before: "say ,ore"), ",ore")
+        XCTAssertEqual(KeyboardTextLogic.correctableWord(before: ".ike"), ".ike")
+        XCTAssertEqual(KeyboardTextLogic.correctableWord(before: "-lease"), "-lease")
+        XCTAssertEqual(KeyboardTextLogic.correctableWord(before: "2hat"), "2hat")
+        XCTAssertEqual(KeyboardTextLogic.correctableWord(before: "say Wh3n"), "Wh3n")
+        XCTAssertEqual(KeyboardTextLogic.correctableWord(before: "hel["), "hel[")
+        XCTAssertEqual(KeyboardTextLogic.correctableWord(before: "(2hat"), "2hat")
+        XCTAssertEqual(KeyboardTextLogic.correctableWord(before: "don'5"), "don'5")
+        // One symbol key at most, with two letters or more.
+        XCTAssertNil(KeyboardTextLogic.correctableWord(before: "[[lease"))
+        XCTAssertNil(KeyboardTextLogic.correctableWord(before: ";lea5e"))
+        XCTAssertNil(KeyboardTextLogic.correctableWord(before: "a1b2"))
+        XCTAssertNil(KeyboardTextLogic.correctableWord(before: "[a"))
+        XCTAssertNil(KeyboardTextLogic.correctableWord(before: "say ;"))
+        XCTAssertNil(KeyboardTextLogic.correctableWord(before: "24"))
+        // A punctuation key counts as a slip only in front of a word, after a space.
+        XCTAssertNil(KeyboardTextLogic.correctableWord(before: "a;ike"))
+        XCTAssertNil(KeyboardTextLogic.correctableWord(before: "e.g"))
+        XCTAssertNil(KeyboardTextLogic.correctableWord(before: "well-known"))
+        XCTAssertNil(KeyboardTextLogic.correctableWord(before: "ike;"))
+        XCTAssertNil(KeyboardTextLogic.correctableWord(before: "[;ike"))
+        // A capital right after a symbol key: the word starts after the key, and only an
+        // opening bracket may stand right before a word.
+        XCTAssertEqual(KeyboardTextLogic.correctableWord(before: "[Teh"), "Teh")
+        XCTAssertNil(KeyboardTextLogic.correctableWord(before: ";Ike"))
+        XCTAssertNil(KeyboardTextLogic.correctableWord(before: "2Hat"))
+        // The rules for text that is not prose still hold.
+        XCTAssertNil(KeyboardTextLogic.correctableWord(before: "[LEase"))
+        XCTAssertNil(KeyboardTextLogic.correctableWord(before: "2hAT"))
+        XCTAssertNil(KeyboardTextLogic.correctableWord(before: "name@2hat"))
+        XCTAssertNil(KeyboardTextLogic.correctableWord(before: "path/[lease"))
+        XCTAssertNil(KeyboardTextLogic.correctableWord(before: "#2hat"))
+    }
+
+    func testCapitalsWithASymbolKeyInTheTypedWord() {
+        XCTAssertEqual(KeyboardTextLogic.restoringCapitals(in: "hello please", from: "Hello [lease"), "Hello please")
+        XCTAssertEqual(KeyboardTextLogic.restoringCapitals(in: "when", from: "Wh3n"), "When")
+        XCTAssertEqual(KeyboardTextLogic.restoringCapitals(in: "[note", from: "[note"), "[note")
+        func capitalized(_ corrected: String, _ typed: String, after before: String) -> String {
+            KeyboardTextLogic.capitalizingRepairedFirstLetters(
+                in: corrected, from: typed, textBefore: before, type: .sentences)
+        }
+        XCTAssertEqual(capitalized("please", "[lease", after: ""), "Please")
+        XCTAssertEqual(capitalized("please", "[lease", after: "Done. "), "Please")
+        XCTAssertEqual(capitalized("please", "[lease", after: "then "), "please")
+        XCTAssertEqual(capitalized("please send", "[lease send", after: ""), "Please send")
+        XCTAssertEqual(capitalized("tell like", "tell ;ike", after: ""), "tell like")
+        // A symbol that stays in the text, and a word typed with its own first letter, do not change.
+        XCTAssertEqual(capitalized("[note", "[note", after: ""), "[note")
+        XCTAssertEqual(capitalized("the", "teh", after: ""), "the")
+        XCTAssertEqual(
+            KeyboardTextLogic.capitalizingRepairedFirstLetters(in: "please", from: "[lease", textBefore: "", type: .none),
+            "please")
+    }
+
     private func makeController(before: String, after: String = "") {
         keyboardView = KeyboardView()
         document = FakeDocument(before: before, after: after)
