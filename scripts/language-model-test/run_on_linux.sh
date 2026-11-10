@@ -39,6 +39,6 @@ cmake --install "$work/llama-build" --prefix "$PWD/$work/llama" > "$work/cmake-i
 
 gcc -std=c11 -O2 -Wall -Wextra -Werror -I "$work/llama/include" -I LanguageModel \
   LanguageModel/duo_lm_probe.c scripts/language-model-test/probe_cli.c \
-  -L "$work/llama/lib" -lllama -lggml -lggml-base -lm -o "$work/probe_cli"
+  -L "$work/llama/lib" -lllama -lggml -lggml-cpu -lggml-base -lm -o "$work/probe_cli"
 
 LD_LIBRARY_PATH="$PWD/$work/llama/lib" "$work/probe_cli" "$model" | tee "$work/result.txt"
