@@ -111,6 +111,25 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
     /// The owner hides the keyboard here.
     var onDismiss: @MainActor () -> Void = {}
 
+    /// Reads each finished sentence and proposes a fix. Without a proofreader the keyboard
+    /// does not propose anything.
+    var proofreader: SentenceProofreading?
+
+    /// A fix that the proofreader proposed for the sentence right before the cursor. The
+    /// candidate row shows the fix, and a tap on it replaces the sentence.
+    struct ProofreadSuggestion: Equatable {
+        let original: String
+        let corrected: String
+    }
+
+    private(set) var proofreadSuggestion: ProofreadSuggestion?
+    /// The request that is running now. The tests wait for it.
+    private(set) var proofreadTask: Task<Void, Never>?
+    /// The sentence of the latest request, so one sentence is read once.
+    private var proofreadSentence: String?
+    /// The reasons for a missing answer that the space bar has shown already.
+    private var shownProofreadNotes: Set<String> = []
+
     private var previousInsertWasSpace = false
     private var lastSpaceTime: TimeInterval = 0
     private var notice: String?
@@ -286,6 +305,66 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
         pending = nil
         setAllText(nil)
         commitPinyinLetters()
+    }
+
+    // MARK: Proofreading of a finished sentence
+
+    /// Starts a request when a sentence has just ended right before the cursor.
+    private func proofreadFinishedSentence() {
+        guard let proofreader, pinyinBuffer.isEmpty, pending == nil,
+            let sentence = KeyboardTextLogic.finishedSentence(before: document.textBeforeCursor),
+            sentence != proofreadSentence
+        else { return }
+        proofreadSentence = sentence
+        proofreadTask?.cancel()
+        proofreadTask = Task { [weak self] in
+            let result = await proofreader.proofread(sentence)
+            guard let self, !Task.isCancelled else { return }
+            self.showProofreading(result, of: sentence)
+        }
+    }
+
+    private func showProofreading(_ result: ProofreadResult, of sentence: String) {
+        guard let answer = result.text else {
+            // The space bar names each reason once, so a device without the model stays quiet.
+            if let note = result.note, shownProofreadNotes.insert(note).inserted {
+                showNotice("Proofreader: \(note)")
+            }
+            return
+        }
+        // The person may have typed on while the model read the sentence. The fix is shown only
+        // while the same sentence still ends right before the cursor.
+        guard pinyinBuffer.isEmpty,
+            KeyboardTextLogic.finishedSentence(before: document.textBeforeCursor) == sentence,
+            let corrected = KeyboardTextLogic.acceptedProofreading(of: sentence, answer: answer)
+        else { return }
+        proofreadSuggestion = ProofreadSuggestion(original: sentence, corrected: corrected)
+        keyboardView.showCandidates(composition: String(format: "Fix %.1f s", result.seconds), words: [corrected])
+    }
+
+    /// Replaces the sentence right before the cursor with the proposed fix.
+    private func applyProofreadSuggestion() {
+        guard let suggestion = proofreadSuggestion else { return }
+        clearProofreadSuggestion()
+        let before = document.textBeforeCursor
+        let spaces = before.reversed().prefix(while: { $0 == " " }).count
+        guard before.dropLast(spaces).hasSuffix(suggestion.original) else { return }
+        deleteBackward(count: suggestion.original.count + spaces)
+        document.insertText(suggestion.corrected + String(repeating: " ", count: spaces))
+        lastCorrection = nil
+        recentWord = nil
+        // The fixed sentence is not read again.
+        proofreadSentence = suggestion.corrected
+        updateAutoShift()
+    }
+
+    /// Takes the proposed fix off the candidate row. Every key press calls this first.
+    private func clearProofreadSuggestion() {
+        guard proofreadSuggestion != nil else { return }
+        proofreadSuggestion = nil
+        if pinyinBuffer.isEmpty {
+            keyboardView.showCandidates(composition: nil, words: [])
+        }
     }
 
     // MARK: Chinese
@@ -521,6 +600,8 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
     // MARK: KeyboardViewDelegate
 
     func keyboardView(_ keyboardView: KeyboardView, insert text: String) {
+        clearProofreadSuggestion()
+        defer { proofreadFinishedSentence() }
         if var replacement = pending {
             // A replacement is still running. The typed character joins the ones that wait for the delete.
             replacement.typed.append(text)
@@ -535,10 +616,15 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
     }
 
     func keyboardView(_ keyboardView: KeyboardView, didSelectCandidateAt index: Int) {
+        if proofreadSuggestion != nil {
+            applyProofreadSuggestion()
+            return
+        }
         selectCandidate(at: index)
     }
 
     func keyboardViewDeleteBackward(_ keyboardView: KeyboardView) {
+        clearProofreadSuggestion()
         guard pending == nil else { return }
         if !pinyinBuffer.isEmpty {
             pinyinBuffer.removeLast()
@@ -562,6 +648,7 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
     }
 
     func keyboardView(_ keyboardView: KeyboardView, moveCursorBy offset: Int) {
+        clearProofreadSuggestion()
         guard pending == nil else { return }
         setAllText(nil)
         commitPinyinLetters()
@@ -572,6 +659,7 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
     }
 
     func keyboardView(_ keyboardView: KeyboardView, edit command: EditCommand) {
+        clearProofreadSuggestion()
         guard pending == nil else { return }
         previousInsertWasSpace = false
         lastCorrection = nil
