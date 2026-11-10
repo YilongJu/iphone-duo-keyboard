@@ -1,16 +1,18 @@
 /*
  The scorer of duo_lm_scorer.h.
 
- Two steps differ from scripts/lm-rerank/lm_score.c, and neither changes a number on the
- processor, where every value of a token comes from that token's own row of each product:
+ Two steps differ from scripts/lm-rerank/lm_score.c. Neither should change a number, because
+ every value of a token comes from that token's own row of each product. The workflow
+ .github/workflows/lm-keyboard.yml compares this scorer with lm_score.c on the same requests:
 
  1. Each call of the model reads at most 31 tokens, so the context and the candidates may take
     more than one call. This keeps the memory small: llama.cpp keeps the scores of every token
     of one call, 50,257 numbers or 201 KB per token for distilgpt2, and it sets aside room for
-    the largest call at the start. It also keeps the work on the processor's own products.
-    llama.cpp b4846 as built for the app also holds the BLAS backend of Apple's Accelerate
-    library, which takes a product of 32 tokens or more (min_batch in ggml-blas.cpp), turns the
-    weights into 32-bit numbers first, and so gives other numbers than the Linux harness.
+    the largest call at the start. The framework of the app also holds the BLAS backend of
+    Apple's Accelerate library. In llama.cpp b4846 the processor device comes first in the list
+    of backends, so the processor already runs every product. BLAS also refuses a product of
+    fewer than 32 tokens (min_batch in ggml-blas.cpp), so a change of that order cannot move
+    a product of this scorer to BLAS.
  2. The token -1 gets its repair from the text itself. The tokenizer of llama.cpp b4846 writes
     the token of "[UNK]" for a word piece that is a lone space or a lone line break
     (llm_tokenizer_bpe_session in src/llama-vocab.cpp), and a GPT-2 vocabulary has no "[UNK]",
