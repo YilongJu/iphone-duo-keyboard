@@ -13,6 +13,9 @@ on:
       sweep:
         description: Engine settings to compare on the dev half, as sets of name=value pairs separated by semicolons
         default: ''
+      inspect:
+        description: Word sequences to look up in the language model, words separated by spaces and sequences by semicolons
+        default: ''
 
 jobs:
   build:
@@ -29,6 +32,14 @@ jobs:
           curl -sSfLO https://download.fcitx-im.org/data/dict-20260907.tar.zst
           sha256sum *.tar.zst
           for archive in *.tar.zst; do tar --zstd -xf "$archive"; done
+      - name: Print the language model entries of the given word sequences
+        if: github.event.inputs.inspect != ''
+        env:
+          INSPECT: ${{ github.event.inputs.inspect }}
+        run: |
+          set -euo pipefail
+          IFS=';' read -ra sequences <<< "$INSPECT"
+          python3 scripts/typing-engine/inspect_language_model.py build/libime-data "${sequences[@]}"
       - name: Build the lexicon
         run: python3 scripts/typing-engine/build_pinyin_lexicon_from_libime.py build/libime-data ${{ github.event.inputs.pairs }}
       - name: Score the engine with this lexicon on the dev half
