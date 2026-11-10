@@ -5,7 +5,7 @@
 Stock sunpinyin 3.0.0~rc2 converts 63 to 65 percent of clean cases exactly and repairs under 2 percent of slip cases.
 
 ```mermaid
-xychart-beta
+xychart-beta horizontal
     title "Share of dev cases with an exact output"
     x-axis ["stock clean 0.630", "stock slips 0.015", "auto-correction clean 0.630", "auto-correction slips 0.018", "sound pairs clean 0.519", "sound pairs slips 0.083"]
     y-axis "Share of cases" 0 --> 1
@@ -177,14 +177,12 @@ The workflow step "Print the license files of the packages" prints both files in
 ## Calls from the adapter into the sunpinyin library
 
 ```mermaid
-flowchart TD
-    case["Case zh-dev-clean_short-0000<br/>typed letters: dadehao"] --> keys["7 key presses<br/>onKeyEvent for d, a, d, e, h, a, o"]
-    keys --> split["Engine split: da de hao"]
-    split --> list["Candidate list from getCandidateList"]
-    list --> kind{"Is the first candidate the whole-sentence candidate, type BEST_TAIL?"}
-    kind -- "yes: 24,000 of 24,000 outputs" --> sentence["Output: 打得好"]
-    kind -- "no: 0 of 24,000 outputs" --> words["First word candidate at each position, from getCandidates"]
-    sentence --> escape["Escape key press empties the session<br/>commit count stays 0"]
+flowchart LR
+    typed["Case zh-dev-clean_short-0000<br/>typed letters: dadehao"] --> keys["7 key presses<br/>engine split: da de hao"]
+    keys --> kind{"First candidate<br/>of type BEST_TAIL?"}
+    kind -- "yes: 24,000 of 24,000 outputs" --> sentence["Output: 打得好<br/>the whole-sentence candidate"]
+    kind -- "no: 0 of 24,000 outputs" --> words["First word candidate<br/>at each position"]
+    sentence --> escape["Escape key press<br/>commit count stays 0"]
     words --> escape
 ```
 
