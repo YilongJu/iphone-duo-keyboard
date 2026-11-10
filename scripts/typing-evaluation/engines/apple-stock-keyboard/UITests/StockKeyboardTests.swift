@@ -12,14 +12,10 @@ import XCTest
 /// - `EVAL_TASK`: `english` or `pinyin`.
 /// - `EVAL_CASES_FILE`: a JSON Lines file with the cases to type.
 /// - `EVAL_OUTPUT_DIR`: the folder that receives `detail.jsonl`, the accessibility trees and the screenshots.
-/// - `EVAL_TAP_MODE`: `batch` sends the taps of one case as one synthesized event with a fixed
-///   rhythm. `single` sends one XCUICoordinate tap for each key, and the test daemon sets the rhythm.
-/// - `EVAL_KEY_INTERVAL`: seconds between two touch-downs in batch mode.
-/// - `EVAL_FINAL_SPACE`: `same-event` puts the last space into the event of the letters, so the
-///   space follows the last letter in the same rhythm. `separate` reads the field between the
-///   last letter and the space.
-/// - `EVAL_SETTLE_SECONDS`: seconds between the first read after the space and a second read.
-///   The second read shows a change that the keyboard makes after the space. 0 skips it.
+/// - `EVAL_KEY_INTERVAL`: the key interval, the seconds between two touch-downs.
+/// - `EVAL_TAP_MODE`: `paced` sends one synthesized event for each tap and waits for each event.
+///   `paced-open` sends each event at its time and does not wait for the event before it.
+///   `batch` sends the taps of one case as one synthesized event.
 /// - `EVAL_INLINE_PREDICTION`: optional. The value `no` turns inline predictions off in the text view.
 @MainActor
 final class StockKeyboardTests: XCTestCase {
@@ -37,7 +33,9 @@ final class StockKeyboardTests: XCTestCase {
         let m: Bool
         let t: String
         let c: String
+        let e: Int
         let h: [String]
+        let ht: [Int]
     }
 
     private typealias Read = (status: FieldStatus, met: Bool)
@@ -55,21 +53,17 @@ final class StockKeyboardTests: XCTestCase {
     }
 
     private enum TapMode: String {
-        case single
+        case paced
+        case pacedOpen = "paced-open"
         case batch
     }
 
-    private enum FinalSpace: String {
-        case separate
-        case sameEvent = "same-event"
-    }
-
-    /// Seconds a finger stays down in batch mode.
+    /// Seconds a finger stays down on a key.
     private let hold = 0.06
 
     private var app: XCUIApplication!
     private var outputFolder: URL!
-    private var tapMode = TapMode.single
+    private var tapMode = TapMode.paced
     private var keyInterval = 0.0
     private var letterCentres: [Character: CGPoint] = [:]
     private var spaceCentre = CGPoint.zero
@@ -90,16 +84,10 @@ final class StockKeyboardTests: XCTestCase {
             throw Failure("EVAL_TASK must be english or pinyin, and the value is \(task)")
         }
         guard let mode = TapMode(rawValue: try variable("EVAL_TAP_MODE")) else {
-            throw Failure("EVAL_TAP_MODE must be single or batch")
+            throw Failure("EVAL_TAP_MODE must be paced, paced-open or batch")
         }
         guard let interval = Double(try variable("EVAL_KEY_INTERVAL")), interval > hold else {
             throw Failure("EVAL_KEY_INTERVAL must be a number of seconds above \(hold)")
-        }
-        guard let finalSpace = FinalSpace(rawValue: try variable("EVAL_FINAL_SPACE")) else {
-            throw Failure("EVAL_FINAL_SPACE must be separate or same-event")
-        }
-        guard let settleSeconds = Double(try variable("EVAL_SETTLE_SECONDS")), settleSeconds >= 0 else {
-            throw Failure("EVAL_SETTLE_SECONDS must be a number of seconds, 0 or more")
         }
         tapMode = mode
         keyInterval = interval
@@ -111,7 +99,7 @@ final class StockKeyboardTests: XCTestCase {
         let cases = try String(contentsOfFile: try variable("EVAL_CASES_FILE"), encoding: .utf8)
             .split(separator: "\n")
             .map { try decoder.decode(EvalCase.self, from: Data($0.utf8)) }
-        print("EVAL_START task=\(task) mode=\(mode.rawValue) key_interval=\(interval) final_space=\(finalSpace.rawValue) settle_seconds=\(settleSeconds) cases=\(cases.count)")
+        print("EVAL_START task=\(task) mode=\(mode.rawValue) key_interval=\(interval) cases=\(cases.count)")
 
         app = XCUIApplication()
         let contexts = cases.map { $0.context ?? "" }
@@ -141,59 +129,41 @@ final class StockKeyboardTests: XCTestCase {
             }
 
             // The "Next case" button loads the context of this case into the text view.
-            try tap([nextCentre])
-            var loaded = try waitForStatus(timeout: 6) { $0.i == index }
+            _ = try tap([nextCentre])
+            var loaded = try waitForStatus(timeout: 20) { $0.i == index }
             if !loaded.met && loaded.status.i == index - 1 {
                 print("EVAL_NOTE case \(index): the Next tap did not arrive, tapping again")
-                try tap([nextCentre])
-                loaded = try waitForStatus(timeout: 6) { $0.i == index }
+                _ = try tap([nextCentre])
+                loaded = try waitForStatus(timeout: 20) { $0.i == index }
             }
             guard loaded.met else {
                 try saveDiagnostics("case-index-mismatch")
                 throw Failure("the host app shows case \(loaded.status.i), and the test is at case \(index)")
             }
 
-            // English: one space ends the word and applies the correction.
-            // Pinyin: one space takes the first candidate.
-            let typedPoints = try points(for: item.typed)
+            // The typed characters and one space go in at one rhythm.
+            // English: the space ends the word and applies the correction.
+            // Pinyin: the space takes the first candidate.
+            let sendTimes = try tap(try points(for: item.typed) + [spaceCentre])
             var spaceTaps = 1
             var after: Read
-            switch finalSpace {
-            case .separate:
-                try tap(typedPoints)
-                let lastToken = item.typed.split(separator: " ").last.map(String.init) ?? ""
-                let before: Read
-                if task == "english" {
-                    before = try waitForStatus(timeout: 2) { $0.c.lowercased().hasSuffix(lastToken) }
-                } else {
-                    before = try waitForStatus(timeout: 2) { status in
-                        status.m && status.t.filter({ $0.isASCII && $0.isLetter }) == item.typed
-                    }
+            if task == "english" {
+                // The host app counts each space that arrives, so the count tells when the
+                // last space is in the text. A stalled simulator can deliver taps seconds late.
+                let spaces = item.typed.filter({ $0 == " " }).count + 1
+                after = try waitForStatus(timeout: 60) { $0.e >= spaces }
+            } else {
+                // After the space the text view holds Chinese text outside the marked text.
+                after = try waitForStatus(timeout: 8) { !$0.c.isEmpty }
+                // The first candidate can cover only the first letters. The test taps space
+                // again while the keyboard still holds marked text, so every letter gets a candidate.
+                while after.status.m && spaceTaps < 12 {
+                    let reference = after.status
+                    _ = try tap([spaceCentre])
+                    spaceTaps += 1
+                    after = try waitForStatus(timeout: 8) { $0.c != reference.c || $0.m != reference.m }
+                    if !after.met { break }
                 }
-                try tap([spaceCentre])
-                let reference = before.status
-                if task == "english" {
-                    after = try waitForStatus(timeout: 3) { $0.c != reference.c && $0.c.hasSuffix(" ") }
-                } else {
-                    after = try waitForStatus(timeout: 3) { $0.t != reference.t || $0.m != reference.m }
-                }
-            case .sameEvent:
-                try tap(typedPoints + [spaceCentre])
-                let reference = loaded.status
-                if task == "english" {
-                    after = try waitForStatus(timeout: 3) { $0.c != reference.c && $0.c.hasSuffix(" ") }
-                } else {
-                    after = try waitForStatus(timeout: 3) { !$0.m && $0.t != reference.t }
-                }
-            }
-            // Pinyin: the first candidate can cover only the first letters. The test taps space
-            // again while the keyboard still holds marked text, so every letter gets a candidate.
-            while task == "pinyin" && after.status.m && spaceTaps < 12 {
-                let reference = after.status
-                try tap([spaceCentre])
-                spaceTaps += 1
-                after = try waitForStatus(timeout: 3) { $0.t != reference.t || $0.m != reference.m }
-                if !after.met { break }
             }
 
             record["after"] = after.status.t
@@ -201,20 +171,14 @@ final class StockKeyboardTests: XCTestCase {
             record["after_marked"] = after.status.m
             record["after_as_expected"] = after.met
             record["space_taps"] = spaceTaps
-            var last = after.status
-            if settleSeconds > 0 {
-                Thread.sleep(forTimeInterval: settleSeconds)
-                last = try readStatus()
-                record["settled"] = last.t
-                record["settled_committed"] = last.c
-                record["settled_marked"] = last.m
-            }
-            record["history"] = last.h
+            record["history"] = after.status.h
+            record["history_ms"] = after.status.ht
+            record["send_ms"] = sendTimes.map { Int(($0 * 1000).rounded()) }
             record["seconds"] = (Date().timeIntervalSince(caseStart) * 100).rounded() / 100
             let line = try JSONSerialization.data(withJSONObject: record, options: [.sortedKeys])
             detailFile.write(line)
             detailFile.write(Data("\n".utf8))
-            print("EVAL_CASE \(index + 1)/\(cases.count) \(item.id) typed=[\(item.typed)] after=[\(after.status.c)] settled=[\(last.c)] marked=\(last.m) spaces=\(spaceTaps) seconds=\(record["seconds"] ?? "")")
+            print("EVAL_CASE \(index + 1)/\(cases.count) \(item.id) typed=[\(item.typed)] after=[\(after.status.c)] marked=\(after.status.m) expected=\(after.met) spaces=\(spaceTaps) seconds=\(record["seconds"] ?? "")")
         }
         let seconds = Date().timeIntervalSince(runStart)
         print(String(format: "EVAL_DONE cases=%ld taps=%ld status_reads=%ld seconds=%.1f seconds_per_case=%.2f",
@@ -292,15 +256,15 @@ final class StockKeyboardTests: XCTestCase {
         let word = task == "english" ? "teh" : "nihao"
         for attempt in 1...3 {
             let start = try readStatus()
-            try tap(try points(for: word))
-            let before = try waitForStatus(timeout: 8) { status in
+            _ = try tap(try points(for: word))
+            let before = try waitForStatus(timeout: 20) { status in
                 String(status.t.dropFirst(start.t.count)).lowercased().filter({ $0.isASCII && $0.isLetter }) == word
             }
             if attempt == 1 {
                 try saveDiagnostics("warm-up-before-space")
             }
-            try tap([spaceCentre])
-            let after = try waitForStatus(timeout: 8) { $0.t != before.status.t || $0.m != before.status.m }
+            _ = try tap([spaceCentre])
+            let after = try waitForStatus(timeout: 20) { $0.t != before.status.t || $0.m != before.status.m }
             print("EVAL_WARMUP attempt=\(attempt) typed=[\(word)] start=[\(start.t)] before_space=[\(before.status.t)] marked=\(before.status.m) letters_arrived=\(before.met) after_space=[\(after.status.t)] marked_after=\(after.status.m)")
             if before.met && after.met {
                 try saveDiagnostics("warm-up-after-space")
@@ -326,17 +290,20 @@ final class StockKeyboardTests: XCTestCase {
         }
     }
 
-    private func tap(_ points: [CGPoint]) throws {
+    /// Taps the points in order at the key interval. Returns the time each tap was sent, in
+    /// seconds since the first tap.
+    private func tap(_ points: [CGPoint]) throws -> [Double] {
         tapCount += points.count
+        let values = points.map { NSValue(cgPoint: $0) }
         switch tapMode {
-        case .single:
-            let origin = app.coordinate(withNormalizedOffset: CGVector(dx: 0, dy: 0))
-            for point in points {
-                origin.withOffset(CGVector(dx: point.x, dy: point.y)).tap()
-            }
+        case .paced:
+            return try EventSynthesis.tapPointsPaced(values, interval: keyInterval, hold: hold, waitForCompletion: true).map { $0.doubleValue }
+        case .pacedOpen:
+            return try EventSynthesis.tapPointsPaced(values, interval: keyInterval, hold: hold, waitForCompletion: false).map { $0.doubleValue }
         case .batch:
-            let starts = points.indices.map { NSNumber(value: Double($0) * keyInterval) }
-            try EventSynthesis.tapPoints(points.map { NSValue(cgPoint: $0) }, starts: starts, hold: hold)
+            let starts = points.indices.map { Double($0) * keyInterval }
+            try EventSynthesis.tapPoints(values, starts: starts.map { NSNumber(value: $0) }, hold: hold)
+            return starts
         }
     }
 
