@@ -3,13 +3,19 @@ name: Pinyin lexicon
 # Builds Shared/lexicon-pinyin.bin from the libime dictionary and language model on a Linux
 # runner, scores the engine with it on the dev half, and uploads the file as an artifact.
 # Start it by hand:
-#   gh workflow run "Pinyin lexicon" -f pairs=1500000 -f sweep="omission=4;omission=4.5"
+#   gh workflow run "Pinyin lexicon" -f pairs=1500000 -f triples=1000000 -f sweep="beam=16;beam=64"
 on:
   workflow_dispatch:
     inputs:
       pairs:
         description: The number of word pairs to keep
         default: '1500000'
+      triples:
+        description: The number of word triples to keep
+        default: '0'
+      gain:
+        description: Keep only the entries above their back-off estimate (higher), or the entries on both sides (any)
+        default: 'higher'
       sweep:
         description: Engine settings to compare on the dev half, as sets of name=value pairs separated by semicolons
         default: ''
@@ -41,16 +47,26 @@ jobs:
           IFS=';' read -ra sequences <<< "$INSPECT"
           python3 scripts/typing-engine/inspect_language_model.py build/libime-data "${sequences[@]}"
       - name: Build the lexicon
-        run: python3 scripts/typing-engine/build_pinyin_lexicon_from_libime.py build/libime-data ${{ github.event.inputs.pairs }}
+        run: |
+          set -euo pipefail
+          python3 scripts/typing-engine/build_pinyin_lexicon_from_libime.py build/libime-data \
+            ${{ github.event.inputs.pairs }} ${{ github.event.inputs.triples }} --gain ${{ github.event.inputs.gain }}
+          ls -l Shared/lexicon-pinyin.bin
+          sha256sum Shared/lexicon-pinyin.bin
+      - name: Build the engine and check its word-triple model against a second implementation
+        run: |
+          set -euo pipefail
+          mkdir -p build/engine
+          gcc -std=c11 -O1 -g -Wall -Wextra -Wpedantic -Werror -fsanitize=address,undefined \
+            Engine/duo_engine.c Engine/duo_cli.c -lm -o build/engine/duo_cli_checked
+          gcc -std=c11 -O2 -Wall -Wextra -Werror Engine/duo_engine.c Engine/duo_cli.c -lm -o build/engine/duo_cli
+          python3 scripts/typing-engine-check/check_back_off_model.py --cli build/engine/duo_cli_checked
       - name: Score the engine with this lexicon on the dev half
         env:
           SWEEP: ${{ github.event.inputs.sweep }}
         run: |
           set -euo pipefail
-          mkdir -p build/engine
-          gcc -std=c11 -O2 -Wall -Wextra -Werror Engine/duo_engine.c Engine/duo_cli.c -lm -o build/engine/duo_cli
-          ls -l Shared/lexicon-pinyin.bin
-          time python3 scripts/typing-evaluation/run_duo_engine.py --task pinyin --half dev --show-misses 3
+          python3 scripts/typing-evaluation/run_duo_engine.py --task pinyin --half dev --show-misses 3 --show-time
           if [ -n "$SWEEP" ]; then
             IFS=';' read -ra sets <<< "$SWEEP"
             python3 scripts/typing-evaluation/sweep_duo_engine.py --task pinyin "${sets[@]}"

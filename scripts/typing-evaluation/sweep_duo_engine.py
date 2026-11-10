@@ -4,14 +4,14 @@ Usage, from the repository root:
     python3 scripts/typing-evaluation/sweep_duo_engine.py --task english "margin_known=4" "margin_known=5 missing_space=4"
 
 Each quoted argument is one set of name=value pairs. An empty string scores the built-in settings.
-The script prints one line per set with the accuracy of each group, and it always reads the dev
-half: the test half is for the final table only.
+The script prints one line per set with the accuracy of each group and the engine's processor
+time per input, and it always reads the dev half: the test half is for the final table only.
 """
 import argparse
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
-from run_duo_engine import LEXICON, ROOT, case_files, run
+from run_duo_engine import LEXICON, ROOT, case_files, run_timed
 from score import load_cases, score
 
 
@@ -28,14 +28,14 @@ def main():
     lexicon = arguments.lexicon or LEXICON[arguments.task]
 
     def one(settings: str):
-        predictions = run(arguments.task, cases, settings.split(), arguments.cli, lexicon)
-        return settings, score(arguments.task, cases, predictions)
+        predictions, time_report = run_timed(arguments.task, cases, settings.split(), arguments.cli, lexicon)
+        return settings, score(arguments.task, cases, predictions), time_report
 
     # Each run is its own process, so threads are enough to use every core.
     with ThreadPoolExecutor() as pool:
         results = list(pool.map(one, arguments.settings))
 
-    for settings, summary in results:
+    for settings, summary, time_report in results:
         parts = []
         for name, entry in summary["groups"].items():
             text = f"{name} {entry['accuracy']:.4f}"
@@ -46,7 +46,9 @@ def main():
             f"{name} {entry['accuracy']:.4f}" for name, entry in summary["categories"].items()
             if not any(name in group.get("categories", []) for group in summary["groups"].values())
         ]
-        print(f"[{settings or 'built-in'}]  " + "  ".join(parts + alone))
+        # The report ends with the time, as in "duo_cli: 5754 inputs, 12.345 ms of processor time per input".
+        time_text = time_report.rsplit(", ", 1)[-1]
+        print(f"[{settings or 'built-in'}]  " + "  ".join(parts + alone) + f"  ({time_text})")
         if arguments.categories:
             for name, entry in summary["categories"].items():
                 print(f"      {name:28s} {entry['accuracy']:.4f}")
