@@ -62,6 +62,9 @@ typedef struct {
     float insertion_of_double;
     /* Two letters typed in the wrong order. */
     float transposition;
+    /* Added to the cost of an extra letter before a word and of a missing first letter. People
+       mistype the first letter of a word less often than the letters after it. */
+    float first_letter_extra;
     /* The highest total slip cost inside one word: for words of 2 to 4 letters, and of 5 or more.
        A one-letter word must match exactly. */
     float short_word_budget;
@@ -82,6 +85,9 @@ typedef struct {
        margin_known when every typed word is in the lexicon, margin_unknown otherwise. */
     float margin_known;
     float margin_unknown;
+    /* How much the chance of ending the sentence after the last word counts, from 0 to 1.
+       Only a lexicon with a sentence-end mark has that chance. */
+    float sentence_end_weight;
     /* 1 when a space separates words (English), 0 when words follow each other directly (Pinyin). */
     int spaces_between_words;
     /* How many partial readings the search keeps at each position, from 1 to 16. */

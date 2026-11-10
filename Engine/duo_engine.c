@@ -133,6 +133,7 @@ duo_params duo_english_params(void) {
     params.insertion = 5.5f;
     params.insertion_of_double = 3.5f;
     params.transposition = 4.5f;
+    params.first_letter_extra = 0.0f;
     params.short_word_budget = 5.6f;
     params.long_word_budget = 11.0f;
     params.missing_space = 5.0f;
@@ -145,6 +146,7 @@ duo_params duo_english_params(void) {
     params.unknown_letter = -1.2f;
     params.margin_known = 5.0f;
     params.margin_unknown = 0.0f;
+    params.sentence_end_weight = 0.0f;
     params.spaces_between_words = 1;
     params.beam = 8;
     return params;
@@ -162,6 +164,7 @@ duo_params duo_pinyin_params(void) {
     params.unknown_letter = -16.0f;
     params.margin_known = 0.0f;
     params.margin_unknown = 0.0f;
+    params.sentence_end_weight = 1.0f;
     params.spaces_between_words = 0;
     return params;
 }
@@ -176,6 +179,7 @@ int duo_params_set(duo_params *params, const char *name, float value) {
     FIELD(insertion)
     FIELD(insertion_of_double)
     FIELD(transposition)
+    FIELD(first_letter_extra)
     FIELD(short_word_budget)
     FIELD(long_word_budget)
     FIELD(missing_space)
@@ -188,6 +192,7 @@ int duo_params_set(duo_params *params, const char *name, float value) {
     FIELD(unknown_letter)
     FIELD(margin_known)
     FIELD(margin_unknown)
+    FIELD(sentence_end_weight)
 #undef FIELD
     if (strcmp(name, "beam") == 0) { params->beam = (int)value; return 1; }
     return 0;
@@ -264,7 +269,7 @@ static float insertion_cost(const walk_t *walk, int index) {
 static float omission_cost(const walk_t *walk, char letter, int depth) {
     if (letter == '\'') return walk->params->omission_of_apostrophe;
     if (depth > 0 && walk->letters[depth - 1] == letter) return walk->params->omission_of_double;
-    return walk->params->omission;
+    return walk->params->omission + (depth == 0 ? walk->params->first_letter_extra : 0.0f);
 }
 
 static void walk_node(walk_t *walk, uint32_t node_index, int depth) {
@@ -345,7 +350,7 @@ static int find_edges(
         int consumed = b - BAND;
         if (consumed < 0 || consumed > walk.length) walk.rows[0][b] = BIG;
         else if (consumed == 0) walk.rows[0][b] = 0.0f;
-        else walk.rows[0][b] = walk.rows[0][b - 1] + insertion_cost(&walk, consumed - 1);
+        else walk.rows[0][b] = walk.rows[0][b - 1] + insertion_cost(&walk, consumed - 1) + params->first_letter_extra;
     }
     walk_node(&walk, 0, 0);
     return walk.edge_count;
@@ -443,6 +448,42 @@ static void best_word(
     *log_probability = best;
 }
 
+/* The log probability of one given word after the word `previous`. */
+static float word_after(const duo_lexicon *lexicon, const duo_params *params, uint32_t previous, uint32_t word) {
+    float own = word_log_probability(lexicon, word);
+    if (previous == NO_WORD || lexicon->pair_count == 0) return own;
+    uint32_t low = read_u32(lexicon->pair_index + 4 * (size_t)previous);
+    uint32_t high = read_u32(lexicon->pair_index + 4 * ((size_t)previous + 1));
+    while (low < high) {
+        uint32_t middle = low + (high - low) / 2;
+        uint32_t second = read_u32(lexicon->pairs + 8 * (size_t)middle);
+        if (second == word) {
+            float pair_value = read_f32(lexicon->pairs + 8 * (size_t)middle + 4);
+            if (lexicon->model == MODEL_BACK_OFF) return pair_value;
+            return logf(params->pair_weight * expf(pair_value) + (1.0f - params->pair_weight) * expf(own));
+        }
+        if (second < word) low = middle + 1;
+        else high = middle;
+    }
+    if (lexicon->model == MODEL_BACK_OFF) return word_back_off(lexicon, previous) + own;
+    return params->pair_weight > 0.0f ? own + logf(1.0f - params->pair_weight) : own;
+}
+
+/* The two sentence marks of a back-off lexicon sit under spellings that nobody can type. */
+static uint32_t find_mark(const duo_lexicon *lexicon, char mark) {
+    node_t root = node_at(lexicon, 0);
+    for (uint32_t child = root.first_child; child < root.first_child + root.child_count; child++) {
+        if ((char)lexicon->nodes[12 * (size_t)child + 9] == mark) {
+            node_t node = node_at(lexicon, child);
+            return node.word_count > 0 ? node.first_word : NO_WORD;
+        }
+    }
+    return NO_WORD;
+}
+
+#define SENTENCE_START_MARK 1
+#define SENTENCE_END_MARK 2
+
 /* ---- The search over whole readings ---- */
 
 typedef struct {
@@ -533,6 +574,9 @@ static int decode(
         free(edges);
         return 0;
     }
+    /* Without a word before the typed text, the text opens a sentence. */
+    if (previous_word == NO_WORD) previous_word = find_mark(lexicon, SENTENCE_START_MARK);
+    uint32_t end_mark = params->sentence_end_weight > 0.0f ? find_mark(lexicon, SENTENCE_END_MARK) : NO_WORD;
     state_t first = { 0.0f, previous_word, -1, -1, -1, -1 };
     cells[0].states[0] = first;
     cells[0].count = 1;
@@ -605,10 +649,18 @@ static int decode(
     const cell_t *last = &cells[length];
     if (last->count > 0) {
         int best = 0;
-        for (int index = 1; index < last->count; index++) {
-            if (last->states[index].score > last->states[best].score) best = index;
+        float best_score = -BIG;
+        for (int index = 0; index < last->count; index++) {
+            float score = last->states[index].score;
+            if (end_mark != NO_WORD && last->states[index].word != NO_WORD) {
+                score += params->sentence_end_weight * word_after(lexicon, params, last->states[index].word, end_mark);
+            }
+            if (score > best_score) {
+                best_score = score;
+                best = index;
+            }
         }
-        result->score = last->states[best].score;
+        result->score = best_score;
         result->consumed = length;
         ok = write_reading(lexicon, params, typed, cells, length, best, result->text);
     }
