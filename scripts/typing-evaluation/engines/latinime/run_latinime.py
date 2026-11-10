@@ -61,7 +61,8 @@ ENGINES = [
 ]
 
 # The task picks a setting on the dev half by the share of slips repaired, with the share of
-# clean cases kept at 0.98 or more (scripts/typing-evaluation/README.md, Table 1).
+# clean cases kept at 0.98 or more (scripts/typing-evaluation/README.md, Table 1, at the commit
+# this adapter was written against). --clean-floor sets another value.
 CLEAN_FLOOR = 0.98
 # The grid of --tune-on-dev: the stock value, then steps of 0.01 up to 0.60, then three wide
 # steps. "inf" switches the threshold rule off, so that only a whitelist entry replaces a word.
@@ -176,35 +177,48 @@ def load_cases(half: str) -> list[dict]:
     return [json.loads(line) for line in cases_file.read_text(encoding="utf-8").split("\n") if line]
 
 
+def clean_and_slip_shares(cases: list[dict], outputs: dict[str, str]) -> tuple[float, float]:
+    """The share of clean cases kept and the share of slip cases repaired.
+
+    Both come from the per-category counts of score.py. A category whose name starts with
+    "clean" holds clean cases, and every other category holds slips. These are the totals that
+    score.py prints as ALL CLEAN and ALL SLIPS.
+    """
+    categories = score("english", cases, outputs)["categories"]
+    clean = [entry for name, entry in categories.items() if name.startswith("clean")]
+    slips = [entry for name, entry in categories.items() if not name.startswith("clean")]
+    return (sum(entry["right"] for entry in clean) / sum(entry["cases"] for entry in clean),
+            sum(entry["right"] for entry in slips) / sum(entry["cases"] for entry in slips))
+
+
 def tune_on_dev(arguments: argparse.Namespace, layout: Path) -> None:
     """Scores the dev half at each threshold of the grid and writes the tuned threshold.
 
-    The tuned threshold is the lowest grid value at which token mode keeps CLEAN_FLOOR of the
-    clean dev cases. A lower threshold repairs more slips, so the lowest value that keeps the
-    floor is the setting that the task's rule picks. The test half takes no part.
+    The tuned threshold is the lowest grid value at which token mode keeps the clean floor of
+    the clean dev cases. A lower threshold repairs more slips, so the lowest value that keeps
+    the floor is the setting that the task's rule picks. The test half takes no part.
     """
+    floor = arguments.clean_floor
     cases = load_cases("dev")
     inputs = [(case["id"], case["context"], case["typed"]) for case in cases]
     grid = [(f"grid-{mode}-{threshold}", mode, threshold) for threshold in TUNING_GRID for mode in ("token", "span")]
     outputs = run_driver(arguments, layout, inputs, grid)
-    typed_as_is = score("english", cases, {case["id"]: case["typed"] for case in cases})
+    typed_as_is = clean_and_slip_shares(cases, {case["id"]: case["typed"] for case in cases})
     print("Dev shares by auto-correction threshold")
-    print(f"  typed text as it is   clean {typed_as_is['clean']['accuracy']:.4f}  slips {typed_as_is['slips']['accuracy']:.4f}")
+    print(f"  typed text as it is   clean {typed_as_is[0]:.4f}  slips {typed_as_is[1]:.4f}")
     tuned = None
     for threshold in TUNING_GRID:
-        shares = []
-        for mode in ("token", "span"):
-            summary = score("english", cases, outputs[f"grid-{mode}-{threshold}"])
-            shares += [summary["clean"]["accuracy"], summary["slips"]["accuracy"]]
-        if tuned is None and shares[0] >= CLEAN_FLOOR:
+        token_clean, token_slips = clean_and_slip_shares(cases, outputs[f"grid-token-{threshold}"])
+        span_clean, span_slips = clean_and_slip_shares(cases, outputs[f"grid-span-{threshold}"])
+        if tuned is None and token_clean >= floor:
             tuned = threshold
-        print(f"  threshold {threshold:>5s}   token clean {shares[0]:.4f} slips {shares[1]:.4f}"
-              f"   span clean {shares[2]:.4f} slips {shares[3]:.4f}")
+        print(f"  threshold {threshold:>5s}   token clean {token_clean:.4f} slips {token_slips:.4f}"
+              f"   span clean {span_clean:.4f} slips {span_slips:.4f}")
     if tuned is None:
-        raise SystemExit(f"token mode keeps less than {CLEAN_FLOOR} of the clean dev cases at every grid threshold")
+        raise SystemExit(f"token mode keeps less than {floor} of the clean dev cases at every grid threshold")
     TUNED_THRESHOLD_FILE.parent.mkdir(parents=True, exist_ok=True)
     TUNED_THRESHOLD_FILE.write_text(tuned + "\n", encoding="utf-8", newline="\n")
-    print(f"Tuned threshold: {tuned}, the lowest grid value at which token mode keeps {CLEAN_FLOOR} "
+    print(f"Tuned threshold: {tuned}, the lowest grid value at which token mode keeps {floor} "
           f"of the clean dev cases. Written to {TUNED_THRESHOLD_FILE.relative_to(ROOT)}")
 
 
@@ -308,6 +322,8 @@ def main() -> None:
     action.add_argument("--explain-samples", action="store_true",
                         help="print the dictionary counts, the layout and the suggestions for a few dev examples")
     action.add_argument("--list-engines", action="store_true", help="print the engine names")
+    parser.add_argument("--clean-floor", type=float, default=CLEAN_FLOOR,
+                        help="for --tune-on-dev: the share of clean dev cases that the tuned threshold must keep")
     parser.add_argument("--driver", type=Path, default=BUILD / "latinime_driver")
     parser.add_argument("--dictionary", type=Path,
                         default=BUILD / "source" / "java" / "res" / "raw" / "main_en.dict")

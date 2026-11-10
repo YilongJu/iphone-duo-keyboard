@@ -12,7 +12,7 @@ Through our adapter, the stock [AOSP](https://source.android.com/ "Android Open 
 
 This document does not settle the scores on a device, with measured touch points, or with a word-pair dictionary.
 
-Every number below comes from GitHub Actions run 42759559446 on commit `64de497`.
+Every number below comes from GitHub Actions run 42759559446 on commit `64de497`, with the test cases of commit `e997c39`.
 
 ## Terms and engine names
 
@@ -315,6 +315,7 @@ One word lookup takes 2.53 ms on the runner. We have not measured the time on a 
 
 ## Limits of the adapter
 
+- **Test cases.** Every score uses the test cases and the scorer of commit `e997c39`. The main branch holds a newer test set since commit `26cdf17`.
 - **Device.** The adapter has not been compared with the Java keyboard on a phone or an emulator.
 - **Touch points.** Each touch lands on a key center. Real touches land off center, and the engine scores that distance.
 - **Key boxes.** The keys are squares. The AOSP phone layout has taller keys and also a comma key and a period key.
