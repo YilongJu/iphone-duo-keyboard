@@ -39,13 +39,19 @@ class FeatureScorer:
             raise SystemExit("the weights file names other features")
         self.mean, self.scale, self.weights = weights["mean"], weights["scale"], weights["weights"]
         self.requests = 0
+        self.cache: dict[tuple, dict[str, tuple[float, float]]] = {}
 
     def reading_scores(self, context: str, readings: list[dict], typed: str | None) -> dict[str, tuple[float, float]]:
         if typed is None:
             raise SystemExit("the feature scorer needs the typed span")
+        # The features depend on the typed span and the readings only, not on the context.
+        key = (typed, tuple((r["text"], r["score"], r["slips"], r["as_typed"], r["chosen"]) for r in readings))
+        if key in self.cache:
+            return self.cache[key]
         result = {}
         for reading in readings:
             values = features(reading["text"], reading["score"], reading["slips"], reading["as_typed"], reading["chosen"], typed)
             result[reading["text"]] = (sum(w * (v - m) / s for w, v, m, s in zip(self.weights, values, self.mean, self.scale)), 0.0)
         self.requests += 1
+        self.cache[key] = result
         return result
