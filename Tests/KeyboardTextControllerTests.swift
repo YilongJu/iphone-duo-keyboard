@@ -85,8 +85,110 @@ final class FakeProofreader: SentenceProofreading {
     }
 }
 
+/// A language model test with fixed result lines. It does not load a model.
+@MainActor
+final class FakeLanguageModelMeasurer: LanguageModelMeasuring {
+    var lines = ["model       fake", "done        every step ran"]
+    /// Count of runs that were started.
+    var runs = 0
+    /// True keeps each run open after its lines, until `finish()`.
+    var staysOpen = false
+    private var openRun: AsyncStream<String>.Continuation?
+
+    func resultLines() -> AsyncStream<String> {
+        runs += 1
+        let (stream, continuation) = AsyncStream.makeStream(of: String.self)
+        for line in lines {
+            continuation.yield(line)
+        }
+        if staysOpen {
+            openRun = continuation
+        } else {
+            continuation.finish()
+        }
+        return stream
+    }
+
+    func finish() {
+        openRun?.finish()
+        openRun = nil
+    }
+}
+
 @MainActor
 final class KeyboardTextControllerTests: XCTestCase {
+    private func makeMeasuringController(before: String) -> FakeLanguageModelMeasurer {
+        makeController(before: before)
+        let measurer = FakeLanguageModelMeasurer()
+        controller.languageModelMeasurer = measurer
+        return measurer
+    }
+
+    func testTheTriggerTextAndASpaceRunTheLanguageModelTestOnce() async {
+        let measurer = makeMeasuringController(before: "")
+        type("duo:lm ")
+        await controller.languageModelTask?.value
+        XCTAssertEqual(measurer.runs, 1)
+        XCTAssertEqual(document.text, "duo:lm \nmodel       fake\ndone        every step ran")
+        XCTAssertNil(controller.languageModelTask)
+    }
+
+    func testTheTriggerWorksAfterOtherTextAndWithACapital() async {
+        let measurer = makeMeasuringController(before: "Notes of today.\n")
+        type("Duo:lm ")
+        await controller.languageModelTask?.value
+        XCTAssertEqual(measurer.runs, 1)
+        XCTAssertEqual(document.text, "Notes of today.\nDuo:lm \nmodel       fake\ndone        every step ran")
+    }
+
+    func testTheTestStartsAtTheSpaceAndNotBefore() async {
+        let measurer = makeMeasuringController(before: "")
+        type("duo:lm")
+        XCTAssertEqual(measurer.runs, 0)
+        type(" ")
+        // The run has started before the keyboard types its first result line.
+        XCTAssertEqual(measurer.runs, 1)
+        XCTAssertEqual(document.text, "duo:lm ")
+        await controller.languageModelTask?.value
+        XCTAssertEqual(measurer.runs, 1)
+    }
+
+    func testOtherTextDoesNotRunTheLanguageModelTest() {
+        // The trigger without its space, with a letter after it, with a sign or a letter
+        // right before it, and with a space in place of the colon.
+        for text in ["duo:lm", "duo:lmx ", "xduo:lm ", "/duo:lm ", "duo lm ", "duo:l ", "hello world "] {
+            let measurer = makeMeasuringController(before: "")
+            type(text)
+            XCTAssertEqual(measurer.runs, 0, text)
+            XCTAssertNil(controller.languageModelTask, text)
+            XCTAssertEqual(document.text, text)
+        }
+    }
+
+    func testTheTriggerTextIsPlainTextWithoutAMeasurer() {
+        makeController(before: "")
+        type("duo:lm ")
+        XCTAssertNil(controller.languageModelTask)
+        XCTAssertEqual(document.text, "duo:lm ")
+    }
+
+    func testASecondTriggerDoesNotStartTheTestWhileItRuns() async {
+        let measurer = makeMeasuringController(before: "")
+        measurer.staysOpen = true
+        type("duo:lm ")
+        type("duo:lm ")
+        XCTAssertEqual(measurer.runs, 1)
+        let run = controller.languageModelTask
+        measurer.finish()
+        await run?.value
+        XCTAssertEqual(document.text, "duo:lm duo:lm \nmodel       fake\ndone        every step ran")
+        // After the end of a run the trigger starts the test again.
+        measurer.staysOpen = false
+        type("\nduo:lm ")
+        await controller.languageModelTask?.value
+        XCTAssertEqual(measurer.runs, 2)
+    }
+
     private func makeProofreadingController(before: String, answers: [String: String]) -> FakeProofreader {
         makeController(before: before)
         let proofreader = FakeProofreader()

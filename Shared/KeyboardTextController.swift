@@ -148,6 +148,15 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
     /// The reasons for a missing answer that the space bar has shown already.
     private var shownProofreadNotes: Set<String> = []
 
+    /// The text that starts the language model test when a space follows it.
+    static let languageModelTrigger = "duo:lm"
+
+    /// Runs the language model test. Without a measurer the trigger text is typed as any
+    /// other text, and the keyboard does not load a model.
+    var languageModelMeasurer: LanguageModelMeasuring?
+    /// The run of the test that is under way now. The tests wait for it.
+    private(set) var languageModelTask: Task<Void, Never>?
+
     private var previousInsertWasSpace = false
     private var lastSpaceTime: TimeInterval = 0
     private var notice: String?
@@ -394,6 +403,40 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
         }
     }
 
+    // MARK: Language model test
+
+    /// Starts the language model test when the trigger text stands right before the cursor
+    /// as a word of its own. The keyboard then types the space and each result line on a
+    /// line of its own. The test only measures, and the trigger is the only way to start it.
+    /// A capital first letter also counts, because the keyboard capitalizes the start of a
+    /// sentence. Returns false when the space should be typed by the normal rules.
+    private func startLanguageModelTest() -> Bool {
+        guard let languageModelMeasurer, languageModelTask == nil else { return false }
+        let before = document.textBeforeCursor
+        guard before.lowercased().hasSuffix(Self.languageModelTrigger) else { return false }
+        // A letter or another sign right before the trigger makes it part of a longer text.
+        if let preceding = before.dropLast(Self.languageModelTrigger.count).last, !preceding.isWhitespace {
+            return false
+        }
+        // The trigger is a command and not a word of prose, so the space after it does not
+        // start a correction, and a backspace does not bring an earlier correction back.
+        lastCorrection = nil
+        recentWord = nil
+        previousInsertWasSpace = false
+        document.insertText(" ")
+        showNotice("Language model test is running")
+        // The run starts here, before the task below gets its turn on the main thread.
+        let lines = languageModelMeasurer.resultLines()
+        languageModelTask = Task { [weak self] in
+            for await line in lines {
+                self?.document.insertText("\n" + line)
+            }
+            self?.languageModelTask = nil
+            self?.updateAutoShift()
+        }
+        return true
+    }
+
     // MARK: Chinese
 
     private func refreshCandidates() {
@@ -521,6 +564,10 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
     // MARK: Typing
 
     private func insert(_ text: String) {
+        if text == " ", startLanguageModelTest() {
+            updateAutoShift()
+            return
+        }
         let now = ProcessInfo.processInfo.systemUptime
         if text == " ", !chineseMode, previousInsertWasSpace, now - lastSpaceTime < 1.5,
             KeyboardTextLogic.shouldReplaceDoubleSpace(before: document.textBeforeCursor) {

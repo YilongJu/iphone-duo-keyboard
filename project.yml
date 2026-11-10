@@ -25,6 +25,10 @@ targets:
         excludes:
           - duo_cli.c
         compilerFlags: "-O2"
+      # The language model test in C. It calls llama.cpp, which comes as a framework. The test
+      # times its own loops over the vocabulary too, so it is compiled with -O2 like the engine.
+      - path: LanguageModel
+        compilerFlags: "-O2"
     info:
       path: App/Info.plist
       properties:
@@ -52,6 +56,10 @@ targets:
         SWIFT_OBJC_BRIDGING_HEADER: Engine/DuoEngine-Bridging-Header.h
     dependencies:
       - target: DuoKeyboardExtension
+      # llama.cpp, for the language model test. scripts/ci/fetch_language_model.sh downloads the
+      # framework. The app holds the one copy, and the keyboard extension loads that copy.
+      - framework: Vendor/llama.xcframework
+        embed: true
   DuoKeyboardExtension:
     type: app-extension
     platform: iOS
@@ -61,6 +69,10 @@ targets:
       - path: Engine
         excludes:
           - duo_cli.c
+        compilerFlags: "-O2"
+      # The language model test in C. It calls llama.cpp, which comes as a framework. The test
+      # times its own loops over the vocabulary too, so it is compiled with -O2 like the engine.
+      - path: LanguageModel
         compilerFlags: "-O2"
     info:
       path: Keyboard/Info.plist
@@ -81,6 +93,10 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.yilongju.duokeyboard.keyboard
         PRODUCT_NAME: DuoKeyboardExtension
         SWIFT_OBJC_BRIDGING_HEADER: Engine/DuoEngine-Bridging-Header.h
+    dependencies:
+      # The extension links llama.cpp and finds it at run time in the Frameworks folder of the app.
+      - framework: Vendor/llama.xcframework
+        embed: false
   DuoKeyboardTests:
     type: bundle.unit-test
     platform: iOS

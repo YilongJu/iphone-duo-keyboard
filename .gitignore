@@ -8,3 +8,6 @@ Keyboard/Info.plist
 .env
 .playwright-mcp/
 __pycache__/
+# Downloaded by scripts/ci/fetch_language_model.sh
+Vendor/
+Shared/*.gguf

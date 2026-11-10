@@ -39,6 +39,8 @@ jobs:
           echo "ASC_KEY_PATH=$RUNNER_TEMP/keys/AuthKey_$ASC_KEY_ID.p8" >> "$GITHUB_ENV"
       - name: Install XcodeGen
         run: brew install xcodegen
+      - name: Fetch the llama.cpp framework and the language model
+        run: bash scripts/ci/fetch_language_model.sh
       - name: Generate the Xcode project
         run: xcodegen generate
       # The archive step does not sign. Development signing needs a registered test device,
