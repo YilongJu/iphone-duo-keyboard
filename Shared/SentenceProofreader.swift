@@ -48,8 +48,17 @@ final class SystemModelProofreader: SentenceProofreading {
     @available(iOS 26.0, *)
     private func askSystemModel(_ sentence: String) async -> ProofreadResult {
         let model = SystemLanguageModel.default
-        guard case .available = model.availability else {
-            return ProofreadResult(text: nil, seconds: 0, note: "model unavailable: \(model.availability)")
+        switch model.availability {
+        case .available:
+            break
+        case .unavailable(.appleIntelligenceNotEnabled):
+            return ProofreadResult(text: nil, seconds: 0, note: "turn on Apple Intelligence in Settings")
+        case .unavailable(.modelNotReady):
+            return ProofreadResult(text: nil, seconds: 0, note: "the model is still downloading")
+        case .unavailable(.deviceNotEligible):
+            return ProofreadResult(text: nil, seconds: 0, note: "this device cannot run Apple Intelligence")
+        case .unavailable(let reason):
+            return ProofreadResult(text: nil, seconds: 0, note: "model off (\(reason))")
         }
         let start = Date()
         do {
