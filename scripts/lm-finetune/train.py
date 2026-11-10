@@ -62,6 +62,8 @@ SETTINGS = {
     "full": {"learning_rate": 3e-5, "weight_decay": 0.01},
 }
 BATCH_LISTS = 32
+# A step adds the gradients of micro-batches of this many lists, so the memory stays under the cap.
+MICRO_LISTS = 8
 WARMUP_STEPS = 300
 MAX_EPOCHS = 4
 EVALUATE_EVERY = 500
@@ -72,9 +74,12 @@ GRADIENT_CLIP = 1.0
 def lower_priority() -> None:
     if sys.platform == "win32":
         below_normal = 0x00004000
-        handle = ctypes.windll.kernel32.GetCurrentProcess()
-        if not ctypes.windll.kernel32.SetPriorityClass(handle, below_normal):
-            raise SystemExit("could not lower the process priority")
+        kernel = ctypes.windll.kernel32
+        kernel.GetCurrentProcess.restype = ctypes.c_void_p
+        kernel.SetPriorityClass.argtypes = [ctypes.c_void_p, ctypes.c_uint32]
+        kernel.SetPriorityClass.restype = ctypes.c_int
+        if not kernel.SetPriorityClass(kernel.GetCurrentProcess(), below_normal):
+            raise SystemExit(f"could not lower the process priority: error {ctypes.get_last_error()}")
     else:
         os.nice(10)
 
@@ -84,6 +89,26 @@ def gpu_memory_used_mib() -> int:
     answer = subprocess.run(["nvidia-smi", "--query-gpu=memory.used", "--format=csv,noheader,nounits", "-i", "0"],
                             capture_output=True, text=True, check=True)
     return int(answer.stdout.strip())
+
+
+# lm_score.c reads a token's text into a buffer of 64 bytes, and a longer token does not count as
+# a space token there. In a byte-level vocabulary each character of a token is one byte.
+PIECE_BUFFER = 64
+# The start token that llama.cpp b4846 gives lm_score.c for a GPT-2 style vocabulary. The fork
+# (azooKey/llama.cpp, src/llama-vocab.cpp line 1410) sets bos to 2 and leaves out the loop that
+# reads the GGUF value, so every such model reads token 2 first ("#" in GPT-2). check_parity.py
+# compares this with the ready line of lm_score.
+LLAMA_START_TOKEN = 2
+
+
+def space_token_ids(tokenizer, vocabulary: int) -> list[int]:
+    """The tokens whose text starts with a space, as lm_score.c marks them."""
+    return [token for token in range(vocabulary) if tokenizer.decode([token]).startswith(" ")
+            and len(tokenizer.convert_ids_to_tokens(token)) <= PIECE_BUFFER]
+
+
+def start_token_of(tokenizer) -> int:
+    return LLAMA_START_TOKEN
 
 
 def read_lists(path: Path) -> list[dict]:
@@ -148,21 +173,31 @@ def make_batch(items: list[dict], pad: int, device) -> dict:
     }
 
 
+def reading_scores(model, batch: dict, space_tokens: torch.Tensor, low_precision: bool = True):
+    """The two model scores of every reading sequence, as lm_score.c gives them: the log
+    probability of the reading's tokens, and the log probability that the next token starts
+    with a space."""
+    body = model.get_base_model().base_model if hasattr(model, "get_base_model") else model.base_model
+    head = model.get_output_embeddings()
+    with torch.autocast("cuda", dtype=torch.bfloat16, enabled=low_precision):
+        hidden = body(input_ids=batch["input_ids"], attention_mask=batch["attention_mask"]).last_hidden_state
+    # The output layer runs in float32: bfloat16 logits near 50 round in steps of 0.25.
+    with torch.autocast("cuda", enabled=False):
+        token_logits = head(hidden[batch["rows"][:, 0], batch["rows"][:, 1]].float())
+        last_logits = head(hidden[batch["last_rows"][:, 0], batch["last_rows"][:, 1]].float())
+    token_log = F.log_softmax(token_logits.float(), dim=-1)
+    token_scores = token_log.gather(1, batch["targets"][:, None]).squeeze(1)
+    last_log = F.log_softmax(last_logits.float(), dim=-1)
+    space_after = torch.logsumexp(last_log[:, space_tokens], dim=-1)
+    log_probability = torch.zeros(batch["sequences"], device=token_scores.device).index_add(0, batch["owners"], token_scores)
+    return log_probability, space_after
+
+
 def logits_of_lists(model, batch: dict, space_tokens: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
     """The training logits (engine score + model score) of every reading, as a padded table of
     lists by readings, and a mask of the cells that hold a reading."""
-    body = model.get_base_model().base_model if hasattr(model, "get_base_model") else model.base_model
-    head = model.get_output_embeddings()
-    with torch.autocast("cuda", dtype=torch.bfloat16):
-        hidden = body(input_ids=batch["input_ids"], attention_mask=batch["attention_mask"]).last_hidden_state
-    token_hidden = hidden[batch["rows"][:, 0], batch["rows"][:, 1]]
-    last_hidden = hidden[batch["last_rows"][:, 0], batch["last_rows"][:, 1]]
-    token_log = F.log_softmax(head(token_hidden).float(), dim=-1)
-    token_scores = token_log.gather(1, batch["targets"][:, None]).squeeze(1)
-    last_log = F.log_softmax(head(last_hidden).float(), dim=-1)
-    space_after = torch.logsumexp(last_log[:, space_tokens], dim=-1)
-    model_scores = torch.zeros(batch["sequences"], device=token_scores.device).index_add(0, batch["owners"], token_scores)
-    scores = batch["engine"] + model_scores + space_after
+    log_probability, space_after = reading_scores(model, batch, space_tokens)
+    scores = batch["engine"] + log_probability + space_after
     # A table of lists by readings, with minus infinity where a list holds fewer readings.
     counts = torch.bincount(batch["list_of_sequence"], minlength=batch["lists"])
     width = int(counts.max())
@@ -177,8 +212,8 @@ def evaluate(model, items: list[dict], pad: int, space_tokens, device) -> dict:
     model.eval()
     loss_sum, right, engine_right = 0.0, 0, 0
     with torch.no_grad():
-        for start in range(0, len(items), BATCH_LISTS * 2):
-            chunk = items[start:start + BATCH_LISTS * 2]
+        for start in range(0, len(items), BATCH_LISTS):
+            chunk = items[start:start + BATCH_LISTS]
             batch = make_batch(chunk, pad, device)
             table, _ = logits_of_lists(model, batch, space_tokens)
             loss_sum += float(F.cross_entropy(table, batch["list_targets"], reduction="sum"))
@@ -216,12 +251,11 @@ def main():
     from transformers import AutoModelForCausalLM, AutoTokenizer, get_cosine_schedule_with_warmup
     base = BASES[arguments.base]
     tokenizer = AutoTokenizer.from_pretrained(base["repository"], revision=base["revision"])
-    model = AutoModelForCausalLM.from_pretrained(base["repository"], revision=base["revision"], torch_dtype=torch.float32)
-    # lm_score.c reads the start-of-text token, or the end-of-text token when the vocabulary lacks one.
-    start_token = tokenizer.bos_token_id if tokenizer.bos_token_id is not None else tokenizer.eos_token_id
+    model = AutoModelForCausalLM.from_pretrained(base["repository"], revision=base["revision"], dtype=torch.float32)
+    start_token = start_token_of(tokenizer)
     pad = tokenizer.eos_token_id
     vocabulary = model.get_output_embeddings().weight.shape[0]
-    space_ids = [token for token in range(vocabulary) if tokenizer.decode([token]).startswith(" ")]
+    space_ids = space_token_ids(tokenizer, vocabulary)
     space_tokens = torch.tensor(space_ids, dtype=torch.long, device=device)
 
     settings = dict(SETTINGS[arguments.method])
@@ -274,11 +308,17 @@ def main():
     while step < total_steps:
         rng.shuffle(order)
         for start in range(0, len(order), BATCH_LISTS):
-            batch = make_batch([train_items[i] for i in order[start:start + BATCH_LISTS]], pad, device)
-            table, _ = logits_of_lists(model, batch, space_tokens)
-            loss = F.cross_entropy(table, batch["list_targets"])
+            step_items = [train_items[i] for i in order[start:start + BATCH_LISTS]]
             optimizer.zero_grad(set_to_none=True)
-            loss.backward()
+            loss_sum = 0.0
+            for micro in range(0, len(step_items), MICRO_LISTS):
+                batch = make_batch(step_items[micro:micro + MICRO_LISTS], pad, device)
+                table, _ = logits_of_lists(model, batch, space_tokens)
+                # The mean over the lists of the whole step.
+                loss = F.cross_entropy(table, batch["list_targets"], reduction="sum") / len(step_items)
+                loss.backward()
+                loss_sum += float(loss.detach())
+            loss = torch.tensor(loss_sum)
             torch.nn.utils.clip_grad_norm_([p for group in parameters for p in group["params"]], GRADIENT_CLIP)
             optimizer.step()
             schedule.step()
@@ -321,7 +361,7 @@ def main():
     tokenizer.save_pretrained(arguments.out / "hf")
     result = {
         "base": base, "method": arguments.method, "settings": settings, "seed": arguments.seed,
-        "batch_lists": BATCH_LISTS, "warmup_steps": WARMUP_STEPS, "max_epochs": MAX_EPOCHS,
+        "batch_lists": BATCH_LISTS, "micro_lists": MICRO_LISTS, "warmup_steps": WARMUP_STEPS, "max_epochs": MAX_EPOCHS,
         "evaluate_every": EVALUATE_EVERY, "patience": PATIENCE, "gradient_clip": GRADIENT_CLIP,
         "prompt_format": arguments.prompt_format, "no_context": arguments.no_context,
         "start_token": start_token, "space_tokens": len(space_ids),

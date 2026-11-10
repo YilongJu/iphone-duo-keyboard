@@ -77,9 +77,14 @@ Table 2. The stock format and the typed format, for the typed span "sutar" after
 
 | Part | Stock format | Typed format |
 | --- | --- | --- |
-| Text the model reads first | `<|endoftext|>How much` | `<|endoftext|>How much \| sutar \|` |
+| Text the model reads first | start token, then `How much` | start token, then `How much \| sutar \|` |
 | Text of one reading | ` sugar` | ` sugar` |
-| Empty text before the span | the reading follows the start token | `<|endoftext|>\| sutar \|`, then ` sugar` |
+| Empty text before the span | the reading follows the start token | start token, then `\| sutar \|`, then ` sugar` |
+
+The start token is token 2, which is `#` in the GPT-2 vocabulary. llama.cpp b4846, as the app
+holds it (azooKey/llama.cpp), sets token 2 as the start of every GPT-2 style vocabulary
+(`src/llama-vocab.cpp` line 1410). It does not read the start token that the model file names.
+So the stock re-ranker reads `#` first too, and the training uses the same token.
 
 - The text before the span gets the capitals a person would see, as `language_model_text` in
   `rerank.py` gives them. The typed span stays lower case, as the engine reads it.
@@ -215,10 +220,12 @@ same hash of the word.
   That gives about 1.2 million trained weights of 82 million.
 - AdamW: learning rate 2e-4, betas 0.9 and 0.999, weight decay 0.01, gradient clip at 1.0.
 - Schedule: linear warm-up over 300 steps, then cosine decay to 0 at the end of 4 epochs.
-- Batch: 32 lists, about 256 reading sequences.
+- Batch: 32 lists, about 256 reading sequences. A step adds the gradients of four micro-batches
+  of 8 lists, so the memory stays under the cap.
 - Early stopping: the loss on the stopping lists every 500 steps, patience 5. The checkpoint
   with the lowest stopping loss is the result.
-- Precision: bfloat16 autocast with float32 weights.
+- Precision: bfloat16 autocast with float32 weights. The output layer runs in float32, because
+  bfloat16 logits near 50 round in steps of 0.25.
 
 ## Full fine-tune settings
 
