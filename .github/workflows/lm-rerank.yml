@@ -1,0 +1,136 @@
+name: Language model re-ranking
+
+# Measures whether a small language model improves the English corrections of the typing
+# engine by re-ranking the engine's readings, on the dev half of the typing cases only.
+# scripts/lm-rerank/README.md describes the measurement. The test half is never read.
+on:
+  push:
+    branches: [engine/lm-rerank]
+    paths:
+      - 'Engine/**'
+      - 'LanguageModel/**'
+      - 'scripts/lm-rerank/**'
+      - '.github/workflows/lm-rerank.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: lm-rerank-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  engine-check:
+    name: Engine output unchanged, readings checked, control scored
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Compare the engine output with the engine of engine/small-lm on the dev half
+        run: |
+          set -euo pipefail
+          mkdir -p build/engine build/base-engine
+          base=542a979
+          git show "$base:Engine/duo_engine.c" > build/base-engine/duo_engine.c
+          git show "$base:Engine/duo_engine.h" > build/base-engine/duo_engine.h
+          git show "$base:Engine/duo_cli.c" > build/base-engine/duo_cli.c
+          gcc -std=c11 -O2 -Wall -Wextra -Werror build/base-engine/duo_engine.c build/base-engine/duo_cli.c -lm -o build/engine/duo_cli_base
+          gcc -std=c11 -O2 -Wall -Wextra -Werror Engine/duo_engine.c Engine/duo_cli.c -lm -o build/engine/duo_cli
+          for task in english english-symbols pinyin; do
+            python3 scripts/typing-evaluation/run_duo_engine.py --task "$task" --half dev --cli build/engine/duo_cli_base --name base > /dev/null
+            python3 scripts/typing-evaluation/run_duo_engine.py --task "$task" --half dev --cli build/engine/duo_cli --name new > /dev/null
+            cmp "build/typing-evaluation/duo-engine/base.$task.dev.jsonl" "build/typing-evaluation/duo-engine/new.$task.dev.jsonl"
+            echo "$task dev: the outputs are the same, $(wc -l < "build/typing-evaluation/duo-engine/new.$task.dev.jsonl") cases"
+          done
+      - name: Build the engine shim and the readings check
+        run: bash scripts/lm-rerank/build_on_linux.sh
+      - name: Check duo_english_readings under the memory checks
+        run: |
+          set -euo pipefail
+          python3 - > build/lm-rerank/readings-input.tsv <<'EOF'
+          import json
+          for name in ["english.dev.jsonl", "english-symbols.dev.jsonl"]:
+              for line in open("scripts/typing-evaluation/cases/" + name, encoding="utf-8"):
+                  case = json.loads(line)
+                  previous = case["context"].split(" ")[-1] if case["context"] else ""
+                  print(f"{case['id']}\t{previous}\t{case['typed']}")
+          EOF
+          build/lm-rerank/readings_check Shared/lexicon-english.bin < build/lm-rerank/readings-input.tsv
+      - name: Score the control through the Linux copy of the keyboard rules
+        run: python3 scripts/lm-rerank/rerank.py --shim build/lm-rerank/libduo_shim.so --name control --out build/lm-rerank/results/engine-check
+      - uses: actions/upload-artifact@v7
+        with:
+          name: engine-check
+          path: build/lm-rerank/results/engine-check
+          if-no-files-found: error
+
+  rerank:
+    name: Re-rank with ${{ matrix.model }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 340
+    strategy:
+      fail-fast: false
+      matrix:
+        model: [distilgpt2-q3, distilgpt2-q4, gpt2-q4, smollm2-135m-q4, smollm2-360m-q4, qwen2.5-0.5b-q4, qwen3-0.6b-q4]
+    steps:
+      - uses: actions/checkout@v7
+      - name: Build llama.cpp b4846, the scorer, the probe and the engine shim
+        run: bash scripts/lm-rerank/build_on_linux.sh llama
+      - name: Fetch the model and distilgpt2 Q3_K_M for the speed baseline
+        run: |
+          set -euo pipefail
+          bash scripts/lm-rerank/fetch_models.sh distilgpt2-q3 | tail -n 1 > build/lm-rerank/baseline-path.txt
+          bash scripts/lm-rerank/fetch_models.sh "${{ matrix.model }}" | tail -n 1 > build/lm-rerank/model-path.txt
+          cat build/lm-rerank/baseline-path.txt build/lm-rerank/model-path.txt
+      - name: Measure speed and memory with the language model test, baseline and model taking turns
+        run: |
+          set -euo pipefail
+          out="build/lm-rerank/results/rerank-${{ matrix.model }}"
+          mkdir -p "$out"
+          export LD_LIBRARY_PATH="$PWD/build/lm-rerank/llama/lib"
+          nproc | tee "$out/runner.txt"
+          lscpu | grep -E 'Model name|Flags' | cut -c 1-300 >> "$out/runner.txt" || true
+          for round in 1 2; do
+            build/lm-rerank/probe_cli "$(cat build/lm-rerank/baseline-path.txt)" >> "$out/probe-baseline.txt" || true
+            build/lm-rerank/probe_cli "$(cat build/lm-rerank/model-path.txt)" >> "$out/probe-${{ matrix.model }}.txt" || true
+          done
+          cat "$out/probe-${{ matrix.model }}.txt"
+      - name: Re-rank the dev cases and tune on the dev half
+        run: |
+          set -euo pipefail
+          out="build/lm-rerank/results/rerank-${{ matrix.model }}"
+          if grep -q '^load        failed' "$out/probe-${{ matrix.model }}.txt"; then
+            echo "The model did not load in llama.cpp b4846, so the re-ranking does not run."
+            exit 0
+          fi
+          export LD_LIBRARY_PATH="$PWD/build/lm-rerank/llama/lib"
+          python3 scripts/lm-rerank/rerank.py --shim build/lm-rerank/libduo_shim.so --lm build/lm-rerank/lm_score \
+            --model "$(cat build/lm-rerank/model-path.txt)" --threads 4 --name "${{ matrix.model }}" --out "$out"
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: rerank-${{ matrix.model }}
+          path: build/lm-rerank/results/rerank-${{ matrix.model }}
+          if-no-files-found: error
+
+  summary:
+    name: Results table
+    needs: [engine-check, rerank]
+    if: always()
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v7
+        with:
+          path: build/lm-rerank/artifacts
+      - name: Build the table
+        run: |
+          set -euo pipefail
+          python3 scripts/lm-rerank/summarize.py build/lm-rerank/artifacts | tee build/lm-rerank/table.md
+          cat build/lm-rerank/table.md >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: lm-rerank-table
+          path: build/lm-rerank/table.md
+          if-no-files-found: error

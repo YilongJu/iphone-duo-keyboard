@@ -855,6 +855,7 @@ typedef struct {
     int from_state;
     int kept_start;       /* for text kept as typed: its span in the typed text */
     int kept_end;
+    float slips;          /* the part of the score that the assumed slips cost, as a positive number */
 } state_t;
 
 typedef struct {
@@ -988,6 +989,47 @@ static float score_beside_symbol(
     return on_purpose > unknown ? on_purpose : unknown;
 }
 
+/* The readings of the whole typed text that a search collects for duo_english_readings. */
+typedef struct {
+    duo_reading *items;
+    int count;
+    int capacity;
+    /* The text as typed. That reading has its own score, so a search does not collect it. */
+    const char *typed;
+    /* Slip cost that the caller adds to every reading of this search, as for a shifted space. */
+    float extra_slip;
+} reading_pool_t;
+
+/* Adds one reading to the pool. The same text from two ways keeps the higher score. A full pool
+   drops its lowest reading. */
+static void pool_add(reading_pool_t *pool, const char *text, float score, float slips) {
+    if (strcmp(text, pool->typed) == 0) return;
+    int lowest = -1;
+    for (int index = 0; index < pool->count; index++) {
+        duo_reading *existing = &pool->items[index];
+        if (strcmp(existing->text, text) == 0) {
+            if (score > existing->score) {
+                existing->score = score;
+                existing->slip_cost = slips;
+            }
+            return;
+        }
+        if (lowest < 0 || existing->score < pool->items[lowest].score) lowest = index;
+    }
+    duo_reading *slot;
+    if (pool->count < pool->capacity) {
+        slot = &pool->items[pool->count++];
+    } else {
+        if (score <= pool->items[lowest].score) return;
+        slot = &pool->items[lowest];
+    }
+    memcpy(slot->text, text, strlen(text) + 1);
+    slot->score = score;
+    slot->slip_cost = slips;
+    slot->as_typed = 0;
+    slot->chosen = 0;
+}
+
 /* A cell that a reading reaches with its next word, and the cost of reaching it. */
 typedef struct {
     cell_t *cell;
@@ -995,10 +1037,12 @@ typedef struct {
 } target_t;
 
 /* Finds the best reading of typed[0..length). Returns 1 and fills `result`, or 0 on failure.
-   When the lexicon cannot read the text to its end, the unreadable parts are kept as typed. */
+   When the lexicon cannot read the text to its end, the unreadable parts are kept as typed.
+   A `pool` that is not NULL also receives every reading that the search keeps at the end of
+   the text, one per last word. The pool does not change the result. */
 static int decode(
     const duo_lexicon *lexicon, const duo_params *params, const char *typed, int length,
-    uint32_t previous_word, duo_result *result) {
+    uint32_t previous_word, duo_result *result, reading_pool_t *pool) {
     int beam = params->beam < 1 ? 1 : (params->beam > MAX_BEAM ? MAX_BEAM : params->beam);
     cell_t *cells = (cell_t *)calloc((size_t)length + 1, sizeof(cell_t));
     edge_t *edges = (edge_t *)malloc(sizeof(edge_t) * MAX_EDGES);
@@ -1010,7 +1054,7 @@ static int decode(
     /* Without a word before the typed text, the text opens a sentence. */
     if (previous_word == NO_WORD) previous_word = find_mark(lexicon, SENTENCE_START_MARK);
     uint32_t end_mark = params->sentence_end_weight > 0.0f ? find_mark(lexicon, SENTENCE_END_MARK) : NO_WORD;
-    state_t first = { 0.0f, previous_word, NO_PAIR, -1, -1, -1, -1 };
+    state_t first = { 0.0f, previous_word, NO_PAIR, -1, -1, -1, -1, 0.0f };
     cells[0].states[0] = first;
     cells[0].count = 1;
 
@@ -1053,6 +1097,7 @@ static int decode(
                 state.from_state = index;
                 state.kept_start = start;
                 state.kept_end = kept_end;
+                state.slips = cell->states[index].slips;
                 add_state(&cells[next > length ? length : next], beam, state);
             }
         }
@@ -1115,10 +1160,14 @@ static int decode(
                     state.from_state = index;
                     state.kept_start = -1;
                     state.kept_end = -1;
+                    state.slips = from->slips + edge->cost + (edge->cost > 0.0f ? params->slipped_word : 0.0f);
                     int added = 0;
                     for (int target = 0; target < target_count; target++) {
                         state_t reached = state;
-                        if (targets[target].cost != 0.0f) reached.score -= targets[target].cost;
+                        if (targets[target].cost != 0.0f) {
+                            reached.score -= targets[target].cost;
+                            reached.slips += targets[target].cost;
+                        }
                         added |= add_state(targets[target].cell, beam, reached);
                     }
                     /* A back-off estimate that no cell takes ends the node's estimates: the
@@ -1148,6 +1197,19 @@ static int decode(
         result->score = best_score;
         result->consumed = length;
         ok = write_reading(lexicon, params, typed, length, cells, length, best, result->text);
+        if (ok && pool != NULL) {
+            char text[DUO_TEXT_SIZE];
+            for (int index = 0; index < last->count; index++) {
+                const state_t *state = &last->states[index];
+                float score = state->score;
+                if (end_mark != NO_WORD && state->word != NO_WORD) {
+                    score += params->sentence_end_weight * word_after(lexicon, params, state->word, state->pair, end_mark);
+                }
+                if (write_reading(lexicon, params, typed, length, cells, length, index, text)) {
+                    pool_add(pool, text, score - pool->extra_slip, state->slips + pool->extra_slip);
+                }
+            }
+        }
     }
     free(cells);
     free(edges);
@@ -1226,9 +1288,12 @@ static float score_as_typed(
     return score;
 }
 
-int duo_correct_english(
+/* The work of duo_correct_english. A `pool` that is not NULL also receives the readings of
+   every search, for duo_english_readings. The pool does not change the result. */
+static int correct_english(
     const duo_lexicon *lexicon, const duo_params *params,
-    const char *previous_word, const char *typed, duo_result *result) {
+    const char *previous_word, const char *typed, duo_result *result, float *typed_score_out,
+    reading_pool_t *pool) {
     int length = english_input_length(typed);
     if (lexicon == NULL || params == NULL || result == NULL || length == 0) return 0;
     uint32_t previous = NO_WORD;
@@ -1239,6 +1304,7 @@ int duo_correct_english(
     int all_known;
     float typed_score = score_as_typed(lexicon, params, typed, length, previous, &all_known);
     float margin = all_known ? params->margin_known : params->margin_unknown;
+    if (typed_score_out != NULL) *typed_score_out = typed_score;
 
     duo_result best;
     memcpy(best.text, typed, (size_t)length + 1);
@@ -1247,7 +1313,8 @@ int duo_correct_english(
     float best_gain = 0.0f;
 
     duo_result reading;
-    if (decode(lexicon, params, typed, length, previous, &reading)) {
+    if (pool != NULL) pool->extra_slip = 0.0f;
+    if (decode(lexicon, params, typed, length, previous, &reading, pool)) {
         float gain = reading.score - typed_score;
         if (strcmp(reading.text, typed) != 0 && gain >= margin && gain > best_gain) {
             best = reading;
@@ -1258,6 +1325,7 @@ int duo_correct_english(
     /* A space typed one key early or one key late: move each space one place to either side,
        read the result, and charge the cost of the shifted space. */
     char shifted[DUO_MAX_TYPED + 1];
+    if (pool != NULL) pool->extra_slip = params->shifted_space;
     for (int index = 1; index + 1 < length; index++) {
         if (typed[index] != ' ') continue;
         for (int direction = -1; direction <= 1; direction += 2) {
@@ -1267,7 +1335,7 @@ int duo_correct_english(
             shifted[index] = typed[other];
             shifted[other] = ' ';
             if (english_input_length(shifted) == 0) continue;
-            if (!decode(lexicon, params, shifted, length, previous, &reading)) continue;
+            if (!decode(lexicon, params, shifted, length, previous, &reading, pool)) continue;
             float gain = reading.score - params->shifted_space - typed_score;
             if (strcmp(reading.text, typed) != 0 && gain >= margin && gain > best_gain) {
                 best = reading;
@@ -1279,6 +1347,67 @@ int duo_correct_english(
     *result = best;
     result->consumed = length;
     return 1;
+}
+
+int duo_correct_english(
+    const duo_lexicon *lexicon, const duo_params *params,
+    const char *previous_word, const char *typed, duo_result *result) {
+    return correct_english(lexicon, params, previous_word, typed, result, NULL, NULL);
+}
+
+/* The most readings that one call collects before it sorts them: the beam of each search, for
+   the text as typed and for each shifted space. */
+#define READING_POOL (MAX_BEAM * 8)
+
+static int compare_readings_by_score(const void *first, const void *second) {
+    float a = ((const duo_reading *)first)->score;
+    float b = ((const duo_reading *)second)->score;
+    return (a < b) - (a > b);
+}
+
+int duo_english_readings(
+    const duo_lexicon *lexicon, const duo_params *params,
+    const char *previous_word, const char *typed, duo_reading *readings, int capacity) {
+    if (readings == NULL || capacity < 2) return 0;
+    duo_reading *items = (duo_reading *)malloc(sizeof(duo_reading) * READING_POOL);
+    if (items == NULL) return 0;
+    reading_pool_t pool = { items, 0, READING_POOL, typed, 0.0f };
+    duo_result chosen;
+    float typed_score;
+    if (!correct_english(lexicon, params, previous_word, typed, &chosen, &typed_score, &pool)) {
+        free(items);
+        return 0;
+    }
+    /* The text as typed, at the score that the choice compares against. */
+    if (pool.count == pool.capacity) pool.count--;
+    duo_reading *as_typed = &items[pool.count++];
+    memcpy(as_typed->text, typed, strlen(typed) + 1);
+    as_typed->score = typed_score;
+    as_typed->slip_cost = 0.0f;
+    as_typed->as_typed = 1;
+    as_typed->chosen = 0;
+
+    int chosen_index = -1;
+    for (int index = 0; index < pool.count; index++) {
+        if (strcmp(items[index].text, chosen.text) == 0) chosen_index = index;
+    }
+    /* The choice is always one of the readings of its searches. Any other outcome is a fault
+       of this function, so it stops the process. */
+    if (chosen_index < 0) abort();
+    items[chosen_index].chosen = 1;
+
+    qsort(items, (size_t)pool.count, sizeof(duo_reading), compare_readings_by_score);
+    int count = pool.count < capacity ? pool.count : capacity;
+    memcpy(readings, items, sizeof(duo_reading) * (size_t)count);
+    /* The text as typed and the choice stay in the list when the list is cut. */
+    for (int index = count; index < pool.count; index++) {
+        if (!items[index].as_typed && !items[index].chosen) continue;
+        int slot = count - 1;
+        while (readings[slot].as_typed || readings[slot].chosen) slot--;
+        readings[slot] = items[index];
+    }
+    free(items);
+    return count;
 }
 
 /* ---- Pinyin ---- */
@@ -1309,7 +1438,7 @@ int duo_convert_pinyin(
     }
 
     int count = 0;
-    if (decode(lexicon, params, typed, (int)length, NO_WORD, &results[0])) count = 1;
+    if (decode(lexicon, params, typed, (int)length, NO_WORD, &results[0], NULL)) count = 1;
     if (count == capacity) return count;
 
     /* The words that stand for the first letters only: exact spellings longest first, then

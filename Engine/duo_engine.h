@@ -163,6 +163,32 @@ int duo_correct_english(
     const duo_lexicon *lexicon, const duo_params *params,
     const char *previous_word, const char *typed, duo_result *result);
 
+/* One reading of typed English text, for a caller that ranks the readings itself. */
+typedef struct {
+    char text[DUO_TEXT_SIZE];
+    /* Log probability of the reading, slips included, on the scale that duo_correct_english
+       compares. The text as typed has the score of its words read exactly as typed. */
+    float score;
+    /* The part of the score that the assumed slips cost, as a positive number: the channel
+       cost. The rest, score + slip_cost, is the lexicon's log probability of the words, with
+       the price of text kept as typed and of a symbol key typed on purpose. */
+    float slip_cost;
+    /* 1 for the text exactly as typed. */
+    int as_typed;
+    /* 1 for the reading that duo_correct_english returns for the same input. */
+    int chosen;
+} duo_reading;
+
+/* Writes the readings of typed English text that the search keeps, best score first, into
+   `readings`: the text as typed, and for each search (the text as typed and each shifted space)
+   the best reading for each last word, up to the beam. The same text appears once, at its
+   best score. A list cut at `capacity` still holds the text as typed and the chosen reading.
+   The input rules and the choice are those of duo_correct_english, which this function does
+   not change. Returns the count written, or 0 for bad input or a capacity under 2. */
+int duo_english_readings(
+    const duo_lexicon *lexicon, const duo_params *params,
+    const char *previous_word, const char *typed, duo_reading *readings, int capacity);
+
 /* Reads typed Pinyin letters and writes candidates into `results`.
    The first result is the most likely reading of all the letters. The results after it are
    words that stand for the first letters only, longest first, and `consumed` says how many
