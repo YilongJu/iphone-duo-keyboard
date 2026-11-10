@@ -1,0 +1,60 @@
+name: Typing evaluation
+
+# Scores the Duo typing engine (Engine/duo_engine.c) on the typing test cases, on a Linux runner.
+# Start it by hand, optionally with engine settings to try:
+#   gh workflow run "Typing evaluation" -f english_settings="margin_known=4 missing_space=4.5"
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'Engine/**'
+      - 'Shared/lexicon-*.bin'
+      - 'scripts/typing-evaluation/**'
+      - '.github/workflows/evaluation.yml'
+  workflow_dispatch:
+    inputs:
+      english_settings:
+        description: Engine settings for the English run, as name=value pairs separated by spaces
+        default: ''
+      pinyin_settings:
+        description: Engine settings for the Pinyin run, as name=value pairs separated by spaces
+        default: ''
+      halves:
+        description: The halves to score, dev or "dev test"
+        default: dev
+
+jobs:
+  duo-engine:
+    name: Duo engine on the typing test cases
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - name: Build the engine, once with memory checks and once for speed
+        run: |
+          set -euo pipefail
+          mkdir -p build/engine
+          gcc -std=c11 -O1 -g -Wall -Wextra -Wpedantic -Werror -fsanitize=address,undefined \
+            Engine/duo_engine.c Engine/duo_cli.c -lm -o build/engine/duo_cli_checked
+          gcc -std=c11 -O2 -Wall -Wextra -Werror Engine/duo_engine.c Engine/duo_cli.c -lm -o build/engine/duo_cli
+      - name: Run the dev cases under the memory checks
+        run: |
+          set -euo pipefail
+          for task in english pinyin; do
+            python3 scripts/typing-evaluation/run_duo_engine.py --task "$task" --half dev \
+              --cli build/engine/duo_cli_checked > /dev/null
+          done
+          echo "The memory checks did not report an error."
+      - name: Score the engine
+        run: |
+          set -euo pipefail
+          halves="${{ github.event.inputs.halves || 'dev' }}"
+          for half in $halves; do
+            python3 scripts/typing-evaluation/run_duo_engine.py --task english --half "$half" ${{ github.event.inputs.english_settings }}
+            python3 scripts/typing-evaluation/run_duo_engine.py --task pinyin --half "$half" ${{ github.event.inputs.pinyin_settings }}
+          done
+      - uses: actions/upload-artifact@v7
+        with:
+          name: typing-evaluation-duo-engine
+          path: build/typing-evaluation/duo-engine
+          if-no-files-found: error
