@@ -46,23 +46,22 @@ let testDictionary = [
     "men\t\u{4EEC}\t250", "xi\t\u{897F}\t200", "an\t\u{5B89}\t100", "n\t\u{55EF}\t10", "ni\t\u{5C3C}\t5",
 ].joined(separator: "\n")
 
-/// A spell checker with a fixed list of corrections. A key holds one word, or two typed words
-/// with one space between them. Text without its own key is corrected word by word.
+/// A spell checker with a fixed list of readings. A key holds one word, or two typed words
+/// with one space between them. Text without its own key is read word by word.
 @MainActor
 final class FakeSpellChecker: SpellChecking {
     var corrections: [String: String] = [
         "teh": "the", "recieve": "receive", "th e": "the", "thequick": "the quick", "form teh": "from the",
     ]
     var learned: [String] = []
-    /// Every call of `correction`, as "previous word|typed text".
+    /// Every call of `reading`, as "previous word|typed text".
     var requests: [String] = []
 
-    func correction(previousWord: String, typed: String) -> String? {
+    func reading(previousWord: String, typed: String) -> String? {
         requests.append("\(previousWord)|\(typed)")
         if let whole = corrections[typed] { return whole }
-        let corrected = typed.split(separator: " ").map { corrections[String($0)] ?? String($0) }
+        return typed.split(separator: " ").map { corrections[String($0)] ?? String($0) }
             .joined(separator: " ")
-        return corrected == typed ? nil : corrected
     }
 
     func learn(_ word: String) {
@@ -138,6 +137,20 @@ final class KeyboardTextControllerTests: XCTestCase {
         controller.keyboardView(keyboardView, edit: .paste)
         // Pasted text goes in as it is. It does not pass through the Pinyin buffer.
         XCTAssertEqual(document.text, "nihao")
+        XCTAssertEqual(controller.pinyinBuffer, "")
+    }
+
+    func testAPickOfAShorterWordLeavesTheRestForANewSentence() {
+        makeController(before: "")
+        controller.keyboardView(keyboardView, edit: .toggleLanguage)
+        type("wonihao")
+        let candidates = PinyinEngine(dictionaryText: testDictionary).candidates(for: "wonihao")
+        let shorter = candidates.firstIndex { $0.word == "\u{6211}" }!
+        controller.keyboardView(keyboardView, didSelectCandidateAt: shorter)
+        XCTAssertEqual(document.text, "\u{6211}")
+        XCTAssertEqual(controller.pinyinBuffer, "nihao")
+        type(" ")
+        XCTAssertEqual(document.text, "\u{6211}\u{4F60}\u{597D}")
         XCTAssertEqual(controller.pinyinBuffer, "")
     }
 
@@ -300,6 +313,27 @@ final class KeyboardTextControllerTests: XCTestCase {
         // "form teh" together would become "from the". After a cursor move the keyboard does
         // not know that the person typed the two words one after the other.
         XCTAssertEqual(document.text, "form the ")
+    }
+
+    func testAWordAfterACursorMoveByTheAppIsReadAlone() {
+        makeController(before: "form teh\n")
+        type("form ")
+        // The person taps right after the first "teh". The app moves the cursor, and the
+        // keyboard only hears that the document changed.
+        document.cursor = 8
+        controller.documentDidChange()
+        type(" ")
+        XCTAssertEqual(document.text, "form the \nform ")
+        XCTAssertEqual(spellChecker.requests.last, "form|teh")
+    }
+
+    func testTwoWordsReadTogetherCanBringBackTheTypedLetters() {
+        makeController(before: "")
+        spellChecker.corrections = ["fro": "for", "fro yo": "fro yo"]
+        type("fro ")
+        XCTAssertEqual(document.text, "for ")
+        type("yo ")
+        XCTAssertEqual(document.text, "fro yo ")
     }
 
     func testOneLetterAloneDoesNotGoToTheChecker() {
@@ -564,20 +598,6 @@ final class KeyboardTextLogicTests: XCTestCase {
         XCTAssertNil(KeyboardTextLogic.correctableWord(before: "word "))
     }
 
-    func testBestGuessTakesTheFirstCloseGuess() {
-        XCTAssertEqual(KeyboardTextLogic.bestGuess(for: "teh", guesses: ["tea", "the"]), "tea")
-        XCTAssertEqual(KeyboardTextLogic.bestGuess(for: "teh", guesses: ["tether", "the"]), "the")
-        XCTAssertEqual(KeyboardTextLogic.bestGuess(for: "Recieve", guesses: ["receive"]), "Receive")
-        XCTAssertNil(KeyboardTextLogic.bestGuess(for: "xyzzy", guesses: ["pizza", "a lot"]))
-    }
-
-    func testEditDistanceCountsASwapAsOneEdit() {
-        XCTAssertEqual(KeyboardTextLogic.editDistance("teh", "the"), 1)
-        XCTAssertEqual(KeyboardTextLogic.editDistance("cat", "cart"), 1)
-        XCTAssertEqual(KeyboardTextLogic.editDistance("kitten", "sitting"), 3)
-        XCTAssertEqual(KeyboardTextLogic.editDistance("same", "same"), 0)
-    }
-
     func testAutomaticCapitalizationFollowsSentenceEnds() {
         XCTAssertTrue(KeyboardTextLogic.shouldAutoCapitalize(before: "", type: .sentences))
         XCTAssertTrue(KeyboardTextLogic.shouldAutoCapitalize(before: "Done. ", type: .sentences))
@@ -623,9 +643,22 @@ final class PinyinEngineTests: XCTestCase {
         XCTAssertNil(engine.sentence(for: ["zhong", "qi"]))
     }
 
-    func testAPickOfAShorterWordLeavesTheRestForANewSentence() {
-        let afterFirstPick = engine.candidates(for: "nihao")
-        XCTAssertEqual(afterFirstPick.first?.word, "\u{4F60}\u{597D}")
+    func testALongRunOfLettersThatEndsOutsideASyllableIsCutAtOnce() {
+        // A search that tries every cut of these 79 letters would not finish.
+        let letters = String(repeating: "an", count: 39) + "z"
+        let cut = engine.segment(letters)
+        XCTAssertEqual(cut.syllables.count, 39)
+        XCTAssertEqual(cut.remainder, "z")
+    }
+
+    func testTheCutGoesBackWhenTheLongestSyllableLeavesLettersThatDoNotFit() {
+        let small = PinyinEngine(dictionaryText: "xi\t\u{897F}\t10\nxian\t\u{5148}\t9\nang\t\u{6602}\t8")
+        // "xian" leaves "g", which is not a syllable, so the cut is "xi" and "ang".
+        XCTAssertEqual(small.segment("xiang").syllables, ["xi", "ang"])
+        XCTAssertEqual(small.segment("xiang").remainder, "")
+        XCTAssertEqual(engine.segment("xianguo").syllables, ["xian", "guo"])
+        XCTAssertEqual(engine.segment("xiani").syllables, ["xian"])
+        XCTAssertEqual(engine.segment("xiani").remainder, "i")
     }
 
     func testFirstLettersOfferTheWordsThatStartThatWay() {

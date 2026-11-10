@@ -65,6 +65,9 @@ typedef struct {
     /* Added to the cost of an extra letter before a word and of a missing first letter. People
        mistype the first letter of a word less often than the letters after it. */
     float first_letter_extra;
+    /* Added once to the cost of every word that the search reads with one or more slips. Most
+       typed words do not hold a slip, and this cost states that share. */
+    float slipped_word;
     /* The highest total slip cost inside one word: for words of 2 to 4 letters, and of 5 or more.
        A one-letter word must match exactly. */
     float short_word_budget;

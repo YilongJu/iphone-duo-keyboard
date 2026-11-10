@@ -143,6 +143,7 @@ duo_params duo_english_params(void) {
     params.insertion_of_double = 3.5f;
     params.transposition = 4.5f;
     params.first_letter_extra = 0.0f;
+    params.slipped_word = 0.0f;
     params.short_word_budget = 5.6f;
     params.long_word_budget = 11.0f;
     params.missing_space = 5.0f;
@@ -189,6 +190,7 @@ int duo_params_set(duo_params *params, const char *name, float value) {
     FIELD(insertion_of_double)
     FIELD(transposition)
     FIELD(first_letter_extra)
+    FIELD(slipped_word)
     FIELD(short_word_budget)
     FIELD(long_word_budget)
     FIELD(missing_space)
@@ -626,7 +628,8 @@ static int decode(
                 float log_probability;
                 best_word(lexicon, params, cell->states[index].word, edge->node, &word, &log_probability);
                 state_t state;
-                state.score = cell->states[index].score + log_probability - edge->cost;
+                state.score = cell->states[index].score + log_probability - edge->cost
+                    - (edge->cost > 0.0f ? params->slipped_word : 0.0f);
                 state.word = word;
                 state.from_position = start;
                 state.from_state = index;
@@ -818,6 +821,7 @@ int duo_convert_pinyin(
 
     int count = 0;
     if (decode(lexicon, params, typed, (int)length, NO_WORD, &results[0])) count = 1;
+    if (count == capacity) return count;
 
     /* The words that stand for the first letters only: exact spellings longest first, then
        the words that assume a slip. */

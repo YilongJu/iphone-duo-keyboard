@@ -24,10 +24,11 @@ protocol KeyboardDocument: AnyObject {
 /// Finds the text a person most likely meant for the text they typed.
 @MainActor
 protocol SpellChecking: AnyObject {
-    /// Returns the corrected text, or nil to keep the text as typed.
+    /// Returns the text the person most likely meant. The result equals `typed` when the checker
+    /// reads the text as typed, and it is nil when the checker cannot read the text at all.
     /// `typed` holds one word, or two words with one space between them, in lower case.
     /// `previousWord` is the lower-case word before `typed`, or an empty string.
-    func correction(previousWord: String, typed: String) -> String?
+    func reading(previousWord: String, typed: String) -> String?
     /// Stops the keyboard from changing this word again.
     func learn(_ word: String)
     /// True for a word the person brought back after a correction.
@@ -55,8 +56,8 @@ final class EngineSpellChecker: SpellChecking {
         EngineSpellChecker(engine: EnglishTypingEngine(lexicon: TypingLexicon(resource: "lexicon-english", fullCheck: false)))
     }
 
-    func correction(previousWord: String, typed: String) -> String? {
-        engine.correction(previousWord: previousWord, typed: typed)
+    func reading(previousWord: String, typed: String) -> String? {
+        engine.reading(previousWord: previousWord, typed: typed)
     }
 
     func learn(_ word: String) {
@@ -66,35 +67,6 @@ final class EngineSpellChecker: SpellChecking {
 
     func keeps(_ word: String) -> Bool {
         keptWords.contains(word.lowercased())
-    }
-}
-
-/// English spelling from the system's own spell checker, one word at a time. The keyboard
-/// used this checker before the typing engine, and the evaluation keeps it as the comparison.
-@MainActor
-final class SystemSpellChecker: SpellChecking {
-    private let checker = UITextChecker()
-    private let language = "en_US"
-
-    func correction(previousWord: String, typed: String) -> String? {
-        var words = typed.split(separator: " ").map(String.init)
-        guard let word = words.last, word.count >= 2 else { return nil }
-        let range = NSRange(location: 0, length: word.utf16.count)
-        let misspelled = checker.rangeOfMisspelledWord(
-            in: word, range: range, startingAt: 0, wrap: false, language: language)
-        guard misspelled.location != NSNotFound else { return nil }
-        let guesses = checker.guesses(forWordRange: range, in: word, language: language) ?? []
-        guard let guess = KeyboardTextLogic.bestGuess(for: word, guesses: guesses) else { return nil }
-        words[words.count - 1] = guess.lowercased()
-        return words.joined(separator: " ")
-    }
-
-    func learn(_ word: String) {
-        UITextChecker.learnWord(word)
-    }
-
-    func keeps(_ word: String) -> Bool {
-        UITextChecker.hasLearnedWord(word)
     }
 }
 
@@ -126,7 +98,13 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
     private struct RecentWord {
         let typed: String
         let shown: String
+        /// The end of the text before the cursor right after the word and its space. The next
+        /// word is read together with this word only when the person typed it right here.
+        let context: String
     }
+
+    /// Count of characters that `RecentWord.context` holds.
+    private static let recentContextLength = 48
 
     private var recentWord: RecentWord?
 
@@ -468,13 +446,13 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
         let followedBySpace = terminator == " "
         // A word the person brought back after a correction stays as typed.
         guard !spellChecker.keeps(word) else {
-            if followedBySpace { recentWord = RecentWord(typed: word, shown: word) }
+            if followedBySpace { recentWord = RecentWord(typed: word, shown: word, context: contextAfterSpace()) }
             return
         }
         var typedSpan = word
         var shownSpan = word
         if let earlier, !spellChecker.keeps(earlier.typed), !spellChecker.keeps(earlier.shown),
-            before.dropLast(word.count).hasSuffix(earlier.shown + " "),
+            before.hasSuffix(earlier.context + word),
             KeyboardTextLogic.correctableWord(before: String(before.dropLast(word.count + 1))) == earlier.shown {
             typedSpan = earlier.typed + " " + word
             shownSpan = earlier.shown + " " + word
@@ -485,8 +463,10 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
         // One letter alone is a word such as "a" or "I", or a label, so the checker reads a
         // single letter only together with the word before it.
         let reading = typedSpan.count >= 2
-            ? spellChecker.correction(previousWord: previousWord, typed: typedSpan.lowercased()) : nil
-        // Without a correction the shown text stays, and only a lone "i" gets its capital.
+            ? spellChecker.reading(previousWord: previousWord, typed: typedSpan.lowercased()) : nil
+        // A reading of two words together replaces an earlier reading of the first word alone,
+        // also when it brings back the letters the person typed. Without a reading the shown
+        // text stays, and only a lone "i" gets its capital.
         let final = reading.map { KeyboardTextLogic.restoringCapitals(in: $0, from: typedSpan) }
             ?? KeyboardTextLogic.restoringCapitals(in: shownSpan, from: shownSpan)
         let finalWords = final.split(separator: " ")
@@ -500,8 +480,14 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
             // After a correction that joined or split words, the last shown word counts as typed
             // that way, so the next correction does not take the same keys apart again.
             let sameCount = finalWords.count == typedWords.count
-            recentWord = RecentWord(typed: sameCount ? word : String(last), shown: String(last))
+            recentWord = RecentWord(
+                typed: sameCount ? word : String(last), shown: String(last), context: contextAfterSpace())
         }
+    }
+
+    /// The end of the text before the cursor, with the space that the keyboard types next.
+    private func contextAfterSpace() -> String {
+        String((document.textBeforeCursor + " ").suffix(Self.recentContextLength))
     }
 
     /// Brings back the text the field held before the last correction, when the cursor still
