@@ -108,11 +108,11 @@ LETTER_OPERATORS = {
 
 
 def two_errors(text: str, rng: random.Random, minimum_gap: int = 3) -> str | None:
-    """Applies two different letter slips at places at least `minimum_gap` characters apart."""
+    """Applies two letter slips, of the same type or of two types, one in each part of the text."""
     if len(text) < 2 * minimum_gap + 1:
         return None
     middle = rng.randint(minimum_gap, len(text) - minimum_gap)
-    first_name, second_name = rng.sample(sorted(LETTER_OPERATORS), 2)
+    first_name, second_name = rng.choices(sorted(LETTER_OPERATORS), k=2)
     head = LETTER_OPERATORS[first_name](text[:middle], rng)
     tail = LETTER_OPERATORS[second_name](text[middle:], rng)
     if head is None or tail is None:

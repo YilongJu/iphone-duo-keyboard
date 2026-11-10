@@ -39,6 +39,11 @@ typedef struct {
     uint32_t word_count;
     uint32_t pair_count;
     uint32_t strings_size;
+    /* 0: a word's chance after another is a fixed blend of the pair statistic and the word's
+       own probability. 1: a back-off model, where a listed pair gives the chance directly and
+       an unlisted pair costs the first word's back-off weight plus the second word's own
+       log probability. */
+    uint32_t model;
 } duo_lexicon;
 
 /* Costs are in natural-log units, the same scale as the word probabilities: a cost of 4.6 makes
@@ -57,6 +62,12 @@ typedef struct {
     float insertion_of_double;
     /* Two letters typed in the wrong order. */
     float transposition;
+    /* Added to the cost of an extra letter before a word and of a missing first letter. People
+       mistype the first letter of a word less often than the letters after it. */
+    float first_letter_extra;
+    /* Added once to the cost of every word that the search reads with one or more slips. Most
+       typed words do not hold a slip, and this cost states that share. */
+    float slipped_word;
     /* The highest total slip cost inside one word: for words of 2 to 4 letters, and of 5 or more.
        A one-letter word must match exactly. */
     float short_word_budget;
@@ -67,7 +78,8 @@ typedef struct {
     float extra_space;        /* a space typed inside a word */
     float space_for_letter;   /* a space typed in place of a letter from the row above the space bar */
     float shifted_space;      /* a space typed one key early or one key late */
-    /* Share of the word-pair statistic in a word's probability, from 0 to 1. */
+    /* Share of the word-pair statistic in a word's probability, from 0 to 1. A lexicon with a
+       back-off model does not use this share. */
     float pair_weight;
     /* Log probability of text that is not in the lexicon: unknown_word + unknown_letter * letters. */
     float unknown_word;
@@ -76,6 +88,9 @@ typedef struct {
        margin_known when every typed word is in the lexicon, margin_unknown otherwise. */
     float margin_known;
     float margin_unknown;
+    /* How much the chance of ending the sentence after the last word counts, from 0 to 1.
+       Only a lexicon with a sentence-end mark has that chance. */
+    float sentence_end_weight;
     /* 1 when a space separates words (English), 0 when words follow each other directly (Pinyin). */
     int spaces_between_words;
     /* How many partial readings the search keeps at each position, from 1 to 16. */
@@ -91,8 +106,13 @@ typedef struct {
 } duo_result;
 
 /* Checks the bytes and fills `lexicon`. Returns 1 on success and 0 when the bytes are not a
-   valid lexicon file. */
+   valid lexicon file. The check reads the whole file once. */
 int duo_lexicon_open(duo_lexicon *lexicon, const void *data, size_t size);
+
+/* Fills `lexicon` after a check of the header and the file size only. This is for a file that
+   an earlier full check accepted, such as a file inside a signed app. It does not read the
+   file's body, so a keyboard opens fast. Returns 1 on success and 0 on a wrong header or size. */
+int duo_lexicon_open_checked_before(duo_lexicon *lexicon, const void *data, size_t size);
 
 duo_params duo_english_params(void);
 duo_params duo_pinyin_params(void);

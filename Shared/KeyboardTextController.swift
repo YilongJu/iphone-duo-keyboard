@@ -21,32 +21,52 @@ protocol KeyboardDocument: AnyObject {
     func moveCursor(byUTF16Offset offset: Int)
 }
 
-/// Finds the correction for a misspelled word.
+/// Finds the text a person most likely meant for the text they typed.
 @MainActor
 protocol SpellChecking: AnyObject {
-    /// Returns the corrected word, or nil when the word is fine or the checker has no close guess.
-    func correction(for word: String) -> String?
-    /// Stops the checker from flagging this word again.
+    /// Returns the text the person most likely meant. The result equals `typed` when the checker
+    /// reads the text as typed, and it is nil when the checker cannot read the text at all.
+    /// `typed` holds one word, or two words with one space between them, in lower case.
+    /// `previousWord` is the lower-case word before `typed`, or an empty string.
+    func reading(previousWord: String, typed: String) -> String?
+    /// Stops the keyboard from changing this word again.
     func learn(_ word: String)
+    /// True for a word the person brought back after a correction.
+    func keeps(_ word: String) -> Bool
 }
 
-/// English spelling from the system's own spell checker.
+/// English correction from the typing engine in Engine/duo_engine.c. The engine reads a
+/// wrong neighbor key, a missing, extra or doubled letter, swapped letters, and slips around
+/// the space bar, and it weighs each reading by how common its words are.
 @MainActor
-final class SystemSpellChecker: SpellChecking {
-    private let checker = UITextChecker()
-    private let language = "en_US"
+final class EngineSpellChecker: SpellChecking {
+    private static let keptWordsKey = "englishKeptWords"
+    private let engine: EnglishTypingEngine
+    /// Words the person brought back after a correction, kept across keyboard launches.
+    private var keptWords: Set<String>
 
-    func correction(for word: String) -> String? {
-        let range = NSRange(location: 0, length: word.utf16.count)
-        let misspelled = checker.rangeOfMisspelledWord(
-            in: word, range: range, startingAt: 0, wrap: false, language: language)
-        guard misspelled.location != NSNotFound else { return nil }
-        let guesses = checker.guesses(forWordRange: range, in: word, language: language) ?? []
-        return KeyboardTextLogic.bestGuess(for: word, guesses: guesses)
+    init(engine: EnglishTypingEngine) {
+        self.engine = engine
+        // A phone on which nobody has brought a word back yet does not have the stored list.
+        keptWords = Set(UserDefaults.standard.stringArray(forKey: Self.keptWordsKey) ?? [])
+    }
+
+    /// The engine with the English lexicon of the app bundle.
+    static func bundled() -> EngineSpellChecker {
+        EngineSpellChecker(engine: EnglishTypingEngine(lexicon: TypingLexicon(resource: "lexicon-english", fullCheck: false)))
+    }
+
+    func reading(previousWord: String, typed: String) -> String? {
+        engine.reading(previousWord: previousWord, typed: typed)
     }
 
     func learn(_ word: String) {
-        UITextChecker.learnWord(word)
+        guard keptWords.insert(word.lowercased()).inserted else { return }
+        UserDefaults.standard.set(Array(keptWords), forKey: Self.keptWordsKey)
+    }
+
+    func keeps(_ word: String) -> Bool {
+        keptWords.contains(word.lowercased())
     }
 }
 
@@ -70,8 +90,23 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
     }
 
     private var lastCorrection: Correction?
-    /// Words the user brought back after a correction. Autocorrection leaves these alone.
-    private var keptWords: Set<String> = []
+
+    /// The word typed right before the current one, when one space followed it. `typed` holds
+    /// the keys the person pressed and `shown` the text the field holds after any correction.
+    /// The typing engine reads the two last words together, which lets it repair a slip around
+    /// the space bar, such as "th e" for "the".
+    private struct RecentWord {
+        let typed: String
+        let shown: String
+        /// The end of the text before the cursor right after the word and its space. The next
+        /// word is read together with this word only when the person typed it right here.
+        let context: String
+    }
+
+    /// Count of characters that `RecentWord.context` holds.
+    private static let recentContextLength = 48
+
+    private var recentWord: RecentWord?
 
     /// The owner hides the keyboard here.
     var onDismiss: @MainActor () -> Void = {}
@@ -199,6 +234,7 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
     private func replaceAllText(_ snapshot: AllText, typed: String? = nil, rawInsert: String? = nil) {
         setAllText(nil)
         previousInsertWasSpace = false
+        recentWord = nil
         let typedCharacters = typed.map { [$0] } ?? []
         guard !snapshot.after.isEmpty else {
             // The cursor is at the end of the text, so the delete needs no cursor move.
@@ -307,8 +343,9 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
             return true
         }
         if text.count == 1, let letter = text.lowercased().first, letter.isASCII, letter.isLetter {
-            // A buffer of 30 letters covers any phrase in the dictionary.
-            guard pinyinBuffer.count < 30 else { return true }
+            // The typing engine reads up to 120 letters, and a clause of 20 characters takes
+            // about 60, so 80 letters cover a long clause.
+            guard pinyinBuffer.count < 80 else { return true }
             pinyinBuffer.append(letter)
             refreshCandidates()
             return true
@@ -384,6 +421,7 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
             document.deleteBackward()
             document.insertText(". ")
             previousInsertWasSpace = false
+            recentWord = nil
         } else {
             correctLastWord(beforeTyping: text)
             document.insertText(text)
@@ -393,38 +431,78 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
         updateAutoShift()
     }
 
-    /// Replaces a misspelled word right before the cursor, when `terminator` ends that word.
+    /// Corrects the text right before the cursor, when `terminator` ends a word.
+    /// The correction reads the last word, and the word before it when the person typed that
+    /// word right before with one space between the two.
     private func correctLastWord(beforeTyping terminator: String) {
         lastCorrection = nil
-        guard !chineseMode, KeyboardTextLogic.wordTerminators.contains(terminator), document.allowsAutocorrection,
-            let word = KeyboardTextLogic.correctableWord(before: document.textBeforeCursor),
-            !keptWords.contains(word.lowercased())
-        else { return }
-        let corrected: String?
-        if word == "i" {
-            corrected = "I"
-        } else if word.count >= 2 {
-            corrected = spellChecker.correction(for: word)
-        } else {
-            corrected = nil
+        guard KeyboardTextLogic.wordTerminators.contains(terminator) else { return }
+        let earlier = recentWord
+        recentWord = nil
+        guard !chineseMode, document.allowsAutocorrection else { return }
+        let before = document.textBeforeCursor
+        guard let word = KeyboardTextLogic.correctableWord(before: before) else { return }
+
+        let followedBySpace = terminator == " "
+        // A word the person brought back after a correction stays as typed.
+        guard !spellChecker.keeps(word) else {
+            if followedBySpace { recentWord = RecentWord(typed: word, shown: word, context: contextAfterSpace()) }
+            return
         }
-        guard let corrected, corrected != word else { return }
-        deleteBackward(count: word.count)
-        document.insertText(corrected)
-        lastCorrection = Correction(original: word, corrected: corrected, terminator: terminator)
-        showNotice("\(word) \u{2192} \(corrected)")
+        var typedSpan = word
+        var shownSpan = word
+        if let earlier, !spellChecker.keeps(earlier.typed), !spellChecker.keeps(earlier.shown),
+            before.hasSuffix(earlier.context + word),
+            KeyboardTextLogic.correctableWord(before: String(before.dropLast(word.count + 1))) == earlier.shown {
+            typedSpan = earlier.typed + " " + word
+            shownSpan = earlier.shown + " " + word
+        }
+        let typedWords = typedSpan.split(separator: " ")
+
+        let previousWord = KeyboardTextLogic.wordBeforeSpace(at: String(before.dropLast(shownSpan.count)))
+        // One letter alone is a word such as "a" or "I", or a label, so the checker reads a
+        // single letter only together with the word before it.
+        let reading = typedSpan.count >= 2
+            ? spellChecker.reading(previousWord: previousWord, typed: typedSpan.lowercased()) : nil
+        // A reading of two words together replaces an earlier reading of the first word alone,
+        // also when it brings back the letters the person typed. Without a reading the shown
+        // text stays, and only a lone "i" gets its capital.
+        let final = reading.map { KeyboardTextLogic.restoringCapitals(in: $0, from: typedSpan) }
+            ?? KeyboardTextLogic.restoringCapitals(in: shownSpan, from: shownSpan)
+        let finalWords = final.split(separator: " ")
+        if final != shownSpan {
+            deleteBackward(count: shownSpan.count)
+            document.insertText(final)
+            lastCorrection = Correction(original: shownSpan, corrected: final, terminator: terminator)
+            showNotice("\(shownSpan) \u{2192} \(final)")
+        }
+        if followedBySpace, let last = finalWords.last {
+            // After a correction that joined or split words, the last shown word counts as typed
+            // that way, so the next correction does not take the same keys apart again.
+            let sameCount = finalWords.count == typedWords.count
+            recentWord = RecentWord(
+                typed: sameCount ? word : String(last), shown: String(last), context: contextAfterSpace())
+        }
     }
 
-    /// Brings back the word the user typed, when the cursor still sits right after the correction.
+    /// The end of the text before the cursor, with the space that the keyboard types next.
+    private func contextAfterSpace() -> String {
+        String((document.textBeforeCursor + " ").suffix(Self.recentContextLength))
+    }
+
+    /// Brings back the text the field held before the last correction, when the cursor still
+    /// sits right after the correction.
     private func undoLastCorrection() -> Bool {
         guard let correction = lastCorrection else { return false }
         lastCorrection = nil
+        recentWord = nil
         let typed = correction.corrected + correction.terminator
         guard document.textBeforeCursor.hasSuffix(typed) else { return false }
         deleteBackward(count: typed.count)
         document.insertText(correction.original)
-        keptWords.insert(correction.original.lowercased())
-        spellChecker.learn(correction.original)
+        for word in correction.original.split(separator: " ") {
+            spellChecker.learn(String(word))
+        }
         showNotice("Kept \(correction.original)")
         return true
     }
@@ -475,6 +553,7 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
         if !undoLastCorrection() {
             document.deleteBackward()
         }
+        recentWord = nil
         updateAutoShift()
     }
 
@@ -488,6 +567,7 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
         commitPinyinLetters()
         previousInsertWasSpace = false
         lastCorrection = nil
+        recentWord = nil
         document.moveCursor(byUTF16Offset: utf16Offset(forCharacters: offset))
     }
 
@@ -495,6 +575,7 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
         guard pending == nil else { return }
         previousInsertWasSpace = false
         lastCorrection = nil
+        recentWord = nil
         commitPinyinLetters()
         switch command {
         case .toggleLanguage:

@@ -18,6 +18,13 @@ targets:
     sources:
       - App
       - Shared
+      # The C typing engine. duo_cli.c is the command-line driver for the evaluation.
+      # The engine is compiled with -O2 in every configuration, because a debug build of the
+      # search is several times slower and the unit tests run thousands of typing cases.
+      - path: Engine
+        excludes:
+          - duo_cli.c
+        compilerFlags: "-O2"
     info:
       path: App/Info.plist
       properties:
@@ -42,6 +49,7 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.yilongju.duokeyboard
         PRODUCT_NAME: DuoKeyboard
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        SWIFT_OBJC_BRIDGING_HEADER: Engine/DuoEngine-Bridging-Header.h
     dependencies:
       - target: DuoKeyboardExtension
   DuoKeyboardExtension:
@@ -50,6 +58,10 @@ targets:
     sources:
       - Keyboard
       - Shared
+      - path: Engine
+        excludes:
+          - duo_cli.c
+        compilerFlags: "-O2"
     info:
       path: Keyboard/Info.plist
       properties:
@@ -68,6 +80,7 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.yilongju.duokeyboard.keyboard
         PRODUCT_NAME: DuoKeyboardExtension
+        SWIFT_OBJC_BRIDGING_HEADER: Engine/DuoEngine-Bridging-Header.h
   DuoKeyboardTests:
     type: bundle.unit-test
     platform: iOS

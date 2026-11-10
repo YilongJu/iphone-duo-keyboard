@@ -29,7 +29,7 @@ from pathlib import Path
 
 from wordfreq import top_n_list, zipf_frequency
 
-from lexicon_format import write_lexicon
+from lexicon_format import MODEL_MIXED, write_lexicon
 
 ROOT = Path(__file__).resolve().parents[2]
 CACHE = ROOT / "build" / "typing-engine"
@@ -122,7 +122,7 @@ def main():
     part_three = len(words) - part_one - part_two
 
     # Zipf is log10 of the frequency per billion words, so 10 ** (zipf - 9) is a probability.
-    entries = [(word, word, (zipf(word) - 9) * math.log(10)) for word in sorted(words)]
+    entries = [(word, word, (zipf(word) - 9) * math.log(10), 0.0) for word in sorted(words)]
 
     pairs = {}
     for line in fetch(SYMSPELL + PAIRS_FILE, PAIRS_FILE):
@@ -131,7 +131,7 @@ def main():
             # The chance that `second` follows `first`, from counts of one book corpus.
             pairs[(first, second)] = math.log(min(1.0, int(count) / book_counts[first]))
 
-    stats = write_lexicon(OUTPUT, entries, pairs)
+    stats = write_lexicon(OUTPUT, entries, pairs, MODEL_MIXED)
     print(f"words: {part_one} from the book list, {part_two} common everyday tokens, {part_three} rare everyday tokens")
     print(f"wrote {OUTPUT.relative_to(ROOT)}: {stats}")
     for probe in ["teh", "recieve", "alot", "doesnt", "dont", "cant", "its", "xcode", "umar", "imax", "lago", "getters", "backend", "kubernetes", "lol", "wanna", "don't", "i'm"]:

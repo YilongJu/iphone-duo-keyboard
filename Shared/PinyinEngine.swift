@@ -43,7 +43,13 @@ final class PinyinEngine {
     /// The longest word in the dictionary, counted in syllables.
     private var longestWord: Int
 
-    /// Words the user picked, by spelling, with the latest pick first.
+    /// The C typing engine. With it, the first candidate reads all the letters as one sentence
+    /// with a word-pair language model, and it repairs typing slips. Without it, this class
+    /// reads the letters by its own dictionary, which needs correctly typed Pinyin.
+    var decoder: PinyinTypingEngine?
+
+    /// Words the user picked, by spelling, with the latest pick first. With the C typing engine
+    /// the spelling is the typed letters ("nihao"), and without it the syllables ("ni hao").
     private(set) var learnedWords: [String: [String]]
     private let saveLearnedWords: ([String: [String]]) -> Void
 
@@ -55,6 +61,8 @@ final class PinyinEngine {
     private static let learnedSpellingLimit = 3000
     /// The engine learns a phrase of this many syllables at most, so whole long sentences do not fill the store.
     static let longestLearnedPhrase = 8
+    /// Places in the candidate list kept for this class's own dictionary words.
+    private static let placesForDictionaryWords = 8
 
     /// One syllable of the typed letters, with the count of typed characters it covers.
     /// The count includes an apostrophe typed after the syllable.
@@ -117,12 +125,23 @@ final class PinyinEngine {
             fatalError("pinyin-dictionary.txt is missing from the bundle")
         }
         // A phone that has not learned any word yet does not have the stored value.
-        let stored = UserDefaults.standard.dictionary(forKey: learnedWordsKey) as? [String: [String]] ?? [:]
+        let saved = UserDefaults.standard.dictionary(forKey: learnedWordsKey) as? [String: [String]] ?? [:]
+        // Builds before the typing engine stored a pick under its syllables only ("ni hao").
+        // The typing engine looks a pick up under the typed letters ("nihao"), so every stored
+        // pick gets that second key.
+        var stored = saved
+        for (spelling, words) in saved where spelling.contains(" ") {
+            let letters = spelling.replacingOccurrences(of: " ", with: "")
+            let known = stored[letters] ?? []
+            stored[letters] = known + words.filter { !known.contains($0) }
+        }
         do {
-            return PinyinEngine(
+            let engine = PinyinEngine(
                 dictionaryText: try String(contentsOf: url, encoding: .utf8),
                 learnedWords: stored,
                 saveLearnedWords: { UserDefaults.standard.set($0, forKey: learnedWordsKey) })
+            engine.decoder = PinyinTypingEngine(lexicon: TypingLexicon(resource: "lexicon-pinyin", fullCheck: false))
+            return engine
         } catch {
             fatalError("pinyin-dictionary.txt is unreadable: \(error)")
         }
@@ -140,14 +159,7 @@ final class PinyinEngine {
             let chunk = Array(rest[..<chunkEnd])
             let hasApostrophe = chunkEnd < rest.endIndex
             // The chunk's longest run of whole syllables, counted from its start.
-            var end = chunk.count
-            var parsed: [String]?
-            while end > 0 {
-                parsed = parse(chunk, from: 0, to: end)
-                if parsed != nil { break }
-                end -= 1
-            }
-            let chunkSyllables = parsed ?? []
+            let (chunkSyllables, end) = longestWholeSyllables(chunk)
             for (index, syllable) in chunkSyllables.enumerated() {
                 let isLast = index == chunkSyllables.count - 1
                 let closesChunk = isLast && end == chunk.count && hasApostrophe
@@ -163,17 +175,55 @@ final class PinyinEngine {
         return (units, "")
     }
 
-    private func parse(_ characters: [Character], from start: Int, to end: Int) -> [String]? {
-        if start == end { return [] }
-        var length = min(longestSyllable, end - start)
-        while length > 0 {
-            let syllable = String(characters[start..<(start + length)])
-            if syllables.contains(syllable), let rest = parse(characters, from: start + length, to: end) {
-                return [syllable] + rest
-            }
-            length -= 1
+    /// The longest run of whole syllables from the start of `characters`, and the count of
+    /// characters in the run. Where the run can be cut in more than one way, the cut takes the
+    /// longest syllable first, as in "xian" and not "xi an".
+    ///
+    /// The function marks each position once, so its work grows with the count of characters.
+    /// A search that tries every cut would take hours for 80 letters such as "anan...anz".
+    private func longestWholeSyllables(_ characters: [Character]) -> (syllables: [String], end: Int) {
+        func isSyllable(from start: Int, length: Int) -> Bool {
+            syllables.contains(String(characters[start..<(start + length)]))
         }
-        return nil
+        // reached[i] is true when the first i characters are whole syllables.
+        var reached = [Bool](repeating: false, count: characters.count + 1)
+        reached[0] = true
+        var end = 0
+        for position in 0..<characters.count where reached[position] {
+            var length = min(longestSyllable, characters.count - position)
+            while length > 0 {
+                if isSyllable(from: position, length: length) {
+                    reached[position + length] = true
+                    end = max(end, position + length)
+                }
+                length -= 1
+            }
+        }
+        // finishes[i] is true when the characters from i to `end` are whole syllables.
+        var finishes = [Bool](repeating: false, count: end + 1)
+        finishes[end] = true
+        var position = end - 1
+        while position >= 0 {
+            var length = min(longestSyllable, end - position)
+            while length > 0, !finishes[position] {
+                finishes[position] = finishes[position + length] && isSyllable(from: position, length: length)
+                length -= 1
+            }
+            position -= 1
+        }
+        var result: [String] = []
+        position = 0
+        while position < end {
+            var length = min(longestSyllable, end - position)
+            while length > 0, !(finishes[position + length] && isSyllable(from: position, length: length)) {
+                length -= 1
+            }
+            // `reached` and `finishes` agree that a syllable starts here, so the length is above zero.
+            precondition(length > 0, "The syllable marks do not agree at position \(position)")
+            result.append(String(characters[position..<(position + length)]))
+            position += length
+        }
+        return (result, end)
     }
 
     /// The whole syllables of the typed characters, and the characters after them.
@@ -225,9 +275,22 @@ final class PinyinEngine {
         return best[syllables.count]?.text
     }
 
-    /// Candidates for the typed letters, in this order: the most likely sentence for all
-    /// syllables, the words for all syllables, words for fewer leading syllables down to single
-    /// characters, and the words whose syllables start with the typed letters.
+    /// Candidates for the typed letters.
+    ///
+    /// Without the typing engine the order is: the most likely sentence for all syllables, the
+    /// words for all syllables, words for fewer leading syllables down to single characters, and
+    /// the words whose syllables start with the typed letters.
+    ///
+    /// With the typing engine the first candidate depends on the typed letters:
+    /// - Letters that do not start with a whole syllable, as in "nh": the words whose syllables
+    ///   start with these letters lead, as without the typing engine.
+    /// - Letters that are whole syllables: the typing engine's sentence leads.
+    /// - Whole syllables with other letters after them, as in "jintiantq" or "shoujj": the
+    ///   typing engine reads all the letters, and it reads the whole syllables alone. When both
+    ///   readings give the same text, the other letters did not add a character. They may be a
+    ///   syllable the person has not finished, or the first letters of the next word, so the
+    ///   first candidate leaves them in the buffer. When the texts differ, the reading of all
+    ///   the letters leads, as for "shoujj", where the other letters are a slip.
     func candidates(for letters: String, limit: Int = 60) -> [PinyinCandidate] {
         let (units, remainder) = split(letters)
         var result: [PinyinCandidate] = []
@@ -235,6 +298,11 @@ final class PinyinEngine {
         func add(_ word: String, consumed: Int, spelling: String) {
             guard result.count < limit, seen.insert(word).inserted else { return }
             result.append(PinyinCandidate(word: word, consumedLetters: consumed, spelling: spelling))
+        }
+        func addReadings(_ readings: [PinyinReading]) {
+            for reading in readings {
+                add(reading.text, consumed: reading.consumedLetters, spelling: String(letters.prefix(reading.consumedLetters)))
+            }
         }
         func addFirstLetterWords() {
             let firstLetters = letters.replacingOccurrences(of: "'", with: "")
@@ -244,8 +312,8 @@ final class PinyinEngine {
                 add(match.word, consumed: letters.count, spelling: match.spelling)
             }
         }
-        if units.isEmpty {
-            // The letters do not start with a whole syllable, as in "nh" or "zh".
+        /// The words for letters that do not start with a whole syllable, as in "nh" or "zh".
+        func addWordsForPartOfASyllable() {
             addFirstLetterWords()
             if remainder == "n" || remainder == "ng" {
                 for word in words(for: remainder) { add(word, consumed: remainder.count, spelling: remainder) }
@@ -254,23 +322,63 @@ final class PinyinEngine {
                 if result.count >= limit { break }
                 add(single.word, consumed: remainder.count, spelling: single.syllable)
             }
-            return result
         }
         let parsed = units.map { $0.syllable }
         let allCharacters = units.reduce(0) { $0 + $1.characters }
-        if let sentence = sentence(for: parsed) {
-            add(sentence, consumed: allCharacters, spelling: parsed.joined(separator: " "))
-        }
-        var count = units.count
-        while count > 0 {
-            let spelling = parsed[0..<count].joined(separator: " ")
-            let consumed = units[0..<count].reduce(0) { $0 + $1.characters }
-            for word in words(for: spelling) {
-                add(word, consumed: consumed, spelling: spelling)
+        /// The sentence and the words that this class's own dictionary holds for the whole syllables.
+        func addDictionaryWords() {
+            if let sentence = sentence(for: parsed) {
+                add(sentence, consumed: allCharacters, spelling: parsed.joined(separator: " "))
             }
-            count -= 1
+            var count = units.count
+            while count > 0 {
+                let spelling = parsed[0..<count].joined(separator: " ")
+                let consumed = units[0..<count].reduce(0) { $0 + $1.characters }
+                for word in words(for: spelling) {
+                    add(word, consumed: consumed, spelling: spelling)
+                }
+                count -= 1
+            }
+            addFirstLetterWords()
         }
-        addFirstLetterWords()
+
+        // The typing engine does not read the apostrophe that forces a syllable break, so
+        // letters with an apostrophe go through this class's own reading only.
+        guard let decoder, !letters.contains("'") else {
+            if units.isEmpty {
+                addWordsForPartOfASyllable()
+            } else {
+                addDictionaryWords()
+            }
+            return result
+        }
+
+        for word in learnedWords[letters] ?? [] {
+            add(word, consumed: letters.count, spelling: letters)
+        }
+        if units.isEmpty {
+            addWordsForPartOfASyllable()
+            // Letters that are neither first letters nor part of a syllable hold a slip at
+            // their start, and the typing engine reads them.
+            addReadings(decoder.candidates(for: letters, limit: limit))
+            return result
+        }
+        let engineLimit = max(limit - Self.placesForDictionaryWords, 1)
+        var readings = decoder.candidates(for: letters, limit: engineLimit)
+        if !remainder.isEmpty {
+            let wholeSyllables = decoder.candidates(for: String(letters.prefix(allCharacters)), limit: engineLimit)
+            if let all = readings.first, let part = wholeSyllables.first {
+                if all.text == part.text {
+                    readings = wholeSyllables
+                } else {
+                    // The reading that leaves the other letters in the buffer comes second.
+                    readings.insert(part, at: 1)
+                }
+            }
+        }
+        addReadings(readings)
+        // The last places go to this class's own dictionary words.
+        addDictionaryWords()
         return result
     }
 
@@ -279,17 +387,30 @@ final class PinyinEngine {
     /// Remembers that the user picked `word` for `spelling`. The word then comes first for
     /// that spelling, and the sentence search prefers the word.
     func learn(spelling: String, word: String) {
+        var keys: [String] = []
+        // The syllables, as in "ni hao": this class's own reading looks the pick up here.
         let syllableCount = spelling.split(separator: " ").count
-        guard syllableCount >= 1, syllableCount <= Self.longestLearnedPhrase, syllableCount == word.count else { return }
-        var words = learnedWords[spelling] ?? []
-        if words.first == word { return }
-        words.removeAll { $0 == word }
-        words.insert(word, at: 0)
-        if learnedWords[spelling] == nil, learnedWords.count >= Self.learnedSpellingLimit {
-            // The store is full, so one stored spelling makes room. Dictionary order is arbitrary.
-            if let dropped = learnedWords.keys.first { learnedWords[dropped] = nil }
+        if syllableCount >= 1, syllableCount <= Self.longestLearnedPhrase, syllableCount == word.count {
+            keys.append(spelling)
         }
-        learnedWords[spelling] = Array(words.prefix(Self.learnedWordsPerSpelling))
-        saveLearnedWords(learnedWords)
+        // The letters, as in "nihao": the candidate list with the typing engine looks the pick up here.
+        let letters = spelling.replacingOccurrences(of: " ", with: "")
+        if decoder != nil, !letters.isEmpty, word.count <= Self.longestLearnedPhrase, !keys.contains(letters) {
+            keys.append(letters)
+        }
+        var changed = false
+        for key in keys {
+            var words = learnedWords[key] ?? []
+            if words.first == word { continue }
+            words.removeAll { $0 == word }
+            words.insert(word, at: 0)
+            if learnedWords[key] == nil, learnedWords.count >= Self.learnedSpellingLimit {
+                // The store is full, so one stored spelling makes room. Dictionary order is arbitrary.
+                if let dropped = learnedWords.keys.first { learnedWords[dropped] = nil }
+            }
+            learnedWords[key] = Array(words.prefix(Self.learnedWordsPerSpelling))
+            changed = true
+        }
+        if changed { saveLearnedWords(learnedWords) }
     }
 }
