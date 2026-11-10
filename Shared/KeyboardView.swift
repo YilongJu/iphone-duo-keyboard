@@ -134,7 +134,8 @@ final class KeyboardView: UIView {
     // MARK: Sizing
 
     static func style(forWidth width: CGFloat) -> LayoutStyle {
-        width >= wideMinimumWidth ? .wide : .compact
+        if width >= spec.splitMinimumWidth { return .split }
+        return width >= wideMinimumWidth ? .wide : .compact
     }
 
     /// Keyboard height for a given keyboard width.
@@ -148,8 +149,8 @@ final class KeyboardView: UIView {
             rowHeight = spec.landscapePhoneRowHeight
         } else {
             switch style {
-            case .wide:
-                let unit = width / KeyboardSpec.shared.wide.units
+            case .wide, .split:
+                let unit = width / KeyboardLayout.units(style: style)
                 rowHeight = min(max(unit * spec.wideRowHeightPerUnit, spec.wideRowHeightMin), spec.wideRowHeightMax)
             case .compact:
                 rowHeight = spec.compactRowHeight
@@ -176,6 +177,7 @@ final class KeyboardView: UIView {
         rows = layout.rows.map { row in
             row.map { key in
                 let keyView = KeyView(key: key)
+                keyView.isHidden = key.kind == .gap
                 addSubview(keyView)
                 return keyView
             }
@@ -193,7 +195,7 @@ final class KeyboardView: UIView {
     }
 
     private func display(for kind: KeyKind) -> KeyDisplay {
-        let letterSize: CGFloat = style == .wide ? 24 : 23
+        let letterSize: CGFloat = style == .compact ? 23 : 24
         let wordSize: CGFloat = 16
         switch kind {
         case .character(let character):
@@ -240,6 +242,8 @@ final class KeyboardView: UIView {
             return KeyDisplay(primary: "Select All", primaryFontSize: wordSize, emphasized: selectAllActive)
         case .forwardDelete:
             return KeyDisplay(symbolName: "delete.right")
+        case .gap:
+            return KeyDisplay()
         case .language:
             return KeyDisplay(primary: "\u{4E2D}", primaryFontSize: 18, emphasized: chineseActive)
         case .cut:
@@ -252,7 +256,7 @@ final class KeyboardView: UIView {
             let title: String
             switch target {
             case .letters: title = "ABC"
-            case .symbols: title = style == .wide ? ".?123" : "123"
+            case .symbols: title = style == .compact ? "123" : ".?123"
             case .more: title = "#+="
             }
             return KeyDisplay(primary: title, primaryFontSize: wordSize)
@@ -303,7 +307,7 @@ final class KeyboardView: UIView {
         }
         guard let metrics = metrics() else { return }
         let spec = Self.spec
-        let gapY = style == .wide ? spec.gapYWide : spec.gapYCompact
+        let gapY = style == .compact ? spec.gapYCompact : spec.gapYWide
         globeButton.isHidden = true
         candidateBar.frame = CGRect(
             x: metrics.originX, y: metrics.rowEdges[0],
@@ -340,7 +344,8 @@ final class KeyboardView: UIView {
             if point.x > frame.maxX { return point.x - frame.maxX }
             return 0
         }
-        return rows[rowIndex].min { distance($0) < distance($1) }
+        // A touch in the empty middle of the split layout goes to the nearest real key.
+        return rows[rowIndex].filter { $0.key.kind != .gap }.min { distance($0) < distance($1) }
     }
 
     // MARK: Touches
@@ -622,7 +627,7 @@ final class KeyboardView: UIView {
         case .switchLayer(let target):
             currentLayer = target
             rebuild()
-        case .shift, .capsLock, .globe:
+        case .shift, .capsLock, .globe, .gap:
             // Shift and caps lock act on finger down. The globe button handles the globe key.
             break
         }

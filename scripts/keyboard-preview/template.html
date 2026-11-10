@@ -117,11 +117,31 @@ function characterText(key) {
   const shifts = key.layer === "letters" && isLetter(key.base) && state.shift !== "off";
   return shifts ? key.base.toUpperCase() : key.base;
 }
-function styleName() { return state.width >= M.wideMinimumWidth ? "wide" : "compact"; }
+function styleName() {
+  if (state.width >= M.splitMinimumWidth) return "split";
+  return state.width >= M.wideMinimumWidth ? "wide" : "compact";
+}
+// The split layout draws the wide rows with an empty middle at each row's split point.
+function specName() { return styleName() === "compact" ? "compact" : "wide"; }
+function unitsNow() { return SPEC[specName()].units + (styleName() === "split" ? M.splitGapUnits : 0); }
+function splitRow(row, keys) {
+  const gap = { type: "gap", w: M.splitGapUnits };
+  const left = keys.slice(0, row.split);
+  const middle = keys[row.split];
+  if (middle.type === "fn" && middle.name === "space") {
+    const total = keys.reduce((sum, k) => sum + k.w, 0);
+    const before = left.reduce((sum, k) => sum + k.w, 0);
+    const leftWidth = Math.min(Math.max(total / 2 - before, 1), middle.w - 1);
+    left.push({ ...middle, w: leftWidth }, gap, { ...middle, w: middle.w - leftWidth });
+  } else {
+    left.push(gap, middle);
+  }
+  return left.concat(keys.slice(row.split + 1));
+}
 function rowHeightNow() {
   if (state.compactHeight) return M.landscapePhoneRowHeight;
-  if (styleName() === "wide") {
-    const unit = state.width / SPEC.wide.units;
+  if (styleName() !== "compact") {
+    const unit = state.width / unitsNow();
     return Math.min(Math.max(unit * M.wideRowHeightPerUnit, M.wideRowHeightMin), M.wideRowHeightMax);
   }
   return M.compactRowHeight;
@@ -138,7 +158,10 @@ function render() {
   let boardHeight = 0;
   let letterKeyWidth = 0;
   for (const layer of LAYERS) {
-    const rows = SPEC[style][layer.name].map(r => ({ height: r.height, keys: r.keys.map(k => normalize(k, layer.name)) }));
+    const rows = SPEC[specName()][layer.name].map(r => {
+      const keys = r.keys.map(k => normalize(k, layer.name));
+      return { height: r.height, keys: style === "split" ? splitRow(r, keys) : keys };
+    });
     const heading = document.createElement("h2");
     heading.textContent = layer.title + " ";
     const note = document.createElement("span");
@@ -158,8 +181,8 @@ function render() {
     board.style.height = boardHeight + "px";
 
     const usableWidth = state.width - 2 * M.horizontalPadding;
-    const gapY = style === "wide" ? M.gapYWide : M.gapYCompact;
-    const units = SPEC[style].units;
+    const gapY = style === "compact" ? M.gapYCompact : M.gapYWide;
+    const units = unitsNow();
     let y = M.topPadding;
     rows.forEach((row, rowIndex) => {
       const rowWeight = row.keys.reduce((sum, k) => sum + k.w, 0);
@@ -169,6 +192,7 @@ function render() {
       let x = M.horizontalPadding + inset + (units - rowWeight) / 2 * unit;
       const h = row.height * rowHeight;
       for (const key of row.keys) {
+        if (key.type === "gap") { x += key.w * unit; continue; }
         const el = document.createElement("div");
         el.className = "key" + (key.type === "fn" && key.name !== "space" ? " fn" : "");
         el.style.left = (x + M.gapX) + "px";
@@ -191,7 +215,7 @@ function render() {
   document.getElementById("width").value = state.width;
   document.getElementById("readout").textContent =
     `layout ${style}   keyboard ${state.width} x ${boardHeight.toFixed(0)} pt   letter key ${letterKeyWidth.toFixed(1)} pt wide   ` +
-    `row ${rowHeight.toFixed(1)} pt high   wide layout starts at ${M.wideMinimumWidth} pt`;
+    `row ${rowHeight.toFixed(1)} pt high   wide from ${M.wideMinimumWidth} pt, split from ${M.splitMinimumWidth} pt`;
   for (const chip of document.querySelectorAll("#presets .chip")) {
     chip.setAttribute("aria-pressed", String(Number(chip.dataset.width) === state.width));
   }
@@ -216,7 +240,7 @@ function paint(el, key, style) {
     main.style.fontSize = "19px";
   } else if (key.type === "char") {
     main.textContent = characterText(key);
-    main.style.fontSize = style === "wide" ? "24px" : "23px";
+    main.style.fontSize = style === "compact" ? "23px" : "24px";
   } else {
     let label = FN_LABEL[key.name];
     const caption = state.notice ?? (state.allSelected ? "All text selected" : null);
