@@ -345,13 +345,11 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
     }
 
     private func showProofreading(_ result: ProofreadResult, of sentence: String) {
-        guard let answer = result.text else {
-            // The space bar names each reason once, so a device without the model stays quiet.
-            if let note = result.note, shownProofreadNotes.insert(note).inserted {
-                showNotice("Proofreader: \(note)")
-            }
-            return
+        // The space bar names each remark once, so a device without a model stays quiet.
+        if let note = result.note, shownProofreadNotes.insert(note).inserted {
+            showNotice("Proofreader: \(note)")
         }
+        guard let answer = result.text else { return }
         // The person may have typed on while the model read the sentence. The fix is shown only
         // while the same sentence still ends right before the cursor.
         guard pinyinBuffer.isEmpty,
@@ -359,7 +357,8 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
             let corrected = KeyboardTextLogic.acceptedProofreading(of: sentence, answer: answer)
         else { return }
         proofreadSuggestion = ProofreadSuggestion(original: sentence, corrected: corrected)
-        keyboardView.showCandidates(composition: String(format: "Fix %.1f s", result.seconds), words: [corrected])
+        let label = String(format: "Fix %.1f s", result.seconds) + (result.source.isEmpty ? "" : " " + result.source)
+        keyboardView.showCandidates(composition: label, words: [corrected])
     }
 
     /// Replaces the sentence right before the cursor with the proposed fix.
