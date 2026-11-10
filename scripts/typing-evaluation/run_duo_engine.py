@@ -29,7 +29,8 @@ def case_files(task: str, half: str) -> list[Path]:
     return files
 
 
-def run(task: str, cases: list[dict], settings: list[str], cli: Path, lexicon: Path) -> dict[str, str]:
+def run_timed(task: str, cases: list[dict], settings: list[str], cli: Path, lexicon: Path) -> tuple[dict[str, str], str]:
+    """Runs the engine. Returns its outputs and its report of the processor time per input."""
     if task == "english":
         # The engine sees the word right before the typed text, as the keyboard does.
         lines = [f"{case['id']}\t{case['context'].split(' ')[-1] if case['context'] else ''}\t{case['typed']}" for case in cases]
@@ -38,7 +39,11 @@ def run(task: str, cases: list[dict], settings: list[str], cli: Path, lexicon: P
     completed = subprocess.run(
         [str(cli), task, str(lexicon), *settings],
         input="\n".join(lines) + "\n", capture_output=True, text=True, encoding="utf-8", check=True)
-    return dict(line.split("\t", 1) for line in completed.stdout.splitlines())
+    return dict(line.split("\t", 1) for line in completed.stdout.splitlines()), completed.stderr.strip()
+
+
+def run(task: str, cases: list[dict], settings: list[str], cli: Path, lexicon: Path) -> dict[str, str]:
+    return run_timed(task, cases, settings, cli, lexicon)[0]
 
 
 def main():
@@ -49,13 +54,16 @@ def main():
     parser.add_argument("--lexicon", type=Path)
     parser.add_argument("--name", default="duo-engine", help="the engine name in the output file names")
     parser.add_argument("--show-misses", type=int, default=0, help="print this many wrong cases per category")
+    parser.add_argument("--show-time", action="store_true", help="print the engine's processor time per input")
     parser.add_argument("settings", nargs="*")
     arguments = parser.parse_args()
 
     files = case_files(arguments.task, arguments.half)
     cases = load_cases(files)
     lexicon = arguments.lexicon or LEXICON[arguments.task]
-    predictions = run(arguments.task, cases, arguments.settings, arguments.cli, lexicon)
+    predictions, time_report = run_timed(arguments.task, cases, arguments.settings, arguments.cli, lexicon)
+    if arguments.show_time:
+        print(time_report)
     OUTPUT.mkdir(parents=True, exist_ok=True)
     stem = f"{arguments.name}.{arguments.task}.{arguments.half}"
     (OUTPUT / f"{stem}.jsonl").write_text(

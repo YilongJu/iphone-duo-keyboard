@@ -5,21 +5,37 @@
 #include <string.h>
 
 #define DUO_MAGIC 0x4C4F5544u
-#define DUO_VERSION 2u
-#define WORD_BYTES 12
+/* A file of version 2 holds words and word pairs. A file of version 3 adds a reading cost to
+   each word, a back-off weight to each pair, and word triples. */
+#define VERSION_PAIRS 2u
+#define VERSION_TRIPLES 3u
 #define MODEL_BACK_OFF 1u
+#define NODE_BYTES 12
+#define PAIR_BYTES 8
+#define CONTEXT_BYTES 8
+#define TRIPLE_BYTES 4
+/* Version 3 stores the two numbers of a pair in 16 bits each, in steps of 1/2048. A triple is
+   one 32-bit number: its third word in the low 20 bits and its log probability in the high 12
+   bits, in steps of 1/256. Bit 31 of a pair's second word marks a pair that opens triples. */
+#define PAIR_STEPS 2048.0f
+#define TRIPLE_STEPS 256.0f
+#define TRIPLE_WORD_BITS 20
+#define TRIPLE_WORD_MASK 0x000FFFFFu
+#define PAIR_OPENS_TRIPLES 0x80000000u
 
 /* The most slips the search follows inside one word. */
 #define BAND 2
 #define ROW (2 * BAND + 1)
 /* The longest spelling the search follows, in letters. */
 #define MAX_DEPTH 64
-#define MAX_BEAM 16
+#define MAX_BEAM 64
 #define MAX_EDGES 4096
 #define BIG 1.0e9f
 
 /* Marks a state with no lexicon word: the start of the text, or text kept as typed. */
 #define NO_WORD 0xFFFFFFFFu
+/* Marks a state whose last two words are not a pair that a later word depends on. */
+#define NO_PAIR 0xFFFFFFFFu
 
 /* ---- Reading the lexicon bytes ---- */
 
@@ -31,6 +47,12 @@ static uint32_t read_u32(const uint8_t *bytes) {
 
 static uint16_t read_u16(const uint8_t *bytes) {
     uint16_t value;
+    memcpy(&value, bytes, 2);
+    return value;
+}
+
+static int16_t read_i16(const uint8_t *bytes) {
+    int16_t value;
     memcpy(&value, bytes, 2);
     return value;
 }
@@ -50,7 +72,7 @@ typedef struct {
 } node_t;
 
 static node_t node_at(const duo_lexicon *lexicon, uint32_t index) {
-    const uint8_t *bytes = lexicon->nodes + 12 * (size_t)index;
+    const uint8_t *bytes = lexicon->nodes + NODE_BYTES * (size_t)index;
     node_t node;
     node.first_child = read_u32(bytes);
     node.first_word = read_u32(bytes + 4);
@@ -60,42 +82,136 @@ static node_t node_at(const duo_lexicon *lexicon, uint32_t index) {
     return node;
 }
 
+static char node_letter(const duo_lexicon *lexicon, uint32_t index) {
+    return (char)lexicon->nodes[NODE_BYTES * (size_t)index + 9];
+}
+
+static const uint8_t *word_record(const duo_lexicon *lexicon, uint32_t word) {
+    return lexicon->words + (size_t)lexicon->word_bytes * word;
+}
+
+/* A word's own log probability. For a word with several readings it holds the reading cost. */
 static float word_log_probability(const duo_lexicon *lexicon, uint32_t word) {
-    return read_f32(lexicon->words + WORD_BYTES * (size_t)word + 4);
+    return read_f32(word_record(lexicon, word) + 4);
 }
 
 static float word_back_off(const duo_lexicon *lexicon, uint32_t word) {
-    return read_f32(lexicon->words + WORD_BYTES * (size_t)word + 8);
+    return read_f32(word_record(lexicon, word) + 8);
+}
+
+/* The log of the share of this reading among the readings of the word's text. A file of
+   version 2 does not hold it, and the cost is 0. */
+static float word_reading_cost(const duo_lexicon *lexicon, uint32_t word) {
+    return lexicon->version == VERSION_TRIPLES ? read_f32(word_record(lexicon, word) + 12) : 0.0f;
 }
 
 static const char *word_text(const duo_lexicon *lexicon, uint32_t word) {
-    return (const char *)lexicon->strings + read_u32(lexicon->words + WORD_BYTES * (size_t)word);
+    return (const char *)lexicon->strings + read_u32(word_record(lexicon, word));
+}
+
+/* The position of a word's first pair. The pairs of a word end where the next word's start. */
+static uint32_t pair_start(const duo_lexicon *lexicon, uint32_t word) {
+    return read_u32(lexicon->pair_index + 4 * (size_t)word);
+}
+
+static uint32_t pair_second(const duo_lexicon *lexicon, uint32_t pair) {
+    uint32_t second = read_u32(lexicon->pairs + PAIR_BYTES * (size_t)pair);
+    return lexicon->version == VERSION_TRIPLES ? second & ~PAIR_OPENS_TRIPLES : second;
+}
+
+static float pair_log_probability(const duo_lexicon *lexicon, uint32_t pair) {
+    const uint8_t *bytes = lexicon->pairs + PAIR_BYTES * (size_t)pair + 4;
+    return lexicon->version == VERSION_TRIPLES ? -(float)read_u16(bytes) / PAIR_STEPS : read_f32(bytes);
+}
+
+/* The back-off weight of a pair: the cost of a third word that has no listed triple with the
+   pair. A file of version 2 does not hold triples, and the weight is 0. */
+static float pair_back_off(const duo_lexicon *lexicon, uint32_t pair) {
+    if (lexicon->version != VERSION_TRIPLES) return 0.0f;
+    return (float)read_i16(lexicon->pairs + PAIR_BYTES * (size_t)pair + 6) / PAIR_STEPS;
+}
+
+/* Whether the chance of a later word depends on this pair: the pair opens triples, or it has a
+   back-off weight. Two readings that end in the same word, and in pairs for which this is 0,
+   go on the same way. */
+static int pair_matters_later(const duo_lexicon *lexicon, uint32_t pair) {
+    if (lexicon->version != VERSION_TRIPLES) return 0;
+    const uint8_t *bytes = lexicon->pairs + PAIR_BYTES * (size_t)pair;
+    return (read_u32(bytes) & PAIR_OPENS_TRIPLES) != 0 || read_i16(bytes + 6) != 0;
+}
+
+static uint32_t triple_word(const duo_lexicon *lexicon, uint32_t triple) {
+    return read_u32(lexicon->triples + TRIPLE_BYTES * (size_t)triple) & TRIPLE_WORD_MASK;
+}
+
+static float triple_log_probability(const duo_lexicon *lexicon, uint32_t triple) {
+    uint32_t steps = read_u32(lexicon->triples + TRIPLE_BYTES * (size_t)triple) >> TRIPLE_WORD_BITS;
+    return -(float)steps / TRIPLE_STEPS;
+}
+
+/* Finds the triples that a pair opens: the positions `first` up to `end` in the triple table.
+   A pair that opens no triple gives an empty run. */
+static void triples_of_pair(const duo_lexicon *lexicon, uint32_t pair, uint32_t *first, uint32_t *end) {
+    *first = 0;
+    *end = 0;
+    uint32_t low = 0, high = lexicon->context_count;
+    while (low < high) {
+        uint32_t middle = low + (high - low) / 2;
+        const uint8_t *row = lexicon->contexts + CONTEXT_BYTES * (size_t)middle;
+        uint32_t found = read_u32(row);
+        if (found == pair) {
+            *first = read_u32(row + 4);
+            *end = read_u32(row + CONTEXT_BYTES + 4);
+            return;
+        }
+        if (found < pair) low = middle + 1;
+        else high = middle;
+    }
 }
 
 int duo_lexicon_open_checked_before(duo_lexicon *lexicon, const void *data, size_t size) {
     const uint8_t *bytes = (const uint8_t *)data;
     if (lexicon == NULL || data == NULL || size < 32) return 0;
-    if (read_u32(bytes) != DUO_MAGIC || read_u32(bytes + 4) != DUO_VERSION) return 0;
+    if (read_u32(bytes) != DUO_MAGIC) return 0;
+    uint32_t version = read_u32(bytes + 4);
+    if (version != VERSION_PAIRS && version != VERSION_TRIPLES) return 0;
+    /* Version 2 has a header of 8 numbers. Version 3 has 10: the count of pairs that open
+       triples and the count of triples follow the model, and the last number is 0. */
+    size_t header = version == VERSION_TRIPLES ? 40 : 32;
+    if (size < header) return 0;
     uint32_t node_count = read_u32(bytes + 8);
     uint32_t word_count = read_u32(bytes + 12);
     uint32_t strings_size = read_u32(bytes + 16);
     uint32_t pair_count = read_u32(bytes + 20);
     uint32_t model = read_u32(bytes + 24);
+    uint32_t context_count = version == VERSION_TRIPLES ? read_u32(bytes + 28) : 0;
+    uint32_t triple_count = version == VERSION_TRIPLES ? read_u32(bytes + 32) : 0;
+    uint32_t word_bytes = version == VERSION_TRIPLES ? 16 : 12;
     if (model > MODEL_BACK_OFF) return 0;
-    size_t expected = 32 + (size_t)node_count * 12 + (size_t)word_count * WORD_BYTES
-        + ((size_t)word_count + 1) * 4 + (size_t)pair_count * 8 + (size_t)strings_size;
-    if (node_count == 0 || expected != size) return 0;
+    uint64_t expected = (uint64_t)header + (uint64_t)node_count * NODE_BYTES + (uint64_t)word_count * word_bytes
+        + ((uint64_t)word_count + 1) * 4 + (uint64_t)pair_count * PAIR_BYTES + (uint64_t)strings_size;
+    if (version == VERSION_TRIPLES) {
+        expected += ((uint64_t)context_count + 1) * CONTEXT_BYTES + (uint64_t)triple_count * TRIPLE_BYTES;
+    }
+    if (node_count == 0 || expected != (uint64_t)size) return 0;
 
     lexicon->node_count = node_count;
     lexicon->word_count = word_count;
     lexicon->pair_count = pair_count;
+    lexicon->context_count = context_count;
+    lexicon->triple_count = triple_count;
     lexicon->strings_size = strings_size;
     lexicon->model = model;
-    lexicon->nodes = bytes + 32;
-    lexicon->words = lexicon->nodes + (size_t)node_count * 12;
-    lexicon->pair_index = lexicon->words + (size_t)word_count * WORD_BYTES;
+    lexicon->version = version;
+    lexicon->word_bytes = word_bytes;
+    lexicon->nodes = bytes + header;
+    lexicon->words = lexicon->nodes + (size_t)node_count * NODE_BYTES;
+    lexicon->pair_index = lexicon->words + (size_t)word_count * word_bytes;
     lexicon->pairs = lexicon->pair_index + ((size_t)word_count + 1) * 4;
-    lexicon->strings = lexicon->pairs + (size_t)pair_count * 8;
+    lexicon->contexts = lexicon->pairs + (size_t)pair_count * PAIR_BYTES;
+    lexicon->triples = lexicon->contexts;
+    if (version == VERSION_TRIPLES) lexicon->triples += ((size_t)context_count + 1) * CONTEXT_BYTES;
+    lexicon->strings = lexicon->triples + (size_t)triple_count * TRIPLE_BYTES;
     return 1;
 }
 
@@ -116,16 +232,39 @@ int duo_lexicon_open(duo_lexicon *lexicon, const void *data, size_t size) {
     }
     if (strings_size > 0 && lexicon->strings[strings_size - 1] != 0) return 0;
     for (uint32_t word = 0; word < word_count; word++) {
-        if (read_u32(lexicon->words + WORD_BYTES * (size_t)word) >= strings_size) return 0;
+        if (read_u32(word_record(lexicon, word)) >= strings_size) return 0;
     }
     uint32_t previous_start = 0;
     for (uint32_t word = 0; word <= word_count; word++) {
-        uint32_t start = read_u32(lexicon->pair_index + 4 * (size_t)word);
+        uint32_t start = pair_start(lexicon, word);
         if (start < previous_start || start > pair_count) return 0;
         previous_start = start;
     }
     for (uint32_t pair = 0; pair < pair_count; pair++) {
-        if (read_u32(lexicon->pairs + 8 * (size_t)pair) >= word_count) return 0;
+        if (pair_second(lexicon, pair) >= word_count) return 0;
+    }
+    if (lexicon->version != VERSION_TRIPLES) return 1;
+
+    /* The table of the pairs that open triples holds one row per pair, sorted by the pair's
+       position, with the position of the pair's first triple. A closing row ends the last run. */
+    uint32_t context_count = lexicon->context_count;
+    uint32_t triple_count = lexicon->triple_count;
+    uint32_t previous_pair = 0, previous_first = 0;
+    for (uint32_t row = 0; row <= context_count; row++) {
+        uint32_t pair = read_u32(lexicon->contexts + CONTEXT_BYTES * (size_t)row);
+        uint32_t first = read_u32(lexicon->contexts + CONTEXT_BYTES * (size_t)row + 4);
+        if (row == context_count) {
+            if (pair != pair_count || first != triple_count) return 0;
+        } else {
+            if (pair >= pair_count || (row > 0 && pair <= previous_pair)) return 0;
+            if ((read_u32(lexicon->pairs + PAIR_BYTES * (size_t)pair) & PAIR_OPENS_TRIPLES) == 0) return 0;
+        }
+        if (first < previous_first || first > triple_count) return 0;
+        previous_pair = pair;
+        previous_first = first;
+    }
+    for (uint32_t triple = 0; triple < triple_count; triple++) {
+        if (triple_word(lexicon, triple) >= word_count) return 0;
     }
     return 1;
 }
@@ -157,6 +296,7 @@ duo_params duo_english_params(void) {
     params.margin_known = 5.0f;
     params.margin_unknown = 0.0f;
     params.sentence_end_weight = 0.0f;
+    params.reading_cost_weight = 1.0f;
     params.spaces_between_words = 1;
     params.beam = 8;
     return params;
@@ -176,6 +316,8 @@ duo_params duo_pinyin_params(void) {
     params.margin_unknown = 0.0f;
     params.sentence_end_weight = 1.0f;
     params.spaces_between_words = 0;
+    /* Many Chinese words share one spelling, and each of them is its own reading. */
+    params.beam = 32;
     return params;
 }
 
@@ -204,6 +346,7 @@ int duo_params_set(duo_params *params, const char *name, float value) {
     FIELD(margin_known)
     FIELD(margin_unknown)
     FIELD(sentence_end_weight)
+    FIELD(reading_cost_weight)
 #undef FIELD
     if (strcmp(name, "beam") == 0) { params->beam = (int)value; return 1; }
     return 0;
@@ -305,7 +448,7 @@ static void walk_node(walk_t *walk, uint32_t node_index, int depth) {
     if (depth >= MAX_DEPTH) return;
 
     for (uint32_t child_index = node.first_child; child_index < node.first_child + node.child_count; child_index++) {
-        char letter = (char)walk->lexicon->nodes[12 * (size_t)child_index + 9];
+        char letter = node_letter(walk->lexicon, child_index);
         float *row = walk->rows[depth + 1];
         const float *above = walk->rows[depth];
         float lowest = BIG;
@@ -374,7 +517,7 @@ static uint32_t find_exact_node(const duo_lexicon *lexicon, const char *letters,
         node_t node = node_at(lexicon, index);
         uint32_t next = NO_WORD;
         for (uint32_t child = node.first_child; child < node.first_child + node.child_count; child++) {
-            if ((char)lexicon->nodes[12 * (size_t)child + 9] == letters[position]) {
+            if (node_letter(lexicon, child) == letters[position]) {
                 next = child;
                 break;
             }
@@ -387,96 +530,191 @@ static uint32_t find_exact_node(const duo_lexicon *lexicon, const char *letters,
 
 /* ---- Word probabilities ---- */
 
-/* Picks the most probable word of a node after the word `previous`, and its log probability.
-   With a known previous word the probability comes from the word-pair statistic and the word's
-   own frequency, combined by the lexicon's model. The words of a node sit side by side in the
-   word table, so the pairs of `previous` that fall inside the node are one run of its sorted
-   pair list. */
+/* A walk over the words of one node, each with its log probability after a reading's last
+   words. The words of a node share one spelling, such as the Chinese words that sound alike.
+
+   The words of a node sit side by side in the word table, most probable first. The pairs of a
+   word are sorted by their second word, and the triples of a pair by their third word, so the
+   listed pairs and triples that end in the node are one run of each list. The walk goes
+   through the node's words and both runs in step.
+
+   A word without a listed pair or triple gets a back-off estimate: a sum of weights that is
+   the same for the whole node, plus the word's own log probability. These estimates fall from
+   word to word. A caller that has no use for one of them has no use for the later ones, and
+   turns them off with `skip_estimates`. The words with a listed pair or triple still come. */
+typedef struct {
+    const duo_lexicon *lexicon;
+    uint32_t word;         /* the next word of the node */
+    uint32_t end;          /* one past the node's last word */
+    uint32_t pair;         /* the next listed pair of the word before, and one past the last */
+    uint32_t pair_end;
+    uint32_t triple;       /* the next listed triple of the pair before, and one past the last */
+    uint32_t triple_end;
+    float pair_back_off;   /* added to a listed pair's value: the back-off weight of the pair before */
+    float estimate_base;   /* added to a word's own log probability for a back-off estimate */
+    float pair_weight;     /* the blend of model 0 */
+    float own_share;
+    float reading_cost_weight;
+    int own_only;          /* every word gets its own log probability and nothing else */
+    int mixed;             /* model 0 */
+    int skip_estimates;
+} followers_t;
+
+/* Starts a walk over the words of `node_index` after a reading that ends in the word `previous`.
+   `context` is the pair of the reading's last two words, or NO_PAIR. */
+static void start_followers(
+    followers_t *followers, const duo_lexicon *lexicon, const duo_params *params,
+    uint32_t previous, uint32_t context, uint32_t node_index) {
+    node_t node = node_at(lexicon, node_index);
+    followers->lexicon = lexicon;
+    followers->word = node.first_word;
+    followers->end = node.first_word + node.word_count;
+    followers->pair = 0;
+    followers->pair_end = 0;
+    followers->triple = 0;
+    followers->triple_end = 0;
+    followers->pair_back_off = 0.0f;
+    followers->estimate_base = 0.0f;
+    followers->pair_weight = params->pair_weight;
+    followers->own_share = 1.0f - params->pair_weight;
+    followers->reading_cost_weight = params->reading_cost_weight;
+    followers->mixed = lexicon->model != MODEL_BACK_OFF;
+    followers->skip_estimates = 0;
+    followers->own_only = previous == NO_WORD || lexicon->pair_count == 0
+        || (followers->mixed && params->pair_weight <= 0.0f);
+    if (followers->own_only) return;
+
+    if (followers->mixed) {
+        followers->estimate_base = logf(followers->own_share);
+    } else {
+        if (context != NO_PAIR) {
+            followers->pair_back_off = pair_back_off(lexicon, context);
+            uint32_t low, high;
+            triples_of_pair(lexicon, context, &low, &high);
+            followers->triple_end = high;
+            while (low < high) {
+                uint32_t middle = low + (high - low) / 2;
+                if (triple_word(lexicon, middle) < node.first_word) low = middle + 1;
+                else high = middle;
+            }
+            followers->triple = low;
+        }
+        followers->estimate_base = followers->pair_back_off + word_back_off(lexicon, previous);
+    }
+    uint32_t low = pair_start(lexicon, previous);
+    uint32_t high = pair_start(lexicon, previous + 1);
+    followers->pair_end = high;
+    while (low < high) {
+        uint32_t middle = low + (high - low) / 2;
+        if (pair_second(lexicon, middle) < node.first_word) low = middle + 1;
+        else high = middle;
+    }
+    followers->pair = low;
+}
+
+/* Gives the next word of the node, its log probability, and the listed pair of the word before
+   with this word, or NO_PAIR. `estimated` says that the value is a back-off estimate. Returns 0
+   when the node has no word left. */
+static int next_follower(followers_t *followers, uint32_t *word, float *log_probability, uint32_t *pair, int *estimated) {
+    const duo_lexicon *lexicon = followers->lexicon;
+    uint32_t pair_word = followers->pair < followers->pair_end ? pair_second(lexicon, followers->pair) : NO_WORD;
+    uint32_t third_word = followers->triple < followers->triple_end ? triple_word(lexicon, followers->triple) : NO_WORD;
+    if (followers->skip_estimates) {
+        /* Go straight to the next word with a listed pair or triple. */
+        uint32_t listed = pair_word < third_word ? pair_word : third_word;
+        if (listed > followers->word) followers->word = listed;
+    }
+    if (followers->word >= followers->end) return 0;
+
+    uint32_t current = followers->word++;
+    float own = word_log_probability(lexicon, current);
+    *word = current;
+    *pair = NO_PAIR;
+    *estimated = 1;
+    if (followers->own_only) {
+        *log_probability = own;
+        return 1;
+    }
+    float value = own + followers->estimate_base;
+    if (pair_word == current) {
+        *pair = followers->pair;
+        *estimated = 0;
+        float listed = pair_log_probability(lexicon, followers->pair);
+        followers->pair++;
+        if (followers->mixed) {
+            float blend = logf(followers->pair_weight * expf(listed) + followers->own_share * expf(own));
+            if (blend > value) value = blend;
+        } else {
+            value = followers->pair_back_off + listed
+                + followers->reading_cost_weight * word_reading_cost(lexicon, current);
+        }
+    }
+    if (third_word == current) {
+        *estimated = 0;
+        value = triple_log_probability(lexicon, followers->triple)
+            + followers->reading_cost_weight * word_reading_cost(lexicon, current);
+        followers->triple++;
+    }
+    *log_probability = value;
+    return 1;
+}
+
+/* Picks the most probable word of a node after the word `previous`, and its log probability. */
 static void best_word(
     const duo_lexicon *lexicon, const duo_params *params, uint32_t previous, uint32_t node_index,
     uint32_t *word, float *log_probability) {
-    node_t node = node_at(lexicon, node_index);
-    float top = word_log_probability(lexicon, node.first_word);
-    *word = node.first_word;
-    if (previous == NO_WORD || lexicon->pair_count == 0) {
-        *log_probability = top;
-        return;
-    }
-    int back_off_model = lexicon->model == MODEL_BACK_OFF;
-    if (!back_off_model && params->pair_weight <= 0.0f) {
-        *log_probability = top;
-        return;
-    }
-    float own_share = 1.0f - params->pair_weight;
-    /* Back-off model: a listed pair gives the chance of its second word, so the back-off
-       estimate holds only for the words of the node that have no listed pair. `listed` keeps
-       the listed words, to find the best word outside them. */
-    uint32_t listed[32];
-    int listed_count = 0;
-    float best = back_off_model ? -BIG : top + logf(own_share);
-    uint32_t low = read_u32(lexicon->pair_index + 4 * (size_t)previous);
-    uint32_t end = read_u32(lexicon->pair_index + 4 * ((size_t)previous + 1));
-    uint32_t high = end;
-    while (low < high) {
-        uint32_t middle = low + (high - low) / 2;
-        if (read_u32(lexicon->pairs + 8 * (size_t)middle) < node.first_word) low = middle + 1;
-        else high = middle;
-    }
-    for (uint32_t pair = low; pair < end; pair++) {
-        uint32_t second = read_u32(lexicon->pairs + 8 * (size_t)pair);
-        if (second >= node.first_word + node.word_count) break;
-        float pair_value = read_f32(lexicon->pairs + 8 * (size_t)pair + 4);
-        float value = back_off_model
-            ? pair_value
-            : logf(params->pair_weight * expf(pair_value) + own_share * expf(word_log_probability(lexicon, second)));
-        if (back_off_model && listed_count < 32) listed[listed_count++] = second;
-        if (value > best) {
-            best = value;
-            *word = second;
+    followers_t followers;
+    uint32_t candidate, pair;
+    float value;
+    int estimated;
+    *word = node_at(lexicon, node_index).first_word;
+    *log_probability = -BIG;
+    start_followers(&followers, lexicon, params, previous, NO_PAIR, node_index);
+    while (next_follower(&followers, &candidate, &value, &pair, &estimated)) {
+        if (value > *log_probability) {
+            *log_probability = value;
+            *word = candidate;
         }
+        /* The first back-off estimate of a node is its highest. */
+        if (estimated) followers.skip_estimates = 1;
     }
-    if (back_off_model) {
-        /* The words of a node are sorted by their own probability, so the first word without a
-           listed pair has the best back-off estimate. */
-        float weight = word_back_off(lexicon, previous);
-        for (uint32_t candidate = node.first_word; candidate < node.first_word + node.word_count; candidate++) {
-            int is_listed = 0;
-            for (int index = 0; index < listed_count; index++) {
-                if (listed[index] == candidate) {
-                    is_listed = 1;
-                    break;
-                }
-            }
-            if (is_listed) continue;
-            float value = weight + word_log_probability(lexicon, candidate);
-            if (value > best) {
-                best = value;
-                *word = candidate;
-            }
-            break;
-        }
-    }
-    *log_probability = best;
 }
 
-/* The log probability of one given word after the word `previous`. */
-static float word_after(const duo_lexicon *lexicon, const duo_params *params, uint32_t previous, uint32_t word) {
+/* The log probability of one given word after a reading that ends in the word `previous`.
+   `context` is the pair of the reading's last two words, or NO_PAIR. */
+static float word_after(
+    const duo_lexicon *lexicon, const duo_params *params, uint32_t previous, uint32_t context, uint32_t word) {
     float own = word_log_probability(lexicon, word);
     if (previous == NO_WORD || lexicon->pair_count == 0) return own;
-    uint32_t low = read_u32(lexicon->pair_index + 4 * (size_t)previous);
-    uint32_t high = read_u32(lexicon->pair_index + 4 * ((size_t)previous + 1));
+    int back_off_model = lexicon->model == MODEL_BACK_OFF;
+    float reading_cost = params->reading_cost_weight * word_reading_cost(lexicon, word);
+    float weight = 0.0f;
+    if (back_off_model && context != NO_PAIR) {
+        uint32_t low, high;
+        triples_of_pair(lexicon, context, &low, &high);
+        while (low < high) {
+            uint32_t middle = low + (high - low) / 2;
+            uint32_t third = triple_word(lexicon, middle);
+            if (third == word) return triple_log_probability(lexicon, middle) + reading_cost;
+            if (third < word) low = middle + 1;
+            else high = middle;
+        }
+        weight = pair_back_off(lexicon, context);
+    }
+    uint32_t low = pair_start(lexicon, previous);
+    uint32_t high = pair_start(lexicon, previous + 1);
     while (low < high) {
         uint32_t middle = low + (high - low) / 2;
-        uint32_t second = read_u32(lexicon->pairs + 8 * (size_t)middle);
+        uint32_t second = pair_second(lexicon, middle);
         if (second == word) {
-            float pair_value = read_f32(lexicon->pairs + 8 * (size_t)middle + 4);
-            if (lexicon->model == MODEL_BACK_OFF) return pair_value;
+            float pair_value = pair_log_probability(lexicon, middle);
+            if (back_off_model) return weight + pair_value + reading_cost;
             return logf(params->pair_weight * expf(pair_value) + (1.0f - params->pair_weight) * expf(own));
         }
         if (second < word) low = middle + 1;
         else high = middle;
     }
-    if (lexicon->model == MODEL_BACK_OFF) return word_back_off(lexicon, previous) + own;
+    if (back_off_model) return weight + word_back_off(lexicon, previous) + own;
     return params->pair_weight > 0.0f ? own + logf(1.0f - params->pair_weight) : own;
 }
 
@@ -484,7 +722,7 @@ static float word_after(const duo_lexicon *lexicon, const duo_params *params, ui
 static uint32_t find_mark(const duo_lexicon *lexicon, char mark) {
     node_t root = node_at(lexicon, 0);
     for (uint32_t child = root.first_child; child < root.first_child + root.child_count; child++) {
-        if ((char)lexicon->nodes[12 * (size_t)child + 9] == mark) {
+        if (node_letter(lexicon, child) == mark) {
             node_t node = node_at(lexicon, child);
             return node.word_count > 0 ? node.first_word : NO_WORD;
         }
@@ -500,6 +738,7 @@ static uint32_t find_mark(const duo_lexicon *lexicon, char mark) {
 typedef struct {
     float score;
     uint32_t word;        /* the last word of this reading, or NO_WORD */
+    uint32_t pair;        /* the pair of the last two words when a later word depends on it, or NO_PAIR */
     int from_position;    /* where the reading stood before its last word, or -1 at the start */
     int from_state;
     int kept_start;       /* for text kept as typed: its span in the typed text */
@@ -509,27 +748,39 @@ typedef struct {
 typedef struct {
     state_t states[MAX_BEAM];
     int count;
+    int weakest;          /* in a full cell: the first of the readings with the lowest score */
 } cell_t;
 
-/* Adds a reading to a cell. Two readings that end in the same word go on the same way, so the
-   cell keeps the better one. A full cell drops its weakest reading. */
-static void add_state(cell_t *cell, int beam, state_t state) {
-    for (int index = 0; index < cell->count; index++) {
-        state_t *existing = &cell->states[index];
-        if (existing->word == state.word && existing->kept_start == state.kept_start && existing->kept_end == state.kept_end) {
-            if (state.score > existing->score) *existing = state;
-            return;
-        }
-    }
-    if (cell->count < beam) {
-        cell->states[cell->count++] = state;
-        return;
-    }
+static void find_weakest(cell_t *cell) {
     int weakest = 0;
     for (int index = 1; index < cell->count; index++) {
         if (cell->states[index].score < cell->states[weakest].score) weakest = index;
     }
-    if (state.score > cell->states[weakest].score) cell->states[weakest] = state;
+    cell->weakest = weakest;
+}
+
+/* Adds a reading to a cell. Two readings that end in the same word, and in the same pair when
+   a later word depends on the pair, go on the same way, so the cell keeps the better one. A
+   full cell drops its weakest reading. Returns 0 when the cell is full and the reading is not
+   better than the weakest reading in it, and 1 otherwise. */
+static int add_state(cell_t *cell, int beam, state_t state) {
+    int full = cell->count >= beam;
+    if (full && state.score <= cell->states[cell->weakest].score) return 0;
+    for (int index = 0; index < cell->count; index++) {
+        state_t *existing = &cell->states[index];
+        if (existing->word == state.word && existing->pair == state.pair
+            && existing->kept_start == state.kept_start && existing->kept_end == state.kept_end) {
+            if (state.score > existing->score) {
+                *existing = state;
+                if (full) find_weakest(cell);
+            }
+            return 1;
+        }
+    }
+    if (full) cell->states[cell->weakest] = state;
+    else cell->states[cell->count++] = state;
+    if (cell->count >= beam) find_weakest(cell);
+    return 1;
 }
 
 /* Writes the reading that ends in `state` into `text`. Returns 0 when the text does not fit. */
@@ -572,6 +823,12 @@ static int write_reading(
     return 1;
 }
 
+/* A cell that a reading reaches with its next word, and the cost of reaching it. */
+typedef struct {
+    cell_t *cell;
+    float cost;
+} target_t;
+
 /* Finds the best reading of typed[0..length). Returns 1 and fills `result`, or 0 on failure.
    When the lexicon cannot read the text to its end, the unreadable parts are kept as typed. */
 static int decode(
@@ -588,7 +845,7 @@ static int decode(
     /* Without a word before the typed text, the text opens a sentence. */
     if (previous_word == NO_WORD) previous_word = find_mark(lexicon, SENTENCE_START_MARK);
     uint32_t end_mark = params->sentence_end_weight > 0.0f ? find_mark(lexicon, SENTENCE_END_MARK) : NO_WORD;
-    state_t first = { 0.0f, previous_word, -1, -1, -1, -1 };
+    state_t first = { 0.0f, previous_word, NO_PAIR, -1, -1, -1, -1 };
     cells[0].states[0] = first;
     cells[0].count = 1;
 
@@ -612,6 +869,7 @@ static int decode(
                 state.score = cell->states[index].score + params->unknown_word
                     + params->unknown_letter * (float)(kept_end - start);
                 state.word = NO_WORD;
+                state.pair = NO_PAIR;
                 state.from_position = start;
                 state.from_state = index;
                 state.kept_start = start;
@@ -623,35 +881,54 @@ static int decode(
         int edge_count = find_edges(lexicon, params, typed, length, start, edges);
         for (int edge_index = 0; edge_index < edge_count; edge_index++) {
             const edge_t *edge = &edges[edge_index];
+            target_t targets[2];
+            int target_count = 1;
+            targets[0].cost = 0.0f;
+            if (edge->end >= length) {
+                targets[0].cell = &cells[length];
+            } else if (!params->spaces_between_words) {
+                targets[0].cell = &cells[edge->end];
+            } else if (typed[edge->end] == ' ') {
+                targets[0].cell = &cells[edge->end + 1 > length ? length : edge->end + 1];
+            } else {
+                /* No space was typed after this word. Either the space is missing, or the
+                   next byte is a letter from the row above the space bar typed in its place. */
+                targets[0].cell = &cells[edge->end];
+                targets[0].cost = params->missing_space;
+                if (is_above_space(typed[edge->end]) && edge->end + 1 < length) {
+                    targets[1].cell = &cells[edge->end + 1];
+                    targets[1].cost = params->letter_for_space;
+                    target_count = 2;
+                }
+            }
             for (int index = 0; index < cell->count; index++) {
-                uint32_t word;
+                const state_t *from = &cell->states[index];
+                /* Every word of the node goes on as its own reading, because the word that is
+                   most probable here is not always the word of the best whole reading. */
+                followers_t followers;
+                uint32_t word, pair;
                 float log_probability;
-                best_word(lexicon, params, cell->states[index].word, edge->node, &word, &log_probability);
-                state_t state;
-                state.score = cell->states[index].score + log_probability - edge->cost
-                    - (edge->cost > 0.0f ? params->slipped_word : 0.0f);
-                state.word = word;
-                state.from_position = start;
-                state.from_state = index;
-                state.kept_start = -1;
-                state.kept_end = -1;
-                if (edge->end >= length) {
-                    add_state(&cells[length], beam, state);
-                } else if (!params->spaces_between_words) {
-                    add_state(&cells[edge->end], beam, state);
-                } else if (typed[edge->end] == ' ') {
-                    add_state(&cells[edge->end + 1 > length ? length : edge->end + 1], beam, state);
-                } else {
-                    /* No space was typed after this word. Either the space is missing, or the
-                       next byte is a letter from the row above the space bar typed in its place. */
-                    state_t missing = state;
-                    missing.score -= params->missing_space;
-                    add_state(&cells[edge->end], beam, missing);
-                    if (is_above_space(typed[edge->end]) && edge->end + 1 < length) {
-                        state_t replaced = state;
-                        replaced.score -= params->letter_for_space;
-                        add_state(&cells[edge->end + 1], beam, replaced);
+                int estimated;
+                start_followers(&followers, lexicon, params, from->word, from->pair, edge->node);
+                while (next_follower(&followers, &word, &log_probability, &pair, &estimated)) {
+                    state_t state;
+                    state.score = from->score + log_probability - edge->cost
+                        - (edge->cost > 0.0f ? params->slipped_word : 0.0f);
+                    state.word = word;
+                    state.pair = pair != NO_PAIR && pair_matters_later(lexicon, pair) ? pair : NO_PAIR;
+                    state.from_position = start;
+                    state.from_state = index;
+                    state.kept_start = -1;
+                    state.kept_end = -1;
+                    int added = 0;
+                    for (int target = 0; target < target_count; target++) {
+                        state_t reached = state;
+                        if (targets[target].cost != 0.0f) reached.score -= targets[target].cost;
+                        added |= add_state(targets[target].cell, beam, reached);
                     }
+                    /* A back-off estimate that no cell takes ends the node's estimates: the
+                       later ones are lower, and a full cell only gets harder to enter. */
+                    if (estimated && !added) followers.skip_estimates = 1;
                 }
             }
         }
@@ -663,9 +940,20 @@ static int decode(
         int best = 0;
         float best_score = -BIG;
         for (int index = 0; index < last->count; index++) {
-            float score = last->states[index].score;
-            if (end_mark != NO_WORD && last->states[index].word != NO_WORD) {
-                score += params->sentence_end_weight * word_after(lexicon, params, last->states[index].word, end_mark);
+            const state_t *state = &last->states[index];
+            float score = state->score;
+            if (state->word != NO_WORD && params->sentence_end_weight > 0.0f) {
+                if (end_mark != NO_WORD) {
+                    score += params->sentence_end_weight * word_after(lexicon, params, state->word, state->pair, end_mark);
+                } else if (lexicon->model == MODEL_BACK_OFF) {
+                    /* A lexicon without a sentence-end mark does not list the end of a text
+                       after any word. A back-off model gives a follower that it does not list
+                       the back-off weights of the words before it, so the end of the text
+                       costs the weights of the last word and of the last pair. */
+                    float weight = word_back_off(lexicon, state->word);
+                    if (state->pair != NO_PAIR) weight += pair_back_off(lexicon, state->pair);
+                    score += params->sentence_end_weight * weight;
+                }
             }
             if (score > best_score) {
                 best_score = score;
