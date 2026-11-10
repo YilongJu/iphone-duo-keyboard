@@ -736,6 +736,10 @@ class Engine {
         return mEngineCallCount;
     }
 
+    long continuedCallCount() const {
+        return mContinuedCallCount;
+    }
+
     double lookUpSeconds() const {
         return mLookUpSeconds;
     }
@@ -807,6 +811,14 @@ class Engine {
             std::fill_n(inputCodePoints, MAX_WORD_LENGTH, NOT_A_CODE_POINT);
             std::copy_n(typedCodePoints.begin(), size, inputCodePoints);
             latinime::SuggestionResults suggestionResults(MAX_RESULTS);
+            // Suggest::initializeSearch continues the last search when the input has more
+            // than two points (MIN_CONTINUOUS_SUGGESTION_INPUT_SIZE) and the session holds
+            // cached search nodes for an input that the new input extends. Within one word
+            // of this loop, cached nodes always belong to the call before.
+            if (size > 2
+                    && session->getDicTraverseCache()->hasCachedDicNodesForContinuousSuggestion()) {
+                ++mContinuedCallCount;
+            }
             if (size > 0) {
                 mDictionary->getSuggestions(mProximityInfo, session, xCoordinates.data(),
                         yCoordinates.data(), times.data(), pointerIds.data(), inputCodePoints,
@@ -882,6 +894,7 @@ class Engine {
     std::map<std::string, std::vector<Suggestion>> mCache;
     long mLookUpCount = 0;
     long mEngineCallCount = 0;
+    long mContinuedCallCount = 0;
     double mLookUpSeconds = 0.0;
 };
 
@@ -1350,10 +1363,11 @@ int run(int argc, char **argv) {
     const long lookUps = engine.lookUpCount();
     const long engineCalls = engine.engineCallCount();
     std::fprintf(stderr, "latinime_driver: %ld cases, %zu engine names, lookup %s%s, %ld word"
-            " lookups with %ld engine calls in %.2f s (%.2f ms for one word lookup, %.2f ms for"
-            " one engine call), peak resident memory %s\n", caseCount, configs.size(),
+            " lookups with %ld engine calls, of them %ld continued from a cached search, in"
+            " %.2f s (%.2f ms for one word lookup, %.2f ms for one engine call), peak resident"
+            " memory %s\n", caseCount, configs.size(),
             incremental ? "incremental" : "fresh", autoCapitalize ? ", auto-capitalize" : "",
-            lookUps, engineCalls, engine.lookUpSeconds(),
+            lookUps, engineCalls, engine.continuedCallCount(), engine.lookUpSeconds(),
             lookUps > 0 ? 1000.0 * engine.lookUpSeconds() / static_cast<double>(lookUps) : 0.0,
             engineCalls > 0
                     ? 1000.0 * engine.lookUpSeconds() / static_cast<double>(engineCalls) : 0.0,
