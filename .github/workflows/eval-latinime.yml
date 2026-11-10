@@ -72,5 +72,10 @@ jobs:
         if: always()
         with:
           name: typing-evaluation-latinime
-          path: build/typing-evaluation/
+          # The published misspelling lists and the cases made from them stay out of the artifact,
+          # because the page of the lists does not state a license.
+          path: |
+            build/typing-evaluation/
+            !build/typing-evaluation/external/
+            !build/typing-evaluation/mitton/
           if-no-files-found: error
