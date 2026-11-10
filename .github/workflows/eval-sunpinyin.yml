@@ -1,0 +1,116 @@
+name: Typing evaluation of sunpinyin
+
+# Scores the sunpinyin Pinyin engine, from the Ubuntu 24.04 packages, on the typing test cases.
+# The adapter and its notes live in scripts/typing-evaluation/engines/sunpinyin/.
+on:
+  push:
+    branches: ['eval/sunpinyin']
+  workflow_dispatch:
+
+jobs:
+  sunpinyin:
+    name: sunpinyin on the Pinyin typing test cases
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      ADAPTER: scripts/typing-evaluation/engines/sunpinyin
+      CLI: build/engines/sunpinyin/sunpinyin_cli
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install sunpinyin from the Ubuntu packages
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends g++ pkg-config libsunpinyin-dev sunpinyin-data
+
+      - name: Print the installed versions
+        run: |
+          set -euo pipefail
+          echo "== packages"
+          dpkg-query -W -f='${Package} ${Version} ${Architecture}\n' | grep -i -E 'sunpinyin|^g\+\+|^pkg-config|^pkgconf |^libsqlite3-0'
+          echo "== pkg-config"
+          pkg-config --modversion sunpinyin-2.0
+          pkg-config --cflags --libs sunpinyin-2.0
+          echo "== compiler and python"
+          g++ --version | head -n 1
+          python3 --version
+          echo "== files of sunpinyin-data"
+          dpkg -L sunpinyin-data
+          echo "== model and dictionary, by name anywhere under /usr"
+          find /usr -name 'lm_sc.t3g*' -o -name 'pydict_sc.bin*' | sort | while read -r file; do
+            ls -l "$file"
+            sha256sum "$file"
+          done
+          echo "== library"
+          library_package="$(dpkg-query -W -f='${Package}\n' | grep -E '^libsunpinyin3')"
+          dpkg -L "$library_package" | grep -E '\.so'
+          library_file="$(dpkg -L "$library_package" | grep -m 1 -E '\.so\.[0-9.]+$')"
+          echo "== folder names compiled into $library_file"
+          strings "$library_file" | grep -E 'sunpinyin/data|\.sunpinyin' || echo "strings did not find a folder name"
+
+      - name: Print the license files of the packages
+        run: |
+          set -euo pipefail
+          for package in $(dpkg-query -W -f='${Package}\n' | grep -i sunpinyin); do
+            echo "== /usr/share/doc/$package/copyright"
+            cat "/usr/share/doc/$package/copyright" || echo "the package does not have this file"
+          done
+
+      - name: Print the engine interface that the adapter calls
+        run: |
+          set -euo pipefail
+          include_dir="$(pkg-config --variable=includedir sunpinyin-2.0)"
+          grep -n -E 'createSession|destroySession|setLanguage|setInputStyle|setPinyinScheme|setAutoCorrecting|setAutoCorrectionPairs|setFuzzyForwarding|setFuzzyPinyinPairs|setUserDataDir|_STYLE|QUANPIN|SIMPLIFIED_CHINESE' "$include_dir/ime-core/imi_options.h"
+          grep -n -E 'getBestSentence|getCandidates|getLastFrIdx|isEmpty|m_historyPower|setMaxBest' "$include_dir/ime-core/imi_context.h"
+          grep -n -E 'onKeyEvent|getCandidateList|getPreeditString|attachWinHandler' "$include_dir/ime-core/imi_view.h"
+          grep -n -E 'HAVE_|WORDS_BIGENDIAN|ENABLE_PLUGINS' -r "$include_dir" | grep -v -E '_H *$|_H_*$' || true
+
+      - name: Build the adapter program
+        run: |
+          set -euo pipefail
+          mkdir -p "$(dirname "$CLI")"
+          # The three HAVE_ names are the ones the library's own build sets on Linux. Its headers read them.
+          g++ -std=gnu++11 -O2 -Wall -DHAVE_LOG2 -DHAVE_UNISTD_H -DHAVE_SYS_MMAN_H \
+            $(pkg-config --cflags sunpinyin-2.0) "$ADAPTER/sunpinyin_cli.cpp" \
+            $(pkg-config --libs sunpinyin-2.0) -o "$CLI"
+          ldd "$CLI" | grep -i -E 'sunpinyin|sqlite'
+
+      - name: Show each mode on a few probe strings
+        run: |
+          set -euo pipefail
+          python3 "$ADAPTER/run_sunpinyin.py" --cli "$CLI" --probes
+
+      - name: Run the dev half
+        run: |
+          set -euo pipefail
+          python3 "$ADAPTER/run_sunpinyin.py" --cli "$CLI" --half dev --show-misses 6
+
+      - name: Run the test half
+        run: |
+          set -euo pipefail
+          python3 "$ADAPTER/run_sunpinyin.py" --cli "$CLI" --half test
+
+      - name: Score every engine name on both halves
+        run: |
+          set -euo pipefail
+          for name in sunpinyin-default sunpinyin-correction sunpinyin-fuzzy; do
+            for half in dev test; do
+              python3 scripts/typing-evaluation/score.py --task pinyin --engine "$name" \
+                --cases "scripts/typing-evaluation/cases/pinyin.$half.jsonl" \
+                --predictions "build/typing-evaluation/$name/pinyin.$half.jsonl" \
+                --json "build/typing-evaluation/$name/pinyin.$half.summary.json"
+            done
+          done
+
+      - name: Print the run counts
+        run: |
+          set -euo pipefail
+          cat build/typing-evaluation/sunpinyin-*/pinyin.*.run.json
+
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: typing-evaluation-sunpinyin
+          path: build/typing-evaluation/
+          if-no-files-found: error
