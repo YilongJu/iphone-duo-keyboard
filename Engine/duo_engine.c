@@ -164,6 +164,10 @@ duo_params duo_english_params(void) {
 
 duo_params duo_pinyin_params(void) {
     duo_params params = duo_english_params();
+    /* On the dev half of the Pinyin cases, these two values change correctly typed Pinyin less
+       often than the English values do, and they repair slightly more slips. */
+    params.omission = 4.0f;
+    params.slipped_word = 2.0f;
     params.omission_of_apostrophe = BIG;
     params.missing_space = 0.0f;
     params.letter_for_space = BIG;
