@@ -61,6 +61,10 @@ def main():
         name = run.name[len("rerank-"):]
         probe = probe_numbers((run / f"probe-{name}.txt").read_text()) if (run / f"probe-{name}.txt").exists() else {}
         base = probe_numbers((run / "probe-baseline.txt").read_text()) if (run / "probe-baseline.txt").exists() else {}
+        if "load_failed" in probe and (run / "load-error.txt").exists():
+            reasons = [line for line in (run / "load-error.txt").read_text().splitlines() if "error loading model" in line]
+            if reasons:
+                probe["load_failed"] = "does not load: " + reasons[0].split("error loading model: ")[-1].strip()
         result_path = run / "result.json"
         result = json.loads(result_path.read_text()) if result_path.exists() else None
         rows.append((name, probe, base, result))
@@ -86,26 +90,28 @@ def main():
         print(f"| {name} | {s['weight']} | {s['margin_from_typed']} | {s['margin_to_typed']} | {s['margin_other']} | "
               f"{s['space_after']} | {gain:+d} | {folds[0]['gain_on_other_fold']:+d} | {folds[1]['gain_on_other_fold']:+d} |")
 
-    print("\nTable 3. Size, speed on the Linux runner (2 threads) and the phone estimate from the ratio to distilgpt2 Q3_K_M.\n")
-    print("| Model | file MB | per token ms (Linux) | ratio | phone per token ms | 8 candidates ms (Linux) | phone 8 candidates ms | "
-          "anon growth MB (Linux) | phone extra MB | flags |")
+    print("\nTable 3. Size, speed on the Linux runner (2 threads, the model and distilgpt2 Q3_K_M on the same runner) "
+          "and the phone estimates. Estimate A scales the phone's 8-candidate time (23.4 ms) by the per-token ratio, "
+          "estimate B by the ratio of the 8-candidate times. The flags use the larger estimate.\n")
+    print("| Model | file MB | per token ms, model / baseline | per-token ratio | phone per token ms | "
+          "phone 8 candidates ms, A | phone 8 candidates ms, B | anon growth MB, model / baseline | phone extra MB | flags |")
     print("| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |")
     for name, probe, base, result in rows:
         if "per_token_ms" not in probe or "per_token_ms" not in base:
             print(f"| {name} | {probe.get('file_mb', '')} | {probe.get('load_failed', 'not measured')} | | | | | | | |")
             continue
         ratio = probe["per_token_ms"] / base["per_token_ms"]
-        candidates_ratio = probe["candidates_ms"] / base["candidates_ms"]
-        phone_candidates = PHONE_CANDIDATES_MS * candidates_ratio
+        estimate_a = PHONE_CANDIDATES_MS * ratio
+        estimate_b = PHONE_CANDIDATES_MS * probe["candidates_ms"] / base["candidates_ms"]
         phone_memory = PHONE_EXTRA_MB + probe["anon_growth_mb"] - base["anon_growth_mb"]
         flags = []
-        if phone_candidates > FLAG_LATENCY_MS:
+        if max(estimate_a, estimate_b) > FLAG_LATENCY_MS:
             flags.append("latency over 50 ms")
         if phone_memory > FLAG_MEMORY_MB:
             flags.append("memory over 100 MB")
-        print(f"| {name} | {probe['file_mb']:.1f} | {probe['per_token_ms']:.2f} | {ratio:.2f} | {PHONE_PER_TOKEN_MS * ratio:.2f} | "
-              f"{probe['candidates_ms']:.1f} ({probe['candidate_tokens']} tokens) | {phone_candidates:.1f} | "
-              f"{probe['anon_growth_mb']:.1f} | {phone_memory:.1f} | {', '.join(flags) or 'none'} |")
+        print(f"| {name} | {probe['file_mb']:.1f} | {probe['per_token_ms']:.2f} / {base['per_token_ms']:.2f} | {ratio:.2f} | "
+              f"{PHONE_PER_TOKEN_MS * ratio:.2f} | {estimate_a:.1f} | {estimate_b:.1f} | "
+              f"{probe['anon_growth_mb']:.1f} / {base['anon_growth_mb']:.1f} | {phone_memory:.1f} | {', '.join(flags) or 'none'} |")
 
 
 if __name__ == "__main__":
