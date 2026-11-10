@@ -74,6 +74,60 @@ final class KeyboardTextControllerTests: XCTestCase {
         }
     }
 
+    func testSelectAllThenPinyinReplacesAllTextInChineseMode() {
+        makeController(before: "hello ", after: "world")
+        controller.keyboardView(keyboardView, edit: .toggleLanguage)
+        controller.keyboardView(keyboardView, edit: .selectAll)
+        XCTAssertTrue(keyboardView.selectAllActive)
+        type("nihao")
+        waitForDelayedEdits()
+        // The old text is gone, and the letters wait in the Pinyin buffer as usual.
+        XCTAssertEqual(document.text, "")
+        XCTAssertEqual(controller.pinyinBuffer, "nihao")
+        type(" ")
+        XCTAssertEqual(document.text, "\u{4F60}\u{597D}")
+    }
+
+    func testSelectAllThenPinyinWithTheCursorAtTheEndInChineseMode() {
+        makeController(before: "hello")
+        controller.keyboardView(keyboardView, edit: .toggleLanguage)
+        controller.keyboardView(keyboardView, edit: .selectAll)
+        type("wo ")
+        XCTAssertEqual(document.text, "\u{6211}")
+    }
+
+    func testSelectAllThenBackspaceDeletesAllTextInChineseMode() {
+        makeController(before: "\u{4F60}\u{597D}", after: "\u{6211}")
+        controller.keyboardView(keyboardView, edit: .toggleLanguage)
+        controller.keyboardView(keyboardView, edit: .selectAll)
+        controller.keyboardViewDeleteBackward(keyboardView)
+        waitForDelayedEdits()
+        XCTAssertEqual(document.text, "")
+    }
+
+    func testSelectAllThenCopyAndCutWorkInChineseMode() {
+        makeController(before: "\u{4F60}\u{597D}", after: "\u{6211}")
+        controller.keyboardView(keyboardView, edit: .toggleLanguage)
+        controller.keyboardView(keyboardView, edit: .selectAll)
+        controller.keyboardView(keyboardView, edit: .copy)
+        XCTAssertEqual(UIPasteboard.general.string, "\u{4F60}\u{597D}\u{6211}")
+        XCTAssertTrue(keyboardView.selectAllActive)
+        controller.keyboardView(keyboardView, edit: .cut)
+        waitForDelayedEdits()
+        XCTAssertEqual(document.text, "")
+    }
+
+    func testSelectAllThenPasteReplacesAllTextInChineseMode() {
+        makeController(before: "\u{4F60}\u{597D}")
+        controller.keyboardView(keyboardView, edit: .toggleLanguage)
+        UIPasteboard.general.string = "nihao"
+        controller.keyboardView(keyboardView, edit: .selectAll)
+        controller.keyboardView(keyboardView, edit: .paste)
+        // Pasted text goes in as it is. It does not pass through the Pinyin buffer.
+        XCTAssertEqual(document.text, "nihao")
+        XCTAssertEqual(controller.pinyinBuffer, "")
+    }
+
     func testPinyinLettersWaitInTheBufferAndSpaceTypesTheFirstCandidate() {
         makeController(before: "")
         controller.keyboardView(keyboardView, edit: .toggleLanguage)
