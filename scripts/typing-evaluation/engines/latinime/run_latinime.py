@@ -1,14 +1,17 @@
 """Runs the native suggest engine of the AOSP keyboard (LatinIME) over the English test cases.
 
 Usage, from the repository root, after fetch_sources.sh and build.sh in this folder:
+    python3 scripts/typing-evaluation/engines/latinime/run_latinime.py --tune-on-dev
     python3 scripts/typing-evaluation/engines/latinime/run_latinime.py --half dev
     python3 scripts/typing-evaluation/engines/latinime/run_latinime.py --controls
     python3 scripts/typing-evaluation/engines/latinime/run_latinime.py --explain-samples
     python3 scripts/typing-evaluation/engines/latinime/run_latinime.py --list-engines
 
+--tune-on-dev scores the dev half at a grid of thresholds and writes the tuned threshold to
+build/latinime/tuned-threshold.txt. The other actions that run the engine read that file.
 --half writes build/typing-evaluation/NAME/english.HALF.jsonl for each engine name, with one JSON
 object per case: the case `id` and the engine's `output`.
---controls prints five checks on the dev half that score.py does not make.
+--controls prints four checks on the dev half that score.py does not make.
 
 The script builds the keyboard layout from scripts/typing-evaluation/keyboard_noise.py and hands
 the cases to latinime_driver, which calls the engine. README.md in this folder describes both.
@@ -30,6 +33,7 @@ from score import score  # noqa: E402
 CASES = EVALUATION / "cases"
 OUTPUT = ROOT / "build" / "typing-evaluation"
 BUILD = ROOT / "build" / "latinime"
+TUNED_THRESHOLD_FILE = BUILD / "tuned-threshold.txt"
 
 # keyboard_noise.py measures in key widths and puts two rows one key width apart. The engine
 # takes whole pixels. 108 pixels is one tenth of a screen 1080 pixels wide.
@@ -39,7 +43,7 @@ ROW_HEIGHT = 108
 # The auto-correction thresholds of java/res/values/config-auto-correction-thresholds.xml in the
 # AOSP keyboard. SettingsValues.java uses "modest" whenever auto-correction is on, so "modest" is
 # the stock setting. The other two stand in the same resource file, and the settings screen of
-# this AOSP version does not offer them.
+# this AOSP version does not offer them. "tuned" is the value that --tune-on-dev writes.
 THRESHOLDS = {"modest": "0.185", "aggressive": "0.067", "very-aggressive": "-inf"}
 
 # Engine name, mode and threshold. Mode "token": each space-separated token of `typed` is one
@@ -48,20 +52,24 @@ THRESHOLDS = {"modest": "0.185", "aggressive": "0.067", "very-aggressive": "-inf
 ENGINES = [
     ("latinime-token", "token", "modest"),
     ("latinime-span", "span", "modest"),
+    ("latinime-token-tuned", "token", "tuned"),
+    ("latinime-span-tuned", "span", "tuned"),
     ("latinime-token-aggressive", "token", "aggressive"),
     ("latinime-span-aggressive", "span", "aggressive"),
     ("latinime-token-very-aggressive", "token", "very-aggressive"),
     ("latinime-span-very-aggressive", "span", "very-aggressive"),
 ]
 
-# Thresholds of the dev sweep in --controls, from the stock value upward. "inf" switches the
-# threshold rule off, so that only a whitelist entry replaces a typed word.
-SWEEP_THRESHOLDS = ["0.185", "0.2", "0.22", "0.24", "0.26", "0.28", "0.3", "0.32", "0.34", "0.36", "0.38",
-                    "0.4", "0.45", "0.5", "0.6", "0.8", "1", "inf"]
+# The task picks a setting on the dev half by the share of slips repaired, with the share of
+# clean cases kept at 0.98 or more (scripts/typing-evaluation/README.md, Table 1).
+CLEAN_FLOOR = 0.98
+# The grid of --tune-on-dev: the stock value, then steps of 0.01 up to 0.60, then three wide
+# steps. "inf" switches the threshold rule off, so that only a whitelist entry replaces a word.
+TUNING_GRID = ["0.185"] + [f"{0.19 + 0.01 * step:.2f}" for step in range(42)] + ["0.8", "1", "inf"]
 
 # Context and typed text for --explain-samples: cases of the dev half, one for each category
-# example of Table 3 in scripts/typing-evaluation/README.md, and the word "hid". The stock word
-# list holds "hid" as a word and also maps "hid" to "his".
+# example of Table 3 in scripts/typing-evaluation/README.md, the word "hid", and one correct
+# two-word text. The stock word list holds "hid" as a word and also maps "hid" to "his".
 SAMPLES = [
     ("has tom tried doing", "this"),
     ("", "mary"),
@@ -81,6 +89,8 @@ SAMPLES = [
     ("", "youd"),
     ("where's tom going", "to be"),
 ]
+
+EngineSetting = tuple[str, str, str]  # Engine name, mode, threshold value for the driver.
 
 
 def pixels(value: float, unit: int) -> int:
@@ -118,11 +128,15 @@ def write_layout(path: Path) -> None:
     path.write_text("\n".join(lines) + "\n", encoding="utf-8", newline="\n")
 
 
-# The six engine names as (name, mode, threshold value) for the driver.
-STOCK_ENGINES = [(name, mode, THRESHOLDS[threshold]) for name, mode, threshold in ENGINES]
+def engine_settings() -> list[EngineSetting]:
+    """The eight engine names with their threshold values. Reads the tuned threshold from its file."""
+    if not TUNED_THRESHOLD_FILE.is_file():
+        raise SystemExit(f"{TUNED_THRESHOLD_FILE} is missing: run this script with --tune-on-dev first")
+    values = dict(THRESHOLDS, tuned=TUNED_THRESHOLD_FILE.read_text(encoding="utf-8").strip())
+    return [(name, mode, values[threshold]) for name, mode, threshold in ENGINES]
 
 
-def driver_command(arguments: argparse.Namespace, layout: Path, engines: list[tuple[str, str, str]]) -> list[str]:
+def driver_command(arguments: argparse.Namespace, layout: Path, engines: list[EngineSetting]) -> list[str]:
     for required in (arguments.driver, arguments.dictionary):
         if not required.is_file():
             raise SystemExit(f"{required} is missing: run fetch_sources.sh and build.sh first")
@@ -133,12 +147,10 @@ def driver_command(arguments: argparse.Namespace, layout: Path, engines: list[tu
 
 
 def run_driver(arguments: argparse.Namespace, layout: Path, inputs: list[tuple[str, str, str]],
-               options: tuple[str, ...] = (),
-               engines: list[tuple[str, str, str]] = STOCK_ENGINES) -> dict[str, dict[str, str]]:
+               engines: list[EngineSetting], options: tuple[str, ...] = ()) -> dict[str, dict[str, str]]:
     """Runs (id, context, typed) triples through the driver. Returns output by engine name and id.
 
     `options` holds extra driver arguments, such as ("--lookup", "incremental").
-    `engines` holds (name, mode, threshold value) triples, the six engine names by default.
     """
     lines = [f"{case_id}\t{context}\t{typed}" for case_id, context, typed in inputs]
     completed = subprocess.run(
@@ -164,17 +176,53 @@ def load_cases(half: str) -> list[dict]:
     return [json.loads(line) for line in cases_file.read_text(encoding="utf-8").split("\n") if line]
 
 
+def tune_on_dev(arguments: argparse.Namespace, layout: Path) -> None:
+    """Scores the dev half at each threshold of the grid and writes the tuned threshold.
+
+    The tuned threshold is the lowest grid value at which token mode keeps CLEAN_FLOOR of the
+    clean dev cases. A lower threshold repairs more slips, so the lowest value that keeps the
+    floor is the setting that the task's rule picks. The test half takes no part.
+    """
+    cases = load_cases("dev")
+    inputs = [(case["id"], case["context"], case["typed"]) for case in cases]
+    grid = [(f"grid-{mode}-{threshold}", mode, threshold) for threshold in TUNING_GRID for mode in ("token", "span")]
+    outputs = run_driver(arguments, layout, inputs, grid)
+    typed_as_is = score("english", cases, {case["id"]: case["typed"] for case in cases})
+    print("Dev shares by auto-correction threshold")
+    print(f"  typed text as it is   clean {typed_as_is['clean']['accuracy']:.4f}  slips {typed_as_is['slips']['accuracy']:.4f}")
+    tuned = None
+    for threshold in TUNING_GRID:
+        shares = []
+        for mode in ("token", "span"):
+            summary = score("english", cases, outputs[f"grid-{mode}-{threshold}"])
+            shares += [summary["clean"]["accuracy"], summary["slips"]["accuracy"]]
+        if tuned is None and shares[0] >= CLEAN_FLOOR:
+            tuned = threshold
+        print(f"  threshold {threshold:>5s}   token clean {shares[0]:.4f} slips {shares[1]:.4f}"
+              f"   span clean {shares[2]:.4f} slips {shares[3]:.4f}")
+    if tuned is None:
+        raise SystemExit(f"token mode keeps less than {CLEAN_FLOOR} of the clean dev cases at every grid threshold")
+    TUNED_THRESHOLD_FILE.parent.mkdir(parents=True, exist_ok=True)
+    TUNED_THRESHOLD_FILE.write_text(tuned + "\n", encoding="utf-8", newline="\n")
+    print(f"Tuned threshold: {tuned}, the lowest grid value at which token mode keeps {CLEAN_FLOOR} "
+          f"of the clean dev cases. Written to {TUNED_THRESHOLD_FILE.relative_to(ROOT)}")
+
+
 def run_half(arguments: argparse.Namespace, layout: Path) -> None:
     cases = load_cases(arguments.half)
-    outputs = run_driver(arguments, layout, [(case["id"], case["context"], case["typed"]) for case in cases])
-    for name, _, _ in ENGINES:
+    engines = engine_settings()
+    outputs = run_driver(arguments, layout, [(case["id"], case["context"], case["typed"]) for case in cases], engines)
+    for name, mode, threshold in engines:
         target = OUTPUT / name / f"english.{arguments.half}.jsonl"
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(
             "".join(json.dumps({"id": case["id"], "output": outputs[name][case["id"]]}, ensure_ascii=False) + "\n"
                     for case in cases),
             encoding="utf-8", newline="\n")
-        print(f"{name}: wrote {len(cases)} outputs to {target.relative_to(ROOT)}")
+        (target.parent / "settings.json").write_text(
+            json.dumps({"engine": name, "mode": mode, "threshold": threshold}) + "\n",
+            encoding="utf-8", newline="\n")
+        print(f"{name} ({mode} mode, threshold {threshold}): wrote {len(cases)} outputs to {target.relative_to(ROOT)}")
 
 
 def report_changes(cases: list[dict], first: dict[str, dict[str, str]], second: dict[str, dict[str, str]],
@@ -192,14 +240,15 @@ def report_changes(cases: list[dict], first: dict[str, dict[str, str]], second: 
 
 
 def run_controls(arguments: argparse.Namespace, layout: Path) -> None:
-    """Five checks on the dev half that score.py does not make."""
+    """Four checks on the dev half that score.py does not make."""
     cases = load_cases("dev")
+    engines = engine_settings()
     inputs = [(case["id"], case["context"], case["typed"]) for case in cases]
-    baseline = run_driver(arguments, layout, inputs)
+    baseline = run_driver(arguments, layout, inputs, engines)
 
     # Control 1: the same cases with the context removed. The stock dictionary does not hold
     # word pairs, so the previous words should not change an output.
-    without_context = run_driver(arguments, layout, [(case["id"], "", case["typed"]) for case in cases])
+    without_context = run_driver(arguments, layout, [(case["id"], "", case["typed"]) for case in cases], engines)
     print("Control 1: dev outputs that change when the context is removed")
     report_changes(cases, baseline, without_context, ignore_case=False)
 
@@ -207,7 +256,8 @@ def run_controls(arguments: argparse.Namespace, layout: Path) -> None:
     # show how often an engine changes two correct words typed with their space. This control
     # types the intended text of each dev case that holds two words.
     two_words = [case for case in cases if " " in case["intended"]]
-    typed_right = run_driver(arguments, layout, [(case["id"], case["context"], case["intended"]) for case in two_words])
+    typed_right = run_driver(
+        arguments, layout, [(case["id"], case["context"], case["intended"]) for case in two_words], engines)
     print("Control 2: dev two-word targets typed without a slip, share left unchanged (letter case ignored)")
     for name, _, _ in ENGINES:
         kept = sum(typed_right[name][case["id"]].lower() == case["intended"].lower() for case in two_words)
@@ -222,42 +272,25 @@ def run_controls(arguments: argparse.Namespace, layout: Path) -> None:
     # Control 3: the lookup sequence. The scored runs ask the engine once for each word, in a new
     # session. On a phone the keyboard keeps one session and may ask after every key, and the
     # engine then continues its last search. This control asks after every key in one session.
-    incremental = run_driver(arguments, layout, inputs, ("--lookup", "incremental"))
+    incremental = run_driver(arguments, layout, inputs, engines, ("--lookup", "incremental"))
     print("Control 3: dev outputs that change when the engine is asked after every key in one session")
     report_changes(cases, baseline, incremental, ignore_case=False)
 
     # Control 4: auto-capitalization. The scored runs type every letter in lower case. On a phone
     # the first letter of an empty text field is in upper case. This control types that letter in
     # upper case for the cases with an empty context, and compares the outputs without their case.
-    capitalized = run_driver(arguments, layout, inputs, ("--auto-capitalize",))
+    capitalized = run_driver(arguments, layout, inputs, engines, ("--auto-capitalize",))
     empty_context = [case for case in cases if not case["context"]]
     print("Control 4: dev outputs of the cases with an empty context that change, letter case ignored,")
     print("           when the first letter is typed in upper case")
     report_changes(empty_context, baseline, capitalized, ignore_case=True)
 
-    # Control 5: the threshold. The task picks a setting by the share of slips repaired while the
-    # share of clean cases stays at 0.98 or more, and the stock threshold keeps less than that.
-    # This control scores the dev half at higher thresholds, with score.py's own function. The
-    # first row returns the typed text as it is, to show both ends of the scale.
-    sweep = [(f"sweep-{mode}-{threshold}", mode, threshold)
-             for threshold in SWEEP_THRESHOLDS for mode in ("token", "span")]
-    swept = run_driver(arguments, layout, inputs, engines=sweep)
-    typed_as_is = score("english", cases, {case["id"]: case["typed"] for case in cases})
-    print("Control 5: dev shares by auto-correction threshold")
-    print(f"  typed text as it is   clean {typed_as_is['clean']['accuracy']:.4f}  slips {typed_as_is['slips']['accuracy']:.4f}")
-    for threshold in SWEEP_THRESHOLDS:
-        shares = []
-        for mode in ("token", "span"):
-            summary = score("english", cases, swept[f"sweep-{mode}-{threshold}"])
-            shares += [summary["clean"]["accuracy"], summary["slips"]["accuracy"]]
-        print(f"  threshold {threshold:>5s}   token clean {shares[0]:.4f} slips {shares[1]:.4f}"
-              f"   span clean {shares[2]:.4f} slips {shares[3]:.4f}")
-
 
 def explain_samples(arguments: argparse.Namespace, layout: Path) -> None:
     lines = [f"sample-{index:02d}\t{context}\t{typed}" for index, (context, typed) in enumerate(SAMPLES)]
     completed = subprocess.run(
-        driver_command(arguments, layout, STOCK_ENGINES) + ["--explain", "--dump-layout", "--dictionary-statistics"],
+        driver_command(arguments, layout, engine_settings())
+        + ["--explain", "--dump-layout", "--dictionary-statistics"],
         input="\n".join(lines) + "\n", capture_output=True, text=True, encoding="utf-8")
     sys.stdout.write(completed.stdout)
     sys.stderr.write(completed.stderr)
@@ -268,8 +301,10 @@ def explain_samples(arguments: argparse.Namespace, layout: Path) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser()
     action = parser.add_mutually_exclusive_group(required=True)
+    action.add_argument("--tune-on-dev", action="store_true",
+                        help="score the dev half at a grid of thresholds and write the tuned threshold")
     action.add_argument("--half", choices=["dev", "test"], help="run the cases of this half")
-    action.add_argument("--controls", action="store_true", help="print the five controls on the dev half")
+    action.add_argument("--controls", action="store_true", help="print the four controls on the dev half")
     action.add_argument("--explain-samples", action="store_true",
                         help="print the dictionary counts, the layout and the suggestions for a few dev examples")
     action.add_argument("--list-engines", action="store_true", help="print the engine names")
@@ -285,7 +320,9 @@ def main() -> None:
         return
     layout = BUILD / "layout.tsv"
     write_layout(layout)
-    if arguments.explain_samples:
+    if arguments.tune_on_dev:
+        tune_on_dev(arguments, layout)
+    elif arguments.explain_samples:
         explain_samples(arguments, layout)
     elif arguments.controls:
         run_controls(arguments, layout)
