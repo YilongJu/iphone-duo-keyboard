@@ -26,21 +26,31 @@ struct FieldScreen: UIViewControllerRepresentable {
 struct FieldStatus: Codable {
     /// Index of the loaded case. The value is -1 before the first case.
     let i: Int
-    /// True while the keyboard holds marked text in the text view, as the Pinyin keyboard does
-    /// before the person picks a candidate.
+    /// True while the text view holds marked text. The Pinyin keyboard marks the letters before
+    /// the person picks a candidate. The English keyboard marks an inline prediction, the gray
+    /// text that the person has not accepted.
     let m: Bool
-    /// The text of the text view.
+    /// The text of the text view, with the marked text.
     let t: String
+    /// The text of the text view without the marked text.
+    let c: String
+    /// Every state of the text since the case was loaded, oldest first. Each entry is the text
+    /// with the marked text between the two marks of `FieldViewController.markedBrackets`.
+    let h: [String]
 }
 
 /// The only screen. The "Next case" button loads the context of the next case into the text
 /// view and puts the cursor at the end. The UI test then taps the keys of the software keyboard.
 final class FieldViewController: UIViewController, UITextViewDelegate {
+    /// The marks around marked text in a history entry: the white square brackets U+27E6 and U+27E7.
+    static let markedBrackets = (open: "\u{27E6}", close: "\u{27E7}")
+
     private let statusLabel = UILabel()
     private let nextButton = UIButton(type: .system)
     private let field = UITextView()
     private var contexts: [String] = []
     private var caseIndex = -1
+    private var history: [String] = []
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -54,7 +64,7 @@ final class FieldViewController: UIViewController, UITextViewDelegate {
         contexts = decoded
 
         statusLabel.numberOfLines = 0
-        statusLabel.font = .monospacedSystemFont(ofSize: 10, weight: .regular)
+        statusLabel.font = .monospacedSystemFont(ofSize: 8, weight: .regular)
         statusLabel.accessibilityIdentifier = "evalStatus"
         statusLabel.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(statusLabel)
@@ -75,7 +85,7 @@ final class FieldViewController: UIViewController, UITextViewDelegate {
         field.delegate = self
         field.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(field)
-        // The run named apple-english-inline-prediction-off sets this variable to "no".
+        // A run that measures the keyboard without inline predictions sets this variable to "no".
         if environment["EVAL_INLINE_PREDICTION"] == "no" {
             field.inlinePredictionType = .no
         }
@@ -113,6 +123,7 @@ final class FieldViewController: UIViewController, UITextViewDelegate {
         if !field.isFirstResponder {
             field.becomeFirstResponder()
         }
+        history = []
         updateStatus()
     }
 
@@ -125,7 +136,20 @@ final class FieldViewController: UIViewController, UITextViewDelegate {
     }
 
     private func updateStatus() {
-        let status = FieldStatus(i: caseIndex, m: field.markedTextRange != nil, t: field.text ?? "")
+        let text = (field.text ?? "") as NSString
+        var committed = text as String
+        var annotated = text as String
+        if let marked = field.markedTextRange {
+            let start = field.offset(from: field.beginningOfDocument, to: marked.start)
+            let range = NSRange(location: start, length: field.offset(from: marked.start, to: marked.end))
+            let brackets = FieldViewController.markedBrackets
+            committed = text.replacingCharacters(in: range, with: "")
+            annotated = text.replacingCharacters(in: range, with: brackets.open + text.substring(with: range) + brackets.close)
+        }
+        if history.last != annotated {
+            history.append(annotated)
+        }
+        let status = FieldStatus(i: caseIndex, m: field.markedTextRange != nil, t: text as String, c: committed, h: history)
         guard let data = try? JSONEncoder().encode(status) else {
             fatalError("the field status did not encode as JSON")
         }
