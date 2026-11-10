@@ -11,8 +11,8 @@ For each engine name the script writes, under build/typing-evaluation/NAME/:
 
 The script does not score. Run scripts/typing-evaluation/score.py on the first file.
 
-A case where the engine program stops (a crash, a wrong exit code or a time limit) gets no
-output line, so score.py counts it as wrong and reports it as missing. The script starts the
+A case where the engine program stops (a crash, a wrong exit code or a time limit) does not get
+an output line, so score.py counts the case as wrong and reports it as missing. The script starts the
 program again for the cases after it.
 """
 import argparse
@@ -31,12 +31,13 @@ MODES = {
     "sunpinyin-default": "default",
     "sunpinyin-correction": "correction",
     "sunpinyin-fuzzy": "fuzzy",
+    "sunpinyin-ibus-defaults": "ibus",
 }
 
-# Exit codes of sunpinyin_cli that mean the set-up is wrong. No case can run after one of them.
+# Exit codes of sunpinyin_cli that mean the set-up is wrong. A case cannot run after one of them.
 SETUP_EXIT_CODES = {2: "wrong arguments", 3: "the engine did not create a session", 4: "a malformed input line"}
 
-# Strings that show what each mode does. None of them comes from the test cases.
+# Strings that show the output of each mode. The strings do not come from the test cases.
 PROBES = [
     ("clean", "nihao"),
     ("clean", "zhongguoren"),
@@ -54,6 +55,9 @@ PROBES = [
     ("two letters swapped", "nihoa"),
     ("sound pair n and l", "lixihuan"),
     ("sound pair z and zh", "zongguoren"),
+    ("sound pair l and r, r typed for l", "raoshi"),
+    ("sound pair l and r, l typed for r", "lenshi"),
+    ("sound pair eng and ong", "dengxi"),
     ("syllable outside the dictionary", "yiden"),
 ]
 
