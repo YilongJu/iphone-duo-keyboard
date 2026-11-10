@@ -5,8 +5,8 @@ Usage, from the repository root:
 
 The script prints three things for each engine name and half:
 1. The reason the adapter stopped, as counts, and the count of outputs that hold letters a to z.
-2. The count of cases where the correction engine and the default engine of one schema differ,
-   per category, with the count of cases that changed from wrong to right and from right to wrong.
+2. The count of cases where a patched engine and the default engine of one schema differ, per
+   category, with the count of cases that changed from wrong to right and from right to wrong.
 3. An error when librime committed a case, because a commit feeds the user dictionary of librime.
 """
 import argparse
@@ -17,7 +17,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[4]
 CASES = ROOT / "scripts" / "typing-evaluation" / "cases"
 OUTPUT = ROOT / "build" / "typing-evaluation"
-PAIRS = [("rime-default", "rime-correction"), ("rime-pinyin-simp-default", "rime-pinyin-simp-correction")]
+PAIRS = [("rime-default", "rime-correction"), ("rime-default", "rime-fuzzy"),
+         ("rime-pinyin-simp-default", "rime-pinyin-simp-correction")]
 
 
 def read_details(engine: str, half: str) -> dict[str, dict]:
@@ -37,7 +38,8 @@ def main():
     committed = 0
     for engine in engines:
         info = json.loads((OUTPUT / engine / "run-info.json").read_text(encoding="utf-8"))
-        print(f"{engine}: librime {info['librime_version']}, schema {info['schema']}, correction {info['correction']}, "
+        print(f"{engine}: librime {info['librime_version']}, schema {info['schema']}, "
+              f"custom files {sorted(info['custom_files'])}, "
               f"files built in the user folder {info['files_built_in_user_folder']}")
         for half in arguments.halves:
             rows = read_details(engine, half)
@@ -47,13 +49,13 @@ def main():
             print(f"  pinyin.{half}: {entry['cases']} cases in {entry['seconds']} s, stops {entry['stops']}, "
                   f"cases with a space press {entry['cases_with_a_selection']}, outputs that hold letters {with_letters}")
 
-    for default, correction in PAIRS:
-        if default not in engines or correction not in engines:
+    for default, patched in PAIRS:
+        if default not in engines or patched not in engines:
             continue
         for half in arguments.halves:
             cases = [json.loads(line) for line in (CASES / f"pinyin.{half}.jsonl").read_text(encoding="utf-8").splitlines() if line]
-            before, after = read_details(default, half), read_details(correction, half)
-            print(f"{correction} against {default} on pinyin.{half}: category, cases, outputs that differ, "
+            before, after = read_details(default, half), read_details(patched, half)
+            print(f"{patched} against {default} on pinyin.{half}: category, cases, outputs that differ, "
                   f"wrong to right, right to wrong")
             totals: dict[str, list[int]] = {}
             for case in cases:

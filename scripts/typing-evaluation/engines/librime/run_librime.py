@@ -20,12 +20,34 @@ ROOT = Path(__file__).resolve().parents[4]
 CASES = ROOT / "scripts" / "typing-evaluation" / "cases"
 STOCK_DATA = Path("/usr/share/rime-data")
 
-# Each engine name is one stock schema, with or without the neighbor-key correction of librime.
+# The custom patch that turns on the neighbor-key correction of librime.
+CORRECTION_PATCH = "patch:\n  translator/enable_correction: true\n"
+
+# The custom patch that adds the fuzzy-sound templates of the stock file pinyin.yaml. The five
+# templates are the ones for the sound pairs of the fuzzy_sound category. The last three lines are
+# the stock rules of luna_pinyin, and pinyin.yaml says the fuzzy-sound templates go before them.
+FUZZY_SOUND_PATCH = """patch:
+  speller/algebra:
+    __patch:
+      - pinyin:/zh_z_bufen
+      - pinyin:/n_l_bufen
+      - pinyin:/r_l_bufen
+      - pinyin:/hu_f_buhun
+      - pinyin:/en_eng_bufen
+      - pinyin:/abbreviation
+      - pinyin:/spelling_correction
+      - pinyin:/key_correction
+"""
+# A rule of the template n_l_bufen. The deployed schema holds it only with the fuzzy-sound patch.
+FUZZY_SOUND_MARKER = "derive/^n/l/"
+
+# Each engine name is one stock schema with at most one custom patch.
 ENGINES = {
-    "rime-default": {"schema": "luna_pinyin_simp", "correction": False},
-    "rime-correction": {"schema": "luna_pinyin_simp", "correction": True},
-    "rime-pinyin-simp-default": {"schema": "pinyin_simp", "correction": False},
-    "rime-pinyin-simp-correction": {"schema": "pinyin_simp", "correction": True},
+    "rime-default": {"schema": "luna_pinyin_simp", "patch": None},
+    "rime-correction": {"schema": "luna_pinyin_simp", "patch": CORRECTION_PATCH},
+    "rime-fuzzy": {"schema": "luna_pinyin_simp", "patch": FUZZY_SOUND_PATCH},
+    "rime-pinyin-simp-default": {"schema": "pinyin_simp", "patch": None},
+    "rime-pinyin-simp-correction": {"schema": "pinyin_simp", "patch": CORRECTION_PATCH},
 }
 
 # The stock files each schema reads. A missing file stops the run before the deployment.
@@ -36,11 +58,12 @@ STOCK_FILES = {
 }
 
 # Probe strings that the log shows for every engine name. The first two have a required output.
-# The others show how the engine treats one slip each: gn for ng, oa for ao, a neighbor key,
-# a missing letter, a doubled letter, a letter that starts no syllable, and three slips from the cases.
+# The others show how the engine treats one slip each: gn for ng, oa for ao, on for ong, ain for ian,
+# a neighbor key, a missing letter, a doubled letter, a letter that does not start a syllable,
+# l for n, z for zh, and four slips from the cases.
 REQUIRED_PROBES = {"nihao": "你好", "zhongguo": "中国"}
-PROBES = ["nihao", "zhongguo", "dagn", "hoa", "zhonguo", "tain", "nihso", "niha", "nihaoo", "nihaouwomen",
-          "woydxiangqubeijing", "wocchimianbao", "taicanrnele", "lixihuanyuduiba"]
+PROBES = ["nihao", "zhongguo", "dagn", "hoa", "zhonguo", "tain", "nihso", "niha", "nihaoo", "nihaoiwomen",
+          "lihao", "zongguo", "woydxiangqubeijing", "wocchimianbao", "taicanrnele", "lixihuanyuduiba"]
 
 
 def run_cli(cli: Path, arguments: list[str], stdin_text: str | None = None) -> str:
@@ -55,7 +78,7 @@ def convert(cli: Path, folders: list[str], settings: dict, items: list[tuple[str
     """Types each (id, letters) item and returns one row per item, in the same order."""
     stdin_text = "".join(f"{identifier}\t{typed}\n" for identifier, typed in items)
     stdout = run_cli(cli, ["run", *folders, "--schema", settings["schema"],
-                           "--correction", "on" if settings["correction"] else "off"], stdin_text)
+                           "--correction", "on" if settings["patch"] is CORRECTION_PATCH else "off"], stdin_text)
     lines = stdout.removesuffix("\n").split("\n")
     if len(lines) != len(items):
         raise SystemExit(f"rime_cli printed {len(lines)} lines for {len(items)} cases")
@@ -102,8 +125,8 @@ def main():
     output.mkdir(parents=True, exist_ok=True)
 
     custom_files = {"default.custom.yaml": f"patch:\n  schema_list:\n    - schema: {schema}\n"}
-    if settings["correction"]:
-        custom_files[f"{schema}.custom.yaml"] = "patch:\n  translator/enable_correction: true\n"
+    if settings["patch"] is not None:
+        custom_files[f"{schema}.custom.yaml"] = settings["patch"]
     for name, text in custom_files.items():
         (user / name).write_text(text, encoding="utf-8", newline="\n")
         print(f"--- {user / name}\n{text}", end="", flush=True)
@@ -115,6 +138,17 @@ def main():
     deploy_seconds = time.monotonic() - started
     staged = sorted(path.name for path in (user / "build").iterdir()) if (user / "build").is_dir() else []
     print(f"deployed in {deploy_seconds:.1f} s, files that librime built in the user folder: {staged}", flush=True)
+
+    # librime reads the deployed schema from the user folder first, then from the prebuilt files.
+    deployed = [folder / "build" / f"{schema}.schema.yaml" for folder in (user, shared)]
+    deployed = [path for path in deployed if path.is_file()]
+    if not deployed:
+        raise SystemExit(f"the deployed schema {schema}.schema.yaml is missing")
+    has_fuzzy_rule = FUZZY_SOUND_MARKER in deployed[0].read_text(encoding="utf-8")
+    if has_fuzzy_rule != (settings["patch"] is FUZZY_SOUND_PATCH):
+        raise SystemExit(f"{deployed[0]} {'holds' if has_fuzzy_rule else 'does not hold'} the rule {FUZZY_SOUND_MARKER}")
+    print(f"deployed schema {deployed[0]}: the rule {FUZZY_SOUND_MARKER} is {'present' if has_fuzzy_rule else 'absent'}",
+          flush=True)
 
     probe_rows = convert(cli, folders, settings, [(probe, probe) for probe in PROBES])
     write_details(output / "probes.tsv", probe_rows)
@@ -128,7 +162,7 @@ def main():
             raise SystemExit(f"the probe {row['typed']} gave {row['output']!r}, expected {wanted!r}")
 
     info = {"engine": arguments.engine, "librime_version": version, "schema": schema,
-            "correction": settings["correction"], "custom_files": custom_files,
+            "custom_files": custom_files,
             "files_built_in_user_folder": staged, "deploy_seconds": round(deploy_seconds, 1), "halves": {}}
     for half in arguments.halves:
         cases = [json.loads(line) for line in (CASES / f"pinyin.{half}.jsonl").read_text(encoding="utf-8").splitlines() if line]

@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
 
 env:
-  ENGINES: rime-default rime-correction rime-pinyin-simp-default rime-pinyin-simp-correction
+  ENGINES: rime-default rime-correction rime-fuzzy rime-pinyin-simp-default rime-pinyin-simp-correction
 
 jobs:
   librime:
@@ -113,7 +113,7 @@ jobs:
           name: typing-evaluation-librime
           path: build/typing-evaluation/
           if-no-files-found: warn
-      - name: Check the runs and compare the correction engines with the default engines
+      - name: Check the runs and compare the patched engines with the default engines
         run: |
           set -euo pipefail
           for engine in $ENGINES; do
