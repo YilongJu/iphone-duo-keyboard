@@ -59,7 +59,7 @@ it opens.</p>
 
 <div class="controls">
   <span id="presets"></span>
-  <label>Width <input id="width" type="range" min="320" max="1100" step="1"> <span id="widthValue"></span> pt</label>
+  <label>Width <input id="width" type="range" min="320" max="1140" step="1"> <span id="widthValue"></span> pt</label>
   <label>Corner radius <input id="radius" type="range" min="0" max="80" step="1" value="55"> <span id="radiusValue"></span> pt</label>
   <button class="chip" id="theme" aria-pressed="false">Dark</button>
 </div>
@@ -94,9 +94,8 @@ const PRESETS = [
   { name: "Open, portrait", width: 669, compactHeight: false },
   { name: "Closed, landscape", width: 678, compactHeight: true },
   { name: "Open, landscape", width: 951, compactHeight: false },
-  { name: "iPad 11-inch, portrait", width: 820, compactHeight: false, pad: true, landscape: false },
-  { name: "iPad 11-inch, landscape", width: 1180, compactHeight: false, pad: true, landscape: true },
-  { name: "iPad 13-inch, landscape", width: 1376, compactHeight: false, pad: true, landscape: true },
+  { name: "iPad mini, portrait", width: 744, compactHeight: false, pad: true, landscape: false },
+  { name: "iPad mini, landscape", width: 1133, compactHeight: false, pad: true, landscape: true },
 ];
 const FN_LABEL = {
   backspace: "⌫", forwardDelete: "⌦", shift: "⇧", capsLock: "⇪", tab: "⇥", globe: "🌐", dismiss: "⌨↓",

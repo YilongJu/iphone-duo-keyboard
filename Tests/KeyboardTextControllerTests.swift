@@ -760,11 +760,12 @@ final class KeyboardLayoutTests: XCTestCase {
     }
 
     func testAnIPadGetsTheWideLayoutInPortraitAndTheSplitLayoutInLandscape() {
-        // 820 and 1180 points are the two widths of an 11-inch iPad, 1032 and 1376 of a 13-inch one.
+        // 744 and 1133 points are the two widths of the iPad mini, the iPad this keyboard is
+        // made for. The other widths belong to larger iPads, which follow the same rule.
         for width in [744, 820, 1032] as [CGFloat] {
             XCTAssertEqual(KeyboardView.style(forWidth: width, device: .pad, landscape: false), .wide)
         }
-        for width in [1024, 1180, 1376] as [CGFloat] {
+        for width in [1133, 1180, 1376] as [CGFloat] {
             XCTAssertEqual(KeyboardView.style(forWidth: width, device: .pad, landscape: true), .split)
         }
         // A floating or very narrow keyboard keeps the compact layout.
@@ -786,9 +787,9 @@ final class KeyboardLayoutTests: XCTestCase {
     }
 
     func testTheSplitKeysOfAnIPadStayWithinReachOfAThumb() {
-        // On a 13-inch iPad in landscape the keys stop at 52 points and the middle takes the rest.
-        let gap = KeyboardLayout.padSplitGap(forWidth: 1376)
-        XCTAssertEqual(1376 / (14.5 + gap), 52, accuracy: 0.001)
+        // On an iPad mini in landscape the keys stop at 52 points and the middle takes the rest.
+        let gap = KeyboardLayout.padSplitGap(forWidth: 1133)
+        XCTAssertEqual(1133 / (14.5 + gap), 52, accuracy: 0.001)
         let layout = KeyboardLayout.make(style: .split, layer: .letters, showsGlobe: true, splitGap: gap)
         XCTAssertEqual(layout.units, 14.5 + gap, accuracy: 0.001)
         for row in layout.rows {
