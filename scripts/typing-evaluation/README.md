@@ -160,9 +160,10 @@ from the engine's vocabulary and word choice.
 - The symbol cases do not say how often a person types a symbol in front of a word on purpose.
   The two frequency limits above set which text counts as a slip, and a different limit would
   move the scores of the symbol groups.
-- Our engine refuses a word with more than one symbol or digit, or with fewer than two letters,
-  and such a word stays as typed whatever the costs are. 66 of the 129 dev cases of
-  `clean_symbol_token` are of that kind, so the costs decide only the other 63.
+- Our engine refuses a word that holds more than one symbol or digit, fewer than two letters
+  beside a symbol or digit, a symbol that is not beside a letter key, or `-`, `;`, `,` or `.`
+  after its first place. Such a word stays as typed whatever the costs are. 66 of the 129 dev
+  cases of `clean_symbol_token` are of that kind, so the costs decide only the other 63.
 - The Pinyin targets come from pypinyin readings, and a wrong reading gives an unreachable target.
 
 ## Engine outputs
