@@ -19,7 +19,6 @@
 
 using namespace ime_pinyin;
 using first_candidates::fail;
-using first_candidates::SearchResult;
 
 namespace {
 
@@ -63,15 +62,15 @@ std::string utf16_to_utf8(const char16 *units) {
     return text;
 }
 
-SearchResult search(const std::string &letters) {
-    SearchResult result;
+first_candidates::FirstCandidate search_googlepinyin(const std::string &letters) {
+    first_candidates::FirstCandidate result;
     im_reset_search();
     im_search(letters.c_str(), letters.size());
     if (im_get_sps_str(&result.covered) == NULL)
         fail("im_get_sps_str returned NULL");
     char16 candidate[kCandidateCapacity];
     if (result.covered > 0 && im_get_candidate(0, candidate, kCandidateCapacity) != NULL) {
-        result.has_candidate = true;
+        result.found = true;
         result.text = utf16_to_utf8(candidate);
     }
     return result;
@@ -100,7 +99,7 @@ int main(int argc, char **argv) {
 
     std::cerr << "mode: " << (abbreviation ? "stock" : "no-abbreviation") << '\n';
     // One search of the decoder reads kMaxSearchSteps - 1 letters.
-    first_candidates::run_cases(search, kMaxSearchSteps - 1);
+    first_candidates::run_cases(search_googlepinyin, kMaxSearchSteps - 1);
     im_close_decoder();
     return 0;
 }

@@ -23,14 +23,13 @@
 #include "first_candidates.h"
 
 using first_candidates::fail;
-using first_candidates::SearchResult;
 
 namespace {
 
 pinyin_instance_t *g_instance = NULL;
 
-SearchResult search(const std::string &letters) {
-    SearchResult result;
+first_candidates::FirstCandidate search_libpinyin(const std::string &letters) {
+    first_candidates::FirstCandidate result;
     pinyin_reset(g_instance);
     result.covered = pinyin_parse_more_full_pinyins(g_instance, letters.c_str());
     if (result.covered == 0)
@@ -39,7 +38,7 @@ SearchResult search(const std::string &letters) {
     if (pinyin_guess_sentence(g_instance) && pinyin_get_sentence(g_instance, 0, &sentence)) {
         if (sentence == NULL)
             fail("pinyin_get_sentence returned true without a sentence for " + letters);
-        result.has_candidate = true;
+        result.found = true;
         result.text = sentence;
     }
     g_free(sentence);
@@ -84,7 +83,7 @@ int main(int argc, char **argv) {
     std::cerr << "modes:" << (modes.empty() ? " none" : modes) << '\n'
               << "options: 0x" << std::hex << options << std::dec << '\n';
     // One search of libpinyin reads every letter.
-    first_candidates::run_cases(search, 0);
+    first_candidates::run_cases(search_libpinyin, 0);
     pinyin_free_instance(g_instance);
     pinyin_fini(context);
     return 0;
