@@ -1,0 +1,27 @@
+[project]
+name = "lm-finetune"
+version = "0.1.0"
+description = "Fine-tunes a small language model to re-rank the English readings of the typing engine."
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "torch==2.8.0",
+    "transformers==4.57.1",
+    "peft==0.17.1",
+    "safetensors==0.6.2",
+    "numpy==2.2.6",
+    # For convert_hf_to_gguf.py and gguf-py of llama.cpp b4846.
+    "sentencepiece==0.2.1",
+    "pyyaml==6.0.3",
+    "tqdm==4.67.1",
+]
+
+[tool.uv]
+package = false
+
+[tool.uv.sources]
+torch = [{ index = "pytorch-cu128" }]
+
+[[tool.uv.index]]
+name = "pytorch-cu128"
+url = "https://download.pytorch.org/whl/cu128"
+explicit = true

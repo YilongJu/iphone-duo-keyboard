@@ -1,0 +1,48 @@
+name: Language model fine-tune data
+
+# Builds the training, stopping and tuning cases of the distilgpt2 fine-tune from Tatoeba
+# sentences that the dev and test halves do not use, and the lists of readings that the training
+# reads. docs/lm-finetune-design.md gives the design and scripts/lm-finetune/README.md the
+# results. The artifact holds cases and lists only. Model weights never leave the training machine.
+on:
+  push:
+    branches: [engine/lm-finetune]
+    paths:
+      - 'scripts/lm-finetune/build_cases.py'
+      - 'scripts/lm-finetune/build_lists.py'
+      - '.github/workflows/lm-finetune.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: lm-finetune-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  data:
+    name: Cases and lists of readings
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install wordfreq
+        run: python3 -m pip install --quiet --break-system-packages wordfreq
+      - name: Build the published misspelling cases, which the leakage rules read
+        run: python3 scripts/typing-evaluation/build_external_english_cases.py
+      - name: Build the cases from the current Tatoeba export
+        run: |
+          set -euo pipefail
+          python3 scripts/lm-finetune/build_cases.py --out build/lm-finetune/data
+          sha256sum build/typing-evaluation/eng_sentences.tsv.bz2 | tee build/lm-finetune/data/export-sha256.txt
+      - name: Build the engine shim
+        run: bash scripts/lm-rerank/build_on_linux.sh
+      - name: Build the lists of readings with the engine
+        run: |
+          set -euo pipefail
+          nproc
+          python3 scripts/lm-finetune/build_lists.py --shim build/lm-rerank/libduo_shim.so \
+            --data build/lm-finetune/data --workers "$(nproc)"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: lm-finetune-data
+          path: build/lm-finetune/data
+          if-no-files-found: error
