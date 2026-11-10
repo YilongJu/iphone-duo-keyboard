@@ -16,10 +16,14 @@
  *
  * Usage:
  *   latinime_driver --dictionary main_en.dict --layout layout.tsv \
- *       --engine NAME:MODE:THRESHOLD [--engine ...] [--explain] [--dump-layout]
+ *       --engine NAME:MODE:THRESHOLD [--engine ...] [--lookup fresh|incremental]
+ *       [--auto-capitalize] [--explain] [--dump-layout] [--dictionary-statistics]
  * MODE is "token" (each space-separated token of `typed` is one composing word, as on a phone)
  * or "span" (the whole of `typed` is one touch sequence, and a typed space is a touch on the
  * space bar). THRESHOLD is the auto-correction threshold on the normalized score.
+ * --lookup fresh (the default) asks the engine once for each composing word, in a new session.
+ * --lookup incremental keeps one session for the run and asks after every key of the word.
+ * --auto-capitalize types the first letter of a case in upper case when its context is empty.
  */
 #include <algorithm>
 #include <chrono>
@@ -43,6 +47,7 @@
 #include "defines.h"
 #include "dictionary/interface/dictionary_header_structure_policy.h"
 #include "dictionary/property/ngram_context.h"
+#include "dictionary/property/word_property.h"
 #include "dictionary/structure/dictionary_structure_with_buffer_policy_factory.h"
 #include "jni.h"
 #include "suggest/core/dictionary/dictionary.h"
@@ -51,6 +56,7 @@
 #include "suggest/core/session/dic_traverse_session.h"
 #include "suggest/core/suggest_options.h"
 #include "utils/autocorrection_threshold_utils.h"
+#include "utils/int_array_view.h"
 
 namespace {
 
@@ -327,6 +333,20 @@ int javaFloatToInt(const float value) {
     return static_cast<int>(value);
 }
 
+// StringUtils.capitalizeFirstCodePoint for the letters of ASCII and Latin-1. A word that starts
+// with another character stays as it is.
+CodePoints capitalizeFirstCodePoint(const CodePoints &word) {
+    CodePoints capitalized = word;
+    if (capitalized.empty()) {
+        return capitalized;
+    }
+    const int first = capitalized[0];
+    if ((first >= 'a' && first <= 'z') || (first >= 0xE0 && first <= 0xFE && first != 0xF7)) {
+        capitalized[0] = first - 0x20;
+    }
+    return capitalized;
+}
+
 // ---------------------------------------------------------------------------------------------
 // Keyboard layout and the proximity grid
 // ---------------------------------------------------------------------------------------------
@@ -531,8 +551,8 @@ const float kWeightForLocale = 1.0f;
 
 class Engine {
  public:
-    Engine(const std::string &dictionaryPath, const Layout &layout)
-            : mEnv(hostJniEnv()), mLayout(layout) {
+    Engine(const std::string &dictionaryPath, const Layout &layout, const bool incremental)
+            : mEnv(hostJniEnv()), mLayout(layout), mIncremental(incremental) {
         struct stat fileStatus;
         if (stat(dictionaryPath.c_str(), &fileStatus) != 0) {
             fail("cannot read the dictionary file " + dictionaryPath);
@@ -576,6 +596,58 @@ class Engine {
                 asJintArray(&keyYCoordinates), asJintArray(&keyWidths), asJintArray(&keyHeights),
                 asJintArray(&keyCharCodes), nullptr /* sweetSpotCenterXs */,
                 nullptr /* sweetSpotCenterYs */, nullptr /* sweetSpotRadii */);
+        if (mIncremental) {
+            mSharedSession = newSession();
+        }
+    }
+
+    // The counts behind the claim that the stock dictionary does not hold word pairs. The loop
+    // is the one of BinaryDictionary.getNextWordProperty in Java: every entry, with its
+    // shortcuts and its word pairs (n-gram entries).
+    std::string dictionaryStatistics() const {
+        long entries = 0;
+        long notAWord = 0;
+        long possiblyOffensive = 0;
+        long zeroProbability = 0;
+        long entriesWithShortcuts = 0;
+        long shortcuts = 0;
+        long entriesWithWordPairs = 0;
+        long wordPairs = 0;
+        int token = 0;
+        do {
+            int codePoints[MAX_WORD_LENGTH];
+            int codePointCount = 0;
+            token = mDictionary->getNextWordAndNextToken(token, codePoints, &codePointCount);
+            if (codePointCount <= 0) {
+                continue;
+            }
+            const latinime::WordProperty wordProperty = mDictionary->getWordProperty(
+                    latinime::CodePointArrayView(codePoints, codePointCount));
+            const latinime::UnigramProperty &unigramProperty = wordProperty.getUnigramProperty();
+            ++entries;
+            if (unigramProperty.isNotAWord()) ++notAWord;
+            if (unigramProperty.isPossiblyOffensive()) ++possiblyOffensive;
+            if (unigramProperty.getProbability() == 0) ++zeroProbability;
+            if (!unigramProperty.getShortcuts().empty()) ++entriesWithShortcuts;
+            shortcuts += static_cast<long>(unigramProperty.getShortcuts().size());
+            if (!wordProperty.getNgramProperties().empty()) ++entriesWithWordPairs;
+            wordPairs += static_cast<long>(wordProperty.getNgramProperties().size());
+        } while (token != 0);
+        return std::to_string(entries) + " entries, " + std::to_string(notAWord)
+                + " flagged not-a-word, " + std::to_string(possiblyOffensive)
+                + " flagged possibly offensive, " + std::to_string(zeroProbability)
+                + " with probability 0, " + std::to_string(entriesWithShortcuts)
+                + " entries with shortcuts (" + std::to_string(shortcuts) + " shortcuts), "
+                + std::to_string(entriesWithWordPairs) + " entries with word pairs ("
+                + std::to_string(wordPairs) + " word pairs)";
+    }
+
+    // A new case starts. With --lookup incremental a lookup depends on the lookups before it,
+    // so a result is reused within one case only.
+    void startCase() {
+        if (mIncremental) {
+            mCache.clear();
+        }
     }
 
     // The header fields that Dictionary::logDictionaryInfo reads.
@@ -660,6 +732,10 @@ class Engine {
         return mLookUpCount;
     }
 
+    long engineCallCount() const {
+        return mEngineCallCount;
+    }
+
     double lookUpSeconds() const {
         return mLookUpSeconds;
     }
@@ -675,15 +751,12 @@ class Engine {
             // The Java method returns null for a word of more than 48 code points.
             return std::vector<Suggestion>();
         }
-        int inputCodePoints[MAX_WORD_LENGTH];
-        std::fill_n(inputCodePoints, MAX_WORD_LENGTH, NOT_A_CODE_POINT);
         // One entry more than the input, so that data() is valid for an empty input.
         std::vector<int> xCoordinates(inputSize + 1, 0);
         std::vector<int> yCoordinates(inputSize + 1, 0);
         std::vector<int> times(inputSize + 1, 0);
         std::vector<int> pointerIds(inputSize + 1, 0);
         for (int i = 0; i < inputSize; ++i) {
-            inputCodePoints[i] = typedCodePoints[i];
             coordinatesOf(typedCodePoints[i], &xCoordinates[i], &yCoordinates[i]);
         }
 
@@ -711,26 +784,14 @@ class Engine {
         const latinime::NgramContext ngramContext(prevWordCodePoints, prevWordCodePointCount,
                 isBeginningOfSentence, MAX_PREV_WORD_COUNT_FOR_N_GRAM);
 
-        // A new session for each lookup, so that a lookup does not continue the search of the
-        // lookup before it. The Java class DicTraverseSession creates and initializes a session
-        // through latinime_setDicTraverseSession and latinime_initDicTraverseSession.
-        latinime::DicTraverseSession *const session = static_cast<latinime::DicTraverseSession *>(
-                latinime::DicTraverseSession::getSessionInstance(mEnv, nullptr /* localeStr */,
-                        static_cast<jlong>(mDictionarySize)));
-        {
-            const latinime::NgramContext emptyNgramContext;
-            session->init(mDictionary, &emptyNgramContext, nullptr /* suggestOptions */);
-        }
-
-        latinime::SuggestionResults suggestionResults(MAX_RESULTS);
-        if (inputSize > 0) {
-            mDictionary->getSuggestions(mProximityInfo, session, xCoordinates.data(),
-                    yCoordinates.data(), times.data(), pointerIds.data(), inputCodePoints,
-                    inputSize, &ngramContext, &suggestOptions,
-                    NOT_A_WEIGHT_OF_LANG_MODEL_VS_SPATIAL_MODEL, &suggestionResults);
-        } else {
-            mDictionary->getPredictions(&ngramContext, &suggestionResults);
-        }
+        // --lookup fresh: a new session for each lookup, and one engine call for the whole word.
+        // A lookup then does not continue the search of the lookup before it.
+        // --lookup incremental: the one session of the run, and one engine call after each key,
+        // as the keyboard makes when the suggestion strip updates after every key press. The
+        // engine then continues its last search where the new input extends the last input.
+        // The previous words are the same for every key of a word here. On a phone their
+        // 40-character window moves with the word.
+        latinime::DicTraverseSession *const session = mIncremental ? mSharedSession : newSession();
 
         HostArray outSuggestionCount = makeIntArray(1, 0);
         HostArray outCodePoints = makeIntArray(MAX_WORD_LENGTH * MAX_RESULTS, 0);
@@ -740,12 +801,32 @@ class Engine {
         HostArray outAutoCommitFirstWordConfidence = makeIntArray(1, 0);
         HostArray inOutWeightOfLangModelVsSpatialModel =
                 makeFloatArray(1, NOT_A_WEIGHT_OF_LANG_MODEL_VS_SPATIAL_MODEL);
-        suggestionResults.outputSuggestions(mEnv, asJintArray(&outSuggestionCount),
-                asJintArray(&outCodePoints), asJintArray(&outScores),
-                asJintArray(&outSpaceIndices), asJintArray(&outTypes),
-                asJintArray(&outAutoCommitFirstWordConfidence),
-                asJfloatArray(&inOutWeightOfLangModelVsSpatialModel));
-        latinime::DicTraverseSession::releaseSessionInstance(session);
+        const int firstSize = (mIncremental && inputSize > 0) ? 1 : inputSize;
+        for (int size = firstSize; size <= inputSize; ++size) {
+            int inputCodePoints[MAX_WORD_LENGTH];
+            std::fill_n(inputCodePoints, MAX_WORD_LENGTH, NOT_A_CODE_POINT);
+            std::copy_n(typedCodePoints.begin(), size, inputCodePoints);
+            latinime::SuggestionResults suggestionResults(MAX_RESULTS);
+            if (size > 0) {
+                mDictionary->getSuggestions(mProximityInfo, session, xCoordinates.data(),
+                        yCoordinates.data(), times.data(), pointerIds.data(), inputCodePoints,
+                        size, &ngramContext, &suggestOptions,
+                        NOT_A_WEIGHT_OF_LANG_MODEL_VS_SPATIAL_MODEL, &suggestionResults);
+            } else {
+                mDictionary->getPredictions(&ngramContext, &suggestionResults);
+            }
+            ++mEngineCallCount;
+            if (size == inputSize) {
+                suggestionResults.outputSuggestions(mEnv, asJintArray(&outSuggestionCount),
+                        asJintArray(&outCodePoints), asJintArray(&outScores),
+                        asJintArray(&outSpaceIndices), asJintArray(&outTypes),
+                        asJintArray(&outAutoCommitFirstWordConfidence),
+                        asJfloatArray(&inOutWeightOfLangModelVsSpatialModel));
+            }
+        }
+        if (!mIncremental) {
+            latinime::DicTraverseSession::releaseSessionInstance(session);
+        }
 
         // The loop at the end of BinaryDictionary.getSuggestions, and the bounded TreeSet of
         // com.android.inputmethod.latin.utils.SuggestionResults.
@@ -778,15 +859,29 @@ class Engine {
         return std::vector<Suggestion>(resultSet.begin(), resultSet.end());
     }
 
+    // The Java class DicTraverseSession creates and initializes a session through
+    // latinime_setDicTraverseSession and latinime_initDicTraverseSession.
+    latinime::DicTraverseSession *newSession() const {
+        latinime::DicTraverseSession *const session = static_cast<latinime::DicTraverseSession *>(
+                latinime::DicTraverseSession::getSessionInstance(mEnv, nullptr /* localeStr */,
+                        static_cast<jlong>(mDictionarySize)));
+        const latinime::NgramContext emptyNgramContext;
+        session->init(mDictionary, &emptyNgramContext, nullptr /* suggestOptions */);
+        return session;
+    }
+
     JNIEnv *const mEnv;
     const Layout mLayout;
+    const bool mIncremental;
     long mDictionarySize = 0;
     // The dictionary and the proximity info live for the whole run.
     latinime::Dictionary *mDictionary = nullptr;
     latinime::ProximityInfo *mProximityInfo = nullptr;
     std::vector<int> mProximityChars;
+    latinime::DicTraverseSession *mSharedSession = nullptr;
     std::map<std::string, std::vector<Suggestion>> mCache;
     long mLookUpCount = 0;
+    long mEngineCallCount = 0;
     double mLookUpSeconds = 0.0;
 };
 
@@ -903,12 +998,16 @@ struct CommitResult {
     CodePoints consideredWord;
 };
 
-// Suggest.getSuggestedWordsForNonBatchInput for a word typed in lower case with the shift state
-// off, followed by InputLogic.commitCurrentAutoCorrection. `typedWord` is the composing word.
+// Suggest.getSuggestedWordsForNonBatchInput, followed by
+// InputLogic.commitCurrentAutoCorrection. `typedLowerCase` is the composing word in lower case.
+// With `isOnlyFirstCharCapitalized` the person typed its first letter in upper case, which is
+// the state WordComposer.isOrWillBeOnlyFirstCharCapitalized reports.
 CommitResult commitComposingWord(Engine *const engine, const CodePoints &textBeforeComposing,
-        const CodePoints &composingForContext, const CodePoints &typedWord,
-        const float autoCorrectionThreshold) {
+        const CodePoints &composingForContext, const CodePoints &typedLowerCase,
+        const bool isOnlyFirstCharCapitalized, const float autoCorrectionThreshold) {
     CommitResult result;
+    const CodePoints typedWord = isOnlyFirstCharCapitalized
+            ? capitalizeFirstCodePoint(typedLowerCase) : typedLowerCase;
     // StringUtils.getTrailingSingleQuotesCount
     int trailingSingleQuotesCount = 0;
     while (trailingSingleQuotesCount < static_cast<int>(typedWord.size())
@@ -921,15 +1020,22 @@ CommitResult commitComposingWord(Engine *const engine, const CodePoints &textBef
     result.previousWords = previousWordsFor(textBeforeComposing, composingForContext);
 
     // DictionaryFacilitatorImpl.getSuggestionResults, with the main dictionary as the one source.
+    // The engine gets the word in lower case and with its trailing single quotes removed
+    // (ComposedData.copyCodePointsExceptTrailingSingleQuotesAndReturnCodePointCount).
+    const CodePoints engineInput(typedLowerCase.begin(),
+            typedLowerCase.end() - trailingSingleQuotesCount);
     const std::vector<Suggestion> &suggestionResults =
-            engine->getSuggestions(result.previousWords, consideredWord);
+            engine->getSuggestions(result.previousWords, engineInput);
     result.results = suggestionResults;
 
-    // Suggest.getTransformedSuggestedWordInfoList. The typed word is in lower case, so the two
-    // capitalization transforms do not apply, and the transform only appends single quotes.
+    // Suggest.getTransformedSuggestedWordInfoList. The all-capitals transform does not apply,
+    // because at most the first letter of the typed word is in upper case.
     std::vector<Suggestion> suggestionsContainer(suggestionResults);
-    if (trailingSingleQuotesCount != 0) {
+    if (isOnlyFirstCharCapitalized || trailingSingleQuotesCount != 0) {
         for (Suggestion &suggestion : suggestionsContainer) {
+            if (isOnlyFirstCharCapitalized) {
+                suggestion.word = capitalizeFirstCodePoint(suggestion.word);
+            }
             const int quotesToAppend = trailingSingleQuotesCount
                     - (contains(suggestion.word, KEYCODE_SINGLE_QUOTE) ? 1 : 0);
             for (int i = quotesToAppend - 1; i >= 0; --i) {
@@ -957,8 +1063,8 @@ CommitResult commitComposingWord(Engine *const engine, const CodePoints &textBef
 
     bool hasAutoCorrection = false;
     // The other conditions of the Java expression are constant here: correction is enabled, a
-    // word is in composition, the word has neither digits nor capitals, it is not resumed, and
-    // the main dictionary is present.
+    // word is in composition, the word has neither digits nor a second capital, it is not
+    // resumed, and the main dictionary is present.
     if (!allowsToBeAutoCorrected || suggestionResults.empty()
             || suggestionResults[0].kind() == kKindShortcut) {
         hasAutoCorrection = false;
@@ -1064,12 +1170,15 @@ void explainCommit(const std::string &engineName, const std::string &composing,
 
 // The text the engine leaves in the field for one case and one engine configuration.
 std::string runCase(Engine *const engine, const EngineConfig &config, const std::string &context,
-        const std::string &typed, std::set<std::string> *const explainedLookUps) {
+        const std::string &typed, const bool autoCapitalize,
+        std::set<std::string> *const explainedLookUps) {
     // The text field before the typed text: the context and one space.
     CodePoints textBefore = decodeUtf8(context);
     if (!textBefore.empty()) {
         textBefore.push_back(' ');
     }
+    // Auto-capitalization puts the first letter of an empty text field in upper case.
+    bool capitalizeNext = autoCapitalize && context.empty();
     if (config.spanMode) {
         // The whole span is one composing word. For the previous-word lookup the span counts
         // as one word, so its spaces are replaced by a letter there.
@@ -1077,8 +1186,8 @@ std::string runCase(Engine *const engine, const EngineConfig &config, const std:
         CodePoints spanForContext = span;
         std::replace(spanForContext.begin(), spanForContext.end(), static_cast<int>(' '),
                 static_cast<int>('a'));
-        const CommitResult result =
-                commitComposingWord(engine, textBefore, spanForContext, span, config.threshold);
+        const CommitResult result = commitComposingWord(engine, textBefore, spanForContext, span,
+                capitalizeNext, config.threshold);
         if (explainedLookUps) explainCommit(config.name, typed, result, explainedLookUps);
         return encodeUtf8(result.committed);
     }
@@ -1094,8 +1203,9 @@ std::string runCase(Engine *const engine, const EngineConfig &config, const std:
             continue;
         }
         const CodePoints token = decodeUtf8(tokens[i]);
-        const CommitResult result =
-                commitComposingWord(engine, textBefore, token, token, config.threshold);
+        const CommitResult result = commitComposingWord(engine, textBefore, token, token,
+                capitalizeNext, config.threshold);
+        capitalizeNext = false;
         if (explainedLookUps) explainCommit(config.name, tokens[i], result, explainedLookUps);
         output += encodeUtf8(result.committed);
         textBefore.insert(textBefore.end(), result.committed.begin(), result.committed.end());
@@ -1145,6 +1255,9 @@ int run(int argc, char **argv) {
     std::vector<EngineConfig> configs;
     bool explain = false;
     bool dump = false;
+    bool statistics = false;
+    bool incremental = false;
+    bool autoCapitalize = false;
     for (int i = 1; i < argc; ++i) {
         const std::string argument = argv[i];
         const bool hasValue = i + 1 < argc;
@@ -1154,10 +1267,20 @@ int run(int argc, char **argv) {
             layoutPath = argv[++i];
         } else if (argument == "--engine" && hasValue) {
             configs.push_back(parseEngineConfig(argv[++i]));
+        } else if (argument == "--lookup" && hasValue) {
+            const std::string strategy = argv[++i];
+            if (strategy != "fresh" && strategy != "incremental") {
+                fail("--lookup takes fresh or incremental, got '" + strategy + "'");
+            }
+            incremental = strategy == "incremental";
+        } else if (argument == "--auto-capitalize") {
+            autoCapitalize = true;
         } else if (argument == "--explain") {
             explain = true;
         } else if (argument == "--dump-layout") {
             dump = true;
+        } else if (argument == "--dictionary-statistics") {
+            statistics = true;
         } else {
             fail("unknown or incomplete argument '" + argument + "'");
         }
@@ -1166,13 +1289,16 @@ int run(int argc, char **argv) {
         fail("--dictionary and --layout are required");
     }
 
-    Engine engine(dictionaryPath, readLayout(layoutPath));
+    Engine engine(dictionaryPath, readLayout(layoutPath), incremental);
     std::fprintf(stderr, "latinime_driver: dictionary %s\n", engine.describeDictionary().c_str());
+    if (statistics) {
+        std::printf("dictionary statistics: %s\n", engine.dictionaryStatistics().c_str());
+    }
     if (dump) {
         dumpLayout(engine);
     }
     if (configs.empty()) {
-        if (!dump) fail("at least one --engine is required");
+        if (!dump && !statistics) fail("at least one --engine is required");
         return 0;
     }
 
@@ -1192,6 +1318,11 @@ int run(int argc, char **argv) {
         if (typed.empty()) {
             fail("empty typed text");
         }
+        // InputLogic.handleNonSeparatorEvent does not start a composing word on a word
+        // connector, and the apostrophe is one. The driver does not model that path.
+        if (typed[0] == '\'' || typed.find(" '") != std::string::npos) {
+            fail("a typed word that starts with an apostrophe is not supported");
+        }
         for (const char character : typed) {
             if (!((character >= 'a' && character <= 'z') || character == '\'' || character == ' ')) {
                 fail("typed text holds a character outside a to z, apostrophe and space");
@@ -1202,9 +1333,10 @@ int run(int argc, char **argv) {
             std::printf("case %s  context [%s]  typed [%s]\n", id.c_str(), context.c_str(),
                     typed.c_str());
         }
+        engine.startCase();
         std::set<std::string> explainedLookUps;
         for (const EngineConfig &config : configs) {
-            const std::string output = runCase(&engine, config, context, typed,
+            const std::string output = runCase(&engine, config, context, typed, autoCapitalize,
                     explain ? &explainedLookUps : nullptr);
             if (explain) {
                 std::printf("  %s (%s, threshold %g) leaves [%s]\n", config.name.c_str(),
@@ -1216,10 +1348,15 @@ int run(int argc, char **argv) {
         }
     }
     const long lookUps = engine.lookUpCount();
-    std::fprintf(stderr, "latinime_driver: %ld cases, %zu engine names, %ld engine lookups in"
-            " %.2f s (%.2f ms for one lookup), peak resident memory %s\n", caseCount,
-            configs.size(), lookUps, engine.lookUpSeconds(),
+    const long engineCalls = engine.engineCallCount();
+    std::fprintf(stderr, "latinime_driver: %ld cases, %zu engine names, lookup %s%s, %ld word"
+            " lookups with %ld engine calls in %.2f s (%.2f ms for one word lookup, %.2f ms for"
+            " one engine call), peak resident memory %s\n", caseCount, configs.size(),
+            incremental ? "incremental" : "fresh", autoCapitalize ? ", auto-capitalize" : "",
+            lookUps, engineCalls, engine.lookUpSeconds(),
             lookUps > 0 ? 1000.0 * engine.lookUpSeconds() / static_cast<double>(lookUps) : 0.0,
+            engineCalls > 0
+                    ? 1000.0 * engine.lookUpSeconds() / static_cast<double>(engineCalls) : 0.0,
             peakResidentMemory().c_str());
     return 0;
 }

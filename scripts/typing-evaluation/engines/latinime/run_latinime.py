@@ -8,7 +8,7 @@ Usage, from the repository root, after fetch_sources.sh and build.sh in this fol
 
 --half writes build/typing-evaluation/NAME/english.HALF.jsonl for each engine name, with one JSON
 object per case: the case `id` and the engine's `output`.
---controls prints two checks on the dev half that score.py does not make.
+--controls prints four checks on the dev half that score.py does not make.
 
 The script builds the keyboard layout from scripts/typing-evaluation/keyboard_noise.py and hands
 the cases to latinime_driver, which calls the engine. README.md in this folder describes both.
@@ -122,12 +122,15 @@ def driver_command(arguments: argparse.Namespace, layout: Path) -> list[str]:
     return command
 
 
-def run_driver(arguments: argparse.Namespace, layout: Path,
-               inputs: list[tuple[str, str, str]]) -> dict[str, dict[str, str]]:
-    """Runs (id, context, typed) triples through the driver. Returns output by engine name and id."""
+def run_driver(arguments: argparse.Namespace, layout: Path, inputs: list[tuple[str, str, str]],
+               options: tuple[str, ...] = ()) -> dict[str, dict[str, str]]:
+    """Runs (id, context, typed) triples through the driver. Returns output by engine name and id.
+
+    `options` holds extra driver arguments, such as ("--lookup", "incremental").
+    """
     lines = [f"{case_id}\t{context}\t{typed}" for case_id, context, typed in inputs]
     completed = subprocess.run(
-        driver_command(arguments, layout), input="\n".join(lines) + "\n",
+        driver_command(arguments, layout) + list(options), input="\n".join(lines) + "\n",
         capture_output=True, text=True, encoding="utf-8")
     sys.stderr.write(completed.stderr)
     if completed.returncode != 0:
@@ -162,18 +165,31 @@ def run_half(arguments: argparse.Namespace, layout: Path) -> None:
         print(f"{name}: wrote {len(cases)} outputs to {target.relative_to(ROOT)}")
 
 
+def report_changes(cases: list[dict], first: dict[str, dict[str, str]], second: dict[str, dict[str, str]],
+                   ignore_case: bool) -> None:
+    """Prints, for each engine name, the number of cases whose output differs between two runs."""
+    for name, _, _ in ENGINES:
+        changed = []
+        for case in cases:
+            before, after = first[name][case["id"]], second[name][case["id"]]
+            if (before.lower() != after.lower()) if ignore_case else (before != after):
+                changed.append((case["typed"], before, after))
+        print(f"  {name:32s} {len(changed):4d} / {len(cases):4d}")
+        for typed, before, after in changed[:5]:
+            print(f"      typed {typed!r}: {before!r} becomes {after!r}")
+
+
 def run_controls(arguments: argparse.Namespace, layout: Path) -> None:
-    """Two checks on the dev half that score.py does not make."""
+    """Four checks on the dev half that score.py does not make."""
     cases = load_cases("dev")
+    inputs = [(case["id"], case["context"], case["typed"]) for case in cases]
+    baseline = run_driver(arguments, layout, inputs)
 
     # Control 1: the same cases with the context removed. The stock dictionary does not hold
     # word pairs, so the previous words should not change an output.
-    with_context = run_driver(arguments, layout, [(case["id"], case["context"], case["typed"]) for case in cases])
     without_context = run_driver(arguments, layout, [(case["id"], "", case["typed"]) for case in cases])
     print("Control 1: dev outputs that change when the context is removed")
-    for name, _, _ in ENGINES:
-        changed = sum(with_context[name][case["id"]] != without_context[name][case["id"]] for case in cases)
-        print(f"  {name:32s} {changed:4d} / {len(cases):4d}")
+    report_changes(cases, baseline, without_context, ignore_case=False)
 
     # Control 2: correct two-word text. The clean categories hold one word each, so they do not
     # show how often an engine changes two correct words typed with their space. This control
@@ -191,12 +207,28 @@ def run_controls(arguments: argparse.Namespace, layout: Path) -> None:
                 shown += 1
                 print(f"      changed: {case['intended']!r} to {output!r}")
 
+    # Control 3: the lookup sequence. The scored runs ask the engine once for each word, in a new
+    # session. On a phone the keyboard keeps one session and may ask after every key, and the
+    # engine then continues its last search. This control asks after every key in one session.
+    incremental = run_driver(arguments, layout, inputs, ("--lookup", "incremental"))
+    print("Control 3: dev outputs that change when the engine is asked after every key in one session")
+    report_changes(cases, baseline, incremental, ignore_case=False)
+
+    # Control 4: auto-capitalization. The scored runs type every letter in lower case. On a phone
+    # the first letter of an empty text field is in upper case. This control types that letter in
+    # upper case for the cases with an empty context, and compares the outputs without their case.
+    capitalized = run_driver(arguments, layout, inputs, ("--auto-capitalize",))
+    empty_context = [case for case in cases if not case["context"]]
+    print("Control 4: dev outputs of the cases with an empty context that change, letter case ignored,")
+    print("           when the first letter is typed in upper case")
+    report_changes(empty_context, baseline, capitalized, ignore_case=True)
+
 
 def explain_samples(arguments: argparse.Namespace, layout: Path) -> None:
     lines = [f"sample-{index:02d}\t{context}\t{typed}" for index, (context, typed) in enumerate(SAMPLES)]
     completed = subprocess.run(
-        driver_command(arguments, layout) + ["--explain", "--dump-layout"], input="\n".join(lines) + "\n",
-        capture_output=True, text=True, encoding="utf-8")
+        driver_command(arguments, layout) + ["--explain", "--dump-layout", "--dictionary-statistics"],
+        input="\n".join(lines) + "\n", capture_output=True, text=True, encoding="utf-8")
     sys.stdout.write(completed.stdout)
     sys.stderr.write(completed.stderr)
     if completed.returncode != 0:
@@ -207,10 +239,9 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     action = parser.add_mutually_exclusive_group(required=True)
     action.add_argument("--half", choices=["dev", "test"], help="run the cases of this half")
-    action.add_argument("--controls", action="store_true",
-                        help="print the context control and the two-word control on the dev half")
+    action.add_argument("--controls", action="store_true", help="print the four controls on the dev half")
     action.add_argument("--explain-samples", action="store_true",
-                        help="print the layout and the engine's suggestions for a few dev examples")
+                        help="print the dictionary counts, the layout and the suggestions for a few dev examples")
     action.add_argument("--list-engines", action="store_true", help="print the engine names")
     parser.add_argument("--driver", type=Path, default=BUILD / "latinime_driver")
     parser.add_argument("--dictionary", type=Path,
