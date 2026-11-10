@@ -178,15 +178,12 @@ The workflow step "Print the license files of the packages" prints both files in
 
 ```mermaid
 flowchart LR
-    typed["Case zh-dev-clean_short-0000<br/>typed letters: dadehao"] --> keys["7 key presses<br/>engine split: da de hao"]
-    keys --> kind{"First candidate<br/>of type BEST_TAIL?"}
-    kind -- "yes: 24,000 of 24,000 outputs" --> sentence["Output: 打得好<br/>the whole-sentence candidate"]
-    kind -- "no: 0 of 24,000 outputs" --> words["First word candidate<br/>at each position"]
-    sentence --> escape["Escape key press<br/>commit count stays 0"]
-    words --> escape
+    typed["Case zh-dev-clean_short-0000<br/>7 key presses: dadehao<br/>engine split: da de hao"] --> kind{"First candidate<br/>of type BEST_TAIL?"}
+    kind -- "yes" --> sentence["Output: 打得好<br/>24,000 of 24,000 outputs"]
+    kind -- "no" --> words["First word candidate at each position<br/>0 of 24,000 outputs"]
 ```
 
-Figure 2. Path of one case through the adapter program. The first candidate was the engine's whole-sentence candidate for every output of the eight runs.
+Figure 2. Path of one case through the adapter program. The first candidate was the engine's whole-sentence candidate for every output of the eight runs. After each case, an Escape key press empties the session, and the commit count stays 0.
 
 `sunpinyin_cli.cpp` makes these calls, in this order.
 
