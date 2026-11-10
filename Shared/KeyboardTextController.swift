@@ -99,10 +99,29 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
 
     private var pending: PendingReplacement?
 
-    init(keyboardView: KeyboardView, document: KeyboardDocument, spellChecker: SpellChecking) {
+    /// True while the keyboard types Simplified Chinese through Pinyin.
+    private(set) var chineseMode = false
+    /// The Pinyin letters typed so far that are not Chinese text yet.
+    private(set) var pinyinBuffer = ""
+    private var pinyinCandidates: [PinyinCandidate] = []
+    private let makePinyinEngine: @MainActor () -> PinyinEngine
+    /// The dictionary loads on the first switch to Chinese, so English typing does not pay for the load.
+    private lazy var pinyinEngine: PinyinEngine = makePinyinEngine()
+
+    /// Chinese forms of the punctuation keys.
+    private static let chinesePunctuation: [String: String] = [
+        ",": "\u{FF0C}", ".": "\u{3002}", "?": "\u{FF1F}", "!": "\u{FF01}", ":": "\u{FF1A}",
+        ";": "\u{FF1B}", "(": "\u{FF08}", ")": "\u{FF09}", "\\": "\u{3001}",
+    ]
+
+    init(
+        keyboardView: KeyboardView, document: KeyboardDocument, spellChecker: SpellChecking,
+        pinyinEngine: @escaping @MainActor () -> PinyinEngine
+    ) {
         self.keyboardView = keyboardView
         self.document = document
         self.spellChecker = spellChecker
+        self.makePinyinEngine = pinyinEngine
         super.init()
         keyboardView.delegate = self
     }
@@ -118,14 +137,16 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
     // MARK: State shown on the keyboard
 
     private func updateAutoShift() {
-        let capitalize = KeyboardTextLogic.shouldAutoCapitalize(
+        // Pinyin letters are lower case, so Chinese typing does not use automatic capitals.
+        let capitalize = !chineseMode && KeyboardTextLogic.shouldAutoCapitalize(
             before: document.textBeforeCursor, type: document.autocapitalizationType)
         keyboardView.setAutomaticShift(capitalize)
     }
 
     private func refreshCaption() {
         keyboardView.selectAllActive = allText != nil
-        keyboardView.spaceCaption = notice ?? (allText != nil ? "All text selected" : nil)
+        keyboardView.spaceCaption = notice
+            ?? (allText != nil ? "All text selected" : (chineseMode ? "\u{62FC}\u{97F3}" : nil))
     }
 
     /// Shows a short message on the space bar for 2.5 seconds.
@@ -216,6 +237,73 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
             withTarget: self, selector: #selector(finishPendingReplacement), object: nil)
         pending = nil
         setAllText(nil)
+        commitPinyinLetters()
+    }
+
+    // MARK: Chinese
+
+    private func refreshCandidates() {
+        if pinyinBuffer.isEmpty {
+            pinyinCandidates = []
+            keyboardView.showCandidates(composition: nil, words: [])
+        } else {
+            pinyinCandidates = pinyinEngine.candidates(for: pinyinBuffer)
+            keyboardView.showCandidates(
+                composition: pinyinEngine.display(for: pinyinBuffer), words: pinyinCandidates.map { $0.word })
+        }
+    }
+
+    /// Types the candidate at `index` and keeps the letters the candidate did not cover.
+    private func selectCandidate(at index: Int) {
+        guard pinyinCandidates.indices.contains(index) else { return }
+        let candidate = pinyinCandidates[index]
+        document.insertText(candidate.word)
+        pinyinBuffer.removeFirst(candidate.consumedLetters)
+        refreshCandidates()
+    }
+
+    /// Types the buffered letters as plain letters and empties the buffer.
+    private func commitPinyinLetters() {
+        guard !pinyinBuffer.isEmpty else { return }
+        document.insertText(pinyinBuffer)
+        pinyinBuffer = ""
+        refreshCandidates()
+    }
+
+    /// Handles a typed character while the keyboard types Chinese.
+    /// Returns false when the character should go through the normal typing path.
+    private func handleChineseInput(_ text: String) -> Bool {
+        if text.count == 1, let letter = text.lowercased().first, letter.isASCII, letter.isLetter {
+            // A buffer of 30 letters covers any phrase in the dictionary.
+            guard pinyinBuffer.count < 30 else { return true }
+            pinyinBuffer.append(letter)
+            refreshCandidates()
+            return true
+        }
+        if !pinyinBuffer.isEmpty {
+            if text == " " {
+                if pinyinCandidates.isEmpty { commitPinyinLetters() } else { selectCandidate(at: 0) }
+                return true
+            }
+            if text == "\n" {
+                commitPinyinLetters()
+                return true
+            }
+            if let digit = Int(text), (1...9).contains(digit) {
+                selectCandidate(at: digit - 1)
+                return true
+            }
+            // Punctuation ends the word: the best candidates go in first, then the punctuation.
+            while !pinyinBuffer.isEmpty, !pinyinCandidates.isEmpty {
+                selectCandidate(at: 0)
+            }
+            commitPinyinLetters()
+        }
+        if let chinese = Self.chinesePunctuation[text] {
+            document.insertText(chinese)
+            return true
+        }
+        return false
     }
 
     private func deleteBackward(count: Int) {
@@ -235,7 +323,7 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
 
     private func insert(_ text: String) {
         let now = ProcessInfo.processInfo.systemUptime
-        if text == " ", previousInsertWasSpace, now - lastSpaceTime < 1.5,
+        if text == " ", !chineseMode, previousInsertWasSpace, now - lastSpaceTime < 1.5,
             KeyboardTextLogic.shouldReplaceDoubleSpace(before: document.textBeforeCursor) {
             document.deleteBackward()
             document.insertText(". ")
@@ -252,7 +340,7 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
     /// Replaces a misspelled word right before the cursor, when `terminator` ends that word.
     private func correctLastWord(beforeTyping terminator: String) {
         lastCorrection = nil
-        guard KeyboardTextLogic.wordTerminators.contains(terminator), document.allowsAutocorrection,
+        guard !chineseMode, KeyboardTextLogic.wordTerminators.contains(terminator), document.allowsAutocorrection,
             let word = KeyboardTextLogic.correctableWord(before: document.textBeforeCursor),
             !keptWords.contains(word.lowercased())
         else { return }
@@ -305,6 +393,10 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
             pending = replacement
             return
         }
+        if chineseMode, allText == nil, handleChineseInput(text) {
+            updateAutoShift()
+            return
+        }
         if let snapshot = confirmedAllText() {
             replaceAllText(snapshot, with: text)
             return
@@ -312,8 +404,17 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
         insert(text)
     }
 
+    func keyboardView(_ keyboardView: KeyboardView, didSelectCandidateAt index: Int) {
+        selectCandidate(at: index)
+    }
+
     func keyboardViewDeleteBackward(_ keyboardView: KeyboardView) {
         guard pending == nil else { return }
+        if !pinyinBuffer.isEmpty {
+            pinyinBuffer.removeLast()
+            refreshCandidates()
+            return
+        }
         if let snapshot = confirmedAllText() {
             replaceAllText(snapshot, with: nil)
             return
@@ -332,6 +433,7 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
     func keyboardView(_ keyboardView: KeyboardView, moveCursorBy offset: Int) {
         guard pending == nil else { return }
         setAllText(nil)
+        commitPinyinLetters()
         previousInsertWasSpace = false
         lastCorrection = nil
         document.moveCursor(byUTF16Offset: utf16Offset(forCharacters: offset))
@@ -341,7 +443,13 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
         guard pending == nil else { return }
         previousInsertWasSpace = false
         lastCorrection = nil
+        commitPinyinLetters()
         switch command {
+        case .toggleLanguage:
+            setAllText(nil)
+            chineseMode.toggle()
+            keyboardView.chineseActive = chineseMode
+            refreshCaption()
         case .selectAll:
             if allText != nil {
                 setAllText(nil)

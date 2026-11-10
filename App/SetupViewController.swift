@@ -13,7 +13,8 @@ final class SetupViewController: UIViewController, UITextViewDelegate {
     private let previewContainer = UIInputView(frame: .zero, inputViewStyle: .keyboard)
     private lazy var previewDocument = TextViewDocument(textView: previewField)
     private lazy var textController = KeyboardTextController(
-        keyboardView: previewKeyboard, document: previewDocument, spellChecker: SystemSpellChecker())
+        keyboardView: previewKeyboard, document: previewDocument, spellChecker: SystemSpellChecker(),
+        pinyinEngine: { PinyinEngine.bundled() })
     private var didAutoFocus = false
 
     override func viewDidLoad() {

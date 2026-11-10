@@ -7,6 +7,8 @@ protocol KeyboardViewDelegate: AnyObject {
     func keyboardViewReturn(_ keyboardView: KeyboardView)
     func keyboardView(_ keyboardView: KeyboardView, moveCursorBy offset: Int)
     func keyboardView(_ keyboardView: KeyboardView, edit command: EditCommand)
+    /// The user tapped a word in the candidate bar.
+    func keyboardView(_ keyboardView: KeyboardView, didSelectCandidateAt index: Int)
     func keyboardViewDismiss(_ keyboardView: KeyboardView)
     /// Called on every finger down, so the owner can play the key click.
     func keyboardViewDidPressKey(_ keyboardView: KeyboardView)
@@ -42,6 +44,24 @@ final class KeyboardView: UIView {
 
     var shiftState: ShiftState = .off {
         didSet { if oldValue != shiftState { refreshLabels() } }
+    }
+
+    /// True while the keyboard types Chinese. The language key then draws in the pressed color.
+    var chineseActive = false {
+        didSet { if oldValue != chineseActive { refreshLabels() } }
+    }
+
+    /// The bar of Chinese candidates. The bar covers the top row while the user composes a word.
+    private let candidateBar = CandidateBar()
+
+    /// Shows the typed Pinyin and its candidate words, or hides the bar when `composition` is nil.
+    func showCandidates(composition: String?, words: [String]) {
+        if let composition {
+            candidateBar.show(composition: composition, words: words)
+            candidateBar.isHidden = false
+        } else {
+            candidateBar.isHidden = true
+        }
     }
 
     /// True while the select-all key is on. The key then draws in the pressed color.
@@ -97,6 +117,12 @@ final class KeyboardView: UIView {
         backgroundColor = UIColor(white: 0.5, alpha: 0.02)
         globeButton.accessibilityLabel = "Next keyboard"
         addSubview(globeButton)
+        candidateBar.isHidden = true
+        candidateBar.onSelect = { [weak self] index in
+            guard let self else { return }
+            self.delegate?.keyboardView(self, didSelectCandidateAt: index)
+        }
+        addSubview(candidateBar)
         rebuild()
     }
 
@@ -155,6 +181,7 @@ final class KeyboardView: UIView {
             }
         }
         bringSubviewToFront(globeButton)
+        bringSubviewToFront(candidateBar)
         refreshLabels()
         setNeedsLayout()
     }
@@ -213,6 +240,8 @@ final class KeyboardView: UIView {
             return KeyDisplay(primary: "Select All", primaryFontSize: wordSize, emphasized: selectAllActive)
         case .forwardDelete:
             return KeyDisplay(symbolName: "delete.right")
+        case .language:
+            return KeyDisplay(primary: "\u{4E2D}", primaryFontSize: 18, emphasized: chineseActive)
         case .cut:
             return KeyDisplay(symbolName: "scissors")
         case .copy:
@@ -276,6 +305,10 @@ final class KeyboardView: UIView {
         let spec = Self.spec
         let gapY = style == .wide ? spec.gapYWide : spec.gapYCompact
         globeButton.isHidden = true
+        candidateBar.frame = CGRect(
+            x: metrics.originX, y: metrics.rowEdges[0],
+            width: metrics.width, height: metrics.rowEdges[1] - metrics.rowEdges[0]
+        ).insetBy(dx: spec.gapX, dy: gapY)
         for (rowIndex, row) in rows.enumerated() {
             let rowWeight = row.reduce(0) { $0 + $1.key.weight }
             let rowInset = rowIndex == rows.count - 1 ? spec.bottomRowCornerInset : 0
@@ -576,6 +609,8 @@ final class KeyboardView: UIView {
             delegate?.keyboardView(self, edit: .selectAll)
         case .forwardDelete:
             delegate?.keyboardView(self, edit: .deleteForward)
+        case .language:
+            delegate?.keyboardView(self, edit: .toggleLanguage)
         case .cut:
             delegate?.keyboardView(self, edit: .cut)
         case .copy:

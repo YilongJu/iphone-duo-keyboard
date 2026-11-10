@@ -13,7 +13,8 @@ final class KeyboardViewController: UIInputViewController {
     private let keyboardView = KeyboardView()
     private lazy var document = ProxyDocument(controller: self)
     private lazy var textController = KeyboardTextController(
-        keyboardView: keyboardView, document: document, spellChecker: SystemSpellChecker())
+        keyboardView: keyboardView, document: document, spellChecker: SystemSpellChecker(),
+        pinyinEngine: { PinyinEngine.bundled() })
     private var heightConstraint: NSLayoutConstraint?
 
     override func viewDidLoad() {

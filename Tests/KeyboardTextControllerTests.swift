@@ -39,6 +39,13 @@ final class FakeDocument: KeyboardDocument {
     }
 }
 
+/// A small dictionary in the format of pinyin-dictionary.txt, most frequent word first.
+let testDictionary = [
+    "wo\t\u{6211}", "ni\t\u{4F60}", "hao\t\u{597D}", "ni hao\t\u{4F60}\u{597D}", "ni\t\u{5C3C}",
+    "zhong\t\u{4E2D}", "guo\t\u{56FD}", "zhong guo\t\u{4E2D}\u{56FD}", "xi\t\u{897F}", "an\t\u{5B89}",
+    "xian\t\u{5148}", "n\t\u{55EF}", "men\t\u{4EEC}",
+].joined(separator: "\n")
+
 /// A spell checker with a fixed list of corrections.
 @MainActor
 final class FakeSpellChecker: SpellChecking {
@@ -65,6 +72,59 @@ final class KeyboardTextControllerTests: XCTestCase {
         for character in text {
             controller.keyboardView(keyboardView, insert: String(character))
         }
+    }
+
+    func testPinyinLettersWaitInTheBufferAndSpaceTypesTheFirstCandidate() {
+        makeController(before: "")
+        controller.keyboardView(keyboardView, edit: .toggleLanguage)
+        type("nihao")
+        XCTAssertEqual(document.text, "")
+        XCTAssertEqual(controller.pinyinBuffer, "nihao")
+        type(" ")
+        XCTAssertEqual(document.text, "\u{4F60}\u{597D}")
+        XCTAssertEqual(controller.pinyinBuffer, "")
+    }
+
+    func testADigitPicksACandidateAndTheRestStaysInTheBuffer() {
+        makeController(before: "")
+        controller.keyboardView(keyboardView, edit: .toggleLanguage)
+        type("nihao")
+        // Candidates: the phrase for "ni hao", then the two characters for "ni".
+        type("2")
+        XCTAssertEqual(document.text, "\u{4F60}")
+        XCTAssertEqual(controller.pinyinBuffer, "hao")
+    }
+
+    func testBackspaceRemovesAPinyinLetterBeforeAnyText() {
+        makeController(before: "a")
+        controller.keyboardView(keyboardView, edit: .toggleLanguage)
+        type("wo")
+        controller.keyboardViewDeleteBackward(keyboardView)
+        XCTAssertEqual(controller.pinyinBuffer, "w")
+        XCTAssertEqual(document.text, "a")
+    }
+
+    func testPunctuationTypesTheWordAndTheChineseMark() {
+        makeController(before: "")
+        controller.keyboardView(keyboardView, edit: .toggleLanguage)
+        type("nihao,")
+        XCTAssertEqual(document.text, "\u{4F60}\u{597D}\u{FF0C}")
+    }
+
+    func testReturnTypesThePinyinLettersAsTheyAre() {
+        makeController(before: "")
+        controller.keyboardView(keyboardView, edit: .toggleLanguage)
+        type("wo")
+        controller.keyboardViewReturn(keyboardView)
+        XCTAssertEqual(document.text, "wo")
+    }
+
+    func testEnglishTypingIsUnchangedAfterASwitchBack() {
+        makeController(before: "")
+        controller.keyboardView(keyboardView, edit: .toggleLanguage)
+        controller.keyboardView(keyboardView, edit: .toggleLanguage)
+        type("teh ")
+        XCTAssertEqual(document.text, "the ")
     }
 
     func testASpaceCorrectsTheWordBeforeIt() {
@@ -120,7 +180,8 @@ final class KeyboardTextControllerTests: XCTestCase {
         document = FakeDocument(before: before, after: after)
         spellChecker = FakeSpellChecker()
         controller = KeyboardTextController(
-            keyboardView: keyboardView, document: document, spellChecker: spellChecker)
+            keyboardView: keyboardView, document: document, spellChecker: spellChecker,
+            pinyinEngine: { PinyinEngine(dictionaryText: testDictionary) })
     }
 
     /// The controller deletes the text after the cursor in a delayed step, so the test waits.
@@ -355,6 +416,39 @@ final class KeyboardTextLogicTests: XCTestCase {
         XCTAssertFalse(KeyboardTextLogic.shouldAutoCapitalize(before: "Done.", type: .sentences))
         XCTAssertFalse(KeyboardTextLogic.shouldAutoCapitalize(before: "word ", type: .sentences))
         XCTAssertFalse(KeyboardTextLogic.shouldAutoCapitalize(before: "", type: .none))
+    }
+}
+
+final class PinyinEngineTests: XCTestCase {
+    private let engine = PinyinEngine(dictionaryText: testDictionary)
+
+    func testSegmentSplitsLettersIntoSyllables() {
+        XCTAssertEqual(engine.segment("nihao").syllables, ["ni", "hao"])
+        XCTAssertEqual(engine.segment("zhongguo").syllables, ["zhong", "guo"])
+        XCTAssertEqual(engine.segment("nih").syllables, ["ni"])
+        XCTAssertEqual(engine.segment("nih").remainder, "h")
+        XCTAssertEqual(engine.segment("zh").remainder, "zh")
+    }
+
+    func testSegmentTakesTheLongestSyllableFirst() {
+        XCTAssertEqual(engine.segment("xian").syllables, ["xian"])
+        XCTAssertEqual(engine.segment("nimen").syllables, ["ni", "men"])
+    }
+
+    func testCandidatesPutTheWholePhraseFirst() {
+        let words = engine.candidates(for: "nihao").map { $0.word }
+        XCTAssertEqual(words, ["\u{4F60}\u{597D}", "\u{4F60}", "\u{5C3C}"])
+        XCTAssertEqual(engine.candidates(for: "nihao").first?.consumedLetters, 5)
+        XCTAssertEqual(engine.candidates(for: "nihao").last?.consumedLetters, 2)
+    }
+
+    func testAnIncompleteSyllableOffersCharactersThatStartThatWay() {
+        let words = engine.candidates(for: "zh").map { $0.word }
+        XCTAssertEqual(words, ["\u{4E2D}"])
+    }
+
+    func testDisplayMarksTheSyllables() {
+        XCTAssertEqual(engine.display(for: "nihaoz"), "ni'hao'z")
     }
 }
 

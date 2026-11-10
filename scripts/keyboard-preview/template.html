@@ -78,6 +78,7 @@ it opens.</p>
   <tr><td>Corner radius</td><td>The slider's value</td><td>The display's real radius</td></tr>
   <tr><td>Cut, copy, paste</td><td>A notice on the space bar</td><td>The system clipboard, with Full Access on</td></tr>
   <tr><td>Space bar hold</td><td>Not simulated</td><td>Moves the cursor</td></tr>
+  <tr><td>Chinese key</td><td>A notice on the space bar</td><td>Switches to Pinyin, with candidates in the top row</td></tr>
 </table>
 
 <script>
@@ -97,7 +98,7 @@ const PRESETS = [
 const FN_LABEL = {
   backspace: "⌫", forwardDelete: "⌦", shift: "⇧", capsLock: "⇪", tab: "⇥", globe: "🌐", dismiss: "⌨↓",
   left: "←", right: "→", up: "↑", down: "↓", home: "Home", end: "End", selectAll: "Select All",
-  cut: "✂", copy: "⧉", paste: "📋", symbols: ".?123", letters: "ABC", more: "#+=", space: "", return: "return",
+  cut: "✂", copy: "⧉", paste: "📋", symbols: ".?123", letters: "ABC", more: "#+=", language: "\u4E2D", space: "", return: "return",
 };
 const state = {
   width: 669, compactHeight: false, shift: "off", autoShift: false,
@@ -371,6 +372,7 @@ function act(key, alt, keepLayerView) {
         else notice("Select text first");
         break;
       case "paste": notice("Paste"); break;
+      case "language": notice("Pinyin runs on the phone only"); break;
       case "symbols": case "letters": case "more": layerToFlash = key.name; break;
       case "globe": notice("Next keyboard"); break;
       case "dismiss": notice("Hide keyboard"); break;
