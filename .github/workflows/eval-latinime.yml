@@ -27,6 +27,8 @@ jobs:
           curl --version | sed -n 1p
           echo "JAVA_HOME=$JAVA_HOME"
           "$JAVA_HOME/bin/java" -version 2>&1
+          # The license line in the header of the JNI header that the build includes.
+          grep -n -m 1 'Classpath' "$JAVA_HOME/include/jni.h"
       - name: Fetch the AOSP LatinIME sources and the stock English dictionary
         run: bash "$ENGINE/fetch_sources.sh" build/latinime/source
       - name: Build the engine core and the driver
@@ -39,7 +41,7 @@ jobs:
           for half in dev test; do
             python3 "$ENGINE/run_latinime.py" --half "$half"
           done
-      - name: Print the four controls on the dev half
+      - name: Print the five controls on the dev half
         run: python3 "$ENGINE/run_latinime.py" --controls
       - name: Score each engine name on each half
         run: |

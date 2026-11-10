@@ -48,6 +48,7 @@
 #include "dictionary/interface/dictionary_header_structure_policy.h"
 #include "dictionary/property/ngram_context.h"
 #include "dictionary/property/word_property.h"
+#include "dictionary/structure/pt_common/shortcut/shortcut_list_reading_utils.h"
 #include "dictionary/structure/dictionary_structure_with_buffer_policy_factory.h"
 #include "jni.h"
 #include "suggest/core/dictionary/dictionary.h"
@@ -611,6 +612,7 @@ class Engine {
         long zeroProbability = 0;
         long entriesWithShortcuts = 0;
         long shortcuts = 0;
+        long whitelistShortcuts = 0;
         long entriesWithWordPairs = 0;
         long wordPairs = 0;
         int token = 0;
@@ -630,6 +632,15 @@ class Engine {
             if (unigramProperty.getProbability() == 0) ++zeroProbability;
             if (!unigramProperty.getShortcuts().empty()) ++entriesWithShortcuts;
             shortcuts += static_cast<long>(unigramProperty.getShortcuts().size());
+            for (const latinime::UnigramProperty::ShortcutProperty &shortcut
+                    : unigramProperty.getShortcuts()) {
+                // A whitelist shortcut carries the marker value in its probability field.
+                if (latinime::ShortcutListReadingUtils::isWhitelist(
+                        static_cast<latinime::ShortcutListReadingUtils::ShortcutFlags>(
+                                shortcut.getProbability()))) {
+                    ++whitelistShortcuts;
+                }
+            }
             if (!wordProperty.getNgramProperties().empty()) ++entriesWithWordPairs;
             wordPairs += static_cast<long>(wordProperty.getNgramProperties().size());
         } while (token != 0);
@@ -637,7 +648,8 @@ class Engine {
                 + " flagged not-a-word, " + std::to_string(possiblyOffensive)
                 + " flagged possibly offensive, " + std::to_string(zeroProbability)
                 + " with probability 0, " + std::to_string(entriesWithShortcuts)
-                + " entries with shortcuts (" + std::to_string(shortcuts) + " shortcuts), "
+                + " entries with shortcuts (" + std::to_string(shortcuts) + " shortcuts, "
+                + std::to_string(whitelistShortcuts) + " of them whitelist shortcuts), "
                 + std::to_string(entriesWithWordPairs) + " entries with word pairs ("
                 + std::to_string(wordPairs) + " word pairs)";
     }
