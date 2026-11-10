@@ -103,8 +103,13 @@ typedef struct {
 } duo_result;
 
 /* Checks the bytes and fills `lexicon`. Returns 1 on success and 0 when the bytes are not a
-   valid lexicon file. */
+   valid lexicon file. The check reads the whole file once. */
 int duo_lexicon_open(duo_lexicon *lexicon, const void *data, size_t size);
+
+/* Fills `lexicon` after a check of the header and the file size only. This is for a file that
+   an earlier full check accepted, such as a file inside a signed app. It does not read the
+   file's body, so a keyboard opens fast. Returns 1 on success and 0 on a wrong header or size. */
+int duo_lexicon_open_checked_before(duo_lexicon *lexicon, const void *data, size_t size);
 
 duo_params duo_english_params(void);
 duo_params duo_pinyin_params(void);
