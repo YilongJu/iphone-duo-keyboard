@@ -112,7 +112,7 @@ def main():
               f"flags {'+'.join(stats['flags']) or 'None'} (value {stats['flags_value']}), "
               f"{stats['cases']} cases, {stats['letters']} letters, {stats['typing_seconds']:.1f} s typing, "
               f"{per_letter:.3f} ms per letter, slowest case {stats['slowest_case_milliseconds']:.1f} ms, "
-              f"refused letters {stats['refused_letters']}, cases with more than one pick {stats['cases_with_more_than_one_pick']}, "
+              f"cases with more than one pick {stats['cases_with_more_than_one_pick']}, "
               f"sentence differs from picks {stats['sentence_differs_from_picks']}, "
               f"bulk typing differs {stats['bulk_typing_differs']}, empty outputs {run['empty_outputs']}, "
               f"outputs with a Latin letter {run['outputs_with_a_latin_letter']}")

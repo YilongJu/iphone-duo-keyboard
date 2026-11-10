@@ -49,6 +49,8 @@ struct Mode {
     bool qwertyCorrection;
     // Apply the settings that fcitx5-chinese-addons applies on top of the libime defaults:
     // 2 sentences, score filter 1, long-word limit 4, 15 word candidates, 35 syllables at most.
+    // The adapter copies these decoder settings only. fcitx5 also loads its own chaizi.dict, and
+    // extb.dict on a desktop, and the adapter loads neither.
     bool fcitx5Settings;
 };
 
@@ -88,8 +90,6 @@ std::vector<Mode> allModes() {
 struct Statistics {
     std::size_t cases = 0;
     std::size_t letters = 0;
-    // Letters the context did not accept, because PinyinContext::type returned false.
-    std::size_t refusedLetters = 0;
     // Cases where the first candidate did not cover every letter, so a second pick was needed.
     std::size_t casesWithMoreThanOnePick = 0;
     // Cases where PinyinContext::sentence() differs from the text built by the picks.
@@ -103,7 +103,6 @@ struct Statistics {
 struct Conversion {
     std::string output;
     std::string sentence;
-    std::size_t refusedLetters = 0;
     std::size_t picks = 0;
 };
 
@@ -113,17 +112,19 @@ Conversion convert(libime::PinyinIME &ime, const Mode &mode, const std::string &
     if (mode.fcitx5Settings) {
         context.setMaxSentenceLength(35);
     }
+    // PinyinContext::type returns false when the context does not accept the letters. The output
+    // would then cover a part of the case only, so the program stops.
     if (oneLetterAtATime) {
         for (const char &letter : typed) {
             if (!context.type(&letter, 1)) {
-                result.refusedLetters += 1;
+                throw std::runtime_error("libime did not accept a letter of: " + typed);
             }
         }
     } else if (!context.type(typed.data(), typed.size())) {
-        result.refusedLetters += typed.size();
+        throw std::runtime_error("libime did not accept the letters in one call: " + typed);
     }
-    if (context.empty()) {
-        return result;
+    if (context.size() != typed.size()) {
+        throw std::runtime_error("the context holds a different number of letters than: " + typed);
     }
     result.sentence = context.sentence();
     // The harness rule: take the first candidate until every letter is used.
@@ -253,7 +254,6 @@ int main(int argc, char **argv) {
 
         statistics.cases += 1;
         statistics.letters += typed.size();
-        statistics.refusedLetters += byLetter.refusedLetters;
         statistics.casesWithMoreThanOnePick += byLetter.picks > 1;
         statistics.sentenceDiffersFromPicks += byLetter.sentence != byLetter.output;
         statistics.bulkTypingDiffers += inOneCall.output != byLetter.output;
@@ -279,8 +279,8 @@ int main(int argc, char **argv) {
            << quoted("fcitx5_settings") << ": " << (mode->fcitx5Settings ? "true" : "false") << ", "
            << quoted("nbest") << ": " << ime.nbest() << ", " << quoted("beam_size") << ": " << ime.beamSize() << ", "
            << quoted("frame_size") << ": " << ime.frameSize() << ", " << quoted("cases") << ": " << statistics.cases
-           << ", " << quoted("letters") << ": " << statistics.letters << ", " << quoted("refused_letters") << ": "
-           << statistics.refusedLetters << ", " << quoted("cases_with_more_than_one_pick") << ": "
+           << ", " << quoted("letters") << ": " << statistics.letters << ", "
+           << quoted("cases_with_more_than_one_pick") << ": "
            << statistics.casesWithMoreThanOnePick << ", " << quoted("sentence_differs_from_picks") << ": "
            << statistics.sentenceDiffersFromPicks << ", " << quoted("bulk_typing_differs") << ": "
            << statistics.bulkTypingDiffers << ", " << quoted("typing_seconds") << ": " << statistics.seconds << ", "
