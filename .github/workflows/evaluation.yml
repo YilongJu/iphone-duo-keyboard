@@ -30,6 +30,11 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
+      - name: Build the cases from published misspelling lists
+        run: |
+          set -euo pipefail
+          python3 -m pip install --quiet --break-system-packages wordfreq
+          python3 scripts/typing-evaluation/build_external_english_cases.py
       - name: Build the engine, once with memory checks and once for speed
         run: |
           set -euo pipefail

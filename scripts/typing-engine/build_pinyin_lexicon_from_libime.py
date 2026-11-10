@@ -16,6 +16,11 @@ A word's spelling is its Pinyin written without apostrophes, as a person types i
 with "lve" or "nve" is also listed with "lue" or "nue", and the other way round, because people
 type both.
 
+The language model also holds two marks, "<s>" for the start of a sentence and "</s>" for its
+end, with the chance of each word at the start and of the end after each word. The lexicon keeps
+both marks under spellings that nobody can type (the bytes 1 and 2), so the engine can ask how
+likely a word is to open or to close a sentence.
+
 Usage, from the repository root, on a machine that holds the unpacked files:
     python3 scripts/typing-engine/build_pinyin_lexicon_from_libime.py FOLDER PAIRS
 """
@@ -33,6 +38,10 @@ LN10 = math.log(10)
 SPELLING = re.compile(r"[a-z]+")
 # The other common way to type the two syllables with the sound "ü" after l and n.
 SPELLING_VARIANTS = [("lve", "lue"), ("nve", "nue"), ("lue", "lve"), ("nue", "nve")]
+SENTENCE_START = "<s>"
+SENTENCE_END = "</s>"
+# Spellings of the two marks in the letter tree. Typed text never holds these bytes.
+MARK_SPELLINGS = {SENTENCE_START: "\x01", SENTENCE_END: "\x02"}
 
 
 def read_language_model(path: Path, pair_limit: int):
@@ -65,7 +74,10 @@ def read_language_model(path: Path, pair_limit: int):
                 if gain <= 0:
                     # The back-off estimate already gives this pair at least this much.
                     continue
-                weight = 10 ** (words[first][0] + log_probability) * gain
+                # The start mark has no probability of its own in the file. A sentence starts as
+                # often as it ends, so the end mark's probability stands in for the weight.
+                first_log_probability = words[SENTENCE_END][0] if first == SENTENCE_START else words[first][0]
+                weight = 10 ** (first_log_probability + log_probability) * gain
                 item = (weight, first, second, log_probability)
                 if len(pairs_heap) < pair_limit:
                     heapq.heappush(pairs_heap, item)
@@ -119,6 +131,10 @@ def main():
     report.append(
         f"dictionary lines with two fields, read as a word's single reading: {len(two_field_lines)}"
         + (f", first: {two_field_lines[0]!r}" if two_field_lines else ""))
+
+    for mark, spelling in MARK_SPELLINGS.items():
+        entries.append((spelling, mark, words[mark][0] * LN10, words[mark][1] * LN10))
+        known_texts.add(mark)
 
     pairs = {
         (first, second): log_probability * LN10
