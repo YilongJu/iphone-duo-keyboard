@@ -215,6 +215,10 @@ struct KeyboardSpec: Decodable {
         /// The widest letter key of the split layout on an iPad, in points. On a wide iPad the
         /// empty middle grows, so the keys of each half stay within reach of a thumb.
         let padSplitMaxKeyWidth: CGFloat
+        /// Width of the top left corner that iPadOS covers with its own undo, redo and paste
+        /// buttons, in points. iPadOS draws these buttons over every keyboard, and a keyboard
+        /// extension cannot remove them, so the first row starts to the right of them.
+        let padShortcutButtonsWidth: CGFloat
     }
 
     struct Row: Decodable {

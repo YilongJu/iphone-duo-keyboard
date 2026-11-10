@@ -169,6 +169,29 @@ final class KeyboardView: UIView {
         return width >= wideMinimumWidth ? .wide : .compact
     }
 
+    /// Width of the first row's left end that stays empty, in points. On an iPad the system
+    /// draws its undo, redo and paste buttons there. An iPhone does not have these buttons.
+    static func shortcutButtonsWidth(style: LayoutStyle, device: KeyboardDevice = .current) -> CGFloat {
+        device == .pad && style != .compact ? spec.padShortcutButtonsWidth : 0
+    }
+
+    /// The cells of a row's keys after the row's left group moved right by `reserve` points.
+    /// The left group is the keys before the empty middle of a split row, or the whole row.
+    /// The group keeps its right edge, so its keys get narrower by the same share.
+    static func cells(_ cells: [CGRect], leftGroupCount: Int, movedRightBy reserve: CGFloat) -> [CGRect] {
+        guard reserve > 0, leftGroupCount > 0, let first = cells.first else { return cells }
+        let groupEnd = cells[leftGroupCount - 1].maxX
+        let oldWidth = groupEnd - first.minX
+        guard oldWidth > reserve else { return cells }
+        let scale = (oldWidth - reserve) / oldWidth
+        return cells.enumerated().map { index, cell in
+            guard index < leftGroupCount else { return cell }
+            return CGRect(
+                x: first.minX + reserve + (cell.minX - first.minX) * scale, y: cell.minY,
+                width: cell.width * scale, height: cell.height)
+        }
+    }
+
     /// Width of the split layout's empty middle in key units, or nil for the layout file's width.
     static func splitGap(forWidth width: CGFloat, device: KeyboardDevice = .current) -> CGFloat? {
         device == .pad ? KeyboardLayout.padSplitGap(forWidth: width) : nil
@@ -355,9 +378,10 @@ final class KeyboardView: UIView {
         let spec = Self.spec
         let gapY = style == .compact ? spec.gapYCompact : spec.gapYWide
         globeButton.isHidden = true
+        let shortcutButtons = Self.shortcutButtonsWidth(style: style)
         candidateBar.frame = CGRect(
-            x: metrics.originX, y: metrics.rowEdges[0],
-            width: metrics.width, height: metrics.rowEdges[1] - metrics.rowEdges[0]
+            x: metrics.originX + shortcutButtons, y: metrics.rowEdges[0],
+            width: metrics.width - shortcutButtons, height: metrics.rowEdges[1] - metrics.rowEdges[0]
         ).insetBy(dx: spec.gapX, dy: gapY)
         for (rowIndex, row) in rows.enumerated() {
             let rowWeight = row.reduce(0) { $0 + $1.key.weight }
@@ -366,16 +390,24 @@ final class KeyboardView: UIView {
             var x = metrics.originX + rowInset + (layout.units - rowWeight) / 2 * unit
             let y = metrics.rowEdges[rowIndex]
             let height = metrics.rowEdges[rowIndex + 1] - y
+            var cells: [CGRect] = []
             for keyView in row {
                 let width = keyView.key.weight * unit
-                let cell = CGRect(x: x, y: y, width: width, height: height)
+                cells.append(CGRect(x: x, y: y, width: width, height: height))
+                x += width
+            }
+            if rowIndex == 0 {
+                // The first row leaves the corner that the iPad's own buttons cover.
+                let leftGroup = row.firstIndex { $0.key.kind == .gap } ?? row.count
+                cells = Self.cells(cells, leftGroupCount: leftGroup, movedRightBy: shortcutButtons)
+            }
+            for (keyView, cell) in zip(row, cells) {
                 keyView.hitFrame = cell
                 keyView.frame = cell.insetBy(dx: spec.gapX, dy: gapY)
                 if keyView.key.kind == .globe {
                     globeButton.frame = cell
                     globeButton.isHidden = false
                 }
-                x += width
             }
         }
     }

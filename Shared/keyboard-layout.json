@@ -16,7 +16,8 @@
     "compactRowHeight": 46,
     "landscapePhoneRowHeight": 34,
     "padWideRowHeightMax": 58,
-    "padSplitMaxKeyWidth": 52
+    "padSplitMaxKeyWidth": 52,
+    "padShortcutButtonsWidth": 140
   },
   "wide": {
     "units": 14.5,
