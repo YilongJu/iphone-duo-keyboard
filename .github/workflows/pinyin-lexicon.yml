@@ -14,7 +14,7 @@ on:
         description: Engine settings to compare on the dev half, as sets of name=value pairs separated by semicolons
         default: ''
       inspect:
-        description: Word sequences to look up in the language model, words separated by spaces and sequences by semicolons
+        description: Word sequences to look up in the language model, words separated by spaces and sequences by semicolons, or --counts for counts over the whole model
         default: ''
 
 jobs:

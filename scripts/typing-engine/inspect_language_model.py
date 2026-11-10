@@ -11,11 +11,59 @@ under two models:
 All scores are base-10 logs, as in the file. The first word of a sequence has no word before
 it, which is how libime starts a sentence with this model.
 
+With --counts in place of the sequences, the script prints counts over the whole model: how many
+pairs carry a back-off weight, how many pairs open a triple, and the range of every value. The
+lexicon format stores the pair and triple values in a few bits, and these ranges show that the
+values fit.
+
 Usage, from the repository root, on a machine that holds the unpacked files:
     python3 scripts/typing-engine/inspect_language_model.py FOLDER "我 恨 他" "我 很 他"
+    python3 scripts/typing-engine/inspect_language_model.py FOLDER --counts
 """
 import sys
+from collections import Counter
 from pathlib import Path
+
+
+def print_counts(path: Path):
+    section = 0
+    listed = [0, 0, 0, 0]
+    low = [float("inf")] * 4
+    high = [float("-inf")] * 4
+    back_off_low = [float("inf")] * 4
+    back_off_high = [float("-inf")] * 4
+    with_back_off = [0, 0, 0, 0]
+    triples_per_pair: Counter = Counter()
+    with path.open(encoding="utf-8") as lines:
+        for line in lines:
+            line = line.rstrip("\n")
+            if line.startswith("\\"):
+                section = {"\\1-grams:": 1, "\\2-grams:": 2, "\\3-grams:": 3}.get(line, 0)
+                continue
+            if section == 0:
+                continue
+            fields = line.split("\t")
+            if len(fields) < 2:
+                continue
+            value = float(fields[0])
+            listed[section] += 1
+            low[section] = min(low[section], value)
+            high[section] = max(high[section], value)
+            if len(fields) > 2:
+                back_off = float(fields[2])
+                if back_off != 0.0:
+                    with_back_off[section] += 1
+                back_off_low[section] = min(back_off_low[section], back_off)
+                back_off_high[section] = max(back_off_high[section], back_off)
+            if section == 3:
+                triples_per_pair[fields[1].rsplit(" ", 1)[0]] += 1
+    for size in (1, 2, 3):
+        print(f"{size}-word entries: {listed[size]}, log10 p from {low[size]} to {high[size]}, "
+              f"{with_back_off[size]} with a back-off weight other than 0, from {back_off_low[size]} to {back_off_high[size]}")
+    print(f"pairs that open one or more triples: {len(triples_per_pair)}")
+    sizes = Counter(min(count, 10) for count in triples_per_pair.values())
+    print("pairs by their count of triples (10 stands for 10 or more): " + ", ".join(f"{size}: {sizes[size]}" for size in sorted(sizes)))
+    print(f"the most triples behind one pair: {max(triples_per_pair.values())}")
 
 
 def collect(path: Path, wanted: set[str]):
@@ -82,6 +130,9 @@ def score(found, sequence: list[str], order: int):
 
 def main():
     folder = Path(sys.argv[1])
+    if sys.argv[2:] == ["--counts"]:
+        print_counts(folder / "lm_sc.arpa")
+        return
     sequences = [argument.split() for argument in sys.argv[2:] if argument.strip()]
     wanted = set()
     for sequence in sequences:
