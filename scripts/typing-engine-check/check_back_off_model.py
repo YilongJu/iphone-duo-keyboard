@@ -7,8 +7,8 @@ The check has three parts.
    the highest score of any reading (any way to cut the string into spellings, with any word
    of each spelling) by the rule of an ARPA back-off model: a listed triple, or the pair's
    back-off weight plus a listed pair, or both back-off weights plus the word's own log
-   probability. The end of the text costs the back-off weights of the last word and the last
-   pair. The engine runs with slips off, and the text it returns must reach that highest score.
+   probability. The engine runs with slips off, and the text it returns must reach that
+   highest score.
 2. Refused files. The script breaks one position in a copy of the lexicon at a time, and the
    engine must refuse each broken file.
 3. Version 2. The script writes a lexicon of version 2 and of version 3 from the same words and
@@ -91,12 +91,6 @@ class Reference:
             return penalty + self.pair_value[(previous[1], text)] + float32(cost), False
         return penalty + float32(previous[3]) + float32(own), False
 
-    def end_score(self, before, previous) -> float:
-        weight = float32(previous[3])
-        if before is not None:
-            weight += self.pair_weight.get((before[1], previous[1]), 0.0)
-        return weight
-
     def best(self, typed: str, text: str | None = None):
         """The highest score of a reading of `typed`, and whether that reading holds a listed triple.
 
@@ -118,8 +112,7 @@ class Reference:
                         if key not in tables[end] or score + value > tables[end][key][0]:
                             tables[end][key] = (score + value, has_triple or from_triple)
         ends = [
-            (score + self.end_score(before, previous), has_triple)
-            for (before, previous, given), (score, has_triple) in tables[len(typed)].items()
+            (score, has_triple) for (_, _, given), (score, has_triple) in tables[len(typed)].items()
             if text is None or given == len(text)
         ]
         return max(ends) if ends else None

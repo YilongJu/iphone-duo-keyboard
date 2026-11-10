@@ -946,18 +946,8 @@ static int decode(
         for (int index = 0; index < last->count; index++) {
             const state_t *state = &last->states[index];
             float score = state->score;
-            if (state->word != NO_WORD && params->sentence_end_weight > 0.0f) {
-                if (end_mark != NO_WORD) {
-                    score += params->sentence_end_weight * word_after(lexicon, params, state->word, state->pair, end_mark);
-                } else if (lexicon->model == MODEL_BACK_OFF) {
-                    /* A lexicon without a sentence-end mark does not list the end of a text
-                       after any word. A back-off model gives a follower that it does not list
-                       the back-off weights of the words before it, so the end of the text
-                       costs the weights of the last word and of the last pair. */
-                    float weight = word_back_off(lexicon, state->word);
-                    if (state->pair != NO_PAIR) weight += pair_back_off(lexicon, state->pair);
-                    score += params->sentence_end_weight * weight;
-                }
+            if (end_mark != NO_WORD && state->word != NO_WORD) {
+                score += params->sentence_end_weight * word_after(lexicon, params, state->word, state->pair, end_mark);
             }
             if (score > best_score) {
                 best_score = score;
