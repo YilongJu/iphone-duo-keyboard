@@ -29,16 +29,15 @@ jobs:
           sudo apt-get install -y --no-install-recommends hunspell hunspell-en-us
           command -v uv || pipx install uv
           uv venv --python /usr/bin/python3 build/venv
-          uv pip install --python "$PYTHON" symspellpy pyspellchecker
+          uv pip install --python "$PYTHON" symspellpy==6.10.2 pyspellchecker==0.9.1
           mkdir -p build/typing-evaluation/english-baselines
 
+      # The JamSpell archive on PyPI asks for SWIG 3, and Ubuntu 24.04 ships SWIG 4.2.
+      # The repository commit below builds with SWIG 4.
       - name: Build JamSpell from its repository and download its English model
-        id: jamspell
-        continue-on-error: true
         run: |
           set -euo pipefail
           sudo apt-get install -y --no-install-recommends swig build-essential python3-dev
-          swig -version | grep -i version
           uv pip install --python "$PYTHON" \
             "jamspell @ git+https://github.com/bakwc/JamSpell@25d3f5c2c76786cc6cbbfcf79b3989fc5e48eaa8"
           mkdir -p build/jamspell
@@ -46,19 +45,21 @@ jobs:
             --output build/jamspell/en.tar.gz https://github.com/bakwc/JamSpell-models/raw/master/en.tar.gz
           sha256sum build/jamspell/en.tar.gz
           tar -xzf build/jamspell/en.tar.gz -C build/jamspell
-          ls -l build/jamspell
           "$PYTHON" -c "import jamspell; print(jamspell.TSpellCorrector)"
+
+      - name: Try the JamSpell archive from PyPI, as a record of its build error
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          uv venv --python /usr/bin/python3 build/jamspell-pypi-venv
+          uv pip install --python build/jamspell-pypi-venv/bin/python --no-cache jamspell==0.0.12
+          build/jamspell-pypi-venv/bin/python -c "import jamspell; print(jamspell.TSpellCorrector)"
 
       - name: Print the installed versions
         run: |
           set -euo pipefail
           echo "runner image: $ImageOS $ImageVersion" | tee build/typing-evaluation/english-baselines/versions.txt
-          if [ "${{ steps.jamspell.outcome }}" = "success" ]; then
-            bash "$ENGINES/print_versions.sh" build/jamspell/en.bin 2>&1 | tee -a build/typing-evaluation/english-baselines/versions.txt
-          else
-            echo "JamSpell build outcome: ${{ steps.jamspell.outcome }}" | tee -a build/typing-evaluation/english-baselines/versions.txt
-            bash "$ENGINES/print_versions.sh" 2>&1 | tee -a build/typing-evaluation/english-baselines/versions.txt
-          fi
+          bash "$ENGINES/print_versions.sh" build/jamspell/en.bin 2>&1 | tee -a build/typing-evaluation/english-baselines/versions.txt
 
       - name: Run and score symspell-lookup
         if: ${{ !cancelled() }}
@@ -81,11 +82,11 @@ jobs:
         run: bash "$ENGINES/run_and_score.sh" pyspellchecker --workers 4 --show-misses 3
 
       - name: Run and score jamspell
-        if: ${{ !cancelled() && steps.jamspell.outcome == 'success' }}
+        if: ${{ !cancelled() }}
         run: bash "$ENGINES/run_and_score.sh" jamspell --jamspell-model build/jamspell/en.bin --show-misses 3
 
       - name: Run and score jamspell-no-context
-        if: ${{ !cancelled() && steps.jamspell.outcome == 'success' }}
+        if: ${{ !cancelled() }}
         run: bash "$ENGINES/run_and_score.sh" jamspell-no-context --jamspell-model build/jamspell/en.bin --show-misses 3
 
       - name: Print the scores of every engine
