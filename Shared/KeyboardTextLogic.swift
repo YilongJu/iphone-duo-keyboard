@@ -135,15 +135,25 @@ enum KeyboardTextLogic {
     // MARK: Proofreading of a finished sentence
 
     /// The marks that end a sentence, in English and in Chinese.
-    static let sentenceEnds: Set<Character> = [".", "?", "!", "\u{3002}", "\u{FF1F}", "\u{FF01}"]
+    static let sentenceEnds: Set<Character> = [
+        ".", "?", "!", "\u{2026}", "\u{3002}", "\u{FF1F}", "\u{FF01}",
+    ]
 
-    /// The sentence that ends right before the cursor, or nil. Spaces after the sentence's last
-    /// mark do not count. The sentence needs three words, or four characters when it holds
-    /// Chinese text, because a shorter one does not give a proofreader enough to read.
+    /// The marks that end a clause inside a sentence: comma, semicolon and colon in English
+    /// and in Chinese, and the Chinese list comma.
+    static let clauseEnds: Set<Character> = [
+        ",", ";", ":", "\u{FF0C}", "\u{FF1B}", "\u{FF1A}", "\u{3001}",
+    ]
+
+    /// The text from the start of the current sentence to the mark right before the cursor, or
+    /// nil. The mark is one that ends a sentence or a clause, so a comma also gives a result:
+    /// the sentence as far as it is typed. Spaces after the mark do not count. The text needs
+    /// three words, or four characters when it holds Chinese text, because a shorter one does
+    /// not give a proofreader enough to read.
     static func finishedSentence(before text: String) -> String? {
         var body = Substring(text)
         while body.last == " " { body = body.dropLast() }
-        guard let last = body.last, sentenceEnds.contains(last) else { return nil }
+        guard let last = body.last, sentenceEnds.contains(last) || clauseEnds.contains(last) else { return nil }
         let inner = body.dropLast()
         var start = inner.endIndex
         while start > inner.startIndex {
