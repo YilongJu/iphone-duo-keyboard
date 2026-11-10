@@ -584,8 +584,8 @@ static void start_followers(
     followers->reading_cost_weight = params->reading_cost_weight;
     followers->mixed = lexicon->model != MODEL_BACK_OFF;
     followers->skip_estimates = 0;
-    followers->own_only = previous == NO_WORD || lexicon->pair_count == 0
-        || (followers->mixed && params->pair_weight <= 0.0f);
+    followers->own_only = previous == NO_WORD
+        || (followers->mixed && (lexicon->pair_count == 0 || params->pair_weight <= 0.0f));
     if (followers->own_only) return;
 
     if (followers->mixed) {
@@ -671,13 +671,15 @@ static void best_word(
     uint32_t candidate, pair;
     float value;
     int estimated;
+    int found = 0;
     *word = node_at(lexicon, node_index).first_word;
     *log_probability = -BIG;
     start_followers(&followers, lexicon, params, previous, NO_PAIR, node_index);
     while (next_follower(&followers, &candidate, &value, &pair, &estimated)) {
-        if (value > *log_probability) {
+        if (!found || value > *log_probability) {
             *log_probability = value;
             *word = candidate;
+            found = 1;
         }
         /* The first back-off estimate of a node is its highest. */
         if (estimated) followers.skip_estimates = 1;
@@ -689,8 +691,8 @@ static void best_word(
 static float word_after(
     const duo_lexicon *lexicon, const duo_params *params, uint32_t previous, uint32_t context, uint32_t word) {
     float own = word_log_probability(lexicon, word);
-    if (previous == NO_WORD || lexicon->pair_count == 0) return own;
     int back_off_model = lexicon->model == MODEL_BACK_OFF;
+    if (previous == NO_WORD || (!back_off_model && lexicon->pair_count == 0)) return own;
     float reading_cost = params->reading_cost_weight * word_reading_cost(lexicon, word);
     float weight = 0.0f;
     if (back_off_model && context != NO_PAIR) {
