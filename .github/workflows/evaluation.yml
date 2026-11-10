@@ -42,6 +42,8 @@ jobs:
           gcc -std=c11 -O1 -g -Wall -Wextra -Wpedantic -Werror -fsanitize=address,undefined \
             Engine/duo_engine.c Engine/duo_cli.c -lm -o build/engine/duo_cli_checked
           gcc -std=c11 -O2 -Wall -Wextra -Werror Engine/duo_engine.c Engine/duo_cli.c -lm -o build/engine/duo_cli
+      - name: Check the word-triple model against a second implementation, under the memory checks
+        run: python3 scripts/typing-engine-check/check_back_off_model.py --cli build/engine/duo_cli_checked
       - name: Run the dev cases under the memory checks
         run: |
           set -euo pipefail

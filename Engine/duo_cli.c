@@ -10,12 +10,16 @@
  Output lines:         id <TAB> the engine's text
 
  A name=value argument sets one field of duo_params, such as missing_space=4.5.
+
+ After the last input the program writes one line to the error stream: the count of inputs and
+ the processor time per input, without the time to load and check the lexicon.
  */
 #include "duo_engine.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 static void *read_file(const char *path, size_t *size) {
     FILE *file = fopen(path, "rb");
@@ -76,7 +80,10 @@ int main(int argc, char **argv) {
 
     char line[4096];
     duo_result results[1];
+    long inputs = 0;
+    clock_t started = clock();
     while (fgets(line, sizeof line, stdin) != NULL) {
+        inputs++;
         line[strcspn(line, "\r\n")] = 0;
         char *fields[3];
         int count = split_tabs(line, fields, 3);
@@ -103,6 +110,8 @@ int main(int argc, char **argv) {
             }
         }
     }
+    double milliseconds = 1000.0 * (double)(clock() - started) / CLOCKS_PER_SEC;
+    fprintf(stderr, "duo_cli: %ld inputs, %.3f ms of processor time per input\n", inputs, inputs > 0 ? milliseconds / (double)inputs : 0.0);
     free(data);
     return 0;
 }

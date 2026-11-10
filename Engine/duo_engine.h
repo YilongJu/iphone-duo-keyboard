@@ -4,7 +4,8 @@
  The engine reads the keys a person typed as a noisy signal. It looks at every way to read the
  keys as words from a lexicon, charges a cost for each slip that reading assumes (a neighbor key,
  a missing letter, a doubled letter, two swapped letters, a slip around the space bar), adds how
- probable the words are, alone and after the word before them, and returns the best reading.
+ probable the words are, alone and after the one or two words before them, and returns the best
+ reading.
 
  One code base serves both languages. English: the words are English words and a space separates
  them. Pinyin: the words are Chinese words spelled in Pinyin letters, and they follow each other
@@ -34,16 +35,27 @@ typedef struct {
     const uint8_t *words;
     const uint8_t *pair_index;
     const uint8_t *pairs;
+    const uint8_t *contexts;
+    const uint8_t *triples;
     const uint8_t *strings;
     uint32_t node_count;
     uint32_t word_count;
     uint32_t pair_count;
+    /* Count of the pairs that open one or more triples, and count of the triples. Both are 0 in
+       a file of version 2. */
+    uint32_t context_count;
+    uint32_t triple_count;
     uint32_t strings_size;
     /* 0: a word's chance after another is a fixed blend of the pair statistic and the word's
-       own probability. 1: a back-off model, where a listed pair gives the chance directly and
-       an unlisted pair costs the first word's back-off weight plus the second word's own
+       own probability. 1: a back-off model. A listed triple gives the chance of its third word
+       after the two words before it. Without a listed triple the chance is the back-off weight
+       of those two words as a pair plus the chance after the one word before, and that chance
+       is a listed pair's value, or the back-off weight of the word before plus the word's own
        log probability. */
     uint32_t model;
+    /* The version of the file format, 2 or 3, and the size of one word record in that version. */
+    uint32_t version;
+    uint32_t word_bytes;
 } duo_lexicon;
 
 /* Costs are in natural-log units, the same scale as the word probabilities: a cost of 4.6 makes
@@ -91,9 +103,13 @@ typedef struct {
     /* How much the chance of ending the sentence after the last word counts, from 0 to 1.
        Only a lexicon with a sentence-end mark has that chance. */
     float sentence_end_weight;
+    /* How much a word's reading cost counts when a listed pair or triple gives the word's
+       chance, from 0 to 1. A Chinese word with several Pinyin readings has a cost for each
+       reading, the log of that reading's share. A word's own probability always holds the cost. */
+    float reading_cost_weight;
     /* 1 when a space separates words (English), 0 when words follow each other directly (Pinyin). */
     int spaces_between_words;
-    /* How many partial readings the search keeps at each position, from 1 to 16. */
+    /* How many partial readings the search keeps at each position, from 1 to 64. */
     int beam;
 } duo_params;
 
