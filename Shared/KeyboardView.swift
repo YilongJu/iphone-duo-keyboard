@@ -91,7 +91,10 @@ final class KeyboardView: UIView {
     override init(frame: CGRect) {
         super.init(frame: frame)
         isMultipleTouchEnabled = true
-        backgroundColor = .clear
+        // iOS does not deliver a touch on a fully transparent point to a keyboard extension
+        // (Apple Developer Forums thread 702798). This faint background makes the gaps between
+        // the keys receive touches, and each touch then goes to the nearest key.
+        backgroundColor = UIColor(white: 0.5, alpha: 0.02)
         globeButton.accessibilityLabel = "Next keyboard"
         addSubview(globeButton)
         rebuild()
