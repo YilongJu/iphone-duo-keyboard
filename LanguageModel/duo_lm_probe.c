@@ -16,6 +16,7 @@
 #include <math.h>
 #include <stdarg.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
@@ -121,7 +122,25 @@ static void memory_line(report_t *report, const char *moment) {
          (double)info.phys_footprint / BYTES_PER_MB, (double)info.ledger_phys_footprint_peak / BYTES_PER_MB,
          (double)os_proc_available_memory() / BYTES_PER_MB);
 #else
-    line(report, "memory      %s: not measured, this system is not iOS", moment);
+    /* Linux: the anonymous resident memory, which holds what the process wrote, and the resident
+       pages mapped from files, such as the weights. iOS counts the first kind against the limit
+       of a keyboard and not the second kind, as long as nobody writes to the file pages. */
+    long anon_kb = -1, file_kb = -1;
+    FILE *status = fopen("/proc/self/status", "r");
+    if (status != NULL) {
+        char text[256];
+        while (fgets(text, sizeof text, status) != NULL) {
+            if (strncmp(text, "RssAnon:", 8) == 0) anon_kb = strtol(text + 8, NULL, 10);
+            if (strncmp(text, "RssFile:", 8) == 0) file_kb = strtol(text + 8, NULL, 10);
+        }
+        fclose(status);
+    }
+    if (anon_kb < 0 || file_kb < 0) {
+        line(report, "memory      %s: not measured, /proc/self/status did not give RssAnon and RssFile", moment);
+        return;
+    }
+    line(report, "memory      %s: Linux, anonymous %.1f MB, mapped from files %.1f MB", moment,
+         (double)anon_kb / 1024.0, (double)file_kb / 1024.0);
 #endif
 }
 
