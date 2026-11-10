@@ -240,14 +240,16 @@ enum KeyboardTextLogic {
     /// place and may differ in two letters, or in a third of its letters. With different counts,
     /// as when one word becomes two, the words of each side are joined and compared the same way.
     static func newWordsResembleOldWords(_ before: [String], _ after: [String]) -> Bool {
-        var removed: [String] = []
-        var added: [String] = []
-        for change in after.difference(from: before) {
+        // Both lists run from the first changed word to the last. A loop over the difference
+        // itself gives the words taken out from last to first.
+        let difference = after.difference(from: before)
+        func word(_ change: CollectionDifference<String>.Change) -> String {
             switch change {
-            case .remove(_, let word, _): removed.append(word)
-            case .insert(_, let word, _): added.append(word)
+            case .remove(_, let word, _), .insert(_, let word, _): return word
             }
         }
+        let removed = difference.removals.map(word)
+        let added = difference.insertions.map(word)
         func resembles(_ old: String, _ new: String) -> Bool {
             let limit = max(2, max(old.count, new.count) / 3)
             return changedUnits(old.map(String.init), new.map(String.init)) <= limit
