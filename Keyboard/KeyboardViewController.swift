@@ -6,17 +6,20 @@ extension UIInputView: @retroactive UIInputViewAudioFeedback {
 }
 
 /// The keyboard extension's entry point. iOS creates one instance when the keyboard appears.
-final class KeyboardViewController: UIInputViewController, KeyboardViewDelegate {
+/// The typing rules live in `KeyboardTextController`, which the host app's test field shares.
+final class KeyboardViewController: UIInputViewController {
     /// The globe key is always visible. `needsInputModeSwitchKey` returns false on the iPhone Duo
     /// (Apple feedback FB25073949), and the Duo does not draw a globe button of its own.
     private let keyboardView = KeyboardView()
+    private lazy var document = ProxyDocument(controller: self)
+    private lazy var textController = KeyboardTextController(keyboardView: keyboardView, document: document)
     private var heightConstraint: NSLayoutConstraint?
-    private var previousInsertWasSpace = false
-    private var lastSpaceTime: TimeInterval = 0
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        keyboardView.delegate = self
+        textController.onDismiss = { [weak self] in
+            self?.dismissKeyboard()
+        }
         keyboardView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(keyboardView)
         NSLayoutConstraint.activate([
@@ -47,7 +50,7 @@ final class KeyboardViewController: UIInputViewController, KeyboardViewDelegate 
 
     override func selectionDidChange(_ textInput: UITextInput?) {
         super.selectionDidChange(textInput)
-        updateAutoShift()
+        textController.documentDidChange()
     }
 
     private func updateHeight() {
@@ -69,112 +72,44 @@ final class KeyboardViewController: UIInputViewController, KeyboardViewDelegate 
     }
 
     private func refreshFromDocument() {
+        // `.default` is the value UIKit documents for a text field that does not set a return key type.
         let returnKeyType = textDocumentProxy.returnKeyType ?? .default
         keyboardView.returnKeyTitle = KeyboardTextLogic.returnKeyTitle(for: returnKeyType)
-        updateAutoShift()
+        textController.documentDidChange()
+    }
+}
+
+/// Lets the shared typing rules edit the app's text field through the system's document proxy.
+@MainActor
+final class ProxyDocument: KeyboardDocument {
+    private unowned let controller: UIInputViewController
+
+    init(controller: UIInputViewController) {
+        self.controller = controller
     }
 
-    private func updateAutoShift() {
-        let type = textDocumentProxy.autocapitalizationType ?? .sentences
-        let capitalize = KeyboardTextLogic.shouldAutoCapitalize(
-            before: textDocumentProxy.documentContextBeforeInput, type: type)
-        keyboardView.setAutomaticShift(capitalize)
+    private var proxy: UITextDocumentProxy { controller.textDocumentProxy }
+
+    // The proxy returns nil for an empty context, and an empty string means the same here.
+    var textBeforeCursor: String { proxy.documentContextBeforeInput ?? "" }
+    var textAfterCursor: String { proxy.documentContextAfterInput ?? "" }
+    var selectedText: String? { proxy.selectedText }
+
+    /// `.sentences` is the value UIKit documents for a text field that does not set the trait.
+    var autocapitalizationType: UITextAutocapitalizationType { proxy.autocapitalizationType ?? .sentences }
+
+    /// iOS gives a keyboard the clipboard only when the user turns on Full Access.
+    var canUseClipboard: Bool { controller.hasFullAccess }
+
+    func insertText(_ text: String) {
+        proxy.insertText(text)
     }
 
-    /// Shows a short message on the space bar for 2.5 seconds.
-    private func showNotice(_ text: String) {
-        keyboardView.spaceCaption = text
-        NSObject.cancelPreviousPerformRequests(withTarget: self, selector: #selector(clearNotice), object: nil)
-        perform(#selector(clearNotice), with: nil, afterDelay: 2.5)
+    func deleteBackward() {
+        proxy.deleteBackward()
     }
 
-    @objc private func clearNotice() {
-        keyboardView.spaceCaption = nil
-    }
-
-    // MARK: KeyboardViewDelegate
-
-    func keyboardView(_ keyboardView: KeyboardView, insert text: String) {
-        let proxy = textDocumentProxy
-        if text == " ", previousInsertWasSpace,
-            ProcessInfo.processInfo.systemUptime - lastSpaceTime < 1.5,
-            KeyboardTextLogic.shouldReplaceDoubleSpace(before: proxy.documentContextBeforeInput) {
-            proxy.deleteBackward()
-            proxy.insertText(". ")
-            previousInsertWasSpace = false
-        } else {
-            proxy.insertText(text)
-            previousInsertWasSpace = text == " "
-            lastSpaceTime = ProcessInfo.processInfo.systemUptime
-        }
-        updateAutoShift()
-    }
-
-    func keyboardViewDeleteBackward(_ keyboardView: KeyboardView) {
-        textDocumentProxy.deleteBackward()
-        previousInsertWasSpace = false
-        updateAutoShift()
-    }
-
-    func keyboardViewReturn(_ keyboardView: KeyboardView) {
-        textDocumentProxy.insertText("\n")
-        previousInsertWasSpace = false
-        updateAutoShift()
-    }
-
-    func keyboardView(_ keyboardView: KeyboardView, moveCursorBy offset: Int) {
-        textDocumentProxy.adjustTextPosition(byCharacterOffset: offset)
-        previousInsertWasSpace = false
-    }
-
-    func keyboardView(_ keyboardView: KeyboardView, edit command: EditCommand) {
-        previousInsertWasSpace = false
-        let proxy = textDocumentProxy
-        switch command {
-        case .lineStart, .lineEnd, .lineUp, .lineDown:
-            let offset = KeyboardTextLogic.cursorOffset(
-                for: command,
-                before: proxy.documentContextBeforeInput ?? "",
-                after: proxy.documentContextAfterInput ?? "")
-            if offset != 0 {
-                proxy.adjustTextPosition(byCharacterOffset: offset)
-            }
-        case .cut, .copy:
-            // iOS gives a keyboard the clipboard only when the user turns on Full Access.
-            guard hasFullAccess else {
-                showNotice("Turn on Full Access in Settings")
-                return
-            }
-            guard let selected = proxy.selectedText, !selected.isEmpty else {
-                showNotice("Select text first")
-                return
-            }
-            UIPasteboard.general.string = selected
-            if command == .cut {
-                proxy.deleteBackward()
-                showNotice("Cut")
-            } else {
-                showNotice("Copied")
-            }
-        case .paste:
-            guard hasFullAccess else {
-                showNotice("Turn on Full Access in Settings")
-                return
-            }
-            guard let text = UIPasteboard.general.string, !text.isEmpty else {
-                showNotice("Clipboard is empty")
-                return
-            }
-            proxy.insertText(text)
-        }
-        updateAutoShift()
-    }
-
-    func keyboardViewDismiss(_ keyboardView: KeyboardView) {
-        dismissKeyboard()
-    }
-
-    func keyboardViewDidPressKey(_ keyboardView: KeyboardView) {
-        UIDevice.current.playInputClick()
+    func moveCursor(byUTF16Offset offset: Int) {
+        proxy.adjustTextPosition(byCharacterOffset: offset)
     }
 }

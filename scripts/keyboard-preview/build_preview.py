@@ -8,6 +8,7 @@ Usage, from the repository root:
 """
 import json
 import re
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -17,6 +18,15 @@ OUTPUT = ROOT / "docs" / "keyboard-preview.html"
 PLACEHOLDER = "/*LAYOUT_JSON*/"
 
 layout = json.loads(LAYOUT.read_text(encoding="utf-8"))
+
+# A layout that breaks a rule in check_layout.py does not get a preview.
+sys.path.insert(0, str(Path(__file__).parent))
+from check_layout import check  # noqa: E402
+
+problems = check(layout)
+if problems:
+    raise SystemExit("layout problems:\n" + "\n".join(problems))
+
 template = TEMPLATE.read_text(encoding="utf-8")
 if template.count(PLACEHOLDER) != 1:
     raise SystemExit(f"template.html must hold {PLACEHOLDER} exactly once")

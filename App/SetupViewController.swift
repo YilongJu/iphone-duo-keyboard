@@ -3,7 +3,7 @@ import UIKit
 /// The host app's only screen. The screen has four parts: setup steps, a field that uses the
 /// system-selected keyboard, a field that always shows this app's keyboard, and the display
 /// measurements that decide which layout appears.
-final class SetupViewController: UIViewController, KeyboardViewDelegate {
+final class SetupViewController: UIViewController, UITextViewDelegate {
     private let scrollView = UIScrollView()
     private let stack = UIStackView()
     private let diagnosticsLabel = UILabel()
@@ -11,8 +11,9 @@ final class SetupViewController: UIViewController, KeyboardViewDelegate {
     private let previewField = UITextView()
     private let previewKeyboard = KeyboardView()
     private let previewContainer = UIInputView(frame: .zero, inputViewStyle: .keyboard)
-    private var previousInsertWasSpace = false
-    private var lastSpaceTime: TimeInterval = 0
+    private lazy var previewDocument = TextViewDocument(textView: previewField)
+    private lazy var textController = KeyboardTextController(
+        keyboardView: previewKeyboard, document: previewDocument)
     private var didAutoFocus = false
 
     override func viewDidLoad() {
@@ -66,8 +67,17 @@ final class SetupViewController: UIViewController, KeyboardViewDelegate {
         diagnosticsLabel.accessibilityIdentifier = "diagnostics"
         stack.addArrangedSubview(diagnosticsLabel)
 
-        previewKeyboard.delegate = self
+        textController.onDismiss = { [weak self] in
+            self?.previewField.resignFirstResponder()
+        }
+        previewField.delegate = self
         previewKeyboard.showsGlobe = false
+        // The launch argument "-layer symbols" or "-layer more" opens that layer for a screenshot.
+        switch UserDefaults.standard.string(forKey: "layer") {
+        case "symbols": previewKeyboard.show(layer: .symbols)
+        case "more": previewKeyboard.show(layer: .more)
+        default: break
+        }
         previewKeyboard.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         previewContainer.allowsSelfSizing = false
         previewContainer.addSubview(previewKeyboard)
@@ -86,7 +96,7 @@ final class SetupViewController: UIViewController, KeyboardViewDelegate {
         if !didAutoFocus, ProcessInfo.processInfo.arguments.contains("-focusPreviewField") {
             didAutoFocus = true
             previewField.becomeFirstResponder()
-            updatePreviewAutoShift()
+            textController.documentDidChange()
         }
     }
 
@@ -150,85 +160,59 @@ final class SetupViewController: UIViewController, KeyboardViewDelegate {
         ].joined(separator: "\n")
     }
 
-    private func updatePreviewAutoShift() {
-        let before = textBeforeCursor()
-        let capitalize = KeyboardTextLogic.shouldAutoCapitalize(before: before, type: .sentences)
-        previewKeyboard.setAutomaticShift(capitalize)
+    // MARK: UITextViewDelegate
+
+    func textViewDidChangeSelection(_ textView: UITextView) {
+        textController.documentDidChange()
+    }
+}
+
+/// Lets the shared typing rules edit the host app's test field.
+@MainActor
+final class TextViewDocument: KeyboardDocument {
+    private let textView: UITextView
+
+    init(textView: UITextView) {
+        self.textView = textView
     }
 
-    private func textBeforeCursor() -> String? {
-        guard let range = previewField.selectedTextRange,
-            let beforeRange = previewField.textRange(from: previewField.beginningOfDocument, to: range.start)
-        else { return nil }
-        return previewField.text(in: beforeRange)
+    var textBeforeCursor: String {
+        guard let selection = textView.selectedTextRange,
+            let range = textView.textRange(from: textView.beginningOfDocument, to: selection.start)
+        else { return "" }
+        return textView.text(in: range) ?? ""
     }
 
-    private func textAfterCursor() -> String? {
-        guard let range = previewField.selectedTextRange,
-            let afterRange = previewField.textRange(from: range.end, to: previewField.endOfDocument)
-        else { return nil }
-        return previewField.text(in: afterRange)
+    var textAfterCursor: String {
+        guard let selection = textView.selectedTextRange,
+            let range = textView.textRange(from: selection.end, to: textView.endOfDocument)
+        else { return "" }
+        return textView.text(in: range) ?? ""
     }
 
-    // MARK: KeyboardViewDelegate
-
-    func keyboardView(_ keyboardView: KeyboardView, insert text: String) {
-        if text == " ", previousInsertWasSpace,
-            ProcessInfo.processInfo.systemUptime - lastSpaceTime < 1.5,
-            KeyboardTextLogic.shouldReplaceDoubleSpace(before: textBeforeCursor()) {
-            previewField.deleteBackward()
-            previewField.insertText(". ")
-            previousInsertWasSpace = false
-        } else {
-            previewField.insertText(text)
-            previousInsertWasSpace = text == " "
-            lastSpaceTime = ProcessInfo.processInfo.systemUptime
-        }
-        updatePreviewAutoShift()
+    var selectedText: String? {
+        guard let selection = textView.selectedTextRange, !selection.isEmpty else { return nil }
+        return textView.text(in: selection)
     }
 
-    func keyboardViewDeleteBackward(_ keyboardView: KeyboardView) {
-        previewField.deleteBackward()
-        previousInsertWasSpace = false
-        updatePreviewAutoShift()
+    var autocapitalizationType: UITextAutocapitalizationType { textView.autocapitalizationType }
+
+    var canUseClipboard: Bool { true }
+
+    func insertText(_ text: String) {
+        textView.insertText(text)
     }
 
-    func keyboardViewReturn(_ keyboardView: KeyboardView) {
-        previewField.insertText("\n")
-        previousInsertWasSpace = false
-        updatePreviewAutoShift()
+    func deleteBackward() {
+        textView.deleteBackward()
     }
 
-    func keyboardView(_ keyboardView: KeyboardView, moveCursorBy offset: Int) {
-        previousInsertWasSpace = false
-        guard let range = previewField.selectedTextRange,
-            let position = previewField.position(from: range.start, offset: offset)
-        else { return }
-        previewField.selectedTextRange = previewField.textRange(from: position, to: position)
-    }
-
-    func keyboardView(_ keyboardView: KeyboardView, edit command: EditCommand) {
-        previousInsertWasSpace = false
-        switch command {
-        case .lineStart, .lineEnd, .lineUp, .lineDown:
-            let offset = KeyboardTextLogic.cursorOffset(
-                for: command, before: textBeforeCursor() ?? "", after: textAfterCursor() ?? "")
-            self.keyboardView(keyboardView, moveCursorBy: offset)
-        case .cut:
-            previewField.cut(nil)
-        case .copy:
-            previewField.copy(nil)
-        case .paste:
-            previewField.paste(nil)
-        }
-        updatePreviewAutoShift()
-    }
-
-    func keyboardViewDismiss(_ keyboardView: KeyboardView) {
-        previewField.resignFirstResponder()
-    }
-
-    func keyboardViewDidPressKey(_ keyboardView: KeyboardView) {
-        UIDevice.current.playInputClick()
+    func moveCursor(byUTF16Offset offset: Int) {
+        guard let selection = textView.selectedTextRange else { return }
+        let origin = offset < 0 ? selection.start : selection.end
+        // A move past either end of the text stops at that end.
+        let target = textView.position(from: origin, offset: offset)
+            ?? (offset < 0 ? textView.beginningOfDocument : textView.endOfDocument)
+        textView.selectedTextRange = textView.textRange(from: target, to: target)
     }
 }

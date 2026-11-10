@@ -74,7 +74,10 @@ final class KeyView: UIView {
         secondaryLabel.font = .systemFont(ofSize: 14)
         if let symbolName = display.symbolName {
             let configuration = UIImage.SymbolConfiguration(pointSize: 19, weight: .regular)
-            iconView.image = UIImage(systemName: symbolName, withConfiguration: configuration)
+            let image = UIImage(systemName: symbolName, withConfiguration: configuration)
+            // A wrong symbol name would leave the key blank, so a debug build stops here.
+            assert(image != nil, "Unknown SF Symbol: \(symbolName)")
+            iconView.image = image
         } else {
             iconView.image = nil
         }

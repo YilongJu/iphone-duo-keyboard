@@ -6,3 +6,4 @@ DerivedData/
 App/Info.plist
 Keyboard/Info.plist
 .env
+.playwright-mcp/

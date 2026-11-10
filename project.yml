@@ -68,12 +68,29 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.yilongju.duokeyboard.keyboard
         PRODUCT_NAME: DuoKeyboardExtension
+  DuoKeyboardTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - Tests
+    dependencies:
+      - target: DuoKeyboard
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.yilongju.duokeyboard.tests
+        GENERATE_INFOPLIST_FILE: "YES"
+        TEST_HOST: $(BUILT_PRODUCTS_DIR)/DuoKeyboard.app/DuoKeyboard
+        BUNDLE_LOADER: $(TEST_HOST)
 schemes:
   DuoKeyboard:
     build:
       targets:
         DuoKeyboard: all
         DuoKeyboardExtension: all
+    test:
+      config: Debug
+      targets:
+        - DuoKeyboardTests
     run:
       config: Debug
     archive:
