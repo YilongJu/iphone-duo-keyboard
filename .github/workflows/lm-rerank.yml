@@ -10,6 +10,7 @@ on:
       - 'Engine/**'
       - 'LanguageModel/**'
       - 'scripts/lm-rerank/**'
+      - '!scripts/lm-rerank/README.md'
       - '.github/workflows/lm-rerank.yml'
   workflow_dispatch:
 
