@@ -30,7 +30,7 @@ env:
   PARTS_DIR: build/typing-evaluation-parts
   SAMPLE_SEED: '20261109'
   # The number of cases each simulator types. 0 types the whole shard, and a small number gives a short trial.
-  SHARD_LIMIT: '12'
+  SHARD_LIMIT: '0'
 
 jobs:
   keyboard:
@@ -43,12 +43,32 @@ jobs:
       matrix:
         # share is the share of each stratum that sample_cases.py draws. shards is the number of
         # shards of the sample, and shard_list names the shards this job types. The job types
-        # each shard on its own new simulator. A Pinyin sample has 8 shards, so one simulator
-        # types each clause one time. control: 'yes' turns every correction of the text view off.
+        # each shard on its own new simulator. A new simulator takes 7 to 12 minutes before the
+        # first key tap, so each job types one shard. A Pinyin sample has 8 shards, so one
+        # simulator types each clause one time. control: 'yes' turns every correction of the
+        # text view off, and that job types the first of 4 shards of the English dev sample.
         include:
-          - {engine: apple-stock-keyboard, task: english, half: dev, share: '0.2', shards: 2, shard_list: '0', control: 'no'}
-          - {engine: apple-stock-keyboard, task: pinyin, half: dev, share: '0.15', shards: 8, shard_list: '0 1', control: 'no'}
           - {engine: apple-stock-keyboard-control, task: english, half: dev, share: '0.2', shards: 4, shard_list: '0', control: 'yes'}
+          - {engine: apple-stock-keyboard, task: english, half: dev, share: '0.2', shards: 2, shard_list: '0', control: 'no'}
+          - {engine: apple-stock-keyboard, task: english, half: dev, share: '0.2', shards: 2, shard_list: '1', control: 'no'}
+          - {engine: apple-stock-keyboard, task: pinyin, half: dev, share: '0.12', shards: 8, shard_list: '0', control: 'no'}
+          - {engine: apple-stock-keyboard, task: pinyin, half: dev, share: '0.12', shards: 8, shard_list: '1', control: 'no'}
+          - {engine: apple-stock-keyboard, task: pinyin, half: dev, share: '0.12', shards: 8, shard_list: '2', control: 'no'}
+          - {engine: apple-stock-keyboard, task: pinyin, half: dev, share: '0.12', shards: 8, shard_list: '3', control: 'no'}
+          - {engine: apple-stock-keyboard, task: pinyin, half: dev, share: '0.12', shards: 8, shard_list: '4', control: 'no'}
+          - {engine: apple-stock-keyboard, task: pinyin, half: dev, share: '0.12', shards: 8, shard_list: '5', control: 'no'}
+          - {engine: apple-stock-keyboard, task: pinyin, half: dev, share: '0.12', shards: 8, shard_list: '6', control: 'no'}
+          - {engine: apple-stock-keyboard, task: pinyin, half: dev, share: '0.12', shards: 8, shard_list: '7', control: 'no'}
+          - {engine: apple-stock-keyboard, task: english, half: test, share: '0.2', shards: 2, shard_list: '0', control: 'no'}
+          - {engine: apple-stock-keyboard, task: english, half: test, share: '0.2', shards: 2, shard_list: '1', control: 'no'}
+          - {engine: apple-stock-keyboard, task: pinyin, half: test, share: '0.12', shards: 8, shard_list: '0', control: 'no'}
+          - {engine: apple-stock-keyboard, task: pinyin, half: test, share: '0.12', shards: 8, shard_list: '1', control: 'no'}
+          - {engine: apple-stock-keyboard, task: pinyin, half: test, share: '0.12', shards: 8, shard_list: '2', control: 'no'}
+          - {engine: apple-stock-keyboard, task: pinyin, half: test, share: '0.12', shards: 8, shard_list: '3', control: 'no'}
+          - {engine: apple-stock-keyboard, task: pinyin, half: test, share: '0.12', shards: 8, shard_list: '4', control: 'no'}
+          - {engine: apple-stock-keyboard, task: pinyin, half: test, share: '0.12', shards: 8, shard_list: '5', control: 'no'}
+          - {engine: apple-stock-keyboard, task: pinyin, half: test, share: '0.12', shards: 8, shard_list: '6', control: 'no'}
+          - {engine: apple-stock-keyboard, task: pinyin, half: test, share: '0.12', shards: 8, shard_list: '7', control: 'no'}
     env:
       PART_PREFIX: apple-stock-keyboard-part-${{ matrix.engine }}-${{ matrix.task }}-${{ matrix.half }}
       KEY_INTERVAL: '0.33'
@@ -130,13 +150,19 @@ jobs:
             export TEST_RUNNER_EVAL_CONTROL="${{ matrix.control }}"
             export TEST_RUNNER_EVAL_CASES_FILE="$PWD/$part/cases.jsonl"
             export TEST_RUNNER_EVAL_OUTPUT_DIR="$PWD/$part"
-            xcodebuild test-without-building \
-              -project "$ENGINE_DIR/StockKeyboardHost.xcodeproj" -scheme StockKeyboardHost \
-              -destination "platform=iOS Simulator,id=$udid" \
-              -derivedDataPath build/apple-stock-keyboard-derived \
-              -parallel-testing-enabled NO -test-timeouts-enabled NO > "$part/xcodebuild-test.log" 2>&1
-            status=$?
-            grep -E "^EVAL_(START|PASS|KEYS|WARMUP|NOTE|DONE)|error:|\*\* TEST" "$part/xcodebuild-test.log"
+            # The test runner can stop before the first case, while the new simulator is still
+            # busy. The job starts the test one more time only when the test typed no case.
+            for start in 1 2; do
+              xcodebuild test-without-building \
+                -project "$ENGINE_DIR/StockKeyboardHost.xcodeproj" -scheme StockKeyboardHost \
+                -destination "platform=iOS Simulator,id=$udid" \
+                -derivedDataPath build/apple-stock-keyboard-derived \
+                -parallel-testing-enabled NO -test-timeouts-enabled NO > "$part/xcodebuild-test-$start.log" 2>&1
+              status=$?
+              grep -E "^EVAL_(START|PASS|KEYS|WARMUP|NOTE|DONE)|error:|encountered an error|\*\* TEST" "$part/xcodebuild-test-$start.log"
+              if [ -s "$part/attempts.jsonl" ]; then break; fi
+              echo "::warning::shard $shard: start $start of the test typed no case, xcodebuild exit status $status"
+            done
             # The shard passes when the text view was read for every case. XCTest can report a
             # failure for a read that the test repeated with success.
             total=$(grep -c . "$part/cases.jsonl")
