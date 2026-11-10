@@ -1,0 +1,45 @@
+name: Pinyin lexicon
+
+# Builds Shared/lexicon-pinyin.bin from the libime dictionary and language model on a Linux
+# runner, and uploads the file as an artifact. Start it by hand:
+#   gh workflow run "Pinyin lexicon"
+on:
+  workflow_dispatch:
+    inputs:
+      pairs:
+        description: The number of word pairs to keep
+        default: '1500000'
+
+jobs:
+  build:
+    name: Build the Pinyin lexicon from libime data
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - name: Download the libime data
+        run: |
+          set -euo pipefail
+          mkdir -p build/libime-data && cd build/libime-data
+          curl -sSfLO https://download.fcitx-im.org/data/lm_sc.arpa-20260629.tar.zst
+          curl -sSfLO https://download.fcitx-im.org/data/dict-20260907.tar.zst
+          sha256sum *.tar.zst
+          for archive in *.tar.zst; do tar --zstd -xvf "$archive"; done
+          ls -l
+      - name: Show the format of each file
+        run: |
+          set -euo pipefail
+          cd build/libime-data
+          for file in $(find . -type f ! -name '*.tar.zst'); do
+            echo "=== $file: $(wc -c < "$file") bytes, $(wc -l < "$file") lines"
+            head -n 12 "$file"
+          done
+      - name: Build the lexicon
+        run: python3 scripts/typing-engine/build_pinyin_lexicon_from_libime.py build/libime-data ${{ github.event.inputs.pairs }}
+      - uses: actions/upload-artifact@v7
+        with:
+          name: lexicon-pinyin
+          path: |
+            Shared/lexicon-pinyin.bin
+            build/libime-data/lexicon-report.txt
+          if-no-files-found: error
