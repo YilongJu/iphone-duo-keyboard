@@ -101,6 +101,10 @@ jobs:
           out="build/lm-rerank/results/rerank-${{ matrix.model }}"
           if grep -q '^load        failed' "$out/probe-${{ matrix.model }}.txt"; then
             echo "The model did not load in llama.cpp b4846, so the re-ranking does not run."
+            # lm_score writes every error line of llama.cpp, which names the reason.
+            LD_LIBRARY_PATH="$PWD/build/lm-rerank/llama/lib" build/lm-rerank/lm_score \
+              "$(cat build/lm-rerank/model-path.txt)" 4 < /dev/null 2> "$out/load-error.txt" || true
+            cat "$out/load-error.txt"
             exit 0
           fi
           export LD_LIBRARY_PATH="$PWD/build/lm-rerank/llama/lib"

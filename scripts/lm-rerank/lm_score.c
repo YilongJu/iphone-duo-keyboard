@@ -101,6 +101,13 @@ static double log_of_marked(const float *scores, int vocabulary, const unsigned 
 static int tokenize(const struct llama_vocab *vocab, const char *text, llama_token *tokens, int capacity) {
     int count = llama_tokenize(vocab, text, (int32_t)strlen(text), tokens, capacity, false, false);
     if (count < 0) die("a text gives more tokens than the buffer holds");
+    int vocabulary = llama_vocab_n_tokens(vocab);
+    for (int index = 0; index < count; index++) {
+        if (tokens[index] < 0 || tokens[index] >= vocabulary) {
+            fprintf(stderr, "lm_score: the text \"%s\" gives token %d at place %d of %d\n", text, tokens[index], index, count);
+            die("a token is outside the vocabulary");
+        }
+    }
     return count;
 }
 
@@ -232,6 +239,12 @@ int main(int argc, char **argv) {
             for (int index = 0; index < candidate_lengths[candidate]; index++) {
                 rows[candidate][index] = batch.n_tokens;
                 add_token(&batch, candidate_tokens[candidate][index], context_count + index, candidate + 1, 1);
+            }
+        }
+        for (int index = 0; index < batch.n_tokens; index++) {
+            if (batch.token[index] < 0 || batch.token[index] >= vocabulary) {
+                fprintf(stderr, "lm_score: batch place %d of %d holds token %d\n", index, batch.n_tokens, batch.token[index]);
+                die("a candidate batch holds a token outside the vocabulary");
             }
         }
         if (llama_decode(model_context, batch) != 0) die("the model did not read the candidates");
