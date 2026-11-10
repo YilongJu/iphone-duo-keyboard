@@ -13,7 +13,8 @@ The check has three parts.
    engine must refuse each broken file.
 3. Version 2. The script writes a lexicon of version 2 and of version 3 from the same words and
    pairs, without triples, reading costs or pair back-off weights. Both hold the same model,
-   and the engine must return a text of the highest score for both.
+   and the engine must return a text of the highest score for both. The same holds for a
+   lexicon without pairs, where a word costs the back-off weight of the word before it.
 
 Usage, from the repository root, after building Engine/duo_cli.c:
     python3 scripts/typing-engine-check/check_back_off_model.py [--cli build/engine/duo_cli]
@@ -130,6 +131,8 @@ def check_scores(cli: Path, lexicon: Path, words, pairs, triples, generator: ran
     reference = Reference(words, pairs, triples)
     typed = ["".join(generator.choice(SPELLINGS) for _ in range(generator.randint(1, 5))) for _ in range(count)]
     outputs = run(cli, lexicon, typed)
+    if len(outputs) != len(typed):
+        raise SystemExit(f"FAILED: the engine gave {len(outputs)} outputs for {len(typed)} inputs")
     wrong = 0
     with_triple = 0
     for text, output in zip(typed, outputs):
@@ -209,6 +212,12 @@ def main():
     write_lexicon_with_triples(version_3, words, pairs, {}, MODEL_BACK_OFF)
     for lexicon in (version_2, version_3):
         failures += check_scores(arguments.cli, lexicon, words, pairs, {}, random.Random(7), arguments.cases)
+    without_pairs_2 = OUTPUT / "words-version-2.bin"
+    without_pairs_3 = OUTPUT / "words-version-3.bin"
+    write_lexicon(without_pairs_2, [word[:4] for word in words], {}, MODEL_BACK_OFF)
+    write_lexicon_with_triples(without_pairs_3, words, {}, {}, MODEL_BACK_OFF)
+    for lexicon in (without_pairs_2, without_pairs_3):
+        failures += check_scores(arguments.cli, lexicon, words, {}, {}, random.Random(8), arguments.cases)
 
     if failures:
         print(f"FAILED: {failures} checks")

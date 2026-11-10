@@ -65,6 +65,7 @@ def read_language_model(path: Path, pair_limit: int, triple_limit: int, any_gain
     pairs_heap: list[tuple[float, str, str, float]] = []
     triples_heap: list[tuple[float, str, str, str, float]] = []
     counts = {"pairs": 0, "pairs_above": 0, "triples": 0, "triples_above": 0}
+    kept_by_weight: set[int] | None = None
     section = 0
 
     def weight_of(seen_log_probability: float, gain: float) -> float | None:
@@ -123,10 +124,16 @@ def read_language_model(path: Path, pair_limit: int, triple_limit: int, any_gain
                 context = all_pairs.get(numbers[first] * len(words) + numbers[second])
                 if context is None:
                     raise SystemExit(f"the triple {fields[1]!r} has no pair for its first two words")
+                if kept_by_weight is None:
+                    # The file lists every pair before the first triple, so the pairs kept by
+                    # weight are final here.
+                    kept_by_weight = {numbers[one] * len(words) + numbers[two] for _, one, two, _ in pairs_heap}
                 # Without the triple, the engine uses the pair's back-off weight plus the chance
-                # of the third word after the second.
-                after_second = all_pairs.get(numbers[second] * len(words) + numbers[third])
-                estimate = context[1] + (after_second[0] if after_second is not None else words[second][1] + words[third][0])
+                # of the third word after the second. That chance is the value of their pair
+                # when the lexicon keeps the pair by weight, and a back-off estimate when not.
+                after_second = numbers[second] * len(words) + numbers[third]
+                estimate = context[1] + (
+                    all_pairs[after_second][0] if after_second in kept_by_weight else words[second][1] + words[third][0])
                 gain = log_probability - estimate
                 counts["triples_above"] += gain > 0
                 weight = weight_of(own_log_probability(first) + context[0] + log_probability, gain)
