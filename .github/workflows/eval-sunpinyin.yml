@@ -45,9 +45,6 @@ jobs:
           echo "== library"
           library_package="$(dpkg-query -W -f='${Package}\n' | grep -E '^libsunpinyin3')"
           dpkg -L "$library_package" | grep -E '\.so'
-          library_file="$(dpkg -L "$library_package" | grep -m 1 -E '\.so\.[0-9.]+$')"
-          echo "== folder names compiled into $library_file"
-          strings "$library_file" | grep -E 'sunpinyin/data|\.sunpinyin' || echo "strings did not find a folder name"
 
       - name: Print the license files of the packages
         run: |
@@ -94,7 +91,7 @@ jobs:
       - name: Score every engine name on both halves
         run: |
           set -euo pipefail
-          for name in sunpinyin-default sunpinyin-correction sunpinyin-fuzzy; do
+          for name in sunpinyin-default sunpinyin-correction sunpinyin-fuzzy sunpinyin-ibus-defaults; do
             for half in dev test; do
               python3 scripts/typing-evaluation/score.py --task pinyin --engine "$name" \
                 --cases "scripts/typing-evaluation/cases/pinyin.$half.jsonl" \

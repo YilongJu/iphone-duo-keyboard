@@ -1,7 +1,7 @@
 // Adapter program between the typing evaluation and the sunpinyin input method engine.
 //
 // Usage: sunpinyin_cli MODE USER_DATA_DIR < cases.tsv > outputs.tsv
-//   MODE           default, correction or fuzzy
+//   MODE           default, correction, fuzzy or ibus
 //   USER_DATA_DIR  an empty folder for the engine's history file and user dictionary
 //
 // Each input line holds a case id, a tab, and the typed letters a to z.
@@ -9,7 +9,7 @@
 // read ("sentence" or "words"), the output, and the engine's own split of the letters.
 //
 // The program types the letters into a sunpinyin session as key presses and reads the first
-// candidate. It never commits text, so the engine does not learn from one case to the next.
+// candidate. The program never commits text, so the engine does not learn from one case to the next.
 //
 // Exit codes: 2 wrong arguments, 3 the engine did not create a session, 4 a malformed input
 // line, 5 the engine holds a different number of letters than the case, 6 the session did not
@@ -32,6 +32,8 @@ static const char* const kCorrectionPairs[][2] = {
 
 // The 14 sound pairs that the settings window of ibus-sunpinyin offers
 // (wrapper/ibus/setup/main.py, class FuzzySetupDialog, sunpinyin v3.0.0-rc2).
+// The library keeps the first mapping of each sound (initFuzzyMap in pinyin/syllable.h), so
+// this list gives 12 pairs in both directions, r read as l, and leaves eng and ong apart.
 static const char* const kFuzzyPairs[][2] = {
     {"sh", "s"},   {"zh", "z"},   {"ch", "c"},     {"an", "ang"},   {"on", "ong"},
     {"en", "eng"}, {"in", "ing"}, {"eng", "ong"},  {"ian", "iang"}, {"uan", "uang"},
@@ -75,7 +77,7 @@ static std::string utf8(const TWCHAR* text)
 }
 
 // The view computes its sentence candidates only while a window handler is attached.
-// This handler draws nothing and counts the commits, which must stay at zero.
+// This handler does not draw. It counts the commits, and the count must stay at zero.
 class CQuietWinHandler : public CIMIWinHandler
 {
 public:
@@ -91,7 +93,8 @@ public:
 
 // Takes the engine's first word candidate at each position in turn. The evaluation asks for
 // this when the first candidate covers only some letters. A letter where the engine does not
-// offer a candidate stays as typed.
+// offer a candidate stays as typed. The function reads each candidate and does not select it,
+// so a later candidate does not see an earlier choice.
 static std::string first_candidates_in_turn(CIMIContext* context, const std::string& typed)
 {
     std::string output;
@@ -114,7 +117,7 @@ static std::string first_candidates_in_turn(CIMIContext* context, const std::str
 int main(int argc, char** argv)
 {
     if (argc != 3) {
-        fprintf(stderr, "usage: sunpinyin_cli default|correction|fuzzy USER_DATA_DIR < cases.tsv\n");
+        fprintf(stderr, "usage: sunpinyin_cli default|correction|fuzzy|ibus USER_DATA_DIR < cases.tsv\n");
         return 2;
     }
     const std::string mode = argv[1];
@@ -127,8 +130,12 @@ int main(int argc, char** argv)
     } else if (mode == "fuzzy") {
         scheme.setFuzzyPinyinPairs(to_pairs(kFuzzyPairs));
         scheme.setFuzzyForwarding(true);
+    } else if (mode == "ibus") {
+        // The ibus front end makes this call while its sound pairs are off (update_fuzzy_pinyins
+        // in wrapper/ibus/src/sunpinyin_engine.cpp). The pair list stays empty.
+        scheme.setFuzzyForwarding(false);
     } else if (mode != "default") {
-        fprintf(stderr, "unknown mode '%s': use default, correction or fuzzy\n", mode.c_str());
+        fprintf(stderr, "unknown mode '%s': use default, correction, fuzzy or ibus\n", mode.c_str());
         return 2;
     }
 
@@ -148,6 +155,14 @@ int main(int argc, char** argv)
     CQuietWinHandler handler;
     view->attachWinHandler(&handler);
     CIMIContext* context = view->getIC();
+    if (mode == "ibus") {
+        // The two values that the ibus front end sets for a person who has not changed a setting:
+        // history weight level 3 (the library starts at 5), and the GBK character set, level 1
+        // (the library starts at 3). Source: update_history_power and update_charset_level in
+        // wrapper/ibus/src/sunpinyin_engine.cpp.
+        context->setHistoryPower(3);
+        context->setCharsetLevel(1);
+    }
 
     std::string line;
     while (std::getline(std::cin, line)) {
