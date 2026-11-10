@@ -47,16 +47,27 @@ jobs:
         # first key tap, so each job types one shard. A Pinyin sample has 8 shards, so one
         # simulator types each clause one time. control: 'yes' turns every correction of the
         # text view off, and that job types the first of 4 shards of the English dev sample.
-        # Run 42771475264 typed the control shard, both shards of the English dev sample, the
-        # Pinyin dev shards 0 and 2 to 7 and the Pinyin test shard 0. The rows below are the
-        # shards that run did not finish. The English test sample goes in 4 shards, because a
-        # job with half of the sample came within 5 minutes of the time limit.
+        # An English sample goes in 4 shards, because a job with half of the sample came within
+        # 5 minutes of the time limit.
         include:
+          - {engine: apple-stock-keyboard-control, task: english, half: dev, share: '0.2', shards: 4, shard_list: '0', control: 'yes'}
+          - {engine: apple-stock-keyboard, task: english, half: dev, share: '0.2', shards: 4, shard_list: '0', control: 'no'}
+          - {engine: apple-stock-keyboard, task: english, half: dev, share: '0.2', shards: 4, shard_list: '1', control: 'no'}
+          - {engine: apple-stock-keyboard, task: english, half: dev, share: '0.2', shards: 4, shard_list: '2', control: 'no'}
+          - {engine: apple-stock-keyboard, task: english, half: dev, share: '0.2', shards: 4, shard_list: '3', control: 'no'}
+          - {engine: apple-stock-keyboard, task: pinyin, half: dev, share: '0.12', shards: 8, shard_list: '0', control: 'no'}
           - {engine: apple-stock-keyboard, task: pinyin, half: dev, share: '0.12', shards: 8, shard_list: '1', control: 'no'}
+          - {engine: apple-stock-keyboard, task: pinyin, half: dev, share: '0.12', shards: 8, shard_list: '2', control: 'no'}
+          - {engine: apple-stock-keyboard, task: pinyin, half: dev, share: '0.12', shards: 8, shard_list: '3', control: 'no'}
+          - {engine: apple-stock-keyboard, task: pinyin, half: dev, share: '0.12', shards: 8, shard_list: '4', control: 'no'}
+          - {engine: apple-stock-keyboard, task: pinyin, half: dev, share: '0.12', shards: 8, shard_list: '5', control: 'no'}
+          - {engine: apple-stock-keyboard, task: pinyin, half: dev, share: '0.12', shards: 8, shard_list: '6', control: 'no'}
+          - {engine: apple-stock-keyboard, task: pinyin, half: dev, share: '0.12', shards: 8, shard_list: '7', control: 'no'}
           - {engine: apple-stock-keyboard, task: english, half: test, share: '0.2', shards: 4, shard_list: '0', control: 'no'}
           - {engine: apple-stock-keyboard, task: english, half: test, share: '0.2', shards: 4, shard_list: '1', control: 'no'}
           - {engine: apple-stock-keyboard, task: english, half: test, share: '0.2', shards: 4, shard_list: '2', control: 'no'}
           - {engine: apple-stock-keyboard, task: english, half: test, share: '0.2', shards: 4, shard_list: '3', control: 'no'}
+          - {engine: apple-stock-keyboard, task: pinyin, half: test, share: '0.12', shards: 8, shard_list: '0', control: 'no'}
           - {engine: apple-stock-keyboard, task: pinyin, half: test, share: '0.12', shards: 8, shard_list: '1', control: 'no'}
           - {engine: apple-stock-keyboard, task: pinyin, half: test, share: '0.12', shards: 8, shard_list: '2', control: 'no'}
           - {engine: apple-stock-keyboard, task: pinyin, half: test, share: '0.12', shards: 8, shard_list: '3', control: 'no'}

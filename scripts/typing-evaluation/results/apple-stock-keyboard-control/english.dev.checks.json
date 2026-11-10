@@ -1,0 +1,30 @@
+{
+  "sampled cases": 1035,
+  "typed cases": 259,
+  "parts": 1,
+  "attempts": 259,
+  "attempts that ended with an error": 0,
+  "cases typed in more than one pass": 0,
+  "cases whose counted attempt has a key gap above 1.5 times the key interval": 12,
+  "cases whose counted attempt is not complete": 0,
+  "cases where a key tap did not arrive": 0,
+  "right cases": 49,
+  "cases with every key gap inside the limit": 247,
+  "right cases among the cases with every key gap inside the limit": 46,
+  "control: cases whose text view holds exactly the typed characters": 259,
+  "control: share of the typed cases": 1.0,
+  "cases where the keyboard changed the context": 0,
+  "cases with an inline prediction left as marked text": 0,
+  "key interval asked for, ms": 330,
+  "time between two key arrivals in the counted attempts, ms": {
+    "median": 334,
+    "10th percentile": 323,
+    "90th percentile": 351,
+    "99th percentile": 609,
+    "gaps": 1661
+  },
+  "seconds per counted attempt": {
+    "median": 4.85,
+    "sum": 1404
+  }
+}
