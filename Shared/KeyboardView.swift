@@ -33,8 +33,8 @@ final class KeyboardView: UIView {
         didSet { if oldValue != showsGlobe { rebuild() } }
     }
 
-    var returnKeyTitle = "return" {
-        didSet { if oldValue != returnKeyTitle { refreshLabels() } }
+    var returnKeySymbol = "return.left" {
+        didSet { if oldValue != returnKeySymbol { refreshLabels() } }
     }
 
     /// Small text on the space bar, for a short notice such as "Copied".
@@ -310,7 +310,7 @@ final class KeyboardView: UIView {
         case .tab:
             return KeyDisplay(symbolName: "arrow.right.to.line")
         case .returnKey:
-            return KeyDisplay(primary: returnKeyTitle, primaryFontSize: wordSize)
+            return KeyDisplay(symbolName: returnKeySymbol)
         case .globe:
             return KeyDisplay(symbolName: "globe")
         case .dismiss:
