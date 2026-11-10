@@ -52,6 +52,14 @@ jobs:
           echo "N-gram order of the packaged language model, read from the KenLM header:"
           python3 "$ADAPTER_DIR/kenlm_header.py" "$lm"
 
+      # A print for the license table of the adapter README. The scores do not depend on it.
+      - name: Print the license fields of the packaged libime data
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          ls -l /usr/share/doc/libime-data/ /usr/share/doc/libime-data-language-model/
+          grep -n -E '^(Files|Copyright|License|Source|Upstream-Name):' /usr/share/doc/libime-data/copyright
+
       - name: Build the adapter against the packaged libime
         run: |
           set -euo pipefail
@@ -141,6 +149,8 @@ jobs:
         if: ${{ !cancelled() && steps.source_build.outcome == 'success' }}
         run: |
           set -euo pipefail
+          dpkg-query -W -f='${binary:Package}\t${Version}\n' \
+            extra-cmake-modules gettext libzstd-dev zstd libboost-dev libboost-iostreams-dev gcc-14 g++-14 ninja-build
           grep -H 'set(PACKAGE_VERSION ' \
             "$SRC_PREFIX/lib/cmake/Fcitx5Utils/Fcitx5UtilsConfigVersion.cmake" \
             "$SRC_PREFIX/lib/cmake/LibIMECore/LibIMECoreConfigVersion.cmake" \
@@ -209,6 +219,23 @@ jobs:
                 --predictions "build/typing-evaluation/$name/pinyin.$half.jsonl" \
                 --json "build/typing-evaluation/$name/pinyin.$half.summary.json"
             done
+          done
+
+      # A control that separates the libime code from the libime data: the code of the source
+      # build with the dictionary and the language model of the Ubuntu packages, every flag off.
+      - name: Run and score libime from source with the packaged data
+        if: ${{ !cancelled() && steps.source_adapter.outcome == 'success' }}
+        run: |
+          set -euo pipefail
+          export LD_LIBRARY_PATH="$SRC_PREFIX/lib"
+          name=libime-src-none-packaged-data
+          python3 "$ADAPTER_DIR/run_libime.py" --adapter build/libime-source/adapter/libime_adapter \
+            --dict "$APT_DICT" --lm "$APT_LM" --halves dev test --jobs 4 --engine "$name=none"
+          for half in dev test; do
+            python3 scripts/typing-evaluation/score.py --task pinyin --engine "$name" \
+              --cases "scripts/typing-evaluation/cases/pinyin.$half.jsonl" \
+              --predictions "build/typing-evaluation/$name/pinyin.$half.jsonl" \
+              --json "build/typing-evaluation/$name/pinyin.$half.summary.json"
           done
 
       # ---------------------------------------------------------------- Results
