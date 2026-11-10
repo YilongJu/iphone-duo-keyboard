@@ -1,3 +1,4 @@
+import UIKit
 import XCTest
 
 @testable import DuoKeyboard
@@ -10,6 +11,7 @@ final class FakeDocument: KeyboardDocument {
     var selectedText: String?
     var autocapitalizationType: UITextAutocapitalizationType = .none
     var canUseClipboard = true
+    var documentIdentifier = UUID()
 
     init(before: String, after: String = "") {
         text = before + after
@@ -161,6 +163,35 @@ final class KeyboardTextControllerTests: XCTestCase {
         controller.keyboardView(keyboardView, insert: "X")
         waitForDelayedEdits()
         XCTAssertEqual(document.text, "otherX text")
+    }
+
+    func testAMoveToAnotherFieldStopsTheReplacement() {
+        makeController(before: "hello ", after: "world")
+        controller.keyboardView(keyboardView, edit: .selectAll)
+        controller.keyboardView(keyboardView, insert: "X")
+        // The user moves to another field whose text also ends with "world".
+        document.documentIdentifier = UUID()
+        document.text = "KEEPworld"
+        document.cursor = 9
+        waitForDelayedEdits()
+        XCTAssertEqual(document.text, "KEEPworld")
+    }
+
+    func testAnUnconfirmedCursorMoveDeletesNoText() {
+        makeController(before: "hello ", after: "world")
+        controller.keyboardView(keyboardView, edit: .selectAll)
+        controller.keyboardViewDeleteBackward(keyboardView)
+        // The cursor lands in a place the controller did not ask for.
+        document.cursor = 3
+        waitForDelayedEdits()
+        XCTAssertEqual(document.text, "hello world")
+    }
+
+    func testSelectAllWithASelectionInTheAppStaysOff() {
+        makeController(before: "hello ", after: "world")
+        document.selectedText = "lo"
+        controller.keyboardView(keyboardView, edit: .selectAll)
+        XCTAssertFalse(keyboardView.selectAllActive)
     }
 
     func testSelectAllOnAnEmptyFieldStaysOff() {

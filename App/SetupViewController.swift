@@ -199,6 +199,8 @@ final class TextViewDocument: KeyboardDocument {
 
     var canUseClipboard: Bool { true }
 
+    let documentIdentifier = UUID()
+
     func insertText(_ text: String) {
         textView.insertText(text)
     }

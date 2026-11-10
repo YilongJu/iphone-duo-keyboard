@@ -11,6 +11,8 @@ protocol KeyboardDocument: AnyObject {
     var autocapitalizationType: UITextAutocapitalizationType { get }
     /// False in the keyboard extension while the user has Full Access turned off.
     var canUseClipboard: Bool { get }
+    /// Identifies the text field. The value changes when the user moves to another field.
+    var documentIdentifier: UUID { get }
     func insertText(_ text: String)
     func deleteBackward()
     /// Moves the cursor. The offset counts UTF-16 units.
@@ -38,17 +40,21 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
     /// The document's text at the moment the user pressed select all.
     private struct AllText: Equatable {
         let before: String
-        let selected: String
         let after: String
-        var text: String { before + selected + after }
+        var text: String { before + after }
     }
 
     private var allText: AllText?
 
-    /// Text after the cursor that waits for deletion, while the cursor moves across the text.
-    private var pendingAfter: String?
-    private var pendingInsert: String?
-    private var pendingAttempts = 0
+    /// A replacement of all text that waits for the document to confirm a cursor move.
+    private struct PendingReplacement {
+        let snapshot: AllText
+        var insert: String?
+        let documentIdentifier: UUID
+        var attempts = 0
+    }
+
+    private var pending: PendingReplacement?
 
     init(keyboardView: KeyboardView, document: KeyboardDocument) {
         self.keyboardView = keyboardView
@@ -94,10 +100,7 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
     // MARK: All text
 
     private func currentText() -> AllText {
-        AllText(
-            before: document.textBeforeCursor,
-            selected: document.selectedText ?? "",
-            after: document.textAfterCursor)
+        AllText(before: document.textBeforeCursor, after: document.textAfterCursor)
     }
 
     private func setAllText(_ value: AllText?) {
@@ -109,7 +112,7 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
     /// cursor. A document that changed since then clears the stored text.
     private func confirmedAllText() -> AllText? {
         guard let allText else { return nil }
-        if allText == currentText() {
+        if allText == currentText(), document.selectedText == nil {
             return allText
         }
         setAllText(nil)
@@ -117,49 +120,64 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
     }
 
     /// Deletes the stored text and then inserts `text`, if any.
+    /// The caller passes a snapshot that `confirmedAllText()` just returned.
     private func replaceAllText(_ snapshot: AllText, with text: String?) {
         setAllText(nil)
         previousInsertWasSpace = false
-        if !snapshot.selected.isEmpty {
-            // One delete removes a selection that the user made in the app.
-            document.deleteBackward()
-        }
-        for _ in 0..<snapshot.before.count {
-            document.deleteBackward()
-        }
         guard !snapshot.after.isEmpty else {
+            // The cursor is at the end of the text, so the delete needs no cursor move.
+            deleteBackward(count: snapshot.before.count)
             finishReplacement(insert: text)
             return
         }
-        // A keyboard can delete backward only. The cursor moves to the end of the text first,
-        // and the delete happens after the document confirms the cursor's new place.
+        // A keyboard can delete backward only. The cursor moves to the end of the text first.
+        // The delete waits for the document to confirm the cursor's new place, so a move that
+        // did not happen as expected does not delete any text.
         document.moveCursor(byUTF16Offset: snapshot.after.utf16.count)
-        pendingAfter = snapshot.after
-        pendingInsert = text
-        pendingAttempts = 0
-        perform(#selector(deleteTextAfterMove), with: nil, afterDelay: 0.08)
+        pending = PendingReplacement(
+            snapshot: snapshot, insert: text, documentIdentifier: document.documentIdentifier)
+        scheduleReplacementCheck()
     }
 
-    @objc private func deleteTextAfterMove() {
-        guard let after = pendingAfter else { return }
-        let context = document.textBeforeCursor
-        let cursorIsAfterText = context.hasSuffix(after) || (!context.isEmpty && after.hasSuffix(context))
-        if cursorIsAfterText {
-            for _ in 0..<after.count {
-                document.deleteBackward()
-            }
-        } else if pendingAttempts < 5 {
+    private func scheduleReplacementCheck() {
+        perform(#selector(finishPendingReplacement), with: nil, afterDelay: 0.08, inModes: [.common])
+    }
+
+    @objc private func finishPendingReplacement() {
+        guard var replacement = pending else { return }
+        let after = replacement.snapshot.after
+        let sameDocument = document.documentIdentifier == replacement.documentIdentifier
+        if sameDocument, document.selectedText == nil, document.textBeforeCursor.hasSuffix(after) {
+            pending = nil
+            deleteBackward(count: after.count + replacement.snapshot.before.count)
+            finishReplacement(insert: replacement.insert)
+        } else if sameDocument, replacement.attempts < 5 {
             // The document reports a cursor move with a delay, so the check runs again.
-            pendingAttempts += 1
-            perform(#selector(deleteTextAfterMove), with: nil, afterDelay: 0.08)
-            return
+            replacement.attempts += 1
+            pending = replacement
+            scheduleReplacementCheck()
         } else {
-            showNotice("Some text stayed in place")
+            // The cursor's place stayed unconfirmed. The text stays as it is, and the typed
+            // text that waited for the replacement is dropped.
+            pending = nil
+            showNotice("Select all did not finish")
+            updateAutoShift()
         }
-        let insert = pendingInsert
-        pendingAfter = nil
-        pendingInsert = nil
-        finishReplacement(insert: insert)
+    }
+
+    /// Stops a replacement that still waits for its cursor move. The owner calls this when the
+    /// keyboard leaves the screen.
+    func cancelPendingEdits() {
+        NSObject.cancelPreviousPerformRequests(
+            withTarget: self, selector: #selector(finishPendingReplacement), object: nil)
+        pending = nil
+        setAllText(nil)
+    }
+
+    private func deleteBackward(count: Int) {
+        for _ in 0..<count {
+            document.deleteBackward()
+        }
     }
 
     private func finishReplacement(insert text: String?) {
@@ -200,9 +218,9 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
     // MARK: KeyboardViewDelegate
 
     func keyboardView(_ keyboardView: KeyboardView, insert text: String) {
-        if pendingAfter != nil {
+        if pending != nil {
             // A replacement is still running. The typed text joins the text that waits for insertion.
-            pendingInsert = (pendingInsert ?? "") + text
+            pending?.insert = (pending?.insert ?? "") + text
             return
         }
         if let snapshot = confirmedAllText() {
@@ -213,7 +231,7 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
     }
 
     func keyboardViewDeleteBackward(_ keyboardView: KeyboardView) {
-        guard pendingAfter == nil else { return }
+        guard pending == nil else { return }
         if let snapshot = confirmedAllText() {
             replaceAllText(snapshot, with: nil)
             return
@@ -228,14 +246,14 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
     }
 
     func keyboardView(_ keyboardView: KeyboardView, moveCursorBy offset: Int) {
-        guard pendingAfter == nil else { return }
+        guard pending == nil else { return }
         setAllText(nil)
         previousInsertWasSpace = false
         document.moveCursor(byUTF16Offset: utf16Offset(forCharacters: offset))
     }
 
     func keyboardView(_ keyboardView: KeyboardView, edit command: EditCommand) {
-        guard pendingAfter == nil else { return }
+        guard pending == nil else { return }
         previousInsertWasSpace = false
         switch command {
         case .selectAll:
@@ -243,7 +261,11 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
                 setAllText(nil)
             } else {
                 let current = currentText()
-                if current.text.isEmpty {
+                if document.selectedText != nil {
+                    // A selection made in the app already answers cut and copy, and the
+                    // keyboard cannot see where that selection sits in the stored text.
+                    showNotice("Clear the selection first")
+                } else if current.text.isEmpty {
                     showNotice("No text to select")
                 } else {
                     setAllText(current)
@@ -308,7 +330,7 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
     }
 
     func keyboardViewDismiss(_ keyboardView: KeyboardView) {
-        setAllText(nil)
+        cancelPendingEdits()
         onDismiss()
     }
 

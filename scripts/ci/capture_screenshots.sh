@@ -14,8 +14,9 @@ xcrun simctl list devices available > "$output_dir/available-devices.txt"
 
 # Each line is a device name prefix. The first available simulator whose name starts with the
 # prefix is used. The script stops when a prefix does not match any simulator.
-# Saves one screenshot per display. The iPhone Duo simulator has two displays (inner and outer),
-# and simctl then asks for a --display value and lists the valid ones in its error text.
+# Saves a screenshot. A simulator with one display gives one file. The iPhone Duo simulator has
+# two displays (inner and outer): simctl then asks for a --display value and lists the valid
+# ones in its error text, and the function saves one file per listed display.
 capture() {
   local udid="$1" base="$2" message
   if message=$(xcrun simctl io "$udid" screenshot "$base.png" 2>&1); then
