@@ -91,41 +91,45 @@ enum KeyboardTextLogic {
         return word
     }
 
-    /// Picks the first guess that is close to the typed word, and gives the guess the typed
-    /// word's capital. A short word allows one edit, and a longer word allows two.
-    static func bestGuess(for word: String, guesses: [String]) -> String? {
-        let typed = word.lowercased()
-        let limit = typed.count <= 4 ? 1 : 2
-        for guess in guesses where !guess.contains(" ") {
-            let distance = editDistance(typed, guess.lowercased())
-            guard distance > 0, distance <= limit else { continue }
-            if let first = word.first, first.isUppercase {
-                return guess.prefix(1).uppercased() + guess.dropFirst()
-            }
-            return guess
+    /// The lower-case word that ends `text`, when one space follows it, or an empty string.
+    /// The typing engine reads this word as the context of the text typed after it.
+    static func wordBeforeSpace(at text: String) -> String {
+        guard text.hasSuffix(" ") else { return "" }
+        let head = text.dropLast()
+        var start = head.endIndex
+        while start > head.startIndex {
+            let previous = head.index(before: start)
+            let character = head[previous]
+            guard character.isASCII, character.isLetter || character == "'" else { break }
+            start = previous
         }
-        return nil
+        return head[start...].lowercased()
     }
 
-    /// Count of single-character edits between two words. A swap of two neighbors counts as one edit.
-    static func editDistance(_ first: String, _ second: String) -> Int {
-        let a = Array(first)
-        let b = Array(second)
-        if a.isEmpty { return b.count }
-        if b.isEmpty { return a.count }
-        var table = Array(repeating: Array(repeating: 0, count: b.count + 1), count: a.count + 1)
-        for i in 0...a.count { table[i][0] = i }
-        for j in 0...b.count { table[0][j] = j }
-        for i in 1...a.count {
-            for j in 1...b.count {
-                let cost = a[i - 1] == b[j - 1] ? 0 : 1
-                table[i][j] = min(table[i - 1][j] + 1, table[i][j - 1] + 1, table[i - 1][j - 1] + cost)
-                if i > 1, j > 1, a[i - 1] == b[j - 2], a[i - 2] == b[j - 1] {
-                    table[i][j] = min(table[i][j], table[i - 2][j - 2] + 1)
-                }
-            }
+    /// Gives corrected lower-case words the capitals of the typed words. A typed word that
+    /// starts with a capital gives its capital to the word in the same place, or to the first
+    /// word when the correction changed the count of words. The word "i" and its contractions
+    /// always get their capital.
+    static func restoringCapitals(in corrected: String, from typed: String) -> String {
+        let typedWords = typed.split(separator: " ")
+        var words = corrected.split(separator: " ").map(String.init)
+        func capitalized(_ word: String) -> String {
+            word.prefix(1).uppercased() + word.dropFirst()
         }
-        return table[a.count][b.count]
+        func startsWithCapital(_ word: Substring) -> Bool {
+            word.first?.isUppercase ?? false
+        }
+        if words.count == typedWords.count {
+            for index in words.indices where startsWithCapital(typedWords[index]) {
+                words[index] = capitalized(words[index])
+            }
+        } else if let first = typedWords.first, startsWithCapital(first), !words.isEmpty {
+            words[0] = capitalized(words[0])
+        }
+        for index in words.indices where words[index] == "i" || words[index].hasPrefix("i'") {
+            words[index] = capitalized(words[index])
+        }
+        return words.joined(separator: " ")
     }
 
     static func returnKeyTitle(for type: UIReturnKeyType) -> String {

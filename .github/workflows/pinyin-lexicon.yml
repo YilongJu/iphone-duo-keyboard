@@ -1,0 +1,53 @@
+name: Pinyin lexicon
+
+# Builds Shared/lexicon-pinyin.bin from the libime dictionary and language model on a Linux
+# runner, scores the engine with it on the dev half, and uploads the file as an artifact.
+# Start it by hand:
+#   gh workflow run "Pinyin lexicon" -f pairs=1500000 -f sweep="omission=4;omission=4.5"
+on:
+  workflow_dispatch:
+    inputs:
+      pairs:
+        description: The number of word pairs to keep
+        default: '1500000'
+      sweep:
+        description: Engine settings to compare on the dev half, as sets of name=value pairs separated by semicolons
+        default: ''
+
+jobs:
+  build:
+    name: Build the Pinyin lexicon from libime data
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - name: Download the libime data
+        run: |
+          set -euo pipefail
+          mkdir -p build/libime-data && cd build/libime-data
+          curl -sSfLO https://download.fcitx-im.org/data/lm_sc.arpa-20260629.tar.zst
+          curl -sSfLO https://download.fcitx-im.org/data/dict-20260907.tar.zst
+          sha256sum *.tar.zst
+          for archive in *.tar.zst; do tar --zstd -xf "$archive"; done
+      - name: Build the lexicon
+        run: python3 scripts/typing-engine/build_pinyin_lexicon_from_libime.py build/libime-data ${{ github.event.inputs.pairs }}
+      - name: Score the engine with this lexicon on the dev half
+        env:
+          SWEEP: ${{ github.event.inputs.sweep }}
+        run: |
+          set -euo pipefail
+          mkdir -p build/engine
+          gcc -std=c11 -O2 -Wall -Wextra -Werror Engine/duo_engine.c Engine/duo_cli.c -lm -o build/engine/duo_cli
+          ls -l Shared/lexicon-pinyin.bin
+          time python3 scripts/typing-evaluation/run_duo_engine.py --task pinyin --half dev --show-misses 3
+          if [ -n "$SWEEP" ]; then
+            IFS=';' read -ra sets <<< "$SWEEP"
+            python3 scripts/typing-evaluation/sweep_duo_engine.py --task pinyin "${sets[@]}"
+          fi
+      - uses: actions/upload-artifact@v7
+        with:
+          name: lexicon-pinyin
+          path: |
+            Shared/lexicon-pinyin.bin
+            build/libime-data/lexicon-report.txt
+          if-no-files-found: error

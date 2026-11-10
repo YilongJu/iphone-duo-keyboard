@@ -41,11 +41,14 @@ EDGE_PUNCTUATION = ".,!?;:\"()[]"
 # A target word is common enough that any keyboard's word list holds it.
 TARGET_MINIMUM_ZIPF = 3.5
 # A slip that produces a real, reasonably common word is a different problem (the keyboard needs
-# the sentence to see it), so the letter categories leave those slips out.
+# the sentence to see it). The letter categories leave those slips out, and the category
+# `real_word_slip` holds them.
 TYPED_MAXIMUM_ZIPF = 3.0
 INTENDED_OVER_TYPED_ZIPF = 2.0
 # Two parts that are both common words, such as "to day", read as two intended words.
 COMMON_WORD_ZIPF = 4.0
+# Words of 2 and 3 letters are the most frequent words of all. Their slips get their own category.
+SHORT_WORD_MINIMUM_ZIPF = 5.0
 
 
 def zipf(word: str) -> float:
@@ -98,6 +101,28 @@ def make_letter_case(words, index, operator, rng, minimum_length):
     return typed, word
 
 
+def make_short_word_case(words, index, rng):
+    word = words[index]
+    if not plain(word) or not 2 <= len(word) <= 3 or zipf(word) < SHORT_WORD_MINIMUM_ZIPF:
+        return None
+    # A dropped letter leaves one letter of a two-letter word, which nobody could read back.
+    names = [name for name in sorted(noise.LETTER_OPERATORS) if name != "deletion" or len(word) == 3]
+    typed = noise.LETTER_OPERATORS[rng.choice(names)](word, rng)
+    if typed is None or not letter_slip_is_fair(word, typed):
+        return None
+    return typed, word
+
+
+def make_real_word_case(words, index, rng):
+    word = words[index]
+    if not plain(word) or len(word) < 3 or zipf(word) < TARGET_MINIMUM_ZIPF:
+        return None
+    typed = noise.LETTER_OPERATORS[rng.choice(sorted(noise.LETTER_OPERATORS))](word, rng)
+    if typed is None or typed == word or zipf(typed) < COMMON_WORD_ZIPF:
+        return None
+    return typed, word
+
+
 def make_two_word_case(words, index, operator, rng):
     if index + 1 >= len(words):
         return None
@@ -112,6 +137,15 @@ def make_two_word_case(words, index, operator, rng):
     if all(zipf(part) >= COMMON_WORD_ZIPF for part in parts):
         return None
     return typed, intended
+
+
+def make_clean_two_word_case(words, index):
+    if index + 1 >= len(words):
+        return None
+    left, right = words[index], words[index + 1]
+    if not (plain(left) and plain(right)) or min(zipf(left), zipf(right)) < TARGET_MINIMUM_ZIPF:
+        return None
+    return f"{left} {right}", f"{left} {right}"
 
 
 def make_split_word_case(words, index, operator, rng):
@@ -178,14 +212,17 @@ def build_half(half: str, sentences, rare_words, unknown_tokens) -> list[dict]:
     from_sentences("clean_common", lambda words, index, rng: make_clean_common_case(words, index))
     from_word_list("clean_rare", rare_words[half])
     from_word_list("clean_names_and_terms", unknown_tokens[half])
+    from_sentences("clean_two_words", lambda words, index, rng: make_clean_two_word_case(words, index))
     for name, operator in noise.LETTER_OPERATORS.items():
         from_sentences(name, lambda words, index, rng, operator=operator: make_letter_case(words, index, operator, rng, 4))
     from_sentences("two_errors", lambda words, index, rng: make_letter_case(words, index, noise.two_errors, rng, 7))
+    from_sentences("short_word_slip", make_short_word_case)
     for name, operator in noise.SPACE_OPERATORS_TWO_WORDS.items():
         from_sentences(name, lambda words, index, rng, operator=operator: make_two_word_case(words, index, operator, rng))
     for name, operator in noise.SPACE_OPERATORS_ONE_WORD.items():
         from_sentences(name, lambda words, index, rng, operator=operator: make_split_word_case(words, index, operator, rng))
     from_sentences("apostrophe_missing", lambda words, index, rng: make_apostrophe_case(words, index))
+    from_sentences("real_word_slip", make_real_word_case)
     return cases
 
 
@@ -206,7 +243,10 @@ def main():
         counts = {}
         for case in cases:
             counts[case["category"]] = counts.get(case["category"], 0) + 1
-        print(f"wrote {path.relative_to(ROOT)}: {len(cases)} cases from {len(sentences[half])} sentences")
+        lengths = [len(case["typed"]) for case in cases]
+        contexts = [len(case["context"].split()) for case in cases]
+        print(f"wrote {path.relative_to(ROOT)}: {len(cases)} cases from {len(sentences[half])} sentences, "
+              f"typed length {min(lengths)} to {max(lengths)}, context {min(contexts)} to {max(contexts)} words")
         for category, count in counts.items():
             sample = next(case for case in cases if case["category"] == category)
             print(f"  {category:24s} {count:4d}   e.g. {sample['typed']!r} -> {sample['intended']!r}")

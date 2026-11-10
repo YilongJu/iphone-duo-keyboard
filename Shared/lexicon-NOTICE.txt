@@ -1,0 +1,28 @@
+lexicon-english.bin and lexicon-pinyin.bin hold the word lists and word-pair counts of the typing
+engine in Engine/duo_engine.c. Both files are built from data of other projects.
+
+lexicon-pinyin.bin
+
+  Built by scripts/typing-engine/build_pinyin_lexicon_from_libime.py, in the GitHub workflow
+  .github/workflows/pinyin-lexicon.yml, from two files of the fcitx5 libime project:
+
+    https://download.fcitx-im.org/data/lm_sc.arpa-20260629.tar.zst   (language model)
+    https://download.fcitx-im.org/data/dict-20260907.tar.zst         (words with their Pinyin)
+
+  Both source files are under the GNU Lesser General Public License, version 2.1 or later
+  (https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html), and lexicon-pinyin.bin is under the
+  same license. Changes: the converter keeps the single words with their weights, the 1,500,000
+  word pairs with the highest weight, and adds the spellings "lve", "nve", "lue" and "nue". The
+  converter and the workflow in this repository rebuild the file from the two source files.
+
+lexicon-english.bin
+
+  Built by scripts/typing-engine/build_english_lexicon.py from three sources:
+
+  - SymSpell's frequency_dictionary_en_82_765.txt and frequency_bigramdictionary_en_243_342.txt,
+    MIT license, https://github.com/wolfgarbe/SymSpell
+  - Word frequencies of the wordfreq Python package, https://github.com/rspeer/wordfreq. Its code
+    is under the Apache License 2.0 and its data under CC BY-SA 4.0.
+  - Wikipedia's machine-readable list of common misspellings, CC BY-SA 4.0,
+    https://en.wikipedia.org/wiki/Wikipedia:Lists_of_common_misspellings/For_machines
+    The build removes these misspellings from the word list.
