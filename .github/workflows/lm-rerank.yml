@@ -65,13 +65,20 @@ jobs:
           if-no-files-found: error
 
   rerank:
-    name: Re-rank with ${{ matrix.model }}
+    name: Re-rank with ${{ matrix.model }}${{ matrix.suffix }}
     runs-on: ubuntu-24.04
     timeout-minutes: 340
     strategy:
       fail-fast: false
       matrix:
         model: [distilgpt2-q3, distilgpt2-q4, gpt2-q4, smollm2-135m-q4, smollm2-360m-q4, qwen2.5-0.5b-q4, qwen3-0.6b-q4]
+        suffix: ['']
+        # Controls: the model reads each reading without the text before it.
+        include:
+          - model: distilgpt2-q3
+            suffix: -no-context
+          - model: qwen2.5-0.5b-q4
+            suffix: -no-context
     steps:
       - uses: actions/checkout@v7
       - name: Build llama.cpp b4846, the scorer, the probe and the engine shim
@@ -85,7 +92,7 @@ jobs:
       - name: Measure speed and memory with the language model test, baseline and model taking turns
         run: |
           set -euo pipefail
-          out="build/lm-rerank/results/rerank-${{ matrix.model }}"
+          out="build/lm-rerank/results/rerank-${{ matrix.model }}${{ matrix.suffix }}"
           mkdir -p "$out"
           export LD_LIBRARY_PATH="$PWD/build/lm-rerank/llama/lib"
           nproc | tee "$out/runner.txt"
@@ -98,7 +105,7 @@ jobs:
       - name: Re-rank the dev cases and tune on the dev half
         run: |
           set -euo pipefail
-          out="build/lm-rerank/results/rerank-${{ matrix.model }}"
+          out="build/lm-rerank/results/rerank-${{ matrix.model }}${{ matrix.suffix }}"
           if grep -q '^load        failed' "$out/probe-${{ matrix.model }}.txt"; then
             echo "The model did not load in llama.cpp b4846, so the re-ranking does not run."
             # lm_score writes every error line of llama.cpp, which names the reason.
@@ -109,12 +116,12 @@ jobs:
           fi
           export LD_LIBRARY_PATH="$PWD/build/lm-rerank/llama/lib"
           python3 scripts/lm-rerank/rerank.py --shim build/lm-rerank/libduo_shim.so --lm build/lm-rerank/lm_score \
-            --model "$(cat build/lm-rerank/model-path.txt)" --threads 4 --name "${{ matrix.model }}" --out "$out"
+            --model "$(cat build/lm-rerank/model-path.txt)" --threads 4 --name "${{ matrix.model }}${{ matrix.suffix }}" --out "$out"             ${{ matrix.suffix == '-no-context' && '--no-context' || '' }}
       - uses: actions/upload-artifact@v7
         if: always()
         with:
-          name: rerank-${{ matrix.model }}
-          path: build/lm-rerank/results/rerank-${{ matrix.model }}
+          name: rerank-${{ matrix.model }}${{ matrix.suffix }}
+          path: build/lm-rerank/results/rerank-${{ matrix.model }}${{ matrix.suffix }}
           if-no-files-found: error
 
   summary:
