@@ -4,6 +4,8 @@ name: Typing evaluation of libime
 # Part 1 installs libime from the Ubuntu 24.04 packages.
 # Part 2 builds the libime release named in LIBIME_TAG from source, with the fcitx5 utility
 # library named in FCITX5_TAG, to reach the Correction flag that the packaged version lacks.
+# The scored runs start the adapter with a fixed address layout, so two runs give the same
+# outputs. scripts/typing-evaluation/engines/libime/README.md describes every engine name.
 on:
   push:
     branches: ['eval/libime']
@@ -52,9 +54,8 @@ jobs:
           echo "N-gram order of the packaged language model, read from the KenLM header:"
           python3 "$ADAPTER_DIR/kenlm_header.py" "$lm"
 
-      # A print for the license table of the adapter README. The scores do not depend on it.
+      # A print for the license table of the adapter README.
       - name: Print the license fields of the packaged libime data
-        continue-on-error: true
         run: |
           set -euo pipefail
           ls -l /usr/share/doc/libime-data/ /usr/share/doc/libime-data-language-model/
