@@ -107,7 +107,7 @@ Table 4. Right cases and their shares from `score.py`, with 900 clean cases and 
 | `libpinyin-correction-incomplete` | 470 (0.5222) | 37 (0.0176) | 465 (0.5167) | 30 (0.0143) | 0.0, 0.0 |
 | `libpinyin-correction-incomplete-fuzzy` | 365 (0.4056) | 141 (0.0671) | 362 (0.4022) | 152 (0.0724) | -11.7, -11.4 |
 
-The engine names within 1 point of their comparison line repair under 2 percent of the slip cases.
+The engine names within 1 point of their comparison line repair under 2 percent of the slip cases. Each run writes the lines behind Table 4 and Table 5 to `googlepinyin-libpinyin.scores.txt` in the artifact.
 
 Table 5. Right cases of 300 in each slip category, written as dev, test.
 
@@ -224,7 +224,7 @@ Table 9. The limits, their size in the runs, and their effect on a score.
 | Letters that stay unchanged | `googlepinyin`: 348 letters in 315 dev cases and 345 letters in 318 test cases. `libpinyin-default`: 2,162 letters in 1,359 dev cases. | The Latin letter counts as a wrong character. The clean cases do not hold an unchanged letter. |
 | First candidates only | Every case | The score does not show a lower candidate that a person could pick. |
 | Empty user dictionary | Every case | The score does not show the learning of an engine. |
-| One child process for each search | 3,600 to 8,200 searches for 3,000 cases | The run time is not the engine's latency. A case takes about 1 millisecond with Google Pinyin and 3 to 4 milliseconds with libpinyin. |
+| One child process for each search | 3,600 to 8,200 searches for 3,000 cases | The run time is not the engine's latency. A case takes about 1 millisecond with Google Pinyin and 3 to 5 milliseconds with libpinyin. |
 | Base flags of libpinyin | `0x380` in every libpinyin engine name | `pinyin_init` alone sets `USE_TONE` only. The three base flags come from libpinyin's own test program. |
 | Topic word lists of libpinyin | 12 extra files such as `science.bin`, not loaded | The scores use the four default tables only. |
 
