@@ -1,0 +1,40 @@
+name: Language model test on Linux
+
+# Runs the language model test of LanguageModel/duo_lm_probe.c on a Linux runner, with llama.cpp
+# built from the commit of the framework in the app, on the model file that ships. The run
+# proves that the test compiles against that version, that the model loads, and that the two
+# ways to score the candidates agree. The times belong to the Linux runner, not to an iPhone.
+on:
+  push:
+    paths:
+      - 'LanguageModel/**'
+      - 'scripts/language-model-test/**'
+      - 'scripts/ci/fetch_language_model.sh'
+      - '.github/workflows/language-model-test.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: language-model-test-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  linux:
+    name: Load and score the model on Linux
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - name: Fetch the model file
+        run: bash scripts/ci/fetch_language_model.sh model
+      - name: Build llama.cpp and run the test
+        run: bash scripts/language-model-test/run_on_linux.sh
+      - name: Stop when a step of the test did not run
+        run: grep -q '^done        every step ran$' build/language-model-test/result.txt
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: language-model-test-linux
+          path: |
+            build/language-model-test/result.txt
+            build/language-model-test/*.log
+          if-no-files-found: error
