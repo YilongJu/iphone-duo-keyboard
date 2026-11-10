@@ -1,0 +1,192 @@
+name: Typing evaluation of the Apple stock keyboard
+
+# Measures Apple's own keyboards on the typing test cases, as the reference line for the other
+# engines. The keyboard jobs tap the keys of the software keyboard in the iOS Simulator. The
+# nsspellchecker job asks the spell checker of macOS for its corrections. The collect job merges
+# the parts of the other jobs and runs score.py for each engine name and half.
+on:
+  push:
+    branches: ['eval/apple-stock-keyboard']
+    paths-ignore:
+      - '**/README.md'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: eval-apple-stock-keyboard
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  ENGINE_DIR: scripts/typing-evaluation/engines/apple-stock-keyboard
+  PARTS_DIR: build/typing-evaluation-parts
+  SAMPLE_SEED: '20261109'
+
+jobs:
+  keyboard:
+    name: ${{ matrix.engine }} ${{ matrix.half }} part ${{ matrix.shard }}
+    runs-on: xcode-27
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        # per_category is the size of the fixed-seed sample of each category. first keeps the
+        # first cases of each sampled category for a short trial, and 0 keeps all of them.
+        include:
+          - {engine: apple-english, task: english, half: dev, per_category: 40, first: 3, shard: 0, shards: 1, tap_mode: single}
+          - {engine: apple-english-batch, task: english, half: dev, per_category: 40, first: 3, shard: 0, shards: 1, tap_mode: batch}
+          - {engine: apple-pinyin, task: pinyin, half: dev, per_category: 30, first: 2, shard: 0, shards: 1, tap_mode: single}
+          - {engine: apple-pinyin-batch, task: pinyin, half: dev, per_category: 30, first: 2, shard: 0, shards: 1, tap_mode: batch}
+    env:
+      PART: apple-stock-keyboard-part-${{ matrix.engine }}-${{ matrix.half }}-${{ matrix.shard }}
+    steps:
+      - uses: actions/checkout@v7
+      - name: Print the versions of macOS, Xcode and the simulator runtimes
+        run: |
+          sw_vers
+          xcodebuild -version
+          xcrun simctl list runtimes
+          python3 --version
+      - name: Install XcodeGen
+        run: |
+          brew install xcodegen
+          xcodegen --version
+      - name: Sample the cases with a fixed seed
+        run: |
+          set -euo pipefail
+          part="$PARTS_DIR/$PART"
+          mkdir -p "$part"
+          python3 "$ENGINE_DIR/sample_cases.py" \
+            --cases "scripts/typing-evaluation/cases/${{ matrix.task }}.${{ matrix.half }}.jsonl" \
+            --per-category ${{ matrix.per_category }} --first ${{ matrix.first }} --seed "$SAMPLE_SEED" \
+            --shard ${{ matrix.shard }} --shards ${{ matrix.shards }} \
+            --sample-out "$part/sample.jsonl" --shard-out "$part/cases.jsonl"
+          printf '{"kind": "keyboard", "engine": "%s", "task": "%s", "half": "%s", "shard": %s, "shards": %s, "tap_mode": "%s", "per_category": %s, "first": %s, "seed": %s}\n' \
+            "${{ matrix.engine }}" "${{ matrix.task }}" "${{ matrix.half }}" "${{ matrix.shard }}" "${{ matrix.shards }}" \
+            "${{ matrix.tap_mode }}" "${{ matrix.per_category }}" "${{ matrix.first }}" "$SAMPLE_SEED" > "$part/part.json"
+          cat "$part/part.json"
+      - name: Generate the Xcode project
+        run: |
+          cd "$ENGINE_DIR"
+          xcodegen generate
+      - name: Create a new simulator
+        run: |
+          set -euo pipefail
+          udid=$(bash "$ENGINE_DIR/simulator.sh" create "typing-evaluation-${{ matrix.engine }}")
+          echo "simulator $udid"
+          echo "SIMULATOR_UDID=$udid" >> "$GITHUB_ENV"
+      - name: Build the host app and the UI test
+        run: |
+          set -euo pipefail
+          log="$PARTS_DIR/$PART/xcodebuild-build.log"
+          if ! xcodebuild build-for-testing \
+              -project "$ENGINE_DIR/StockKeyboardHost.xcodeproj" -scheme StockKeyboardHost \
+              -destination "platform=iOS Simulator,id=$SIMULATOR_UDID" \
+              -derivedDataPath build/apple-stock-keyboard-derived > "$log" 2>&1; then
+            grep -n -E "error|warning: " "$log" | head -n 120 || true
+            tail -n 60 "$log"
+            exit 1
+          fi
+          grep -E "warning: " "$log" | sort -u | head -n 40 || true
+          tail -n 4 "$log"
+      - name: Boot the simulator and set its keyboard
+        run: bash "$ENGINE_DIR/simulator.sh" configure "$SIMULATOR_UDID" "${{ matrix.task }}" 2>&1 | tee "$PARTS_DIR/$PART/simulator.log"
+      - name: Type the cases on the stock keyboard
+        run: |
+          set -euo pipefail
+          # xcodebuild hands a variable to the test process when its name starts with TEST_RUNNER_.
+          export TEST_RUNNER_EVAL_TASK="${{ matrix.task }}"
+          export TEST_RUNNER_EVAL_TAP_MODE="${{ matrix.tap_mode }}"
+          export TEST_RUNNER_EVAL_CASES_FILE="$PWD/$PARTS_DIR/$PART/cases.jsonl"
+          export TEST_RUNNER_EVAL_OUTPUT_DIR="$PWD/$PARTS_DIR/$PART"
+          xcodebuild test-without-building \
+            -project "$ENGINE_DIR/StockKeyboardHost.xcodeproj" -scheme StockKeyboardHost \
+            -destination "platform=iOS Simulator,id=$SIMULATOR_UDID" \
+            -derivedDataPath build/apple-stock-keyboard-derived \
+            -parallel-testing-enabled NO -test-timeouts-enabled NO 2>&1 | tee "$PARTS_DIR/$PART/xcodebuild-test.log"
+      - name: Show the outputs of this part
+        if: always()
+        run: python3 "$ENGINE_DIR/collect_outputs.py" --parts "$PARTS_DIR" --out build/typing-evaluation
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: ${{ env.PART }}
+          path: build/typing-evaluation-parts/${{ env.PART }}
+          if-no-files-found: error
+
+  nsspellchecker:
+    name: apple-nsspellchecker on all English cases
+    runs-on: xcode-27
+    timeout-minutes: 30
+    env:
+      PART: apple-stock-keyboard-part-nsspellchecker
+    steps:
+      - uses: actions/checkout@v7
+      - name: Print the versions of macOS, Xcode and Swift
+        run: |
+          sw_vers
+          xcodebuild -version
+          swiftc --version
+      - name: Build the command-line tool
+        run: |
+          set -euo pipefail
+          mkdir -p build/apple-nsspellchecker
+          swiftc -O "$ENGINE_DIR/NSSpellCheckerTool/main.swift" -o build/apple-nsspellchecker/nsspellchecker
+      - name: Correct each token of all English cases
+        run: |
+          set -euo pipefail
+          outputs="$PARTS_DIR/$PART/outputs"
+          for half in dev test; do
+            for mode in context word; do
+              if [ "$mode" = context ]; then name=apple-nsspellchecker; else name=apple-nsspellchecker-word-alone; fi
+              mkdir -p "$outputs/$name"
+              build/apple-nsspellchecker/nsspellchecker "$mode" \
+                "scripts/typing-evaluation/cases/english.$half.jsonl" "$outputs/$name/english.$half.jsonl"
+            done
+          done
+          echo '{"kind": "outputs"}' > "$PARTS_DIR/$PART/part.json"
+      - name: Score the outputs of this part
+        run: |
+          set -euo pipefail
+          python3 "$ENGINE_DIR/collect_outputs.py" --parts "$PARTS_DIR" --out build/typing-evaluation
+          bash "$ENGINE_DIR/score_outputs.sh" build/typing-evaluation
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: ${{ env.PART }}
+          path: build/typing-evaluation-parts/${{ env.PART }}
+          if-no-files-found: error
+
+  collect:
+    name: Merge the parts and score each engine name
+    needs: [keyboard, nsspellchecker]
+    if: ${{ !cancelled() }}
+    runs-on: xcode-27
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - name: Download the parts of this run
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$PARTS_DIR"
+          gh run download "${{ github.run_id }}" --repo "${{ github.repository }}" \
+            --pattern 'apple-stock-keyboard-part-*' --dir "$PARTS_DIR"
+          ls "$PARTS_DIR"/*
+      - name: Merge the parts into one folder per engine name
+        run: python3 "$ENGINE_DIR/collect_outputs.py" --parts "$PARTS_DIR" --out build/typing-evaluation
+      - name: Score each engine name and half
+        run: bash "$ENGINE_DIR/score_outputs.sh" build/typing-evaluation
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: typing-evaluation-apple-stock-keyboard
+          path: build/typing-evaluation
+          if-no-files-found: error
