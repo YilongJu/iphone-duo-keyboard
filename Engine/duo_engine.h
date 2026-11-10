@@ -7,6 +7,10 @@
  probable the words are, alone and after the one or two words before them, and returns the best
  reading.
 
+ In English a neighbor key can also be a symbol or digit key: "[lease" reads as "please" and
+ "2hat" as "what". Such a key stands only for a letter beside it. The engine never drops it,
+ so punctuation that a person typed on purpose stays in the text.
+
  One code base serves both languages. English: the words are English words and a space separates
  them. Pinyin: the words are Chinese words spelled in Pinyin letters, and they follow each other
  with nothing between them.
@@ -90,6 +94,18 @@ typedef struct {
     float extra_space;        /* a space typed inside a word */
     float space_for_letter;   /* a space typed in place of a letter from the row above the space bar */
     float shifted_space;      /* a space typed one key early or one key late */
+    /* A symbol or digit key that a person typed on purpose (English only). A key right before a
+       word, as in "[note", ".net" and "-ish", and a digit right after a word, as in "mp3". Each
+       cost states how seldom people type that key there on purpose. The text as typed is read
+       as the word with this cost when the lexicon holds the word, and the reading that takes
+       the key for a slip must be more likely than that. */
+    float bracket_before_word;
+    float dot_before_word;
+    float comma_before_word;
+    float semicolon_before_word;
+    float dash_before_word;
+    float digit_before_word;
+    float digit_after_word;
     /* Share of the word-pair statistic in a word's probability, from 0 to 1. A lexicon with a
        back-off model does not use this share. */
     float pair_weight;
@@ -138,6 +154,8 @@ int duo_params_set(duo_params *params, const char *name, float value);
 
 /* Reads typed English text and writes the text the person most likely meant.
    `typed` holds one or a few words in lower case: letters, apostrophes and single spaces.
+   A word of two or more letters may also hold one symbol or digit key that sits beside a
+   letter key: a digit or "[" at any place, or one of "-" ";" "," "." in front of the word.
    `previous_word` is the word before the typed text, in lower case, or an empty string.
    The result equals `typed` when no other reading is clearly more likely.
    Returns 1, or 0 when `typed` is empty, too long, or holds other characters. */

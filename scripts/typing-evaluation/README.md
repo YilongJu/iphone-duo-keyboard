@@ -6,6 +6,7 @@ This folder scores how well a typing engine repairs slips and how often it leave
 input alone. Every engine, ours and each open-source one, reads the same test cases.
 
 1. Build the cases: `uv run --with wordfreq python scripts/typing-evaluation/build_english_cases.py`,
+   `uv run --with wordfreq python scripts/typing-evaluation/build_english_symbol_cases.py`,
    `uv run --with pypinyin --with opencc-python-reimplemented python scripts/typing-evaluation/build_pinyin_cases.py`
    and `uv run --with wordfreq python scripts/typing-evaluation/build_external_english_cases.py`.
 2. Run an engine on the dev half and write one output per case.
@@ -23,7 +24,7 @@ Table 1. The English task, in the eight rows that define a machine learning task
 | Row | English autocorrection |
 | --- | --- |
 | Input | Two strings: `context`, the 0 to 11 lower-case words before the typed text, and `typed`, 2 to 23 characters from the set a to z, apostrophe and space. |
-| Model | A typing engine that maps the two strings to one string. Our engine has 21 hand-set costs and does not train. Each open-source engine runs with its stock data. |
+| Model | A typing engine that maps the two strings to one string. Our engine has 21 hand-set costs, and 7 more for symbol and digit keys, and does not train. Each open-source engine runs with its stock data. |
 | Output | One string: the text the engine leaves in the field after the person presses space. |
 | Target | `intended`, the lower-case text the person meant, 1 or 2 words. The slip generator made `typed` from `intended`, so the target is exact by construction. For the published misspelling lists, the list gives the target. |
 | Training signal | None. An engine's free settings are chosen on the dev half by the share of letter-slip and space-slip cases repaired, with the share of clean cases kept at 99 percent or more. |
@@ -69,6 +70,12 @@ Table 3. The categories. A name that starts with `clean` holds input without a s
 | `apostrophe_missing` | English | alone | A contraction without its apostrophe | youd to you'd |
 | `real_word_slip` | English | alone | A letter slip that gives a common real word | ad to and |
 | `real_misspelling_birkbeck`, `_holbrook`, `_aspell` | English | alone | A spelling mistake from a published list | divison to division |
+| `symbol_first_letter` | English symbols | symbol slips | A symbol or digit key in place of the first letter | [lease to please |
+| `symbol_inner_letter` | English symbols | symbol slips | A digit or `[` in place of a later letter | wh3n to when |
+| `symbol_first_letter_two_words` | English symbols | symbol slips | Two typed words, the slip on the first letter of the second | tell ;ike to tell like |
+| `symbol_plus_letter_slip` | English symbols | symbol slips | A symbol or digit key in place of the first letter, and one letter slip after it | 0robabyl to probably |
+| `clean_symbol_token` | English symbols | clean symbols | None, a real token with a digit or a symbol | mp3 to mp3 |
+| `clean_bracket_or_dot_word` | English symbols | clean symbols | None, a real word right after `[`, `.`, `,`, `;` or `-` | [note to [note |
 | `clean` | Pinyin | clean | None, clauses of 2 to 20 characters | taduinide to 它对你的 |
 | `fuzzy_sound` | Pinyin | alone | One sound swapped for its dialect twin, such as n and l | lixihuan to 你喜欢 |
 
@@ -82,6 +89,59 @@ categories:
 - `apostrophe_missing` holds the contractions that are at least ten times as frequent as their
   form without the apostrophe. Our word list uses the same rule, so our engine's score in this
   category is high by construction.
+
+## Cases with a symbol or digit key in place of a letter
+
+A finger that aims at a letter can land on a symbol or digit key beside it. The files
+`cases/english-symbols.dev.jsonl` and `cases/english-symbols.test.jsonl` hold those slips. They
+stand apart from `english.*.jsonl`, so the scores of every engine on the other files stay as
+they are. An engine reads them by the English rules, and `typed` also holds digits and the
+characters `[ - ; , .` and, in the clean tokens, other symbols.
+
+Table 4. The symbol and digit keys beside each letter key. `symbol_keys.py` derives the table
+from the key positions in `Shared/keyboard-layout.json`, for the wide layout and the compact
+layout together.
+
+| Key | Letters beside it | Key | Letters beside it |
+| --- | --- | --- | --- |
+| `1` | q | `9` | i, o |
+| `2` | q, w | `0` | o, p |
+| `3` | w, e | `-` | p |
+| `4` | e, r | `[` | p |
+| `5` | r, t | `;` | l, p |
+| `6` | t, y | `,` | k, l, m |
+| `7` | y, u | `.` | l, and n in the compact layout |
+| `8` | u, i | | |
+
+The more letters a key sits beside, the more words one typed text can stand for: `,ost` can be
+lost or most, and only the words around it tell them apart.
+
+- Every symbol key gets the same count of slip cases, 20 per category and half, and 27 for
+  `symbol_inner_letter`. One typed text appears at most 3 times in a category.
+- A digit or `[` can replace a letter at any place. The keys `-`, `;`, `,` and `.` end a word
+  or join two words, so the cases use them only in front of a word.
+- `clean_symbol_token` reads `inputs/symbol_tokens.txt`: hand-picked tokens such as 2nd, 7am,
+  mp3 and h2o, plus the tokens with one digit that wordfreq lists at Zipf 2.5 or more.
+- `clean_bracket_or_dot_word` gives each of the five symbols 60 cases. Half of them hold a word
+  that is one key from another real word, such as `[art` beside part.
+
+Text such as `[art` can be part with a slip or art after a bracket, and only word frequency
+separates the two readings. A slip case needs the intended word to be at least 1.25 Zipf more
+frequent than the word after the symbol: please over lease is 1.49. A clean case needs every
+word that a neighbor letter would give to be at most 0.5 Zipf more frequent than the typed
+word: part over art is 0.49. The generator leaves out the text between the two limits. A token
+with a digit is judged as a whole by the rule for letter slips, because wordfreq lists real
+tokens such as 5pm.
+
+Our engine (`Engine/duo_engine.c`) reads a symbol or digit key only as a letter beside it. It
+never takes the key for an extra key, and it leaves out the readings that give the text without
+the key, so `[please` and `a[pple` stay as typed. Its 7 costs for symbol keys are chosen on the
+dev half by the share of symbol slips repaired, with the clean symbol cases kept at 99 percent
+or more. Run it with
+`python3 scripts/typing-evaluation/run_duo_engine.py --task english-symbols --half dev`.
+
+A comma, a period or a semicolon typed inside or after a word ends that word, and the keyboard
+corrects the letters before it at once. The cases do not hold that slip.
 
 ## Paired Pinyin cases
 
@@ -97,6 +157,13 @@ from the engine's vocabulary and word choice.
   misspelling lists and the Apple measurement do not share it.
 - The generated letter slips use neighbor keys only, and they leave out a slip that produces a
   common real word (those sit in `real_word_slip`).
+- The symbol cases do not say how often a person types a symbol in front of a word on purpose.
+  The two frequency limits above set which text counts as a slip, and a different limit would
+  move the scores of the symbol groups.
+- Our engine refuses a word that holds more than one symbol or digit, fewer than two letters
+  beside a symbol or digit, a symbol that is not beside a letter key, or `-`, `;`, `,` or `.`
+  after its first place. Such a word stays as typed whatever the costs are. 66 of the 129 dev
+  cases of `clean_symbol_token` are of that kind, so the costs decide only the other 63.
 - The Pinyin targets come from pypinyin readings, and a wrong reading gives an unreachable target.
 
 ## Engine outputs
@@ -116,10 +183,13 @@ the engine's `output`. A case without an output counts as wrong.
 | File | Content |
 | --- | --- |
 | `keyboard_noise.py` | The slip operators and the key geometry |
+| `symbol_keys.py` | The symbol and digit keys beside each letter, from the layout file, and the check that the engine and the keyboard hold the same table |
 | `build_english_cases.py`, `build_pinyin_cases.py` | The case generators |
+| `build_english_symbol_cases.py` | The generator of the cases with a symbol or digit key in place of a letter |
 | `build_external_english_cases.py` | Cases from published misspelling lists, written to `build/` and kept out of git |
 | `inputs/names_and_terms.txt` | The hand-written list behind `clean_names_and_terms` |
-| `cases/` | The generated cases: 5,173 English per half, 5,754 Pinyin in the dev half and 5,777 in the test half |
+| `inputs/symbol_tokens.txt` | The list behind `clean_symbol_token` |
+| `cases/` | The generated cases: 5,173 English per half, 1,626 English symbol cases in the dev half and 1,625 in the test half, 5,754 Pinyin in the dev half and 5,777 in the test half |
 | `score.py` | The scorer |
 | `run_duo_engine.py` | Runs our engine (`Engine/duo_engine.c`) and scores it |
 | `Tests/TypingEvaluationTests.swift` | Runs the shipping Swift keyboard code over the cases in the iOS Simulator |

@@ -35,6 +35,8 @@ jobs:
           set -euo pipefail
           python3 -m pip install --quiet --break-system-packages wordfreq
           python3 scripts/typing-evaluation/build_external_english_cases.py
+      - name: Check the symbol keys beside each letter against the layout file
+        run: python3 scripts/typing-evaluation/symbol_keys.py --check
       - name: Build the engine, once with memory checks and once for speed
         run: |
           set -euo pipefail
@@ -47,7 +49,7 @@ jobs:
       - name: Run the dev cases under the memory checks
         run: |
           set -euo pipefail
-          for task in english pinyin; do
+          for task in english english-symbols pinyin; do
             python3 scripts/typing-evaluation/run_duo_engine.py --task "$task" --half dev \
               --cli build/engine/duo_cli_checked > /dev/null
           done
@@ -58,6 +60,7 @@ jobs:
           halves="${{ github.event.inputs.halves || 'dev' }}"
           for half in $halves; do
             python3 scripts/typing-evaluation/run_duo_engine.py --task english --half "$half" ${{ github.event.inputs.english_settings }}
+            python3 scripts/typing-evaluation/run_duo_engine.py --task english-symbols --half "$half" ${{ github.event.inputs.english_settings }}
             python3 scripts/typing-evaluation/run_duo_engine.py --task pinyin --half "$half" ${{ github.event.inputs.pinyin_settings }}
           done
       - uses: actions/upload-artifact@v7
