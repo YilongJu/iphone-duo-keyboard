@@ -106,12 +106,17 @@ def main():
     print("\nTable 3. Size, speed on the Linux runner (2 threads, the model and distilgpt2 Q3_K_M on the same runner) "
           "and the phone estimates. Estimate A scales the phone's 8-candidate time (23.4 ms) by the per-token ratio, "
           "estimate B by the ratio of the 8-candidate times. The flags use the larger estimate.\n")
-    print("| Model | file MB | per token ms, model / baseline | per-token ratio | phone per token ms | "
+    print("| Model | runner processor | file MB | per token ms, model / baseline | per-token ratio | phone per token ms | "
           "phone 8 candidates ms, A | phone 8 candidates ms, B | anon growth MB, model / baseline | phone extra MB | flags |")
-    print("| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |")
+    print("| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |")
     for name, probe, base, result in rows:
+        runner_file = folder / f"rerank-{name}" / "runner.txt"
+        processor = ""
+        if runner_file.exists():
+            found = re.search(r"Model name:\s*(.+)", runner_file.read_text())
+            processor = found.group(1).strip() if found else ""
         if "per_token_ms" not in probe or "per_token_ms" not in base:
-            print(f"| {name} | {probe.get('file_mb', '')} | {probe.get('load_failed', 'not measured')} | | | | | | | |")
+            print(f"| {name} | {processor} | {probe.get('file_mb', '')} | {probe.get('load_failed', 'not measured')} | | | | | | | |")
             continue
         ratio = probe["per_token_ms"] / base["per_token_ms"]
         estimate_a = PHONE_CANDIDATES_MS * ratio
@@ -122,7 +127,7 @@ def main():
             flags.append("latency over 50 ms")
         if phone_memory > FLAG_MEMORY_MB:
             flags.append("memory over 100 MB")
-        print(f"| {name} | {probe['file_mb']:.1f} | {probe['per_token_ms']:.2f} / {base['per_token_ms']:.2f} | {ratio:.2f} | "
+        print(f"| {name} | {processor} | {probe['file_mb']:.1f} | {probe['per_token_ms']:.2f} / {base['per_token_ms']:.2f} | {ratio:.2f} | "
               f"{PHONE_PER_TOKEN_MS * ratio:.2f} | {estimate_a:.1f} | {estimate_b:.1f} | "
               f"{probe['anon_growth_mb']:.1f} / {base['anon_growth_mb']:.1f} | {phone_memory:.1f} | {', '.join(flags) or 'none'} |")
 
