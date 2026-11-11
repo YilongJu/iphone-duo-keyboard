@@ -309,6 +309,7 @@ duo_params duo_english_params(void) {
     params.reading_cost_weight = 1.0f;
     params.spaces_between_words = 1;
     params.beam = 8;
+    params.apostrophe_readings = 1;
     return params;
 }
 
@@ -332,6 +333,7 @@ duo_params duo_pinyin_params(void) {
     params.spaces_between_words = 0;
     /* Many Chinese words share one spelling, and each of them is its own reading. */
     params.beam = 32;
+    params.apostrophe_readings = 0;
     return params;
 }
 
@@ -370,6 +372,7 @@ int duo_params_set(duo_params *params, const char *name, float value) {
     FIELD(reading_cost_weight)
 #undef FIELD
     if (strcmp(name, "beam") == 0) { params->beam = (int)value; return 1; }
+    if (strcmp(name, "apostrophe_readings") == 0) { params->apostrophe_readings = value != 0.0f; return 1; }
     return 0;
 }
 
@@ -1365,6 +1368,78 @@ static int compare_readings_by_score(const void *first, const void *second) {
     return (a < b) - (a > b);
 }
 
+/* The typed text with one word changed: `word_start` to `word_end` replaced by `word`. Returns 0
+   when the text does not fit. */
+static int replace_word(const char *typed, int word_start, int word_end, const char *word, char *text) {
+    size_t head = (size_t)word_start, middle = strlen(word), tail = strlen(typed + word_end);
+    if (head + middle + tail + 1 > DUO_TEXT_SIZE) return 0;
+    memcpy(text, typed, head);
+    memcpy(text + head, word, middle);
+    memcpy(text + head + middle, typed + word_end, tail + 1);
+    return 1;
+}
+
+/* Adds the readings that differ from the typed text in one apostrophe of one word: an
+   apostrophe the person left out ("its going" read as "it's going"), and an apostrophe typed in
+   a word that the lexicon also holds without it ("it's tail" read as "its tail"). Each reading
+   gets the score of its words read exactly, less the cost of that one slip.
+
+   The search keeps one reading per last word, so in "its going" the reading "it's going" loses
+   to the text as typed inside the search and never reaches the list. These readings let a
+   caller that ranks the readings with the words around them, such as the language model of the
+   keyboard, see both forms. duo_correct_english does not read them, so its choice stays. */
+static void add_apostrophe_readings(
+    const duo_lexicon *lexicon, const duo_params *params, const char *typed, const char *previous_word,
+    reading_pool_t *pool) {
+    int length = (int)strlen(typed);
+    uint32_t previous = NO_WORD;
+    if (previous_word != NULL && previous_word[0] != 0 && strlen(previous_word) <= MAX_DEPTH) {
+        previous = find_word(lexicon, previous_word, (int)strlen(previous_word));
+    }
+    char word[MAX_DEPTH + 2];
+    char text[DUO_TEXT_SIZE];
+    int start = 0;
+    while (start < length) {
+        int end = start;
+        int apostrophes = 0, letters_only = 1;
+        while (end < length && typed[end] != ' ') {
+            if (typed[end] == '\'') apostrophes++;
+            else if (!is_letter(typed[end])) letters_only = 0;
+            end++;
+        }
+        int word_length = end - start;
+        if (letters_only && word_length >= 2 && word_length < MAX_DEPTH) {
+            if (apostrophes == 0) {
+                /* An apostrophe between two letters of the word. */
+                for (int place = 1; place < word_length; place++) {
+                    memcpy(word, typed + start, (size_t)place);
+                    word[place] = '\'';
+                    memcpy(word + place + 1, typed + start + place, (size_t)(word_length - place));
+                    word[word_length + 1] = 0;
+                    if (find_exact_node(lexicon, word, word_length + 1) == NO_WORD) continue;
+                    if (!replace_word(typed, start, end, word, text)) continue;
+                    int all_known;
+                    float score = score_as_typed(lexicon, params, text, (int)strlen(text), previous, &all_known);
+                    pool_add(pool, text, score - params->omission_of_apostrophe, params->omission_of_apostrophe);
+                }
+            } else if (apostrophes == 1) {
+                int bare_length = 0;
+                for (int index = start; index < end; index++) {
+                    if (typed[index] != '\'') word[bare_length++] = typed[index];
+                }
+                word[bare_length] = 0;
+                if (bare_length >= 1 && find_exact_node(lexicon, word, bare_length) != NO_WORD
+                    && replace_word(typed, start, end, word, text)) {
+                    int all_known;
+                    float score = score_as_typed(lexicon, params, text, (int)strlen(text), previous, &all_known);
+                    pool_add(pool, text, score - params->insertion, params->insertion);
+                }
+            }
+        }
+        start = end + 1;
+    }
+}
+
 int duo_english_readings(
     const duo_lexicon *lexicon, const duo_params *params,
     const char *previous_word, const char *typed, duo_reading *readings, int capacity) {
@@ -1386,6 +1461,8 @@ int duo_english_readings(
     as_typed->slip_cost = 0.0f;
     as_typed->as_typed = 1;
     as_typed->chosen = 0;
+
+    if (params->apostrophe_readings) add_apostrophe_readings(lexicon, params, typed, previous_word, &pool);
 
     int chosen_index = -1;
     for (int index = 0; index < pool.count; index++) {
