@@ -110,6 +110,7 @@ const state = {
 function normalize(key, layer) {
   if (typeof key === "string") return { type: "char", base: key, w: 1, layer };
   if (Array.isArray(key)) return { type: "dual", base: key[0], alt: key[1], w: 1, layer };
+  if (key.c !== undefined && key.s !== undefined) return { type: "dual", base: key.c, alt: key.s, w: key.w ?? 1, layer };
   if (key.c !== undefined) return { type: "char", base: key.c, w: key.w ?? 1, layer };
   if (FN_LABEL[key.f] === undefined) throw new Error("Unknown key: " + key.f);
   return { type: "fn", name: key.f, w: key.w ?? 1, layer };
