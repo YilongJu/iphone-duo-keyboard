@@ -35,6 +35,26 @@ from score import normalize  # noqa: E402
 
 # The setting of the SmolLM2-135M LoRA fine-tune (harness_trace.py, KeyboardLanguageModel.rule).
 TUNED = {"weight": 1.0, "margin_from_typed": 0.0, "margin_to_typed": 4.0, "margin_other": 2.0}
+# The same setting with the apostrophe step, for rerank.choose.
+SETTING = rerank.Setting(weight=1.0, margin_from_typed=0, margin_to_typed=4, margin_other=2, space_after=1,
+                         margin_apostrophe=1.0, apostrophe_scope="next", apostrophe_score="slips")
+
+
+class RecordedScores:
+    """The model's numbers of one recorded correction, behind the method rerank.choose calls."""
+
+    def __init__(self, entry: dict):
+        self.scores = {r["text"]: (float(r["log_probability"]), float(r["space_after"])) for r in entry["readings"]}
+
+    def reading_scores(self, context, readings, typed):
+        return self.scores
+
+
+def recorded_choice(entry: dict) -> str:
+    """The choice of rerank.choose, apostrophe step included, on one run's recorded numbers."""
+    readings = [{"text": r["text"], "score": r["engine_score"], "slips": r["slip_cost"], "as_typed": r["as_typed"],
+                 "chosen": r["chosen"]} for r in entry["readings"]]
+    return rerank.choose(readings, "", SETTING, RecordedScores(entry), None)
 GROUPS = ["clean", "letter_slips", "space_slips", "symbol_slips", "clean_symbols"]
 # The harness numbers of the arm smollm2-lora-seed1 in scripts/lm-finetune/README.md, Table 2, on
 # the branch engine/lm-finetune: right cases per group, then all dev cases.
@@ -176,8 +196,8 @@ def main():
         for key, entry in run["trace"].items():
             if entry["result"] != "scores":
                 continue
-            rule = decision(entry)
-            if rule["winner"] != entry["choice"]:
+            rule = recorded_choice(entry)
+            if rule != entry["choice"]:
                 differences["rule mismatches"].append({"run": run["name"], "id": key[0], "step": key[1],
                                                        "choice": entry["choice"], "rule": rule})
     failed |= bool(differences["rule mismatches"])

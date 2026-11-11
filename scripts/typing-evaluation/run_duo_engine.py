@@ -7,7 +7,8 @@ A name=value argument sets one engine parameter for this run, such as margin_kno
 The outputs go to build/typing-evaluation/duo-engine/. The English run also reads the cases
 from published misspelling lists in build/typing-evaluation/external/, when that file exists.
 The task english-symbols runs the English engine on cases/english-symbols.HALF.jsonl, the cases
-with a symbol or digit key in place of a letter.
+with a symbol or digit key in place of a letter. The task english-apostrophe-words runs it on
+cases/english-apostrophe-words.HALF.jsonl, the words with and without an apostrophe.
 """
 import argparse
 import json
@@ -22,7 +23,7 @@ EXTERNAL = ROOT / "build" / "typing-evaluation" / "external"
 OUTPUT = ROOT / "build" / "typing-evaluation" / "duo-engine"
 LEXICON = {"english": ROOT / "Shared" / "lexicon-english.bin", "pinyin": ROOT / "Shared" / "lexicon-pinyin.bin"}
 # The task names of the command line, each with the engine mode and the scoring rules it uses.
-ENGINE_TASK = {"english": "english", "english-symbols": "english", "pinyin": "pinyin"}
+ENGINE_TASK = {"english": "english", "english-symbols": "english", "english-apostrophe-words": "english", "pinyin": "pinyin"}
 
 
 def case_files(task: str, half: str) -> list[Path]:

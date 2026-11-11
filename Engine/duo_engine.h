@@ -127,6 +127,10 @@ typedef struct {
     int spaces_between_words;
     /* How many partial readings the search keeps at each position, from 1 to 64. */
     int beam;
+    /* 1 adds to duo_english_readings the readings that differ from the typed text in one
+       apostrophe of one word, such as "it's going" for "its going". 0 leaves them out. The
+       choice of duo_correct_english is the same either way. */
+    int apostrophe_readings;
 } duo_params;
 
 typedef struct {
