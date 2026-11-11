@@ -12,7 +12,8 @@ if [ "$model" != "-" ]; then
   model_arguments=(--lm "$HOME/lmft/bin/lm_score" --model "$model" --prompt-format "$format")
 fi
 mkdir -p "$HOME/lmft2/results"
-nice -n 19 python3 scripts/lm-finetune2/evaluate2.py --shim "$HOME/lmft/bin/libduo_shim.so" "${model_arguments[@]}" \
+# One scoring job at a time: a later job waits for the lock file.
+flock "$HOME/lmft2/eval.lock" nice -n 19 python3 scripts/lm-finetune2/evaluate2.py --shim "$HOME/lmft/bin/libduo_shim.so" "${model_arguments[@]}" \
   --threads 2 --round1 "$root/lm-finetune" --data build/lm-finetune2/data --name "$name" \
   --out "$HOME/lmft2/results/$name" "$@" > "$HOME/lmft2/results/$name.log" 2>&1
 grep -E '^(tuned|ship) ' "$HOME/lmft2/results/$name.log" | cut -c1-600
