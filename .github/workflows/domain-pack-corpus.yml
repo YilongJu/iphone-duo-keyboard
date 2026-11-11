@@ -1,0 +1,42 @@
+name: Domain pack corpus
+
+# Reads the public domain text of the "AI and software" vocabulary pack and counts its words:
+# scripts/domain-pack/collect_corpus.py. The counts and the held-out sentences come back as an
+# artifact, and scripts/domain-pack/build_pack.py turns them into the pack. GitHub starts a
+# dispatched workflow only from the default branch, so a push starts this one.
+on:
+  push:
+    branches: [engine/domain-pack]
+    paths:
+      - 'scripts/domain-pack/collect_corpus.py'
+      - 'scripts/domain-pack/sources.json'
+      - '.github/workflows/domain-pack-corpus.yml'
+
+concurrency:
+  group: domain-pack-corpus-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  corpus:
+    name: Read the sources and count the words
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install 7z
+        run: command -v 7z || (sudo apt-get update && sudo apt-get install -y p7zip-full)
+      - name: Collect the corpus
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          python3 scripts/domain-pack/collect_corpus.py --out build/domain-pack/corpus | tee build-log.txt
+          rm -rf build/domain-pack/corpus/raw
+          mv build-log.txt build/domain-pack/corpus/log.txt
+          ls -l build/domain-pack/corpus
+          (cd build/domain-pack/corpus && sha256sum counts.tsv pairs.tsv totals.json sentences.dev.jsonl sentences.test.jsonl | tee sha256.txt)
+      - uses: actions/upload-artifact@v7
+        with:
+          name: domain-pack-corpus
+          path: build/domain-pack/corpus
+          if-no-files-found: error
