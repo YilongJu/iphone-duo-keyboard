@@ -1102,6 +1102,15 @@ final class KeyboardLayoutTests: XCTestCase {
         }
     }
 
+    /// The wide number row gives each digit key a width and keeps its shifted character.
+    func testAWideDigitKeyKeepsItsShiftedCharacterAndItsWidth() {
+        let layout = KeyboardLayout.make(style: .wide, layer: .letters, showsGlobe: true)
+        let one = layout.rows[1].first { $0.kind == .dual("1", "!") }
+        XCTAssertNotNil(one)
+        XCTAssertEqual(one?.weight ?? 0, 0.9, accuracy: 0.0001)
+        XCTAssertGreaterThan(layout.rows[1].last?.weight ?? 0, 1.5)
+    }
+
     func testASymbolLayerHasOneKeyBackToTheLetters() {
         for style in [LayoutStyle.wide, .compact] {
             for layer in [KeyboardLayer.symbols, .more] {
