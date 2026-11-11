@@ -207,6 +207,39 @@ enum KeyboardTextLogic {
         return longEnough ? String(sentence) : nil
     }
 
+    /// The sentence that the person is still writing, for a pause in the typing, or nil. It runs
+    /// from the last end of a sentence or line break to the cursor. A word that the person is
+    /// still typing is not read, so English text must end in a space. Chinese text has no
+    /// spaces, so it may end in a Chinese character. A sentence that ends in a mark is left to
+    /// `finishedSentence(before:)`.
+    static func unfinishedSentence(before text: String) -> String? {
+        guard let end = text.last else { return nil }
+        let endsInChinese = end.unicodeScalars.contains { $0.value >= 0x4E00 && $0.value <= 0x9FFF }
+        guard end == " " || endsInChinese else { return nil }
+        var body = Substring(text)
+        while body.last == " " { body = body.dropLast() }
+        guard let last = body.last, !sentenceEnds.contains(last), !clauseEnds.contains(last), !last.isNewline
+        else { return nil }
+        var start = body.endIndex
+        while start > body.startIndex {
+            let previous = body.index(before: start)
+            if sentenceEnds.contains(body[previous]) || body[previous].isNewline { break }
+            start = previous
+        }
+        var sentence = body[start...]
+        while sentence.first == " " { sentence = sentence.dropFirst() }
+        guard sentence.count <= 300 else { return nil }
+        let holdsChinese = sentence.unicodeScalars.contains { $0.value >= 0x4E00 && $0.value <= 0x9FFF }
+        let longEnough = holdsChinese ? sentence.count >= 4 : sentence.split(separator: " ").count >= 3
+        return longEnough ? String(sentence) : nil
+    }
+
+    /// The text right before the cursor that a fix may replace: a finished sentence, or the
+    /// sentence the person is still writing.
+    static func sentenceToProofread(before text: String) -> String? {
+        finishedSentence(before: text) ?? unfinishedSentence(before: text)
+    }
+
     /// The proofreader's answer when it is a small fix of the sentence, or nil.
     ///
     /// A language model can rephrase a sentence or answer it in place of fixing it. This check
