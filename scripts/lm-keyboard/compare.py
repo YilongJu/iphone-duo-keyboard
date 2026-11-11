@@ -8,8 +8,8 @@ reads the dev half only, and it stops unread when a folder holds a test-half fil
 Inputs:
     --reference DIR, --reference-name NAME   the run to compare against
     --other DIR, --other-name NAME           the run to compare
-    --published                              also require the reference to give the numbers of
-                                             scripts/lm-finetune/README.md, Table 2, on engine/lm-finetune
+    --published                              also require the reference to give the pinned numbers of
+                                             PUBLISHED below
 Outputs in --out:
     report.md          the tables, also written to standard output
     differences.json   every case and every correction that differs, with both runs' numbers
@@ -37,7 +37,7 @@ from score import normalize  # noqa: E402
 TUNED = {"weight": 1.0, "margin_from_typed": 0.0, "margin_to_typed": 4.0, "margin_other": 2.0}
 # The same setting with the apostrophe step, for rerank.choose.
 SETTING = rerank.Setting(weight=1.0, margin_from_typed=0, margin_to_typed=4, margin_other=2, space_after=1,
-                         margin_apostrophe=1.0, apostrophe_scope="next", apostrophe_score="slips")
+                         margin_apostrophe=8.0, apostrophe_scope="next", apostrophe_score="slips")
 
 
 class RecordedScores:
@@ -56,9 +56,11 @@ def recorded_choice(entry: dict) -> str:
                  "chosen": r["chosen"]} for r in entry["readings"]]
     return rerank.choose(readings, "", SETTING, RecordedScores(entry), None)
 GROUPS = ["clean", "letter_slips", "space_slips", "symbol_slips", "clean_symbols"]
-# The harness numbers of the arm smollm2-lora-seed1 in scripts/lm-finetune/README.md, Table 2, on
-# the branch engine/lm-finetune: right cases per group, then all dev cases.
-PUBLISHED = {"engine only": [957, 1943, 1299, 1131, 427, 6069], "with the model": [954, 2057, 1388, 1165, 427, 6543]}
+# The x86 harness numbers of the shipped configuration: SmolLM2 in the typed format with the lexicon
+# and the apostrophe step of docs/apostrophe-words-design.md, from the dev run of apostrophe_words.py
+# in run 42985401738 (lead 8). Right cases per group, then all dev cases. The lexicon adds 5 engine
+# cases ("youre" to "you're"); with the model the total stays 6,542.
+PUBLISHED = {"engine only": [957, 1943, 1299, 1131, 427, 6074], "with the model": [953, 2057, 1387, 1165, 428, 6542]}
 TASKS = ["english", "english-symbols"]
 
 

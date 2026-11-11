@@ -26,8 +26,10 @@ final class ApostropheStepRuleTests: XCTestCase {
         XCTAssertEqual(RerankRule.distilgpt2WithApostrophes, RerankRule(
             weight: 1.0, marginFromTyped: 24, marginToTyped: 0, marginOther: 2, usesSpaceAfter: true,
             apostrophe: RerankRule.ApostropheStep(scope: .firstWordOfSpan, score: .modelLessSlipCost, margin: 1)))
-        // The keyboard's rule, tuned for its SmolLM2 model, holds the same apostrophe step.
-        XCTAssertEqual(KeyboardLanguageModel.rule.apostrophe, RerankRule.distilgpt2WithApostrophes.apostrophe)
+        // The keyboard's rule, tuned for its SmolLM2 model, holds the same scope and score with
+        // the lead that the dev grid picks for that model.
+        XCTAssertEqual(KeyboardLanguageModel.rule.apostrophe,
+                       RerankRule.ApostropheStep(scope: .firstWordOfSpan, score: .modelLessSlipCost, margin: 8))
     }
 
     func testTheReadingWithTheApostropheNeedsOnlyTheModelLead() {

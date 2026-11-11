@@ -28,10 +28,10 @@ import rerank  # noqa: E402
 
 # The setting of the SmolLM2-135M LoRA fine-tune, chosen on the tuning split (the arm
 # smollm2-lora-seed1 of scripts/lm-finetune/test-plan.json on the branch engine/lm-finetune), with
-# the apostrophe step of docs/apostrophe-words-design.md. KeyboardLanguageModel.rule holds the same
-# numbers.
+# the apostrophe step of docs/apostrophe-words-design.md at lead 8, the lead apostrophe_words.py picks
+# with this model. KeyboardLanguageModel.rule holds the same numbers.
 TUNED = rerank.Setting(weight=1.0, margin_from_typed=0, margin_to_typed=4, margin_other=2, space_after=1,
-                       margin_apostrophe=1.0, apostrophe_scope="next", apostrophe_score="slips")
+                       margin_apostrophe=8.0, apostrophe_scope="next", apostrophe_score="slips")
 # The input format the model was trained on (language_model_prompt of rerank.py).
 PROMPT_FORMAT = "typed"
 
