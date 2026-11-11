@@ -3,7 +3,7 @@
 ## Summary
 
 The keyboard re-ranks with the SmolLM2-135M LoRA fine-tune in the typed format, with the
-apostrophe step at lead 8. On the macOS runner its own code and the harness of `scripts/lm-rerank`
+apostrophe step in the stock prompt at lead 4. On the macOS runner its own code and the harness of `scripts/lm-rerank`
 agree exactly: the same output in all 6,799 dev cases, ignoring letter case, and the same choice
 in all corrections. llama.cpp gives other model numbers on other machines, so the totals differ by
 a few cases between machines.
@@ -12,7 +12,7 @@ a few cases between machines.
    in Notes. Then type `duo:lm` and a space. The `reranker` lines give the time per space press
    and the footprint on the phone.
 2. Expect the phone to differ from the simulator by a few cases. The device part of the app's
-   llama.cpp framework holds other instructions than its simulator part (Table 6).
+   llama.cpp framework holds other instructions than its simulator part (Table 7).
 3. Tune a later model with the harness on the macOS runner, as the keyboard job of
    `.github/workflows/lm-keyboard.yml` runs it. Its numbers equal the keyboard's in the simulator.
 
@@ -29,12 +29,12 @@ It does not read the test half.
 | macOS harness | The harness in the keyboard job, on the macOS runner of the simulator, with `lm_score` linked against the macOS part of the app's framework. |
 | keyboard | `Tests/TypingEvaluationTests.swift`: the keyboard's controller, engine, scorer and rule in the iOS simulator. |
 | typed format | The model reads the text before the span, the typed span between bars, then each reading: "How much \| sutar \|", then " sugar". `LanguageModelPrompt.make` builds it. |
-| shipped setting | Weight 1.0, margins 0, 4 and 2, the space-after term, and the apostrophe step (first word of a two-word span, model score less slip cost) at lead 8. |
+| shipped setting | Weight 1.0, margins 0, 4 and 2, the space-after term, and the apostrophe step (first word of a two-word span, model score less slip cost, stock prompt) at lead 4. |
 | correction | One space press whose typed span has more than one engine reading, so the model scores the readings. |
 
 ## Dev scores of the keyboard and the three harnesses
 
-Table 1. Right dev cases per group, from run 42989763108 at commit 2591a7e. Every run holds the
+Table 1. Right dev cases per group, from run 43010544544 at commit b1492c2. Every run holds the
 lexicon of `engine/apostrophe-words`.
 
 | Run | clean | letter slips | space slips | symbol slips | clean symbols | all dev cases |
@@ -78,7 +78,7 @@ Table 3. The keyboard's C scorer against `lm_score` on the 7,719 requests of eac
 
 The ARM runner's build of llama.cpp uses i8mm instructions, which pair the rows of one product.
 The split of a batch then moves some answers. The app's framework holds no i8mm instruction
-(Table 6), so the 31-token calls give the numbers of one call on the phone and in the simulator.
+(Table 7), so the 31-token calls give the numbers of one call on the phone and in the simulator.
 
 ## Model numbers on three kinds of machine
 
@@ -96,33 +96,51 @@ each other other numbers as well.
 
 ## Apostrophe step with SmolLM2
 
-`scripts/lm-rerank/apostrophe_words.py` ran its dev grid with SmolLM2 in the typed format, over the
-leads of the step's scope and score (run 42985401738). Only lead 8 keeps every existing dev
-category at the count without the step. Leads 0.5 to 6 each lose 1 to 3 space slips. The keyboard
-takes lead 8. A second run (42989763207) on another runner chooses lead 8 as well.
+The step compares the choice with its twins, as "we're going" for the typed "were going". It reads
+the stock prompt, the text before the span without the typed span. With the typed format the
+fine-tune reads the typed words between bars and prefers the typed real word, so the step then
+repairs few ambiguous pairs.
 
-Table 5. Right dev cases of the dropped apostrophe with the next word typed, per pair, against
-distilgpt2 at its lead of 1.
+`scripts/lm-rerank/apostrophe_words.py --steps prompts` ran the dev half of the apostrophe words
+in run 43005655129, for three prompts of the step, each with the scores model and model less slip
+cost over 8 leads. The design's rule keeps every existing dev category and every new control at
+its count without the step, and then takes the most right new cases with the next word typed.
+`apostrophe_prompts_table.py` writes these tables from the run's result.
 
-| Pair | distilgpt2, lead 1 | SmolLM2, lead 1 | SmolLM2, lead 8 |
+Table 5. The setting each prompt takes under the rule.
+
+| Prompt of the step | settings the rule allows | chosen | new cases right, next word typed, of 1,623 |
 | --- | --- | --- | --- |
-| its/it's | 12/40 | 2/40 | 1/40 |
-| were/we're | 38/40 | 4/40 | 0/40 |
-| well/we'll | 33/40 | 3/40 | 1/40 |
-| ill/i'll | 39/40 | 31/40 | 29/40 |
-| hell/he'll | 40/40 | 9/40 | 7/40 |
-| id/i'd | 24/24 | 22/24 | 18/24 |
-| lets/let's | 31/32 | 30/32 | 23/32 |
-| shed/she'd | 30/32 | 32/32 | 25/32 |
-| all 1,623 new cases, next word typed | 1402 | 1378 | 1336 |
+| margin scores, typed span "\| were going \|" | 4 of 16 | slip cost, lead 8 | 1,335 |
+| stock prompt, no typed span | 6 of 16 | slip cost, lead 4 | 1,432 |
+| typed span showing the reading scored | 0 of 16 | none | none |
 
-With SmolLM2 the step repairs the contractions without a twin word, such as "whats" and "hows",
-and few of the ambiguous pairs. The keyboard in the simulator gets 1,334 of the new cases with the
-next word typed, and the harness on the x86 runner 1,336.
+With the step off the keyboard gets 684. Each reading in its own typed span turns some
+"its stays its" controls wrong at every lead.
+
+Table 6. Right dev cases per pair with the next word typed, at each prompt's chosen setting.
+Dropped: the person meant the contraction. Control: the person meant the word without it.
+
+| Pair | distilgpt2, margin scores, lead 1 | SmolLM2, margin scores, lead 8 | SmolLM2, stock prompt, lead 4 | SmolLM2, stock prompt, control |
+| --- | --- | --- | --- | --- |
+| its/it's | 12/40 | 1/40 | 17/40 | 40/40 |
+| were/we're | 38/40 | 0/40 | 16/40 | 40/40 |
+| well/we'll | 33/40 | 1/40 | 13/40 | 40/40 |
+| ill/i'll | 39/40 | 29/40 | 30/40 | 40/40 |
+| hell/he'll | 40/40 | 7/40 | 22/40 | 40/40 |
+| id/i'd | 24/24 | 18/24 | 22/24 | 20/24 |
+| lets/let's | 31/32 | 23/32 | 23/32 | 25/32 |
+| shed/she'd | 30/32 | 25/32 | 29/32 | 31/32 |
+
+The stock prompt at leads under 4 repairs more pairs, as were 33/40 and its 38/40 at lead 0.5, and
+it then turns 3 "its stays its" controls wrong, which the rule refuses. A second run on another
+runner (43009847437) picks the stock prompt at lead 4 as well, with 1,432 new cases. The keyboard
+in the simulator gets 1,427 of the new cases with the next word typed. The step's second request
+is part of the trace, and `compare.py` replays it with the case-by-case check of Table 2.
 
 ## Instructions in the parts of the app's framework
 
-Table 6. Counts of instruction words in each arm64 part of `llama.framework`, by their encoding.
+Table 7. Counts of instruction words in each arm64 part of `llama.framework`, by their encoding.
 
 | Instruction | device | simulator | macOS |
 | --- | --- | --- | --- |
@@ -136,14 +154,14 @@ other kernels than the simulator.
 
 ## Time and memory of the model in the simulator
 
-Table 7. The `reranker` lines of the simulator after the English dev cases, run 42989763108. The
+Table 8. The `reranker` lines of the simulator after the English dev cases, run 43010544544. The
 simulator shares 3 cores of the macOS runner, so these numbers do not stand for the phone.
 
 | Measure | Value |
 | --- | --- |
-| Load of the model | 122 ms |
-| Footprint before the load, after it, after the first correction | 143.1 MB, 157.6 MB, 162.7 MB |
-| Time added per space press, mean, median, 95th percentile | 103.4 ms, 106.8 ms, 181.4 ms |
+| Load of the model | 107 ms |
+| Footprint before the load, after it, after the first correction | 142.8 MB, 157.3 MB, 162.5 MB |
+| Time added per space press, mean, median, 95th percentile | 125.5 ms, 96.6 ms, 207.2 ms |
 
 In the language model test of the simulator, 8 candidates after a 20-token context take 73.6 ms
 with SmolLM2 and 37.5 ms with distilgpt2. The phone measured 23.4 ms for distilgpt2. The `duo:lm`
