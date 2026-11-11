@@ -72,22 +72,24 @@ def main():
             continue
         entry = json.loads(answer.stdout)
         quant[entry["arm"]] = entry
-    print("| Arm | Base | Edit, as fit | Gradient steps on this task | Stopping split right of 7,556 | Dev right of 6,799 at Q3_K_M | Published misspellings right of 751 | Parity lists right of 500, f16 then Q3_K_M | GGUF size, MB |")
-    print("| --- | --- | --- | --- | --- | --- | --- | --- | --- |")
+    print("| Arm | Base | Edit, as fit | Gradient steps on this task | Stopping split right of 7,556 | Dev right of 6,799 at Q3_K_M | Clean and clean-symbol dev right (control 957 and 427) | Published misspellings right of 751 | Parity lists right of 500, f16 then Q3_K_M | GGUF size, MB |")
+    print("| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |")
     for label, base, method, steps, stop_key, dev_name, parity in ROWS:
         result_path = OUT / "results" / dev_name / "result.json"
-        dev = published = "not run"
+        dev = published = clean = "not run"
         if result_path.exists():
             result = json.loads(result_path.read_text(encoding="utf-8"))
             dev = f"{result['tuned']['dev']['right']:,}"
             published = f"{result['tuned']['published_dev']['right']:,}"
+            groups = result["tuned"]["dev"]["groups"]
+            clean = f"{groups['clean']['right']} and {groups['clean_symbols']['right']}"
         q = quant.get(parity)
         parity_text = f"{q['f16']} / {q['q3_k_m']}" if q else "see fine-tune"
         model_file = json.loads(result_path.read_text(encoding="utf-8"))["model"] if result_path.exists() else None
         size = sizes.get(model_file)
         size_text = f"{size / 1e6:.1f}" if size else "n/a"
         stop_text = f"{stop[stop_key]['right']:,}" if stop_key else "n/a"
-        print(f"| `{label}` | {base} | {method} | {steps} | {stop_text} | {dev} | {published} | {parity_text} | {size_text} |")
+        print(f"| `{label}` | {base} | {method} | {steps} | {stop_text} | {dev} | {clean} | {published} | {parity_text} | {size_text} |")
 
 
 if __name__ == "__main__":
