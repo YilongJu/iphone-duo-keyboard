@@ -75,7 +75,7 @@ def main():
                 typed_text = next(r["text"] for r in readings if r["as_typed"])
                 has_twin = any(not r["as_typed"] and rerank.is_twin(r["text"], typed_text, TUNED.apostrophe_scope)
                                for r in readings)
-                step = (model.step_scores(context, [r["text"] for r in readings], TUNED.apostrophe_prompt)
+                step_lm = (model.step_scores(context, [r["text"] for r in readings], TUNED.apostrophe_prompt)
                         if has_twin else {})
                 opens_field = not context
                 lm_context = rerank.language_model_prompt(context, typed, PROMPT_FORMAT)
@@ -89,8 +89,8 @@ def main():
                         "candidate": ("" if not lm_context else " ") + rerank.language_model_text(r["text"], opens_field),
                         "engine_score": r["score"], "slip_cost": r["slips"], "as_typed": r["as_typed"], "chosen": r["chosen"],
                         "log_probability": scores[r["text"]][0], "space_after": scores[r["text"]][1],
-                        "step_log_probability": step[r["text"]][0] if step else None,
-                        "step_space_after": step[r["text"]][1] if step else None,
+                        "step_log_probability": step_lm[r["text"]][0] if step_lm else None,
+                        "step_space_after": step_lm[r["text"]][1] if step_lm else None,
                     } for r in readings],
                     "result": "scores", "choice": choice,
                 })
