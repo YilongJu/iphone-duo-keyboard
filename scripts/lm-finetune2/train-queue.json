@@ -1,13 +1,13 @@
 {
-  "note": "The training runs of round 2, in the run order of docs/lm-finetune2-design.md. A batch of two arms trains at the same time when the GPU has room.",
+  "note": "The training runs of round 2, in the run order of docs/lm-finetune2-design.md. A batch of two arms trains at the same time when the GPU has room. Each step adds the gradients of micro-batches of at most 800 padded tokens (1,500 in round 1), so two runs fit the card.",
   "batches": [
-    [{"name": "smollm2-lora-mix-seed1", "method": "lora", "seed": 1, "memory_gb": 3.0, "extra": ["--extra-data", "build/lm-finetune2/data"]},
-     {"name": "smollm2-lora-seed2", "method": "lora", "seed": 2, "memory_gb": 3.0}],
-    [{"name": "smollm2-lora-clean-seed1", "method": "lora", "seed": 1, "memory_gb": 3.0, "extra": ["--extra-data", "build/lm-finetune2/data", "--extra-without", "real_misspelling_wikipedia"]},
-     {"name": "smollm2-lora-mix-hinge-seed1", "method": "lora", "seed": 1, "memory_gb": 3.0, "extra": ["--extra-data", "build/lm-finetune2/data", "--keep-typed-margin", "4", "--keep-typed-weight", "1.0"]}],
-    [{"name": "smollm2-lora-seed3", "method": "lora", "seed": 3, "memory_gb": 3.0},
-     {"name": "smollm2-lora-mix-seed2", "method": "lora", "seed": 2, "memory_gb": 3.0, "extra": ["--extra-data", "build/lm-finetune2/data"]}],
-    [{"name": "smollm2-lora-mix-seed3", "method": "lora", "seed": 3, "memory_gb": 3.0, "extra": ["--extra-data", "build/lm-finetune2/data"]},
-     {"name": "smollm2-full-mix-seed1", "method": "full", "seed": 1, "memory_gb": 3.5, "extra": ["--extra-data", "build/lm-finetune2/data"]}]
+    [{"name": "smollm2-lora-mix-seed1", "method": "lora", "seed": 1, "memory_gb": 2.3, "extra": ["--extra-data", "build/lm-finetune2/data"], "micro_tokens": 800},
+     {"name": "smollm2-lora-seed2", "method": "lora", "seed": 2, "memory_gb": 2.3, "micro_tokens": 800}],
+    [{"name": "smollm2-lora-clean-seed1", "method": "lora", "seed": 1, "memory_gb": 2.3, "extra": ["--extra-data", "build/lm-finetune2/data", "--extra-without", "real_misspelling_wikipedia"], "micro_tokens": 800},
+     {"name": "smollm2-lora-mix-hinge-seed1", "method": "lora", "seed": 1, "memory_gb": 2.3, "extra": ["--extra-data", "build/lm-finetune2/data", "--keep-typed-margin", "4", "--keep-typed-weight", "1.0"], "micro_tokens": 800}],
+    [{"name": "smollm2-lora-seed3", "method": "lora", "seed": 3, "memory_gb": 2.3, "micro_tokens": 800},
+     {"name": "smollm2-lora-mix-seed2", "method": "lora", "seed": 2, "memory_gb": 2.3, "extra": ["--extra-data", "build/lm-finetune2/data"], "micro_tokens": 800}],
+    [{"name": "smollm2-lora-mix-seed3", "method": "lora", "seed": 3, "memory_gb": 2.3, "extra": ["--extra-data", "build/lm-finetune2/data"], "micro_tokens": 800},
+     {"name": "smollm2-full-mix-seed1", "method": "full", "seed": 1, "memory_gb": 3.5, "extra": ["--extra-data", "build/lm-finetune2/data"], "micro_tokens": 800}]
   ]
 }

@@ -263,10 +263,12 @@ Table 4. The controls and the question each one answers.
 ## Compute plan
 
 - Cases: Python on this machine. Lists: the engine in WSL, 7 processes.
-- Training: the local RTX 4090, under the lock file `build/gpu.lock`. The PyTorch cap is 3.0 GB for
+- Training: the local RTX 4090, under the lock file `build/gpu.lock`. The PyTorch cap is 2.3 GB for
   LoRA and 3.5 GB for the full fine-tune. Each run has below-normal priority.
+- A step adds the gradients of micro-batches of at most 800 padded tokens. Round 1 used 1,500 under
+  a cap of 3.0 GB. The gradient of a step is the same sum over its 32 lists.
 - `run_queue.py` trains two arms at the same time when the GPU memory in use, the two caps and 0.8 GB
-  for the CUDA contexts stay under 22.5 GB. Otherwise the two arms run back to back.
+  for the CUDA contexts stay under 22.3 GB. Otherwise the two arms run back to back.
 - Conversion: `convert_hf_to_gguf.py` and `llama-quantize` of llama.cpp b4846, then the token and
   score checks of `check_parity.py`.
 - Scoring: `lm_score` of round 1 in WSL, 2 threads per arm, low priority.
