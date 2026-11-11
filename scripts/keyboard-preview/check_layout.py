@@ -69,6 +69,10 @@ def check(layout):
                     split = row.get("split")
                     if not isinstance(split, int) or not 0 < split < len(row["keys"]):
                         problems.append(f"{where} row {row_index}: the split value {split!r} is not a key position")
+                    # The split layout puts its empty middle into every row, so every row must
+                    # fill the layout's width, or its two halves do not line up with the others.
+                    if abs(width - units) > 1e-6:
+                        problems.append(f"{where} row {row_index}: width {width:g} is not the {units:g} units of the layout")
                 if width > units + 1e-9:
                     problems.append(f"{where} row {row_index}: width {width:g} is over {units:g} units")
             for required in ("space", "backspace", "return"):
