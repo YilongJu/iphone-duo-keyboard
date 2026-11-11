@@ -24,7 +24,7 @@
     "vllm-project/vllm": {"licence": "Apache-2.0", "group": "docs-ai", "folders": ["docs"]},
     "ggml-org/llama.cpp": {"licence": "MIT", "group": "docs-ai", "folders": ["docs", "tools", "examples"]},
     "ollama/ollama": {"licence": "MIT", "group": "docs-ai", "folders": ["docs"]},
-    "langchain-ai/langgraph": {"licence": "MIT", "group": "docs-ai", "folders": ["docs/docs"]},
+    "langchain-ai/docs": {"licence": "MIT", "group": "docs-ai", "folders": ["src/oss"]},
     "run-llama/llama_index": {"licence": "MIT", "group": "docs-ai", "folders": ["docs"]},
     "microsoft/autogen": {"licence": "CC-BY-4.0", "group": "docs-ai", "folders": ["python/docs", "docs"]},
     "openai/openai-cookbook": {"licence": "MIT", "group": "docs-ai", "folders": ["articles", "examples"]},
