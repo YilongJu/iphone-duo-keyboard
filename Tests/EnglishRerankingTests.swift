@@ -56,7 +56,8 @@ final class RerankRuleTests: XCTestCase {
         XCTAssertEqual(rule, RerankRule(weight: 1.0, marginFromTyped: 24, marginToTyped: 0, marginOther: 2, usesSpaceAfter: true))
         // The arm smollm2-lora-seed1 of scripts/lm-finetune/test-plan.json.
         XCTAssertEqual(KeyboardLanguageModel.rule,
-                       RerankRule(weight: 1.0, marginFromTyped: 0, marginToTyped: 4, marginOther: 2, usesSpaceAfter: true))
+                       RerankRule(weight: 1.0, marginFromTyped: 0, marginToTyped: 4, marginOther: 2, usesSpaceAfter: true,
+                                  apostrophe: RerankRule.ApostropheStep(scope: .firstWordOfSpan, score: .modelLessSlipCost, margin: 8)))
     }
 
     func testTheSmolLM2RuleTakesAnyLeadAwayFromTheTextAsTyped() {
