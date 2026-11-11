@@ -6,9 +6,9 @@ The keyboard of `engine/lm-keyboard` never adds the apostrophe to a typed word t
 common word, such as "its", "were" or "ill": 0 of 318 dev cases, also with the next word typed.
 The fix corrects the earlier word when the next word arrives. The language model compares the
 two forms of the typed letters with the word after them. With the next word typed, the keyboard
-gets 1,403 of 1,623 new dev cases right, where it got 608. It keeps the existing dev cases: no
+gets 1,402 of 1,623 new dev cases right, where it got 608. It keeps the existing dev cases: no
 existing case turns wrong, and the total rises from 6,126 to 6,131. The setting was chosen
-among 24 on the same dev cases, so these are tuning numbers.
+among 32 on the same dev cases, so these are tuning numbers.
 
 What to do:
 
@@ -22,7 +22,7 @@ What to do:
    come back as shown before the correction, and the keyboard keeps them from then on.
 
 This page does not settle the phone's time per correction. The pair its/it's stays weak with
-distilgpt2: 13 of 40 with the next word typed.
+distilgpt2: 12 of 40 with the next word typed.
 
 ## Glossary
 
@@ -100,7 +100,7 @@ Table 3. Options and the reason for each decision.
 | Apostrophe readings in the readings list | taken | Without them the two-word span holds the intended text in 24 of 318 cases. With them, in 318. |
 | Apostrophe step at every correction | not taken | It changes a word from the text before it alone, and it turns 1 to 3 existing clean cases wrong at margins under 6. |
 | Apostrophe step on the first word of a two-word span | taken | The model reads the word after the changed word, as in Apple's sentence-level correction of iOS 17. A word alone stays as typed. |
-| Step score of the model alone, or less the slip cost | measured | Less the slip cost is better for the plain contractions: 700 against 398 of 843 at margin 1. |
+| Step score of the model alone, less the slip cost, or the slip cost alone | measured | Less the slip cost is better for the plain contractions: 700 against 377 of 843. The slip cost alone fixes few ambiguous cases. |
 | Lexicon fixes for "youre", "what'd", "there'd" | taken | Two builder rules were wrong. The fix raises the engine from 6,069 to 6,074. |
 | A separate delayed correction | not needed | The keyboard already reads the previous word with the current word at each space. The undo and the kept words work as for any correction. |
 
@@ -127,21 +127,29 @@ LatinIME, FUTO, HeliBoard, Presage) documents a rule for "its" against "it's".
 
 ## Results on the dev half
 
-Table 4. Right new dev cases with the next word typed, from run 42965906697. The engine runs use
-the new lexicon unless named.
+Table 4. Right new dev cases with the next word typed, from run 42971698702. The engine runs use
+the new lexicon unless named. The setting was chosen among 32 on these same cases.
 
 | Run | dropped, ambiguous | control, word | added | control, contraction | dropped, plain | all |
 | --- | --- | --- | --- | --- | --- | --- |
 | engine, shipped lexicon | 0/318 | 306/318 | 11/72 | 71/72 | 233/843 | 621/1623 |
 | shipped | 0/318 | 306/318 | 11/72 | 71/72 | 220/843 | 608/1623 |
 | readings only | 1/318 | 306/318 | 11/72 | 71/72 | 282/843 | 671/1623 |
-| step on the first word, less slip cost, margin 1 (chosen) | 272/318 | 306/318 | 54/72 | 71/72 | 700/843 | 1403/1623 |
-| step on the first word, model only, margin 1.5 | 232/318 | 306/318 | 70/72 | 71/72 | 379/843 | 1058/1623 |
-| step at every correction, model only, margin 6 | 61/318 | 306/318 | 55/72 | 71/72 | 284/843 | 777/1623 |
+| step on the first word, less slip cost, margin 1 (chosen) | 272/318 | 306/318 | 53/72 | 71/72 | 700/843 | 1402/1623 |
+| step on the first word, model only, margin 1.5 | 233/318 | 306/318 | 70/72 | 71/72 | 377/843 | 1057/1623 |
+| step on the first word, slip cost only, margin 6 | 10/318 | 306/318 | 11/72 | 71/72 | 493/843 | 891/1623 |
+| step at every correction, model only, margin 6 | 61/318 | 306/318 | 55/72 | 71/72 | 283/843 | 776/1623 |
 
-With the word alone, the chosen setting equals the shipped rule plus the lexicon fix: 802 of
-1,623 against 792. The setting with margin 0.5 gets 1,426, and it is out because it turns one
-`clean_ambiguous_word` case wrong.
+With the word alone, the chosen setting gets 804 of 1,623 against 794 shipped: the lexicon fix
+and the apostrophe readings. The same setting with margin 0.5 gets more with the next word, and
+it is out because it turns one `clean_ambiguous_word` case wrong.
+
+Most of the gain on the plain contractions comes from the slip cost. A step on the slip cost
+alone, without the model, gets 762 of 843 plain cases at margins up to 3. It turns 2 to 4
+existing space and symbol slips wrong there, and it fixes 67 of 318 ambiguous cases. The model
+decides the ambiguous pairs, and the slip cost makes the cheap apostrophe repair win over a
+costly one such as "what is happening" for "whats happening". The two x86 runs 42965906697 and
+42971698702 differ by 1 to 2 cases per row, from the runners' processors.
 
 Table 5. Right existing dev cases, from the same run. The last two categories belong to no group.
 
@@ -159,9 +167,9 @@ Table 6. Right cases of the chosen setting per ambiguous pair, with the next wor
 
 | Pair | dropped | control |
 | --- | --- | --- |
-| its/it's | 13/40 | 40/40 |
+| its/it's | 12/40 | 40/40 |
 | were/we're | 38/40 | 40/40 |
-| well/we'll | 32/40 | 40/40 |
+| well/we'll | 33/40 | 40/40 |
 | ill/i'll | 39/40 | 38/40 |
 | hell/he'll | 40/40 | 40/40 |
 | shell/she'll | 17/19 | 19/19 |
