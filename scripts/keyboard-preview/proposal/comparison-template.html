@@ -1,0 +1,245 @@
+<meta charset="utf-8">
+<title>Duo Keyboard Layout Proposal</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one column, each keyboard drawn at its true 669 pt width inside a sideways-scrolling frame, then the size table. */
+:root {
+  --bg: #f3f4f7; --panel: #ffffff; --fg: #1c2230; --muted: #5d6577; --line: #d5d9e2;
+  --board: #d3d7df; --key: #ffffff; --fn: #aeb4c0; --keytext: #11151d;
+  --grow: #1f7a4d; --shrink: #a04a1c; --mid: #2f5fd0; --letters: #2f5fd0;
+  --display: "Space Grotesk", "Segoe UI", system-ui, sans-serif;
+  --body: "Inter", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #12151b; --panel: #1b2029; --fg: #e6e9ef; --muted: #9aa3b5; --line: #2e3543;
+  --board: #2a2f38; --key: #6a6f7a; --fn: #444a55; --keytext: #f4f6fa;
+  --grow: #5fd39a; --shrink: #f2a072; --mid: #8fb0ff; --letters: #8fb0ff; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #12151b; --panel: #1b2029; --fg: #e6e9ef; --muted: #9aa3b5; --line: #2e3543;
+  --board: #2a2f38; --key: #6a6f7a; --fn: #444a55; --keytext: #f4f6fa;
+  --grow: #5fd39a; --shrink: #f2a072; --mid: #8fb0ff; --letters: #8fb0ff; color-scheme: dark }
+body { background: var(--bg); color: var(--fg); font-family: var(--body); line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 24px 48px; }
+main { max-width: 760px; margin: 0 auto; display: grid; gap: 22px; }
+h1 { font-family: var(--display); font-size: 1.7rem; margin: 0; text-wrap: balance; }
+h2 { font-family: var(--display); font-size: 1.15rem; margin: 0 0 6px; text-wrap: balance; }
+p { margin: 0; max-width: 68ch; }
+.muted { color: var(--muted); }
+.summary { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; display: grid; gap: 8px; }
+.summary ul { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
+.controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.chip { font: 500 0.9rem var(--body); border: 1px solid var(--line); background: var(--panel); color: var(--fg);
+  padding: 6px 12px; border-radius: 999px; cursor: pointer; }
+.chip[aria-pressed="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+.chip:focus-visible { outline: 2px solid var(--mid); outline-offset: 2px; }
+label.toggle { display: inline-flex; gap: 6px; align-items: center; font-size: 0.9rem; color: var(--muted); }
+.board-block { display: grid; gap: 6px; min-width: 0; }
+.board-block h2 span { font: 400 0.85rem var(--body); color: var(--muted); margin-left: 6px; }
+.frame { overflow-x: auto; border-radius: 12px; }
+svg text { font-family: var(--body); }
+.legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 0.85rem; color: var(--muted); }
+.legend i { display: inline-block; width: 18px; height: 3px; vertical-align: middle; margin-right: 6px; }
+.tablewrap { overflow-x: auto; max-height: 70vh; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); }
+table { border-collapse: collapse; width: 100%; font-size: 0.9rem; font-variant-numeric: tabular-nums; }
+th, td { padding: 7px 10px; text-align: right; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th:first-child, td:first-child { text-align: left; }
+thead th { position: sticky; top: 0; background: var(--panel); font-weight: 600; z-index: 1; }
+td.up { color: var(--grow); font-weight: 600; }
+td.down { color: var(--shrink); font-weight: 600; }
+code { font-family: var(--mono); font-size: 0.85em; }
+</style>
+
+<main>
+  <h1>Duo Keyboard Layout Proposal</h1>
+
+  <section class="summary" aria-label="Summary">
+    <p><strong>Summary.</strong> The proposal makes each letter key 8% wider and 7% taller. It moves the letter rows 15 to 22 pt closer to the middle of the keyboard, and makes delete 15% wider.</p>
+    <ul>
+      <li>The digit keys get 4% narrower. Return gets 18% narrower and the right shift 24% narrower.</li>
+      <li>The symbol keys right of the letters get 15% to 27% narrower. The ; and ' keys shrink the most, to 30 pt.</li>
+      <li>Every digit and symbol key keeps the same neighbouring letters, so the typing test cases and all scores so far stay valid.</li>
+      <li>Trade-off: caps lock (+8%) and the left shift (+10%) get wider. The letters move right only when the left keys grow or the right keys shrink.</li>
+      <li>Not settled: how the new sizes feel under your thumbs, above all on the ' key. Only a phone build shows that.</li>
+    </ul>
+  </section>
+
+  <div class="controls" role="group" aria-label="Layer">
+    <button class="chip" id="layer-letters" data-layer="letters" aria-pressed="true">Letters</button>
+    <button class="chip" id="layer-symbols" data-layer="symbols" aria-pressed="false">Symbols</button>
+    <button class="chip" id="layer-more" data-layer="more" aria-pressed="false">More symbols</button>
+    <label class="toggle"><input type="checkbox" id="guides" checked> Show the middle lines</label>
+  </div>
+
+  <div class="legend" id="legend">
+    <span><i style="background: var(--mid)"></i>middle of the keyboard</span>
+    <span><i style="background: var(--shrink)"></i>middle of each letter row</span>
+  </div>
+
+  <div class="board-block">
+    <h2>Before<span>today's layout, 14.5 key units wide</span></h2>
+    <div class="frame" id="before"></div>
+  </div>
+  <div class="board-block">
+    <h2>After<span>proposal, 13.5 key units wide</span></h2>
+    <div class="frame" id="after"></div>
+  </div>
+
+  <section class="board-block">
+    <h2>Key widths before and after, on the open Duo (669 pt)</h2>
+    <p class="muted">Widths are the visible key in points, without the 2 pt gap on each side. The letter rows grow taller too, because the row height follows the key width.</p>
+    <div class="tablewrap"><table id="sizes"><thead><tr><th>Key</th><th>Before, pt</th><th>After, pt</th><th>Change</th></tr></thead><tbody></tbody></table></div>
+  </section>
+
+  <section class="board-block">
+    <h2>Distance of each letter row from the middle of the keyboard</h2>
+    <p class="muted">A negative distance means the letters sit to the left of the middle.</p>
+    <div class="tablewrap"><table id="centers"><thead><tr><th>Letter row</th><th>Before, pt</th><th>After, pt</th></tr></thead><tbody></tbody></table></div>
+  </section>
+</main>
+
+<script>
+const BEFORE = /*BEFORE_JSON*/;
+const AFTER = /*AFTER_JSON*/;
+const WIDTH = 669;
+const LABELS = {
+  selectAll: "Select All", cut: "✂", copy: "Copy", paste: "Paste", home: "Home", end: "End",
+  backspace: "⌫", tab: "⇥", capsLock: "⇪", return: "⏎", shift: "⇧", up: "↑", down: "↓",
+  left: "←", right: "→", globe: "🌐", symbols: ".?123", letters: "ABC", language: "中/A",
+  space: "", dismiss: "⌨", more: "#+=", forwardDelete: "⌦"
+};
+const KEY_NAMES = { backspace: "delete", capsLock: "caps lock", forwardDelete: "forward delete", tab: "tab", return: "return",
+  space: "space", up: "up arrow", left: "left arrow", down: "down arrow", right: "right arrow", globe: "globe",
+  symbols: "symbols (.?123)", letters: "letters (ABC)", language: "language (中/A)", dismiss: "hide keyboard", more: "more symbols (#+=)",
+  selectAll: "Select All", cut: "cut", copy: "copy", paste: "paste", home: "Home", end: "End" };
+
+function norm(k) {
+  if (typeof k === "string") return { kind: "char", main: k, w: 1 };
+  if (Array.isArray(k)) return { kind: "char", main: k[0], top: k[1], w: 1 };
+  if (k.c !== undefined) return { kind: "char", main: k.c, top: k.s, w: k.w ?? 1 };
+  return { kind: "fn", name: k.f, w: k.w ?? 1 };
+}
+function geometry(spec, layer) {
+  const M = spec.metrics, units = spec.wide.units, rows = spec.wide[layer];
+  const usable = WIDTH - 2 * M.horizontalPadding;
+  const unitMain = usable / units;
+  const rowH = Math.min(Math.max(unitMain * M.wideRowHeightPerUnit, M.wideRowHeightMin), M.wideRowHeightMax);
+  let y = M.topPadding; const keys = []; const rowsOut = [];
+  rows.forEach((row, ri) => {
+    const inset = ri === rows.length - 1 ? M.bottomRowCornerInset : 0;
+    const unit = (usable - 2 * inset) / units;
+    const ks = row.keys.map(norm);
+    const rowW = ks.reduce((s, k) => s + k.w, 0);
+    let x = M.horizontalPadding + inset + (units - rowW) / 2 * unit;
+    const h = row.height * rowH; const placed = [];
+    for (const k of ks) {
+      const g = { ...k, x: x + M.gapX, y: y + M.gapYWide, w: k.w * unit - 2 * M.gapX, h: h - 2 * M.gapYWide, row: ri };
+      keys.push(g); placed.push(g); x += k.w * unit;
+    }
+    rowsOut.push({ y, h, keys: placed });
+    y += h;
+  });
+  return { keys, rows: rowsOut, height: y + M.bottomPadding, rowH };
+}
+const SVGNS = "http://www.w3.org/2000/svg";
+function el(name, attrs, text) {
+  const e = document.createElementNS(SVGNS, name);
+  for (const [a, v] of Object.entries(attrs)) e.setAttribute(a, v);
+  if (text !== undefined) e.textContent = text;
+  return e;
+}
+function letterRowCenters(g) {
+  const out = {};
+  for (const word of ["qwertyuiop", "asdfghjkl", "zxcvbnm"]) {
+    const ks = g.keys.filter(k => k.kind === "char" && word.includes(k.main));
+    if (ks.length === word.length) out[word] = { x: ks.reduce((s, k) => s + k.x + k.w / 2, 0) / ks.length, y: ks[0].y, h: ks[0].h };
+  }
+  return out;
+}
+function draw(target, spec, layer, guides) {
+  const g = geometry(spec, layer);
+  const svg = el("svg", { viewBox: `0 0 ${WIDTH} ${g.height}`, width: WIDTH, height: g.height, role: "img",
+    "aria-label": `${layer} layer, ${spec.wide.units} key units` });
+  svg.appendChild(el("rect", { x: 0, y: 0, width: WIDTH, height: g.height, rx: 14, fill: "var(--board)" }));
+  for (const k of g.keys) {
+    const isFn = k.kind === "fn" && k.name !== "space";
+    svg.appendChild(el("rect", { x: k.x, y: k.y, width: k.w, height: k.h, rx: 6, fill: isFn ? "var(--fn)" : "var(--key)" }));
+    const label = k.kind === "fn" ? LABELS[k.name] ?? k.name : k.main;
+    const small = k.kind === "fn" && label.length > 3;
+    if (k.top) {
+      svg.appendChild(el("text", { x: k.x + k.w / 2, y: k.y + k.h * 0.36, "text-anchor": "middle", "font-size": 12, fill: "var(--keytext)" }, k.top));
+      svg.appendChild(el("text", { x: k.x + k.w / 2, y: k.y + k.h * 0.8, "text-anchor": "middle", "font-size": 15, fill: "var(--keytext)" }, k.main));
+    } else {
+      const isLetter = k.kind === "char" && /^[a-z]$/.test(k.main);
+      svg.appendChild(el("text", { x: k.x + k.w / 2, y: k.y + k.h / 2 + (small ? 4 : 7), "text-anchor": "middle",
+        "font-size": small ? 12 : (isLetter ? 20 : 17), fill: "var(--keytext)" }, isLetter ? k.main.toUpperCase() : label));
+    }
+  }
+  if (guides) {
+    svg.appendChild(el("line", { x1: WIDTH / 2, x2: WIDTH / 2, y1: 0, y2: g.height, stroke: "var(--mid)", "stroke-width": 2, "stroke-dasharray": "5 4" }));
+    if (layer === "letters") for (const c of Object.values(letterRowCenters(g)))
+      svg.appendChild(el("line", { x1: c.x, x2: c.x, y1: c.y - 2, y2: c.y + c.h + 2, stroke: "var(--shrink)", "stroke-width": 3 }));
+  }
+  target.replaceChildren(svg);
+  return g;
+}
+function keyWidths(g) {
+  const out = new Map();
+  const add = (name, k) => { if (!out.has(name)) out.set(name, k.w); };
+  for (const k of g.keys) {
+    if (k.kind === "char") {
+      if (/^[a-z]$/.test(k.main)) add("letter (A to Z)", k);
+      else if (/^[0-9]$/.test(k.main)) add("digit (1 to 0)", k);
+      else add(`${k.main}${k.top ? "  " + k.top : ""}`, k);
+    } else if (k.name === "shift") {
+      add(out.has("shift, left") ? "shift, right" : "shift, left", k);
+    } else {
+      add(KEY_NAMES[k.name] ?? k.name, k);
+    }
+  }
+  return out;
+}
+let layer = "letters";
+function render() {
+  const guides = document.getElementById("guides").checked;
+  document.getElementById("legend").hidden = !guides;
+  const gb = draw(document.getElementById("before"), BEFORE, layer, guides);
+  const ga = draw(document.getElementById("after"), AFTER, layer, guides);
+  const wb = keyWidths(gb), wa = keyWidths(ga);
+  const order = ["letter (A to Z)", "digit (1 to 0)", "delete", "`  ~", "-  _", "=  +", "tab", "caps lock", "return",
+    "shift, left", "shift, right", "[  {", "]  }", "\\  |", ";  :", "'  \"", ",  <", ".  >", "/  ?", "up arrow", "left arrow",
+    "down arrow", "right arrow", "space", "globe", "symbols (.?123)", "language (中/A)", "hide keyboard"];
+  const names = [...new Set([...order.filter(n => wb.has(n) || wa.has(n)), ...wb.keys(), ...wa.keys()])];
+  const rename = {};
+  const tbody = document.querySelector("#sizes tbody"); tbody.replaceChildren();
+  for (const n of names) {
+    const b = wb.get(n), a = wa.get(n);
+    if (b === undefined || a === undefined) continue;
+    const pct = (a / b - 1) * 100;
+    const tr = document.createElement("tr");
+    const cls = pct > 0.5 ? "up" : pct < -0.5 ? "down" : "";
+    tr.innerHTML = `<td></td><td>${b.toFixed(1)}</td><td>${a.toFixed(1)}</td><td class="${cls}">${pct > 0 ? "+" : ""}${pct.toFixed(0)}%</td>`;
+    tr.firstChild.textContent = rename[n] ?? n;
+    tbody.appendChild(tr);
+  }
+  const rh = document.createElement("tr");
+  rh.innerHTML = `<td>row height</td><td>${gb.rowH.toFixed(1)}</td><td>${ga.rowH.toFixed(1)}</td><td class="up">+${((ga.rowH / gb.rowH - 1) * 100).toFixed(0)}%</td>`;
+  tbody.prepend(rh);
+  const cb = letterRowCenters(geometry(BEFORE, "letters")), ca = letterRowCenters(geometry(AFTER, "letters"));
+  const ct = document.querySelector("#centers tbody"); ct.replaceChildren();
+  for (const [word, label] of [["qwertyuiop", "Q to P"], ["asdfghjkl", "A to L"], ["zxcvbnm", "Z to M"]]) {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td>${label}</td><td>${(cb[word].x - WIDTH / 2).toFixed(1)}</td><td>${(ca[word].x - WIDTH / 2).toFixed(1)}</td>`;
+    ct.appendChild(tr);
+  }
+}
+for (const b of document.querySelectorAll("[data-layer]")) b.addEventListener("click", () => {
+  layer = b.dataset.layer;
+  for (const o of document.querySelectorAll("[data-layer]")) o.setAttribute("aria-pressed", String(o === b));
+  render();
+});
+document.getElementById("guides").addEventListener("change", render);
+render();
+</script>

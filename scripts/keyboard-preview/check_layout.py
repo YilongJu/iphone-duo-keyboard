@@ -37,7 +37,8 @@ def key_parts(key):
     if isinstance(key, list):
         return None, key[0], list(key), 1
     if "c" in key:
-        return None, key["c"], [key["c"]], key.get("w", 1)
+        typed = [key["c"]] + ([key["s"]] if "s" in key else [])
+        return None, key["c"], typed, key.get("w", 1)
     return key["f"], None, [], key.get("w", 1)
 
 
