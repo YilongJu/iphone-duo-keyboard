@@ -177,4 +177,5 @@ The same commands work on any Linux machine, from the repository root:
   would differ. The dev cases hold few of those.
 - The readings are the best per last word, so two readings that end in the same word keep only
   the better one. The oracle still reaches 6,688 of 6,799.
-- The keyboard does not use the re-ranker yet. No Swift code changed.
+- The keyboard runs the distilgpt2 Q3_K_M rule. `scripts/lm-keyboard/README.md` compares the
+  keyboard's own code with this harness on the dev half.
