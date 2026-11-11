@@ -41,6 +41,8 @@ CASES = ROOT / "scripts" / "typing-evaluation" / "cases"
 EXISTING = [CASES / "english.dev.jsonl", CASES / "english-symbols.dev.jsonl"]
 # 0 is left out: on a tie of model scores the step would then move away from the engine's choice.
 GRID = [0.5, 1.0, 1.5, 2.0, 3.0, 4.0, 6.0, 8.0]
+# Where the step runs: "all" at every correction, "later" in a two-word span or after a correction.
+SCOPES = ["all", "later"]
 # The setting tuned for distilgpt2 Q3_K_M (scripts/lm-rerank/README.md, Table 2).
 TUNED = dict(weight=1.0, margin_from_typed=24, margin_to_typed=0, margin_other=2, space_after=1)
 
@@ -89,7 +91,10 @@ def run_group(cases, engine, chooser) -> dict:
 
 
 def existing_summary(cases, engine, chooser) -> dict:
-    return rerank.summarize(cases, rerank.run(cases, engine, chooser))
+    predictions = rerank.run(cases, engine, chooser)
+    summary = rerank.summarize(cases, predictions)
+    summary["outputs"] = predictions
+    return summary
 
 
 def readings_report(cases, engine) -> dict:
@@ -114,15 +119,20 @@ def main():
     parser.add_argument("--threads", type=int, default=4)
     parser.add_argument("--half", choices=["dev", "test"], required=True)
     parser.add_argument("--margin", type=float, help="the one margin_apostrophe of the test-half run")
+    parser.add_argument("--scope", choices=["all", "later"], help="the one apostrophe_scope of the test-half run")
     parser.add_argument("--lexicon", type=Path, default=rerank.LEXICON)
+    parser.add_argument("--shipped-lexicon", type=Path,
+                        help="the lexicon of the keyboard as it ships, when it differs from --lexicon")
+    parser.add_argument("--shipped-shim", type=Path,
+                        help="a second copy of the shim for --shipped-lexicon: one shim holds one lexicon")
     parser.add_argument("--out", type=Path, required=True)
     arguments = parser.parse_args()
     if (arguments.lm is None) != (arguments.model is None):
         raise SystemExit("--lm and --model go together")
-    if arguments.half == "test" and (arguments.margin is None or arguments.model is None):
-        raise SystemExit("the test half runs once, for one --margin, with the model")
-    if arguments.half == "dev" and arguments.margin is not None:
-        raise SystemExit("the dev half runs the whole grid; --margin is for the test half")
+    if arguments.half == "test" and (arguments.margin is None or arguments.scope is None or arguments.model is None):
+        raise SystemExit("the test half runs once, for one --margin and one --scope, with the model")
+    if arguments.half == "dev" and (arguments.margin is not None or arguments.scope is not None):
+        raise SystemExit("the dev half runs the whole grid; --margin and --scope are for the test half")
 
     group = rerank.load_cases([CASES / f"english-apostrophe-words.{arguments.half}.jsonl"])
     if any(case["split"] != arguments.half for case in group):
@@ -132,9 +142,17 @@ def main():
         raise SystemExit("an existing case outside the dev half")
     arguments.out.mkdir(parents=True, exist_ok=True)
 
-    old_engine = SetEngine(arguments.shim, arguments.lexicon, 0)
+    if (arguments.shipped_lexicon is None) != (arguments.shipped_shim is None):
+        raise SystemExit("--shipped-lexicon and --shipped-shim go together")
+    if arguments.shipped_shim is not None and arguments.shipped_shim.resolve() == arguments.shim.resolve():
+        raise SystemExit("--shipped-shim must be another file than --shim")
+    # The keyboard as it ships: its lexicon and the readings without the apostrophe readings.
+    shipped_engine = (SetEngine(arguments.shipped_shim, arguments.shipped_lexicon, 0) if arguments.shipped_shim
+                      else SetEngine(arguments.shim, arguments.lexicon, 0))
+    old_engine = SetEngine(arguments.shim, arguments.lexicon, 0) if arguments.shipped_shim else shipped_engine
     new_engine = SetEngine(arguments.shim, arguments.lexicon, 1)
-    result = {"half": arguments.half, "lexicon": str(arguments.lexicon), "cases": len(group), "runs": {}}
+    result = {"half": arguments.half, "lexicon": str(arguments.lexicon),
+              "shipped_lexicon": str(arguments.shipped_lexicon or arguments.lexicon), "cases": len(group), "runs": {}}
 
     def record(name, entry):
         result["runs"][name] = entry
@@ -143,6 +161,9 @@ def main():
             line["existing"] = entry["existing"]["right"]
         print(name, json.dumps(line), flush=True)
 
+    if arguments.shipped_shim is not None:
+        record("engine, shipped lexicon", {"group": run_group(group, shipped_engine, rerank.engine_choice),
+                                           "existing": existing_summary(existing, shipped_engine, rerank.engine_choice)})
     record("engine", {"group": run_group(group, old_engine, rerank.engine_choice),
                       "existing": existing_summary(existing, old_engine, rerank.engine_choice)})
     result["readings"] = {"without apostrophe readings": readings_report(group, old_engine),
@@ -157,20 +178,21 @@ def main():
             return rerank.setting_chooser(setting, model)
 
         shipped = rerank.Setting(**TUNED)
-        margins = GRID if arguments.half == "dev" else [arguments.margin]
         if arguments.half == "dev":
-            record("shipped", {"group": run_group(group, old_engine, chooser(shipped)),
-                               "existing": existing_summary(existing, old_engine, chooser(shipped))})
+            record("shipped", {"group": run_group(group, shipped_engine, chooser(shipped)),
+                               "existing": existing_summary(existing, shipped_engine, chooser(shipped))})
             record("readings only", {"group": run_group(group, new_engine, chooser(shipped)),
                                      "existing": existing_summary(existing, new_engine, chooser(shipped))})
+            steps = [(scope, margin) for scope in SCOPES for margin in GRID]
         else:
-            record("shipped", {"group": run_group(group, old_engine, chooser(shipped))})
-        for margin in margins:
-            setting = rerank.Setting(**TUNED, margin_apostrophe=margin)
+            record("shipped", {"group": run_group(group, shipped_engine, chooser(shipped))})
+            steps = [(arguments.scope, arguments.margin)]
+        for scope, margin in steps:
+            setting = rerank.Setting(**TUNED, margin_apostrophe=margin, apostrophe_scope=scope)
             entry = {"group": run_group(group, new_engine, chooser(setting))}
             if arguments.half == "dev":
                 entry["existing"] = existing_summary(existing, new_engine, chooser(setting))
-            record(f"apostrophe step {margin:g}", entry)
+            record(f"apostrophe step {scope} {margin:g}", entry)
             print(f"  {time.monotonic() - started:.0f} s, {model.requests} model requests", flush=True)
 
         if arguments.half == "dev":
