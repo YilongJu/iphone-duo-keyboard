@@ -28,10 +28,12 @@ import rerank  # noqa: E402
 
 # The setting of the SmolLM2-135M LoRA fine-tune, chosen on the tuning split (the arm
 # smollm2-lora-seed1 of scripts/lm-finetune/test-plan.json on the branch engine/lm-finetune), with
-# the apostrophe step of docs/apostrophe-words-design.md at lead 8, the lead apostrophe_words.py picks
-# with this model. KeyboardLanguageModel.rule holds the same numbers.
+# the apostrophe step of docs/apostrophe-words-design.md in the stock prompt at lead 4, which
+# apostrophe_words.py --steps prompts picks with this model. KeyboardLanguageModel.rule holds the
+# same numbers.
 TUNED = rerank.Setting(weight=1.0, margin_from_typed=0, margin_to_typed=4, margin_other=2, space_after=1,
-                       margin_apostrophe=8.0, apostrophe_scope="next", apostrophe_score="slips")
+                       margin_apostrophe=4.0, apostrophe_scope="next", apostrophe_score="slips",
+                       apostrophe_prompt="stock")
 # The input format the model was trained on (language_model_prompt of rerank.py).
 PROMPT_FORMAT = "typed"
 
@@ -68,6 +70,13 @@ def main():
             choice = rerank.choose(readings, context, TUNED, model, typed)
             if len(readings) > 1:
                 scores = model.reading_scores(context, readings, typed)
+                # The step's own scores, in the stock prompt, for every reading of a correction
+                # with a twin. A reading's score does not depend on the other candidates.
+                typed_text = next(r["text"] for r in readings if r["as_typed"])
+                has_twin = any(not r["as_typed"] and rerank.is_twin(r["text"], typed_text, TUNED.apostrophe_scope)
+                               for r in readings)
+                step = (model.step_scores(context, [r["text"] for r in readings], TUNED.apostrophe_prompt)
+                        if has_twin else {})
                 opens_field = not context
                 lm_context = rerank.language_model_prompt(context, typed, PROMPT_FORMAT)
                 sorted_texts = sorted(r["text"] for r in readings)
@@ -80,6 +89,8 @@ def main():
                         "candidate": ("" if not lm_context else " ") + rerank.language_model_text(r["text"], opens_field),
                         "engine_score": r["score"], "slip_cost": r["slips"], "as_typed": r["as_typed"], "chosen": r["chosen"],
                         "log_probability": scores[r["text"]][0], "space_after": scores[r["text"]][1],
+                        "step_log_probability": step[r["text"]][0] if step else None,
+                        "step_space_after": step[r["text"]][1] if step else None,
                     } for r in readings],
                     "result": "scores", "choice": choice,
                 })

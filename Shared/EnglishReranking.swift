@@ -81,6 +81,22 @@ struct LanguageModelPrompt: Equatable {
             candidates: readings.map { " " + withAutomaticCapitals($0, opensField: opensField) })
     }
 
+    /// The stock format, `language_model_prompt` of scripts/lm-rerank/rerank.py with the format
+    /// "stock": the text before the span without the spaces at its end, then one space and the
+    /// reading, with the same capitals as `make`. A reading that opens the field follows the start
+    /// token directly. The apostrophe step of the keyboard reads this text (`RerankRule`).
+    static func makeStock(textBefore: String, readings: [String]) -> LanguageModelPrompt {
+        var end = textBefore.endIndex
+        while end > textBefore.startIndex, textBefore[textBefore.index(before: end)] == " " {
+            end = textBefore.index(before: end)
+        }
+        let before = String(textBefore[..<end])
+        let opensField = before.isEmpty
+        return LanguageModelPrompt(
+            context: withAutomaticCapitals(before, opensField: true),
+            candidates: readings.map { (opensField ? "" : " ") + withAutomaticCapitals($0, opensField: opensField) })
+    }
+
     /// `language_model_text` of scripts/lm-rerank/rerank.py: words split at single spaces.
     static func withAutomaticCapitals(_ text: String, opensField: Bool) -> String {
         let words = text.split(separator: " ", omittingEmptySubsequences: false).map { word -> String in
@@ -128,10 +144,21 @@ struct RerankRule: Equatable {
             case modelLessSlipCost
         }
 
+        /// The text the model reads for the step's scores. `apostrophe_prompt` of rerank.py.
+        enum Prompt: Equatable {
+            /// The scores of the margins, in the format of the model.
+            case marginScores
+            /// The stock format of `LanguageModelPrompt.makeStock`, without the typed span. A
+            /// model trained on the typed format reads a typed word as the likely one, so the step
+            /// compares the two forms without it.
+            case stock
+        }
+
         let scope: Scope
         let score: Score
         /// The lead in step score that the best twin needs to replace the choice.
         let margin: Double
+        var prompt: Prompt = .marginScores
     }
 
     init(weight: Double, marginFromTyped: Double, marginToTyped: Double, marginOther: Double, usesSpaceAfter: Bool,
@@ -163,7 +190,12 @@ struct RerankRule: Equatable {
     /// The index of the reading to show. `scores` holds one score per reading, in the same
     /// order. The engine's choice stays unless the reading with the highest combined score,
     /// the first one on a tie, is higher by the margin of the move.
-    func choose(_ readings: [EnglishReading], _ scores: [CandidateScore]) -> Int {
+    ///
+    /// A step with the prompt `.stock` asks `stepScores` for the scores of the readings at the
+    /// given indices, the choice first and then the twins, in the stock prompt. Without an answer
+    /// the choice of the margins stays.
+    func choose(_ readings: [EnglishReading], _ scores: [CandidateScore],
+                stepScores: (([Int]) -> [CandidateScore]?)? = nil) -> Int {
         precondition(readings.count == scores.count, "one score per reading")
         guard let chosen = readings.firstIndex(where: { $0.chosen }) else {
             preconditionFailure("the readings hold no chosen reading")
@@ -181,7 +213,7 @@ struct RerankRule: Equatable {
         }
         // With weight 0 the harness does not ask the model, and the step needs the model.
         guard let apostrophe, weight != 0 else { return choice }
-        return apostropheStep(apostrophe, readings, scores, choice: choice)
+        return apostropheStep(apostrophe, readings, scores, choice: choice, stepScores: stepScores)
     }
 
     /// Whether `text` is a twin of the typed text: the same letters and other apostrophes. In
@@ -211,21 +243,31 @@ struct RerankRule: Equatable {
 
     /// The twin with the highest step score, the first one on a tie, replaces the choice when its
     /// step score leads by the margin. The text as typed is never a twin.
-    private func apostropheStep(_ step: ApostropheStep, _ readings: [EnglishReading], _ scores: [CandidateScore], choice: Int) -> Int {
+    private func apostropheStep(_ step: ApostropheStep, _ readings: [EnglishReading], _ scores: [CandidateScore], choice: Int,
+                                stepScores: (([Int]) -> [CandidateScore]?)?) -> Int {
         guard let typed = readings.first(where: { $0.asTyped }) else {
             preconditionFailure("the readings hold no reading as typed")
         }
-        var twin: Int?
-        for index in readings.indices where index != choice && !readings[index].asTyped
-            && Self.isTwin(readings[index].text, of: typed.text, scope: step.scope) {
-            if let current = twin, stepScore(step, readings[index], scores[index]) <= stepScore(step, readings[current], scores[current]) {
-                continue
-            }
+        let twins = readings.indices.filter { index in
+            index != choice && !readings[index].asTyped && Self.isTwin(readings[index].text, of: typed.text, scope: step.scope)
+        }
+        guard !twins.isEmpty else { return choice }
+        var values: [Int: CandidateScore] = [:]
+        switch step.prompt {
+        case .marginScores:
+            for index in [choice] + twins { values[index] = scores[index] }
+        case .stock:
+            let indices = [choice] + twins
+            guard let stepScores, let fetched = stepScores(indices) else { return choice }
+            precondition(fetched.count == indices.count, "one step score per reading")
+            for (index, score) in zip(indices, fetched) { values[index] = score }
+        }
+        func value(_ index: Int) -> Double { stepScore(step, readings[index], values[index]!) }
+        var twin = twins[0]
+        for index in twins.dropFirst() where value(index) > value(twin) {
             twin = index
         }
-        guard let twin else { return choice }
-        let lead = stepScore(step, readings[twin], scores[twin]) - stepScore(step, readings[choice], scores[choice])
-        return lead >= step.margin ? twin : choice
+        return value(twin) - value(choice) >= step.margin ? twin : choice
     }
 }
 
@@ -236,6 +278,8 @@ struct RerankTrace {
     let prompt: LanguageModelPrompt
     let readings: [EnglishReading]
     let result: CandidateScoringResult
+    /// The scores of the apostrophe step in its own prompt, by reading index, when the step asked.
+    let stepScores: [Int: CandidateScore]
     /// The reading the keyboard shows.
     let choice: Int
     /// Time from the start of the prompt to the choice.
@@ -328,10 +372,27 @@ final class EnglishReranker {
         }
         let result = scorer.score(prompt)
         var choice = chosen
+        var stepScores: [Int: CandidateScore] = [:]
         switch result {
         case .scores(let scores):
             precondition(scores.count == readings.count, "the model gave \(scores.count) scores for \(readings.count) readings")
-            choice = rule.choose(readings, scores)
+            choice = rule.choose(readings, scores) { indices in
+                let stepPrompt = LanguageModelPrompt.makeStock(
+                    textBefore: textBefore, readings: indices.map { readings[$0].text })
+                switch self.scorer.score(stepPrompt) {
+                case .scores(let values):
+                    for (index, value) in zip(indices, values) { stepScores[index] = value }
+                    return values
+                case .notReady(let reason):
+                    self.statistics.recordNotReady(reason)
+                case .refused(let reason):
+                    self.statistics.recordRefused(reason)
+                case .failed(let reason):
+                    self.statistics.recordFailed(reason)
+                    self.onModelError(reason)
+                }
+                return nil
+            }
         case .notReady(let reason):
             statistics.recordNotReady(reason)
         case .refused(let reason):
@@ -345,8 +406,8 @@ final class EnglishReranker {
             statistics.recordRead(milliseconds: milliseconds, changed: choice != chosen)
         }
         onTrace?(RerankTrace(
-            textBefore: textBefore, prompt: prompt, readings: readings, result: result, choice: choice,
-            milliseconds: milliseconds))
+            textBefore: textBefore, prompt: prompt, readings: readings, result: result, stepScores: stepScores,
+            choice: choice, milliseconds: milliseconds))
         return readings[choice].text
     }
 }

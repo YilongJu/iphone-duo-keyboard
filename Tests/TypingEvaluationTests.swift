@@ -70,6 +70,9 @@ final class TypingEvaluationTests: XCTestCase {
         let chosen: Bool
         let logProbability: Double?
         let spaceAfter: Double?
+        /// The scores of the apostrophe step in its stock prompt, for the readings it asked about.
+        let stepLogProbability: Double?
+        let stepSpaceAfter: Double?
     }
 
     /// Collects the trace lines of one run, with the case that is typed now.
@@ -95,7 +98,8 @@ final class TypingEvaluationTests: XCTestCase {
                     engineScore: trace.readings[index].score, slipCost: trace.readings[index].slipCost,
                     asTyped: trace.readings[index].asTyped,
                     chosen: trace.readings[index].chosen, logProbability: scores?[index].logProbability,
-                    spaceAfter: scores?[index].spaceAfter)
+                    spaceAfter: scores?[index].spaceAfter, stepLogProbability: trace.stepScores[index]?.logProbability,
+                    stepSpaceAfter: trace.stepScores[index]?.spaceAfter)
             }
             lines.append(TraceLine(
                 id: caseID, step: step, textBefore: trace.textBefore, context: trace.prompt.context, readings: readings,

@@ -37,7 +37,8 @@ from score import normalize  # noqa: E402
 TUNED = {"weight": 1.0, "margin_from_typed": 0.0, "margin_to_typed": 4.0, "margin_other": 2.0}
 # The same setting with the apostrophe step, for rerank.choose.
 SETTING = rerank.Setting(weight=1.0, margin_from_typed=0, margin_to_typed=4, margin_other=2, space_after=1,
-                         margin_apostrophe=8.0, apostrophe_scope="next", apostrophe_score="slips")
+                         margin_apostrophe=4.0, apostrophe_scope="next", apostrophe_score="slips",
+                         apostrophe_prompt="stock")
 
 
 class RecordedScores:
@@ -46,8 +47,17 @@ class RecordedScores:
     def __init__(self, entry: dict):
         self.scores = {r["text"]: (float(r["log_probability"]), float(r["space_after"])) for r in entry["readings"]}
 
+        self.step = {r["text"]: (float(r["step_log_probability"]), float(r["step_space_after"]))
+                     for r in entry["readings"] if r.get("step_log_probability") is not None}
+
     def reading_scores(self, context, readings, typed):
         return self.scores
+
+    def step_scores(self, context, texts, prompt):
+        missing = [t for t in texts if t not in self.step]
+        if missing:
+            raise SystemExit(f"the trace holds no step score for {missing}")
+        return {t: self.step[t] for t in texts}
 
 
 def recorded_choice(entry: dict) -> str:
