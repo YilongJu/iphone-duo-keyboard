@@ -1,0 +1,109 @@
+name: Apostrophe words
+
+# Measures the corrections of words with and without an apostrophe ("its" and "it's") through the
+# Linux harness of scripts/lm-rerank with distilgpt2, on cases/english-apostrophe-words, and the
+# effect of the same runs on the existing English dev cases. docs/apostrophe-words-design.md
+# describes the measurement. GitHub starts a dispatched workflow only from the default branch, so
+# a push starts this one, and HALF below names the half. The test half is read once, for the one
+# MARGIN that the dev half chose.
+on:
+  push:
+    branches: [engine/apostrophe-words]
+    paths:
+      - 'Engine/**'
+      - 'Shared/lexicon-english.bin'
+      - 'scripts/lm-rerank/**'
+      - 'scripts/typing-evaluation/**'
+      - '.github/workflows/apostrophe-words.yml'
+
+env:
+  HALF: dev
+  MARGIN: ''
+
+concurrency:
+  group: apostrophe-words-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  engine-check:
+    name: Engine choice unchanged, readings checked
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Compare the engine output with the engine of engine/lm-keyboard on the dev cases
+        run: |
+          set -euo pipefail
+          mkdir -p build/engine build/base-engine
+          base=84b3e00
+          for file in duo_engine.c duo_engine.h duo_cli.c; do git show "$base:Engine/$file" > "build/base-engine/$file"; done
+          gcc -std=c11 -O2 -Wall -Wextra -Werror build/base-engine/duo_engine.c build/base-engine/duo_cli.c -lm -o build/engine/duo_cli_base
+          gcc -std=c11 -O2 -Wall -Wextra -Werror Engine/duo_engine.c Engine/duo_cli.c -lm -o build/engine/duo_cli
+          git show "$base:Shared/lexicon-english.bin" > build/base-engine/lexicon-english.bin
+          for task in english english-symbols english-apostrophe-words pinyin; do
+            lexicon=()
+            if [ "$task" != pinyin ]; then lexicon=(--lexicon build/base-engine/lexicon-english.bin); fi
+            python3 scripts/typing-evaluation/run_duo_engine.py --task "$task" --half dev --cli build/engine/duo_cli_base --name base "${lexicon[@]}" > /dev/null
+            python3 scripts/typing-evaluation/run_duo_engine.py --task "$task" --half dev --cli build/engine/duo_cli --name new > /dev/null
+            if cmp -s "build/typing-evaluation/duo-engine/base.$task.dev.jsonl" "build/typing-evaluation/duo-engine/new.$task.dev.jsonl"; then
+              echo "$task dev: the outputs are the same, $(wc -l < "build/typing-evaluation/duo-engine/new.$task.dev.jsonl") cases"
+            else
+              echo "$task dev: the outputs differ in $(diff "build/typing-evaluation/duo-engine/base.$task.dev.jsonl" "build/typing-evaluation/duo-engine/new.$task.dev.jsonl" | grep -c '^<') cases"
+            fi
+          done
+      - name: Build the engine shim and the readings check
+        run: bash scripts/lm-rerank/build_on_linux.sh
+      - name: Check duo_english_readings under the memory checks, with the apostrophe words
+        run: |
+          set -euo pipefail
+          python3 - > build/lm-rerank/readings-input.tsv <<'EOF'
+          import json
+          for name in ["english.dev.jsonl", "english-symbols.dev.jsonl", "english-apostrophe-words.dev.jsonl"]:
+              for line in open("scripts/typing-evaluation/cases/" + name, encoding="utf-8"):
+                  case = json.loads(line)
+                  previous = case["context"].split(" ")[-1] if case["context"] else ""
+                  print(f"{case['id']}\t{previous}\t{case['typed']}")
+                  if "next_word" in case:
+                      print(f"{case['id']}-next\t{previous}\t{case['typed']} {case['next_word']}")
+          EOF
+          build/lm-rerank/readings_check Shared/lexicon-english.bin < build/lm-rerank/readings-input.tsv
+      - name: Score the engine and the readings of the apostrophe words
+        run: python3 scripts/lm-rerank/apostrophe_words.py --shim build/lm-rerank/libduo_shim.so --half dev --out build/lm-rerank/apostrophe-words/engine
+      - uses: actions/upload-artifact@v7
+        with:
+          name: apostrophe-words-engine
+          path: |
+            build/lm-rerank/apostrophe-words/engine
+            build/typing-evaluation/duo-engine
+          if-no-files-found: error
+
+  rerank:
+    name: distilgpt2 Q3_K_M through the harness
+    runs-on: ubuntu-24.04
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@v7
+      - name: Build llama.cpp b4846, the scorer and the engine shim
+        run: bash scripts/lm-rerank/build_on_linux.sh llama
+      - name: Fetch distilgpt2 Q3_K_M
+        run: bash scripts/lm-rerank/fetch_models.sh distilgpt2-q3 | tail -n 1 > build/lm-rerank/model-path.txt
+      - name: Type the cases through the harness
+        run: |
+          set -euo pipefail
+          export LD_LIBRARY_PATH="$PWD/build/lm-rerank/llama/lib"
+          half="$HALF"
+          margin=()
+          if [ "$half" = test ]; then margin=(--margin "$MARGIN"); fi
+          python3 scripts/lm-rerank/apostrophe_words.py --shim build/lm-rerank/libduo_shim.so --lm build/lm-rerank/lm_score \
+            --model "$(cat build/lm-rerank/model-path.txt)" --threads 4 --half "$half" "${margin[@]}" \
+            --out build/lm-rerank/apostrophe-words/rerank
+          python3 scripts/lm-rerank/apostrophe_words_table.py build/lm-rerank/apostrophe-words/rerank/result.$half.json \
+            | tee build/lm-rerank/apostrophe-words/rerank/table.$half.md >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: apostrophe-words-rerank-${{ env.HALF }}
+          path: build/lm-rerank/apostrophe-words/rerank
+          if-no-files-found: error

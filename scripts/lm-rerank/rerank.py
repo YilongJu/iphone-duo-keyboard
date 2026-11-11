@@ -163,6 +163,9 @@ class Setting:
     margin_to_typed: float
     margin_other: float
     space_after: int
+    # None leaves out the apostrophe step of choose(). A number is the lead in model score that
+    # a reading of the typed letters with other apostrophes needs over the choice of the margins.
+    margin_apostrophe: float | None = None
 
 
 def engine_choice(readings: list[dict], text_before: str) -> str:
@@ -202,14 +205,41 @@ def choose(readings: list[dict], context: str, setting: Setting, model: Language
 
     best = max(readings, key=combined)
     if best is chosen:
-        return chosen["text"]
-    if chosen["as_typed"]:
-        margin = setting.margin_from_typed
-    elif best["as_typed"]:
-        margin = setting.margin_to_typed
+        choice = chosen
     else:
-        margin = setting.margin_other
-    return best["text"] if combined(best) - combined(chosen) >= margin else chosen["text"]
+        if chosen["as_typed"]:
+            margin = setting.margin_from_typed
+        elif best["as_typed"]:
+            margin = setting.margin_to_typed
+        else:
+            margin = setting.margin_other
+        choice = best if combined(best) - combined(chosen) >= margin else chosen
+    if setting.margin_apostrophe is not None and lm is not None:
+        choice = apostrophe_step(readings, choice, lm, setting)
+    return choice["text"]
+
+
+def apostrophe_step(readings: list[dict], choice: dict, lm: dict, setting: Setting) -> dict:
+    """The apostrophe step. The readings that spell the typed letters with other apostrophes,
+    as "it's going" for the typed "its going" and "what's" for the typed "whats", are the
+    twins. The twin with the highest model score, the first one in the list on a tie, replaces
+    the choice when its model score leads the choice's by `margin_apostrophe`. The text as typed
+    is never a twin, and the step does not compare it.
+
+    The engine score does not count here. The engine's word pairs come from a list without a
+    single contraction, so after a word and before a word they favor any word over a
+    contraction: "whats" after "understand" gives "what", and "its going" stays as typed."""
+    def model_score(reading: dict) -> float:
+        log_probability, space_after = lm[reading["text"]]
+        return log_probability + (space_after if setting.space_after else 0.0)
+
+    typed = next(r for r in readings if r["as_typed"])
+    letters = typed["text"].replace("'", "")
+    twins = [r for r in readings if r is not choice and not r["as_typed"] and r["text"].replace("'", "") == letters]
+    if not twins:
+        return choice
+    twin = max(twins, key=model_score)
+    return twin if model_score(twin) - model_score(choice) >= setting.margin_apostrophe else choice
 
 
 # ---- The keyboard's correction rules, from Shared/KeyboardTextLogic.swift and KeyboardTextController.swift ----
