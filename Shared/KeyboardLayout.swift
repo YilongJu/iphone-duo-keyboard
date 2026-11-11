@@ -9,7 +9,7 @@ enum KeyboardLayer {
 }
 
 /// `compact` is the phone-width layout (10 key units per row).
-/// `wide` is the iPad-style layout (14.5 key units per row) for the unfolded display.
+/// `wide` is the iPad-style layout (13.5 key units per row) for the unfolded display.
 /// The devices whose keyboards differ. An iPhone, the iPhone Duo included, chooses its layout
 /// from the keyboard's width alone. An iPad chooses by width and by the screen's orientation.
 enum KeyboardDevice {
@@ -144,7 +144,8 @@ enum KeyKind: Equatable {
 
 /// One key. In `keyboard-layout.json` a key takes one of four forms:
 /// `"a"` for a character, `["1", "!"]` for a base and a shifted character,
-/// `{"c": "_", "w": 0.85}` for a character with a width, and `{"f": "shift", "w": 2.25}` for a function key.
+/// `{"c": "_", "w": 0.85}` for a character with a width, `{"c": "1", "s": "!", "w": 0.9}` for a base
+/// and a shifted character with a width, and `{"f": "shift", "w": 2.25}` for a function key.
 struct Key: Decodable {
     let kind: KeyKind
     /// Width in key units. A letter key is 1 unit.
@@ -157,6 +158,7 @@ struct Key: Decodable {
 
     private struct ObjectForm: Decodable {
         let c: String?
+        let s: String?
         let f: String?
         let w: CGFloat?
     }
@@ -176,7 +178,9 @@ struct Key: Decodable {
             return
         }
         let object = try container.decode(ObjectForm.self)
-        if let character = object.c {
+        if let character = object.c, let shifted = object.s {
+            self.init(.dual(character, shifted), object.w ?? 1)
+        } else if let character = object.c {
             self.init(.character(character), object.w ?? 1)
         } else if let name = object.f, let kind = KeyKind.function(named: name) {
             self.init(kind, object.w ?? 1)
