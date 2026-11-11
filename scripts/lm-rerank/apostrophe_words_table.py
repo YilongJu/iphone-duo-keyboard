@@ -52,6 +52,7 @@ def main():
                                             + [f"{alone[c]['right']}/{alone[c]['cases']}" for c in EXISTING_ALONE])
                   + f" | {entry['existing']['right']}/{entry['existing']['cases']} |")
         print()
+    if "chosen" in result:
         print(f"Settings that keep every existing category and the new controls: "
               f"{', '.join(result.get('allowed', [])) or 'none'}. Chosen: {result.get('chosen')}.\n")
         lost = result.get("existing_lost_against_shipped", {})
