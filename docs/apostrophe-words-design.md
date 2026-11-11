@@ -21,8 +21,9 @@ What to do:
 3. Type a word and the next word, see the correction, and press backspace once. Both words
    come back as shown before the correction, and the keyboard keeps them from then on.
 
-This page does not settle the phone's time per correction. The pair its/it's stays weak with
-distilgpt2: 12 of 40 with the next word typed.
+On the test half, read once, the chosen setting gets 1,405 of 1,617, where the shipped
+keyboard gets 612. This page does not settle the phone's time per correction. The pair its/it's
+stays weak with distilgpt2: 12 of 40 on each half with the next word typed.
 
 ## Glossary
 
@@ -184,6 +185,25 @@ gives "Its" and "It's" close scores there. The controls equal the shipped counts
 
 Plain pairs below 10 of 20 with the next word: "whens" 0/20, "whyd" 0/7, "wherere" 0/5,
 "whatd" 0/3, "yall" 0/14, "thatll" 8/20, "shouldve" 8/20.
+
+## Results on the test half
+
+The test half was read once, for the chosen setting, in run 42979245575. It holds no sentence
+with the words of a dev sentence.
+
+Table 7. Right new test cases with the next word typed.
+
+| Run | dropped, ambiguous | control, word | added | control, contraction | dropped, plain | all |
+| --- | --- | --- | --- | --- | --- | --- |
+| engine, shipped lexicon | 0/324 | 313/324 | 13/69 | 67/69 | 230/831 | 623/1617 |
+| shipped | 0/324 | 313/324 | 13/69 | 67/69 | 219/831 | 612/1617 |
+| chosen | 273/324 | 311/324 | 51/69 | 67/69 | 703/831 | 1405/1617 |
+
+With the word alone, the chosen setting gets 806 of 1,617 and the shipped keyboard 794. A
+keyboard that always shows the contraction gets 1,224, and one that never does gets 393.
+
+The chosen setting turns 2 test controls wrong: one "hell" (39 of 40) and one "lets" (25 of
+29). Per pair, its/it's gets 12 of 40 and the other ambiguous pairs 1 of 2 to 40 of 40.
 
 ## Files of the fix
 

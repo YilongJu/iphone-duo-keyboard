@@ -17,11 +17,11 @@ on:
       - '.github/workflows/apostrophe-words.yml'
 
 env:
-  # The one reading of the test half, for the setting that the dev half chose in run 42971698702.
-  HALF: test
-  MARGIN: '1'
-  SCOPE: next
-  SCORE: slips
+  # The test half was read once, in run 42979245575. Later runs read the dev half only.
+  HALF: dev
+  MARGIN: ''
+  SCOPE: ''
+  SCORE: ''
 
 concurrency:
   group: apostrophe-words-${{ github.ref }}
