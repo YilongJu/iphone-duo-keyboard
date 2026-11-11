@@ -238,8 +238,11 @@ def pick(arguments) -> None:
     rows = {"control": sets.row(control), "ship": sets.row(ship)}
     result = {"sizes": sets.sizes(), "ship": arguments.ship, "arms": {}}
     qualified = []
+    dry_run = {}
     for spec in arguments.arm:
         arm = load(spec)
+        # A dry run of the replacement conditions on the selection sets. It checks the code, and it decides nothing.
+        dry_run[spec] = replacement_conditions(sets, arm, ship, control)
         row = sets.row(arm)
         rows[spec] = row
         conditions = pick_conditions(sets, row, rows["ship"], rows["control"])
@@ -249,7 +252,8 @@ def pick(arguments) -> None:
     # Fewest changed words, then most real misspellings, then most non-word slips, then the order given.
     order = sorted(qualified, key=lambda spec: (rows[spec]["changed_words"], -rows[spec]["real_misspellings"], -rows[spec]["non_word_slips"],
                                                  arguments.arm.index(spec)))
-    result.update({"rows": rows, "qualified": qualified, "candidate": order[0] if order else None})
+    result.update({"rows": rows, "qualified": qualified, "candidate": order[0] if order else None,
+                   "dry_run_of_the_replacement_conditions_on_the_selection_sets": dry_run})
     for name, row in rows.items():
         row["estimate"] = {f"s={s} r={r}": round(sets.estimate(row, s, r), 2) for s in SLIP_SHARES for r in REAL_WORD_SHARES}
     arguments.out.mkdir(parents=True, exist_ok=True)
@@ -260,7 +264,14 @@ def pick(arguments) -> None:
         ["Arm", *names, "qualifies"],
         [[f"`{spec}`", *["yes" if entry["conditions"][n] else "no" for n in names], "yes" if entry["qualifies"] else "no"]
          for spec, entry in result["arms"].items()])
-    text += f"\nCandidate: {result['candidate']}\n"
+    text += f"\nCandidate: {result['candidate']}\n\n"
+    text += "Dry run of the six replacement conditions on the selection sets. It checks the code, and it decides nothing.\n\n" + table(
+        ["Arm", "1", "2", "3", "4", "5", "6", "changed sentences only ship / only arm", "p", "non-word difference (interval)"],
+        [[f"`{spec}`", *["yes" if v else "no" for v in d["conditions"].values()],
+          f"{d['numbers']['sentences_changed_only_by_the_reference']} / {d['numbers']['sentences_changed_only_by_the_arm']}",
+          f"{d['numbers']['mcnemar_one_sided_p']:.3g}",
+          f"{d['numbers']['non_word_difference']:+d} ({d['numbers']['non_word_interval'][0]:+d} to {d['numbers']['non_word_interval'][1]:+d})"]
+         for spec, d in dry_run.items()])
     (arguments.out / "pick.md").write_text(text, encoding="utf-8")
     print(text)
 
