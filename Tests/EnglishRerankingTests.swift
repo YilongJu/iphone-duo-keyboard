@@ -52,8 +52,23 @@ final class RerankRuleTests: XCTestCase {
 
     private let rule = RerankRule.distilgpt2
 
-    func testTheTunedSettingIsTheOneOfTheHarness() {
+    func testTheTunedSettingsAreThoseOfTheHarness() {
         XCTAssertEqual(rule, RerankRule(weight: 1.0, marginFromTyped: 24, marginToTyped: 0, marginOther: 2, usesSpaceAfter: true))
+        // The arm smollm2-lora-seed1 of scripts/lm-finetune/test-plan.json.
+        XCTAssertEqual(KeyboardLanguageModel.rule,
+                       RerankRule(weight: 1.0, marginFromTyped: 0, marginToTyped: 4, marginOther: 2, usesSpaceAfter: true))
+    }
+
+    func testTheSmolLM2RuleTakesAnyLeadAwayFromTheTextAsTyped() {
+        let smollm2 = KeyboardLanguageModel.rule
+        let readings = [reading("teh", -10, typed: true, chosen: true), reading("the", -12)]
+        // An equal score leaves the first maximum, the engine's choice, and any lead replaces it.
+        XCTAssertEqual(smollm2.choose(readings, model(-30, -28)), 0)
+        XCTAssertEqual(smollm2.choose(readings, model(-30, -27.99)), 1)
+        // A move back to the text as typed needs a lead of 4.
+        let back = [reading("thr", -10, chosen: true), reading("the", -11, typed: true)]
+        XCTAssertEqual(smollm2.choose(back, model(-5, -0.01)), 0)
+        XCTAssertEqual(smollm2.choose(back, model(-5, 0)), 1)
     }
 
     func testTheEngineChoiceStaysWhenItHasTheHighestCombinedScore() {
@@ -119,25 +134,38 @@ final class RerankRuleTests: XCTestCase {
 
 /// The text the model reads, built the way scripts/lm-rerank/rerank.py builds it.
 final class LanguageModelPromptTests: XCTestCase {
-    func testTheContextAndTheCandidatesGetTheCapitalsAPersonSees() {
-        let prompt = LanguageModelPrompt.make(
-            textBefore: "can i take my shirt off it's so ", typed: "hto", readings: ["hot", "i'm hot", "hto"])
-        XCTAssertEqual(prompt.context, "Can I take my shirt off it's so")
-        XCTAssertEqual(prompt.candidates, [" hot", " I'm hot", " hto"])
+    func testTheTypedSpanStandsBetweenBarsAfterTheTextBeforeIt() {
+        // The example of scripts/lm-finetune/README.md, Table 14.
+        let prompt = try? XCTUnwrap(LanguageModelPrompt.make(textBefore: "how much ", typed: "sutar", readings: ["sugar", "star"]))
+        XCTAssertEqual(prompt?.context, "How much | sutar |")
+        XCTAssertEqual(prompt?.candidates, [" sugar", " star"])
     }
 
-    func testAReadingThatOpensTheFieldFollowsTheStartToken() {
+    func testTheContextAndTheReadingsGetTheCapitalsAPersonSeesAndTheTypedSpanStays() {
+        let prompt = LanguageModelPrompt.make(
+            textBefore: "can i take my shirt off it's so ", typed: "i hto", readings: ["i hot", "i'm hot", "i hto"])
+        XCTAssertEqual(prompt?.context, "Can I take my shirt off it's so | i hto |")
+        XCTAssertEqual(prompt?.candidates, [" I hot", " I'm hot", " I hto"])
+    }
+
+    func testAnEmptyTextBeforeTheSpanLeavesTheTypedSpanAlone() {
         let prompt = LanguageModelPrompt.make(textBefore: "", typed: "i thnik", readings: ["i think", "the"])
-        XCTAssertEqual(prompt.context, "")
-        XCTAssertEqual(prompt.candidates, ["I think", "The"])
-        // Spaces alone also leave the context empty.
-        XCTAssertEqual(LanguageModelPrompt.make(textBefore: "  ", typed: "teh", readings: ["the"]).candidates, ["The"])
+        XCTAssertEqual(prompt?.context, "| i thnik |")
+        // The reading opens the field, so it gets the field's capital, after one space.
+        XCTAssertEqual(prompt?.candidates, [" I think", " The"])
+        // Spaces alone also leave the text before the span empty.
+        XCTAssertEqual(LanguageModelPrompt.make(textBefore: "  ", typed: "teh", readings: ["the"])?.context, "| teh |")
     }
 
     func testOnlyTheSpacesAtTheEndAreDropped() {
         let prompt = LanguageModelPrompt.make(textBefore: "dear tom,\n", typed: "teh", readings: ["the"])
-        XCTAssertEqual(prompt.context, "Dear tom,\n")
-        XCTAssertEqual(prompt.candidates, [" the"])
+        XCTAssertEqual(prompt?.context, "Dear tom,\n | teh |")
+        XCTAssertEqual(prompt?.candidates, [" the"])
+    }
+
+    func testABarInTheTextGivesNoPrompt() {
+        XCTAssertNil(LanguageModelPrompt.make(textBefore: "a | b ", typed: "teh", readings: ["the"]))
+        XCTAssertNil(LanguageModelPrompt.make(textBefore: "a ", typed: "te|h", readings: ["the"]))
     }
 
     func testAnIOnlyAfterASpaceGetsItsCapital() {
@@ -174,7 +202,7 @@ final class EnglishRerankingTests: XCTestCase {
         keyboardView = KeyboardView()
         document = FakeDocument(before: before, after: after)
         scorer = FakeScorer(answer: answer)
-        reranker = EnglishReranker(scorer: scorer)
+        reranker = EnglishReranker(scorer: scorer, rule: KeyboardLanguageModel.rule)
         spellChecker = EngineSpellChecker(
             engine: Self.engine, reranker: reranker, store: UserDefaults(suiteName: Self.storeName)!)
         controller = KeyboardTextController(
@@ -217,7 +245,7 @@ final class EnglishRerankingTests: XCTestCase {
         type("teh ")
         XCTAssertEqual(document.text, "this is a \(other) ")
         let prompt = try XCTUnwrap(scorer.prompts.last)
-        XCTAssertEqual(prompt.context, "This is a")
+        XCTAssertEqual(prompt.context, "This is a | teh |")
         XCTAssertTrue(prompt.candidates.contains(" \(other)"), "\(prompt)")
         XCTAssertEqual(reranker.statistics.readCount, 1)
         XCTAssertEqual(reranker.statistics.changedCount, 1)
@@ -243,7 +271,7 @@ final class EnglishRerankingTests: XCTestCase {
         XCTAssertTrue(scorer.prompts.isEmpty, "\(scorer.prompts)")
         // A word read with a kept word before it is read alone.
         type("cta ")
-        XCTAssertTrue(scorer.prompts.allSatisfy { $0.context == "This is a teh" }, "\(scorer.prompts)")
+        XCTAssertTrue(scorer.prompts.allSatisfy { $0.context == "This is a teh | cta |" }, "\(scorer.prompts)")
     }
 
     func testTheTwoWordReadingGoesToTheModelWithTheTextBeforeBothWords() {
@@ -254,7 +282,7 @@ final class EnglishRerankingTests: XCTestCase {
         XCTAssertEqual(document.text, "I said the ")
         let last = traces.last
         XCTAssertEqual(last?.textBefore, "I said ")
-        XCTAssertEqual(last?.prompt.context, "I said")
+        XCTAssertEqual(last?.prompt.context, "I said | th e |")
         // The readings of the two typed words together.
         XCTAssertTrue(last?.readings.contains { $0.asTyped && $0.text == "th e" } ?? false, "\(String(describing: last))")
     }
@@ -267,7 +295,16 @@ final class EnglishRerankingTests: XCTestCase {
         RunLoop.current.run(until: Date().addingTimeInterval(0.6))
         XCTAssertEqual(document.text, "\(other) ")
         // The field was empty when the model read the word, so the reading opens the field.
-        XCTAssertEqual(scorer.prompts.last?.context, "")
+        XCTAssertEqual(scorer.prompts.last?.context, "| teh |")
+    }
+
+    func testABarBeforeTheWordKeepsTheEngineChoice() {
+        makeController(before: "a | b ", answer: FakeScorer.favoring("tech"))
+        let engineChoice = try? XCTUnwrap(Self.engine.reading(previousWord: "b", typed: "teh"))
+        type("teh ")
+        XCTAssertEqual(document.text, "a | b \(engineChoice ?? "") ")
+        XCTAssertTrue(scorer.prompts.isEmpty)
+        XCTAssertEqual(reranker.statistics.refusedCount, 1)
     }
 
     func testPinyinTypingDoesNotUseTheModel() {

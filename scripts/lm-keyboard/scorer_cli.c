@@ -89,8 +89,8 @@ int main(int argc, char **argv) {
         requests++;
     }
     duo_lm_scorer_info info = duo_lm_scorer_get_info(scorer);
-    fprintf(stderr, "scorer_cli: %ld requests, %ld tokens read, %ld space and %ld line break tokens put in place of -1\n",
-            info.requests, info.tokens_read, info.space_repairs, info.line_break_repairs);
+    fprintf(stderr, "scorer_cli: start token %d, %ld requests, %ld tokens read, %ld space and %ld line break tokens put in place of -1\n",
+            info.start_token, info.requests, info.tokens_read, info.space_repairs, info.line_break_repairs);
     duo_lm_scorer_close(scorer);
     return 0;
 }

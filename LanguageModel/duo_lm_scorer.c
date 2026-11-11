@@ -7,7 +7,7 @@
 
  1. Each call of the model reads at most 31 tokens, so the context and the candidates may take
     more than one call. This keeps the memory small: llama.cpp keeps the scores of every token
-    of one call, 50,257 numbers or 201 KB per token for distilgpt2, and it sets aside room for
+    of one call, 49,152 numbers or 197 KB per token for SmolLM2-135M, and it sets aside room for
     the largest call at the start. The framework of the app also holds the BLAS backend of
     Apple's Accelerate library. In llama.cpp b4846 the processor device comes first in the list
     of backends, so the processor already runs every product. BLAS also refuses a product of

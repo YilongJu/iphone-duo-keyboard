@@ -119,8 +119,8 @@ protocol LanguageModelLoading: AnyObject {
     func loadInBackground()
 }
 
-/// The language model of the English corrections: distilgpt2 from the bundle, loaded once and
-/// kept loaded until a memory warning frees it.
+/// The language model of the English corrections: the SmolLM2-135M fine-tune of the bundle,
+/// loaded once and kept loaded until a memory warning frees it.
 ///
 /// The keyboard asks for a load when it appears in English and when the person switches to
 /// English, so Chinese typing never loads the model. A correction made before the model is
@@ -129,6 +129,12 @@ protocol LanguageModelLoading: AnyObject {
 final class KeyboardLanguageModel: CandidateScoring, LanguageModelLoading {
     /// Threads of each call of the model, the count measured on the iPhone Duo.
     nonisolated static let threads = 2
+
+    /// The rule tuned for the bundled model on the tuning split of scripts/lm-finetune, the arm
+    /// smollm2-lora-seed1 of scripts/lm-finetune/test-plan.json on the branch engine/lm-finetune.
+    /// The model reads the typed format of `LanguageModelPrompt.make`.
+    nonisolated static let rule = RerankRule(
+        weight: 1.0, marginFromTyped: 0, marginToTyped: 4, marginOther: 2, usesSpaceAfter: true)
 
     enum State: Equatable {
         case notLoaded
@@ -310,7 +316,7 @@ final class KeyboardLanguageModel: CandidateScoring, LanguageModelLoading {
                 + "\(statistics.refusedCount) were outside its limits, \(statistics.failedCount) gave a model error")
         if let info = scorerInfo {
             lines.append(
-                "reranker    \(info.requests) requests, \(info.tokens_read) tokens read, "
+                "reranker    start token \(info.start_token), \(info.requests) requests, \(info.tokens_read) tokens read, "
                     + "\(info.space_repairs) space and \(info.line_break_repairs) line break tokens put in place of -1")
         }
         if let problem = statistics.lastProblem {

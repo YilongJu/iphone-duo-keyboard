@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Downloads the two files of the language model test that are too large for the repository:
-# the llama.cpp framework and the model file. Each file has a fixed address and must match a
+# Downloads the two files of the language model that are too large for the repository: the
+# llama.cpp framework and the model file. Each file has a fixed address and must match a
 # fixed SHA-256 value. A file that is already in place and matches is kept.
 #
 # Usage: fetch_language_model.sh [framework] [model]
@@ -16,10 +16,12 @@ framework_url="https://github.com/azooKey/llama.cpp/releases/download/b4846/sign
 framework_sha256="db3b13169df8870375f212e6ac21194225f1c85f7911d595ab64c8c790068e0a"
 framework_dir="Vendor"
 
-# distilgpt2 with weights of about 3 bits (Q3_K_M), at a fixed commit of the model repository.
-model_url="https://huggingface.co/mradermacher/distilgpt2-GGUF/resolve/524d576d63aa026274d5a1ee42414edf7f61e7c7/distilgpt2.Q3_K_M.gguf"
-model_sha256="a0fdd02371cf4b318445575ab917cd3cf4abf494e09c24f760f777eb641b2b85"
-model_path="Shared/distilgpt2.Q3_K_M.gguf"
+# SmolLM2-135M with a LoRA fine-tune for the re-ranker in the typed format, merged and stored with
+# weights of about 4 bits (Q4_K_M). scripts/lm-finetune on the branch engine/lm-finetune trained
+# it, and the release lm-finetune-smollm2-lora-v1 of this repository holds the file.
+model_url="https://github.com/YilongJu/iphone-duo-keyboard/releases/download/lm-finetune-smollm2-lora-v1/smollm2-lora-typed-seed1.Q4_K_M.gguf"
+model_sha256="fe82c0b617bdf19cf72b92148edbf9406c7547396ca7fac477485884431c07bb"
+model_path="Shared/smollm2-lora-typed-seed1.Q4_K_M.gguf"
 
 sha256_of() {
   shasum -a 256 "$1" | cut -d ' ' -f 1

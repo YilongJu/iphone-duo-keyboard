@@ -38,7 +38,7 @@ final class LanguageModelScorerTests: XCTestCase {
         XCTAssertEqual(model.state, .ready)
         XCTAssertEqual(KeyboardLanguageModel.threads, 2)
         let info = try XCTUnwrap(model.scorerInfo)
-        XCTAssertEqual(info.vocabulary, 50257)
+        XCTAssertEqual(info.vocabulary, 49152)
     }
 
     func testEveryCandidateGetsAProbabilityAndTheLikelyOneIsHigher() throws {
@@ -73,12 +73,11 @@ final class LanguageModelScorerTests: XCTestCase {
         XCTAssertEqual(alone.spaceAfter, together[7].spaceAfter, accuracy: 1e-3)
     }
 
-    func testALoneSpacePieceGetsTheSpaceToken() throws {
-        // llama.cpp b4846 gives -1 for the lone space of " ich", as scripts/lm-rerank/README.md says.
-        let before = try XCTUnwrap(model().scorerInfo).space_repairs
-        let values = try scores("he said", [" ich", " itch"])
+    func testTextsWithLoneSpacePiecesGiveScores() throws {
+        // These texts give a lone space piece in the GPT-2 vocabulary (scripts/lm-rerank/README.md).
+        // The SmolLM2 vocabulary has its own merges, so the count of repairs is not fixed here.
+        let values = try scores("he said", [" ich", " itch", " ike", " uring"])
         XCTAssertTrue(values.allSatisfy { $0.logProbability.isFinite }, "\(values)")
-        XCTAssertGreaterThan(try XCTUnwrap(model().scorerInfo).space_repairs, before)
     }
 
     func testALineBreakInTheContextGetsTheLineBreakToken() throws {
@@ -134,7 +133,7 @@ final class LanguageModelScorerTests: XCTestCase {
         var statistics = RerankStatistics()
         statistics.recordRead(milliseconds: 21.5, changed: false)
         let lines = model.reportLines(statistics: statistics)
-        XCTAssertTrue(lines[0].hasPrefix("reranker    distilgpt2.Q3_K_M, 2 threads, loaded in "), lines[0])
+        XCTAssertTrue(lines[0].hasPrefix("reranker    smollm2-lora-typed-seed1.Q4_K_M, 2 threads, loaded in "), lines[0])
         XCTAssertTrue(lines.contains { $0.contains("footprint") && $0.contains("before the load") }, "\(lines)")
         XCTAssertTrue(lines.contains { $0.contains("1 corrections read by the model") && $0.contains("mean 21.5 ms") }, "\(lines)")
         XCTAssertTrue(lines.allSatisfy { $0.count > 12 && $0.prefix(12).last == " " }, "\(lines)")

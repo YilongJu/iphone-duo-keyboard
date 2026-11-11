@@ -18,7 +18,7 @@ final class SetupViewController: UIViewController, UITextViewDelegate {
     /// The preview keyboard re-ranks its English corrections with the same model as the
     /// keyboard extension. The model loads when the preview keyboard appears in English.
     private let languageModel = KeyboardLanguageModel.bundled()
-    private lazy var reranker = EnglishReranker(scorer: languageModel)
+    private lazy var reranker = EnglishReranker(scorer: languageModel, rule: KeyboardLanguageModel.rule)
     private lazy var textController = KeyboardTextController(
         keyboardView: previewKeyboard, document: previewDocument,
         spellChecker: EngineSpellChecker.bundled(reranker: reranker), pinyinEngine: { PinyinEngine.bundled() })

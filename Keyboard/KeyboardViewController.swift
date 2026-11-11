@@ -15,7 +15,7 @@ final class KeyboardViewController: UIInputViewController {
     /// The model that re-ranks the English corrections. It loads when the keyboard appears in
     /// English, and a memory warning frees it.
     private let languageModel = KeyboardLanguageModel.bundled()
-    private lazy var reranker = EnglishReranker(scorer: languageModel)
+    private lazy var reranker = EnglishReranker(scorer: languageModel, rule: KeyboardLanguageModel.rule)
     private lazy var textController = KeyboardTextController(
         keyboardView: keyboardView, document: document, spellChecker: EngineSpellChecker.bundled(reranker: reranker),
         pinyinEngine: { PinyinEngine.bundled() })
@@ -29,6 +29,14 @@ final class KeyboardViewController: UIInputViewController {
         let languageModelTest = BundledLanguageModelTest()
         languageModelTest.keyboardLines = { [languageModel, reranker] in
             languageModel.reportLines(statistics: reranker.statistics)
+        }
+        // The test loads its own copy of the model, so the keyboard frees its copy for the run and
+        // loads it again after. Two copies at once could pass the memory limit of the keyboard.
+        languageModelTest.onRunStart = { [languageModel] in
+            languageModel.unload(reason: "the language model test runs")
+        }
+        languageModelTest.onRunEnd = { [weak self] in
+            self?.textController.keyboardWillAppear()
         }
         textController.languageModelMeasurer = languageModelTest
         textController.languageModelLoader = languageModel

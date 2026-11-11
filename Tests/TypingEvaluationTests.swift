@@ -187,7 +187,7 @@ final class TypingEvaluationTests: XCTestCase {
         for half in halves {
             let cases = try loadCases(EnglishCase.self, from: casesFolder.appendingPathComponent("\(name).\(half).jsonl"))
 
-            let reranker = EnglishReranker(scorer: model)
+            let reranker = EnglishReranker(scorer: model, rule: KeyboardLanguageModel.rule)
             let recorder = TraceRecorder()
             reranker.onTrace = { recorder.record($0) }
             let shipping = EngineSpellChecker(engine: engine, reranker: reranker, store: store)
