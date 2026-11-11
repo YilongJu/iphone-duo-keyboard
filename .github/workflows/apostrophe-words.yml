@@ -20,6 +20,7 @@ env:
   HALF: dev
   MARGIN: ''
   SCOPE: ''
+  SCORE: ''
 
 concurrency:
   group: apostrophe-words-${{ github.ref }}
@@ -101,7 +102,7 @@ jobs:
           export LD_LIBRARY_PATH="$PWD/build/lm-rerank/llama/lib"
           half="$HALF"
           margin=()
-          if [ "$half" = test ]; then margin=(--margin "$MARGIN" --scope "$SCOPE"); fi
+          if [ "$half" = test ]; then margin=(--margin "$MARGIN" --scope "$SCOPE" --score "$SCORE"); fi
           # The lexicon of the keyboard as it ships on engine/lm-keyboard, for the shipped run.
           git show 84b3e00:Shared/lexicon-english.bin > build/lm-rerank/lexicon-english-shipped.bin
           cp build/lm-rerank/libduo_shim.so build/lm-rerank/libduo_shim_shipped.so

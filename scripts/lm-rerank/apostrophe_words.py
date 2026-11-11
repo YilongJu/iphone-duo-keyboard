@@ -41,8 +41,10 @@ CASES = ROOT / "scripts" / "typing-evaluation" / "cases"
 EXISTING = [CASES / "english.dev.jsonl", CASES / "english-symbols.dev.jsonl"]
 # 0 is left out: on a tie of model scores the step would then move away from the engine's choice.
 GRID = [0.5, 1.0, 1.5, 2.0, 3.0, 4.0, 6.0, 8.0]
-# Where the step runs: "all" at every correction, "later" in a two-word span or after a correction.
-SCOPES = ["all", "later"]
+# The settings of the step on the dev half: its scope, its score and its margin. The scope "all"
+# runs with the model score only, as the comparison for the scope "next".
+STEPS = ([("all", "model", margin) for margin in GRID]
+         + [("next", score, margin) for score in ("model", "slips") for margin in GRID])
 # The setting tuned for distilgpt2 Q3_K_M (scripts/lm-rerank/README.md, Table 2).
 TUNED = dict(weight=1.0, margin_from_typed=24, margin_to_typed=0, margin_other=2, space_after=1)
 
@@ -111,6 +113,44 @@ def readings_report(cases, engine) -> dict:
     return report
 
 
+CONTROLS = ["clean_ambiguous_word", "clean_ambiguous_contraction"]
+EXISTING_CASES: list[dict] = []
+
+
+def lost_cases(cases: list[dict], before: dict[str, str], after: dict[str, str]) -> list[str]:
+    """The cases right in `before` and wrong in `after`."""
+    def right(outputs, case):
+        return outputs[case["id"]].strip().lower() == case["intended"].strip().lower()
+    return [case["id"] for case in cases if right(before, case) and not right(after, case)]
+
+
+def select(result: dict, group: list[dict]) -> dict:
+    """The setting of the step for the keyboard. Every category of the existing dev cases must keep
+    at least the shipped count of right cases, and so must the controls of the new cases when the
+    next word is typed. Among those settings the most right new cases with the next word typed
+    count, because the keyboard shows that text in the end. The first setting of the grid wins a tie."""
+    runs = result["runs"]
+    base = runs["shipped"]
+    allowed = []
+    for name, entry in runs.items():
+        if not name.startswith("step "):
+            continue
+        existing_ok = all(entry["existing"]["categories"][c]["right"] >= base["existing"]["categories"][c]["right"]
+                          for c in base["existing"]["categories"])
+        controls_ok = all(entry["group"]["next_word"]["categories"][c][0] >= base["group"]["next_word"]["categories"][c][0]
+                          for c in CONTROLS)
+        if existing_ok and controls_ok:
+            allowed.append(name)
+    chosen = max(allowed, key=lambda n: runs[n]["group"]["next_word"]["right"]) if allowed else None
+    # The existing dev cases that each setting turns from right to wrong, against the shipped run.
+    lost = {name: lost_cases(EXISTING_CASES, base["existing"]["outputs"], entry["existing"]["outputs"])
+            for name, entry in runs.items() if "existing" in entry and name != "shipped"}
+    # Two fixed keyboards for comparison: one that always shows the contraction, one that never does.
+    always = sum(1 for case in group if "'" in case["intended"])
+    return {"allowed": allowed, "chosen": chosen, "existing_lost_against_shipped": lost,
+            "always_contraction": always, "never_contraction": len(group) - always}
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--shim", type=Path, required=True)
@@ -119,7 +159,8 @@ def main():
     parser.add_argument("--threads", type=int, default=4)
     parser.add_argument("--half", choices=["dev", "test"], required=True)
     parser.add_argument("--margin", type=float, help="the one margin_apostrophe of the test-half run")
-    parser.add_argument("--scope", choices=["all", "later"], help="the one apostrophe_scope of the test-half run")
+    parser.add_argument("--scope", choices=["all", "next"], help="the one apostrophe_scope of the test-half run")
+    parser.add_argument("--score", choices=["model", "slips"], help="the one apostrophe_score of the test-half run")
     parser.add_argument("--lexicon", type=Path, default=rerank.LEXICON)
     parser.add_argument("--shipped-lexicon", type=Path,
                         help="the lexicon of the keyboard as it ships, when it differs from --lexicon")
@@ -129,15 +170,17 @@ def main():
     arguments = parser.parse_args()
     if (arguments.lm is None) != (arguments.model is None):
         raise SystemExit("--lm and --model go together")
-    if arguments.half == "test" and (arguments.margin is None or arguments.scope is None or arguments.model is None):
-        raise SystemExit("the test half runs once, for one --margin and one --scope, with the model")
-    if arguments.half == "dev" and (arguments.margin is not None or arguments.scope is not None):
-        raise SystemExit("the dev half runs the whole grid; --margin and --scope are for the test half")
+    one = (arguments.margin, arguments.scope, arguments.score)
+    if arguments.half == "test" and (None in one or arguments.model is None):
+        raise SystemExit("the test half runs once, for one --margin, --scope and --score, with the model")
+    if arguments.half == "dev" and one != (None, None, None):
+        raise SystemExit("the dev half runs the whole grid; --margin, --scope and --score are for the test half")
 
     group = rerank.load_cases([CASES / f"english-apostrophe-words.{arguments.half}.jsonl"])
     if any(case["split"] != arguments.half for case in group):
         raise SystemExit(f"a case outside the {arguments.half} half")
     existing = rerank.load_cases(EXISTING)
+    EXISTING_CASES[:] = existing
     if any(case["split"] != "dev" for case in existing):
         raise SystemExit("an existing case outside the dev half")
     arguments.out.mkdir(parents=True, exist_ok=True)
@@ -183,31 +226,21 @@ def main():
                                "existing": existing_summary(existing, shipped_engine, chooser(shipped))})
             record("readings only", {"group": run_group(group, new_engine, chooser(shipped)),
                                      "existing": existing_summary(existing, new_engine, chooser(shipped))})
-            steps = [(scope, margin) for scope in SCOPES for margin in GRID]
+            steps = STEPS
         else:
             record("shipped", {"group": run_group(group, shipped_engine, chooser(shipped))})
-            steps = [(arguments.scope, arguments.margin)]
-        for scope, margin in steps:
-            setting = rerank.Setting(**TUNED, margin_apostrophe=margin, apostrophe_scope=scope)
+            steps = [(arguments.scope, arguments.score, arguments.margin)]
+        for scope, step_score, margin in steps:
+            setting = rerank.Setting(**TUNED, margin_apostrophe=margin, apostrophe_scope=scope, apostrophe_score=step_score)
             entry = {"group": run_group(group, new_engine, chooser(setting))}
             if arguments.half == "dev":
                 entry["existing"] = existing_summary(existing, new_engine, chooser(setting))
-            record(f"apostrophe step {scope} {margin:g}", entry)
+            record(f"step {scope} {step_score} {margin:g}", entry)
             print(f"  {time.monotonic() - started:.0f} s, {model.requests} model requests", flush=True)
 
         if arguments.half == "dev":
-            base = result["runs"]["shipped"]["existing"]["groups"]
-            allowed = [name for name in result["runs"] if name.startswith("apostrophe step") and all(
-                result["runs"][name]["existing"]["groups"][g]["right"] >= base[g]["right"] for g in base)]
-            result["allowed"] = allowed
-            if allowed:
-                best = max(allowed, key=lambda n: (result["runs"][n]["group"]["word"]["right"]
-                                                   + result["runs"][n]["group"]["next_word"]["right"]))
-                result["chosen"] = best
-                print("chosen", best, flush=True)
-            else:
-                result["chosen"] = None
-                print("no margin keeps every existing group at the shipped count", flush=True)
+            result.update(select(result, group))
+            print("chosen", result["chosen"], flush=True)
         result["lm_requests"] = model.requests
         result["lm_report"] = model.close()
     (arguments.out / f"result.{arguments.half}.json").write_text(json.dumps(result, indent=1), encoding="utf-8")

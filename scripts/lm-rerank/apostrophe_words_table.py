@@ -48,10 +48,15 @@ def main():
             print(f"| {name} | " + " | ".join(f"{groups[g]['right']}/{groups[g]['cases']}" for g in EXISTING_GROUPS)
                   + f" | {entry['existing']['right']}/{entry['existing']['cases']} |")
         print()
-        print(f"Margins that keep every existing group: {', '.join(result.get('allowed', [])) or 'none'}. "
-              f"Chosen: {result.get('chosen')}.\n")
+        print(f"Settings that keep every existing category and the new controls: "
+              f"{', '.join(result.get('allowed', [])) or 'none'}. Chosen: {result.get('chosen')}.\n")
+        lost = result.get("existing_lost_against_shipped", {})
+        print("Existing dev cases right in the shipped run and wrong in this run: "
+              + ", ".join(f"{name} {len(ids)}" for name, ids in lost.items()) + ".\n")
+        print(f"A keyboard that always shows the contraction gets {result['always_contraction']} of "
+              f"{result['cases']} new cases right, and one that never does gets {result['never_contraction']}.\n")
     shown = [name for name in ("engine", "shipped", result.get("chosen")) if name in runs]
-    shown += [name for name in runs if half == "test" and name.startswith("apostrophe step") and name not in shown]
+    shown += [name for name in runs if half == "test" and name.startswith("step ") and name not in shown]
     print("### Right cases per pair\n")
     header = [f"{name}, {way.replace('_', ' ')}" for name in shown for way in ("word", "next_word")]
     print("| Pair | Category | " + " | ".join(header) + " |")
