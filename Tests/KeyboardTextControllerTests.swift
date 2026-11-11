@@ -128,6 +128,31 @@ final class KeyboardTextControllerTests: XCTestCase {
         XCTAssertEqual(document.text, "I came from the office. ")
     }
 
+    func testAPauseInAnUnfinishedSentenceGetsAFix() async {
+        let proofreader = makeProofreadingController(before: "", answers: ["I came form the office": "I came from the office"])
+        controller.proofreadPauseSeconds = 0.05
+        type("I came form the office ")
+        await controller.pauseTask?.value
+        await controller.proofreadTask?.value
+        XCTAssertEqual(proofreader.requests, ["I came form the office"])
+        XCTAssertEqual(controller.proofreadSuggestion?.corrected, "I came from the office")
+        controller.keyboardView(keyboardView, didSelectCandidateAt: 0)
+        XCTAssertEqual(document.text, "I came from the office ")
+    }
+
+    func testAKeyPressBeforeThePauseEndsStartsTheWaitAgain() async {
+        let proofreader = makeProofreadingController(before: "", answers: [:])
+        controller.proofreadPauseSeconds = 0.3
+        type("I came form the office ")
+        let firstWait = controller.pauseTask
+        type("t")
+        await firstWait?.value
+        XCTAssertEqual(proofreader.requests, [])
+        // The word in progress is not read, so the pause after "t" asks nothing.
+        await controller.pauseTask?.value
+        XCTAssertEqual(proofreader.requests, [])
+    }
+
     func testASpaceAfterEveryMarkThatGivesAFixKeepsTheFix() async {
         for mark in ["?", "!", ",", ";", ":"] {
             let sentence = "I came form the office" + mark
@@ -917,6 +942,23 @@ final class KeyboardTextControllerTests: XCTestCase {
 }
 
 final class KeyboardTextLogicTests: XCTestCase {
+    func testAnUnfinishedSentenceRunsFromTheLastSentenceEndToTheLastFinishedWord() {
+        XCTAssertEqual(KeyboardTextLogic.unfinishedSentence(before: "I will sent it too you "), "I will sent it too you")
+        XCTAssertEqual(KeyboardTextLogic.unfinishedSentence(before: "Done. I will sent it  "), "I will sent it")
+        XCTAssertEqual(KeyboardTextLogic.unfinishedSentence(before: "Hi,\nI will sent it "), "I will sent it")
+        // A word in progress, a sentence too short, and a sentence that ends in a mark are not read.
+        XCTAssertNil(KeyboardTextLogic.unfinishedSentence(before: "I will sent it too yo"))
+        XCTAssertNil(KeyboardTextLogic.unfinishedSentence(before: "hi there "))
+        XCTAssertNil(KeyboardTextLogic.unfinishedSentence(before: "I will sent it, "))
+        XCTAssertNil(KeyboardTextLogic.unfinishedSentence(before: "I will sent it. "))
+        XCTAssertNil(KeyboardTextLogic.unfinishedSentence(before: ""))
+        // Chinese text has no spaces, so it may end in a character.
+        let chinese = "\u{6211}\u{4EEC}\u{660E}\u{5929}\u{518D}\u{5317}\u{4EAC}"
+        XCTAssertEqual(KeyboardTextLogic.unfinishedSentence(before: chinese), chinese)
+        XCTAssertEqual(KeyboardTextLogic.sentenceToProofread(before: "I came form the office. "), "I came form the office.")
+        XCTAssertEqual(KeyboardTextLogic.sentenceToProofread(before: "I came form the office "), "I came form the office")
+    }
+
     func testEveryReturnKeyTypeHasASymbolThatExists() {
         let types: [UIReturnKeyType] = [
             .default, .go, .google, .join, .next, .route, .search, .send, .yahoo, .done,
