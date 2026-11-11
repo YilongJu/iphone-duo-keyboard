@@ -32,7 +32,8 @@ jobs:
   engine-check:
     name: Engine choice unchanged, readings checked
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    # The memory checks of the readings alone take about 20 minutes.
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v7
         with:
