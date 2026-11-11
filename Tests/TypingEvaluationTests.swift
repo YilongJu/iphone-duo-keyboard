@@ -25,6 +25,19 @@ final class TypingEvaluationTests: XCTestCase {
         let typed: String
     }
 
+    /// A case of english-apostrophe-words.*.jsonl, with the word after the target word.
+    private struct ApostropheCase: Decodable {
+        let id: String
+        let context: String
+        let typed: String
+        let nextWord: String
+
+        enum CodingKeys: String, CodingKey {
+            case id, context, typed
+            case nextWord = "next_word"
+        }
+    }
+
     private struct PinyinCase: Decodable {
         let id: String
         let typed: String
@@ -52,6 +65,7 @@ final class TypingEvaluationTests: XCTestCase {
         let text: String
         let candidate: String
         let engineScore: Double
+        let slipCost: Double
         let asTyped: Bool
         let chosen: Bool
         let logProbability: Double?
@@ -78,7 +92,8 @@ final class TypingEvaluationTests: XCTestCase {
             let readings = trace.readings.indices.map { index in
                 TraceReading(
                     text: trace.readings[index].text, candidate: trace.prompt.candidates[index],
-                    engineScore: trace.readings[index].score, asTyped: trace.readings[index].asTyped,
+                    engineScore: trace.readings[index].score, slipCost: trace.readings[index].slipCost,
+                    asTyped: trace.readings[index].asTyped,
                     chosen: trace.readings[index].chosen, logProbability: scores?[index].logProbability,
                     spaceAfter: scores?[index].spaceAfter)
             }
@@ -211,6 +226,43 @@ final class TypingEvaluationTests: XCTestCase {
             let engineOnly = EngineSpellChecker(engine: engine, reranker: nil, store: store)
             let engineOutputs = type(cases, with: engineOnly) { _ in }
             try write(engineOutputs, to: outputFolder.appendingPathComponent("\(name).\(half).engine-only.jsonl"))
+        }
+    }
+
+    /// Types the words with and without an apostrophe in two ways: the typed word and a space,
+    /// and then also the next word and a space, so the keyboard reads the two words together.
+    /// The outputs go to `english-apostrophe-words.<half>.jsonl` and
+    /// `english-apostrophe-words.<half>.next-word.jsonl`, with the model and with the engine alone.
+    /// A cases folder without the files skips them.
+    func testEnglishApostropheWordCasesThroughTheTypingController() throws {
+        let (casesFolder, outputFolder) = try folders()
+        let name = "english-apostrophe-words"
+        guard FileManager.default.fileExists(atPath: casesFolder.appendingPathComponent("\(name).dev.jsonl").path) else {
+            throw XCTSkip("\(name).dev.jsonl is not in the cases folder")
+        }
+        let model = try loadedModel()
+        let engine = EnglishTypingEngine(lexicon: TypingLexicon(resource: "lexicon-english", fullCheck: false))
+        let storeName = "TypingEvaluationTests"
+        UserDefaults().removePersistentDomain(forName: storeName)
+        let store = try XCTUnwrap(UserDefaults(suiteName: storeName))
+        for half in try halves() {
+            let cases = try loadCases(ApostropheCase.self, from: casesFolder.appendingPathComponent("\(name).\(half).jsonl"))
+            for (suffix, withNextWord) in [("", false), (".next-word", true)] {
+                let typedCases = cases.map {
+                    EnglishCase(id: $0.id, context: $0.context, typed: withNextWord ? $0.typed + " " + $0.nextWord : $0.typed)
+                }
+                let reranker = EnglishReranker(scorer: model, rule: KeyboardLanguageModel.rule)
+                let shipping = EngineSpellChecker(engine: engine, reranker: reranker, store: store)
+                try write(type(typedCases, with: shipping) { _ in },
+                          to: outputFolder.appendingPathComponent("\(name).\(half)\(suffix).jsonl"))
+                let statistics = reranker.statistics
+                XCTAssertEqual(statistics.notReadyCount + statistics.refusedCount + statistics.failedCount, 0,
+                               "\(name) \(half)\(suffix): \(statistics.lastProblem ?? "")")
+                XCTAssertGreaterThan(statistics.readCount, 0, "\(name) \(half)\(suffix)")
+                let engineOnly = EngineSpellChecker(engine: engine, reranker: nil, store: store)
+                try write(type(typedCases, with: engineOnly) { _ in },
+                          to: outputFolder.appendingPathComponent("\(name).\(half)\(suffix).engine-only.jsonl"))
+            }
         }
     }
 

@@ -70,6 +70,28 @@ def one_edit_away(word: str) -> set[str]:
     return result
 
 
+# The endings of English contractions after the apostrophe.
+CONTRACTION_ENDINGS = {"s", "re", "ll", "d", "ve", "m"}
+
+
+def is_other_ending_of_a_contraction(word: str, frequent_neighbors: set[str]) -> bool:
+    """True for a contraction, as "what'd", whose frequent neighbors one slip away are all
+    contractions of the same word with another ending, as "what's". Such a token is a rarer
+    contraction and not a slip. "get's" stays out, because "gets" is one of its neighbors."""
+    if word.count("'") != 1 or not frequent_neighbors:
+        return False
+    stem, ending = word.split("'")
+    if ending not in CONTRACTION_ENDINGS:
+        return False
+    for neighbor in frequent_neighbors:
+        if neighbor.count("'") != 1:
+            return False
+        other_stem, other_ending = neighbor.split("'")
+        if other_stem != stem or other_ending not in CONTRACTION_ENDINGS:
+            return False
+    return True
+
+
 def main():
     book_counts = {}
     for line in fetch(SYMSPELL + WORDS_FILE, WORDS_FILE):
@@ -92,7 +114,14 @@ def main():
         return value if value > 0 else math.log10(book_counts[word] / book_total * 1e9)
 
     everyday = [word for word in top_n_list("en", 400000) if WORD.fullmatch(word) and everyday_zipf(word) >= RARE_TOKEN_ZIPF]
-    contraction_of = {word.replace("'", ""): word for word in everyday if "'" in word}
+    # The most frequent contraction of each form without the apostrophe: "you're" for "youre",
+    # and not the rarer "your'e".
+    contraction_of = {}
+    for word in everyday:
+        if "'" in word:
+            bare = word.replace("'", "")
+            if bare not in contraction_of or everyday_zipf(word) > everyday_zipf(contraction_of[bare]):
+                contraction_of[bare] = word
 
     def is_weaker_contraction_form(word: str) -> bool:
         full = contraction_of.get(word)
@@ -117,7 +146,10 @@ def main():
         if word in words or word in misspellings or is_weaker_contraction_form(word):
             continue
         if slip_source.get(word, 0.0) - everyday_zipf(word) >= SLIP_ZIPF_GAP:
-            continue
+            frequent_neighbors = {neighbor for neighbor in one_edit_away(word)
+                                  if neighbor in words and zipf(neighbor) - everyday_zipf(word) >= SLIP_ZIPF_GAP}
+            if not is_other_ending_of_a_contraction(word, frequent_neighbors):
+                continue
         words.add(word)
     part_three = len(words) - part_one - part_two
 

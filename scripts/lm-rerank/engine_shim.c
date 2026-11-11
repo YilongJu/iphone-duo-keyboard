@@ -30,6 +30,11 @@ int shim_open(const char *path) {
     return duo_lexicon_open(&lexicon, lexicon_bytes, (size_t)length);
 }
 
+/* Sets one English parameter by its field name, after shim_open. Returns 1, or 0 for an unknown name. */
+int shim_set(const char *name, float value) {
+    return duo_params_set(&params, name, value);
+}
+
 /* duo_correct_english. Writes the text into `out`. Returns 1, or 0 for input outside the engine. */
 int shim_correct(const char *previous_word, const char *typed, char *out, int out_size) {
     duo_result result;

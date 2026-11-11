@@ -132,9 +132,11 @@ final class KeyboardLanguageModel: CandidateScoring, LanguageModelLoading {
 
     /// The rule tuned for the bundled model on the tuning split of scripts/lm-finetune, the arm
     /// smollm2-lora-seed1 of scripts/lm-finetune/test-plan.json on the branch engine/lm-finetune.
-    /// The model reads the typed format of `LanguageModelPrompt.make`.
+    /// The model reads the typed format of `LanguageModelPrompt.make`. The apostrophe step is
+    /// the one of `RerankRule.distilgpt2WithApostrophes` (docs/apostrophe-words-design.md).
     nonisolated static let rule = RerankRule(
-        weight: 1.0, marginFromTyped: 0, marginToTyped: 4, marginOther: 2, usesSpaceAfter: true)
+        weight: 1.0, marginFromTyped: 0, marginToTyped: 4, marginOther: 2, usesSpaceAfter: true,
+        apostrophe: RerankRule.ApostropheStep(scope: .firstWordOfSpan, score: .modelLessSlipCost, margin: 1))
 
     enum State: Equatable {
         case notLoaded

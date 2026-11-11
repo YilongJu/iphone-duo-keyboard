@@ -27,9 +27,11 @@ sys.path.insert(0, str(ROOT / "scripts" / "lm-rerank"))
 import rerank  # noqa: E402
 
 # The setting of the SmolLM2-135M LoRA fine-tune, chosen on the tuning split (the arm
-# smollm2-lora-seed1 of scripts/lm-finetune/test-plan.json on the branch engine/lm-finetune).
-# KeyboardLanguageModel.rule holds the same numbers.
-TUNED = rerank.Setting(weight=1.0, margin_from_typed=0, margin_to_typed=4, margin_other=2, space_after=1)
+# smollm2-lora-seed1 of scripts/lm-finetune/test-plan.json on the branch engine/lm-finetune), with
+# the apostrophe step of docs/apostrophe-words-design.md. KeyboardLanguageModel.rule holds the same
+# numbers.
+TUNED = rerank.Setting(weight=1.0, margin_from_typed=0, margin_to_typed=4, margin_other=2, space_after=1,
+                       margin_apostrophe=1.0, apostrophe_scope="next", apostrophe_score="slips")
 # The input format the model was trained on (language_model_prompt of rerank.py).
 PROMPT_FORMAT = "typed"
 
@@ -76,7 +78,7 @@ def main():
                         "text": r["text"],
                         # lm_score puts one space before a candidate after a context that is not empty.
                         "candidate": ("" if not lm_context else " ") + rerank.language_model_text(r["text"], opens_field),
-                        "engine_score": r["score"], "as_typed": r["as_typed"], "chosen": r["chosen"],
+                        "engine_score": r["score"], "slip_cost": r["slips"], "as_typed": r["as_typed"], "chosen": r["chosen"],
                         "log_probability": scores[r["text"]][0], "space_after": scores[r["text"]][1],
                     } for r in readings],
                     "result": "scores", "choice": choice,

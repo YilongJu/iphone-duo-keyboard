@@ -190,6 +190,18 @@ class Setting:
     margin_to_typed: float
     margin_other: float
     space_after: int
+    # None leaves out the apostrophe step of choose(). A number is the lead in model score that
+    # a reading of the typed letters with other apostrophes needs over the choice of the margins.
+    margin_apostrophe: float | None = None
+    # "all": the step runs at every correction, and a twin spells the typed letters with other
+    # apostrophes. "next": the step runs only in a span of two or more typed words, and a twin
+    # changes the apostrophes of the first word alone and keeps every later word as typed. The
+    # model then sees the word after the changed word, and a typed "its" alone stays as it is.
+    apostrophe_scope: str = "all"
+    # "model": the step compares the model scores alone. "slips": it also takes off each
+    # reading's slip cost, 0.5 for a missing apostrophe and 5.5 for an extra one. "slips_only":
+    # the slip costs alone, as the comparison without the model.
+    apostrophe_score: str = "model"
 
 
 def engine_choice(readings: list[dict], text_before: str, typed: str | None = None) -> str:
@@ -230,14 +242,62 @@ def choose(readings: list[dict], context: str, setting: Setting, model, typed: s
 
     best = max(readings, key=combined)
     if best is chosen:
-        return chosen["text"]
-    if chosen["as_typed"]:
-        margin = setting.margin_from_typed
-    elif best["as_typed"]:
-        margin = setting.margin_to_typed
+        choice = chosen
     else:
-        margin = setting.margin_other
-    return best["text"] if combined(best) - combined(chosen) >= margin else chosen["text"]
+        if chosen["as_typed"]:
+            margin = setting.margin_from_typed
+        elif best["as_typed"]:
+            margin = setting.margin_to_typed
+        else:
+            margin = setting.margin_other
+        choice = best if combined(best) - combined(chosen) >= margin else chosen
+    if setting.margin_apostrophe is not None and lm is not None:
+        choice = apostrophe_step(readings, choice, lm, setting)
+    return choice["text"]
+
+
+def is_twin(text: str, typed: str, scope: str) -> bool:
+    """Whether a reading's text is a twin of the typed text: the same letters, other
+    apostrophes. In the scope "next" only the first word may change, and the span holds two
+    words or more."""
+    if text == typed:
+        return False
+    if scope == "all":
+        return text.replace("'", "") == typed.replace("'", "")
+    if scope != "next":
+        raise SystemExit(f"unknown apostrophe_scope {scope!r}")
+    words, typed_words = text.split(" "), typed.split(" ")
+    return (len(typed_words) >= 2 and len(words) == len(typed_words) and words[1:] == typed_words[1:]
+            and words[0].replace("'", "") == typed_words[0].replace("'", ""))
+
+
+def apostrophe_step(readings: list[dict], choice: dict, lm: dict, setting: Setting) -> dict:
+    """The apostrophe step. The twin with the highest step score, the first one in the list on a
+    tie, replaces the choice when its step score leads the choice's by `margin_apostrophe`. The
+    text as typed is never a twin. The step score is the model score, the log probability plus
+    the space-after term when the rule uses it, and with `apostrophe_score` "slips" less the
+    reading's slip cost.
+
+    The engine's word statistics do not count. They come from a list of word pairs without a
+    single contraction, so a contraction never gets a listed pair, and a word beside it never
+    gets one either."""
+    if setting.apostrophe_score not in ("model", "slips", "slips_only"):
+        raise SystemExit(f"unknown apostrophe_score {setting.apostrophe_score!r}")
+
+    def step_score(reading: dict) -> float:
+        # "slips_only" is the comparison without the model: the cheaper repair wins.
+        if setting.apostrophe_score == "slips_only":
+            return -reading["slips"]
+        log_probability, space_after = lm[reading["text"]]
+        value = log_probability + (space_after if setting.space_after else 0.0)
+        return value - reading["slips"] if setting.apostrophe_score == "slips" else value
+
+    typed = next(r for r in readings if r["as_typed"])["text"]
+    twins = [r for r in readings if r is not choice and not r["as_typed"] and is_twin(r["text"], typed, setting.apostrophe_scope)]
+    if not twins:
+        return choice
+    twin = max(twins, key=step_score)
+    return twin if step_score(twin) - step_score(choice) >= setting.margin_apostrophe else choice
 
 
 # ---- The keyboard's correction rules, from Shared/KeyboardTextLogic.swift and KeyboardTextController.swift ----
