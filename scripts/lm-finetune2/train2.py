@@ -200,53 +200,87 @@ def run(arguments) -> None:
     schedule = get_cosine_schedule_with_warmup(optimizer, t.WARMUP_STEPS, steps_per_epoch * t.MAX_EPOCHS)
 
     arguments.out.mkdir(parents=True, exist_ok=True)
-    log = (arguments.out / "train-log.jsonl").open("w", encoding="utf-8")
-    first = evaluate(stop_items)
-    first.update({"step": 0})
-    log.write(json.dumps(first) + "\n")
-    print("step 0", json.dumps(first), flush=True)
-    best = {"loss": first["loss"], "step": 0, "state": None}
-    waited, step, train_started, peak_used = 0, 0, time.monotonic(), used_before
-    order = list(range(len(train_items)))
+    # A run saves its whole state after every check of the stopping loss, and starts again from
+    # that state. A file named STOP in the output folder ends the run at the next saved state.
+    checkpoint_path = arguments.out / "checkpoint.pt"
+    stop_request = arguments.out / "STOP"
     rng = random.Random(arguments.seed)
+    order = list(range(len(train_items)))
+    resumed_from = None
+    if checkpoint_path.exists():
+        saved = torch.load(checkpoint_path, map_location="cpu", weights_only=False)
+        with torch.no_grad():
+            named = dict(model.named_parameters())
+            for name, value in saved["trainable"].items():
+                named[name].copy_(value.to(device))
+        optimizer.load_state_dict(saved["optimizer"])
+        schedule.load_state_dict(saved["schedule"])
+        rng.setstate(saved["rng"])
+        torch.set_rng_state(saved["torch_rng"])
+        torch.cuda.set_rng_state_all(saved["cuda_rng"])
+        order, position, best, waited, step, first = (saved[key] for key in ("order", "position", "best", "waited", "step", "first"))
+        seconds_before = saved["seconds"]
+        resumed_from = step
+        log = (arguments.out / "train-log.jsonl").open("a", encoding="utf-8")
+        print(f"resumed at step {step}", flush=True)
+    else:
+        log = (arguments.out / "train-log.jsonl").open("w", encoding="utf-8")
+        first = evaluate(stop_items)
+        first.update({"step": 0})
+        log.write(json.dumps(first) + "\n")
+        print("step 0", json.dumps(first), flush=True)
+        best = {"loss": first["loss"], "step": 0, "state": None}
+        waited, step, seconds_before = 0, 0, 0.0
+        position = len(order)  # the first step shuffles the order
+    train_started, peak_used = time.monotonic() - seconds_before, used_before
     stopped = "max steps"
     while step < total_steps:
-        rng.shuffle(order)
-        for start in range(0, len(order), t.BATCH_LISTS):
-            step_items = [train_items[i] for i in order[start:start + t.BATCH_LISTS]]
-            optimizer.zero_grad(set_to_none=True)
-            loss_sum = 0.0
-            for micro_items in t.micro_batches(step_items, arguments.micro_lists, arguments.micro_tokens, arguments.packed):
-                cross_entropy, hinge, _ = loss_of(micro_items)
-                loss = (cross_entropy + (weight or 0.0) * hinge) / len(step_items)
-                loss.backward()
-                loss_sum += float(loss.detach())
-            torch.nn.utils.clip_grad_norm_([p for group in parameters for p in group["params"]], t.GRADIENT_CLIP)
-            optimizer.step()
-            schedule.step()
-            step += 1
-            if step % 100 == 0:
-                peak_used = max(peak_used, t.gpu_memory_used_mib())
-                print(f"step {step} of {total_steps}, loss {loss_sum:.4f}, {time.monotonic() - train_started:.0f} s", flush=True)
-            if step % t.EVALUATE_EVERY == 0 or step == total_steps:
-                result = evaluate(stop_items)
-                result.update({"step": step, "seconds": round(time.monotonic() - train_started, 1)})
-                log.write(json.dumps(result) + "\n")
-                log.flush()
-                print("evaluate", json.dumps(result), flush=True)
-                if result["loss"] < best["loss"]:
-                    trainable = {n: p.detach().to("cpu", copy=True) for n, p in model.named_parameters() if p.requires_grad}
-                    best = {"loss": result["loss"], "step": step, "state": trainable}
-                    waited = 0
-                else:
-                    waited += 1
-                    if waited >= t.PATIENCE:
-                        stopped = "early stop"
-                        break
-            if step >= total_steps:
-                break
-        if stopped == "early stop":
-            break
+        if position >= len(order):
+            rng.shuffle(order)
+            position = 0
+        step_items = [train_items[i] for i in order[position:position + t.BATCH_LISTS]]
+        position += t.BATCH_LISTS
+        optimizer.zero_grad(set_to_none=True)
+        loss_sum = 0.0
+        for micro_items in t.micro_batches(step_items, arguments.micro_lists, arguments.micro_tokens, arguments.packed):
+            cross_entropy, hinge, _ = loss_of(micro_items)
+            loss = (cross_entropy + (weight or 0.0) * hinge) / len(step_items)
+            loss.backward()
+            loss_sum += float(loss.detach())
+        torch.nn.utils.clip_grad_norm_([p for group in parameters for p in group["params"]], t.GRADIENT_CLIP)
+        optimizer.step()
+        schedule.step()
+        step += 1
+        if step % 100 == 0:
+            peak_used = max(peak_used, t.gpu_memory_used_mib())
+            print(f"step {step} of {total_steps}, loss {loss_sum:.4f}, {time.monotonic() - train_started:.0f} s", flush=True)
+        if step % t.EVALUATE_EVERY == 0 or step == total_steps:
+            result = evaluate(stop_items)
+            result.update({"step": step, "seconds": round(time.monotonic() - train_started, 1)})
+            log.write(json.dumps(result) + "\n")
+            log.flush()
+            print("evaluate", json.dumps(result), flush=True)
+            if result["loss"] < best["loss"]:
+                trainable = {n: p.detach().to("cpu", copy=True) for n, p in model.named_parameters() if p.requires_grad}
+                best = {"loss": result["loss"], "step": step, "state": trainable}
+                waited = 0
+            else:
+                waited += 1
+                if waited >= t.PATIENCE:
+                    stopped = "early stop"
+                    break
+            temporary = arguments.out / "checkpoint.tmp"
+            torch.save({"trainable": {n: p.detach().to("cpu", copy=True) for n, p in model.named_parameters() if p.requires_grad},
+                        "optimizer": optimizer.state_dict(), "schedule": schedule.state_dict(), "rng": rng.getstate(),
+                        "torch_rng": torch.get_rng_state(), "cuda_rng": torch.cuda.get_rng_state_all(), "order": order,
+                        "position": position, "best": best, "waited": waited, "step": step, "first": first,
+                        "seconds": time.monotonic() - train_started}, temporary)
+            os.replace(temporary, checkpoint_path)
+            if stop_request.exists():
+                stop_request.unlink()
+                log.close()
+                print(f"stopped at the saved state of step {step}", flush=True)
+                raise SystemExit(3)
     train_seconds = time.monotonic() - train_started
     log.close()
 
@@ -271,7 +305,7 @@ def run(arguments) -> None:
         "trained_weights": trained, "all_weights": every,
         "round1_lists": round1_counts, "train_lists": len(train_items), "stop_lists": len(stop_items),
         "train_lists_with_the_typed_reading_as_target": int(sum(item["typed_target"] for item in train_items)),
-        "steps_per_epoch": steps_per_epoch, "steps": step, "stopped": stopped, "best_step": best["step"],
+        "steps_per_epoch": steps_per_epoch, "resumed_from_step": resumed_from, "steps": step, "stopped": stopped, "best_step": best["step"],
         "stop_before": first, "stop_best": final,
         "encode_seconds": round(encode_seconds, 1), "train_seconds": round(train_seconds, 1),
         "torch_peak_allocated_mib": round(torch.cuda.max_memory_allocated(device) / 2**20),
@@ -280,6 +314,7 @@ def run(arguments) -> None:
         "torch": torch.__version__, "gpu": torch.cuda.get_device_name(0),
     }
     (arguments.out / "train-result.json").write_text(json.dumps(result, indent=2), encoding="utf-8")
+    checkpoint_path.unlink(missing_ok=True)
     print(json.dumps({k: v for k, v in result.items() if k not in ("base", "stop_before")}), flush=True)
 
 

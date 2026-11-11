@@ -8,7 +8,7 @@ root=/d/Github/iphone-duo-keyboard/build/worktrees
 round1="$root/lm-finetune"
 cd "$root/lm-finetune2"
 export UV_PROJECT_ENVIRONMENT="$root/lm-finetune2/build/lm-finetune2/venv"
-export OMP_NUM_THREADS=2 MKL_NUM_THREADS=2
+export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1
 out="build/lm-finetune2/models/$name"
 nice -n 10 uv run --project scripts/lm-finetune python "$round1/build/lm-finetune/llama-convert/convert_hf_to_gguf.py" "$out/hf" \
   --outtype f16 --outfile "$out/model-f16.gguf" > "$out/convert.log" 2>&1

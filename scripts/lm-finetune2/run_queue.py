@@ -43,7 +43,7 @@ def train(arm: dict, arguments) -> subprocess.Popen:
                "--method", arm["method"], "--seed", str(arm["seed"]), "--packed", "--micro-tokens", str(arm["micro_tokens"]),
                "--memory-gb", str(arm["memory_gb"]), "--data", str(arguments.round1 / "build" / "lm-finetune" / "data"),
                "--gpu-lock", str(arguments.lock), "--lock-held-by-parent", "--out", str(out), *arm.get("extra", [])]
-    environment = {**os.environ, "OMP_NUM_THREADS": "2", "MKL_NUM_THREADS": "2", "PYTHONUNBUFFERED": "1"}
+    environment = {**os.environ, "OMP_NUM_THREADS": "1", "MKL_NUM_THREADS": "1", "PYTHONUNBUFFERED": "1"}
     return subprocess.Popen(command, stdout=log, stderr=subprocess.STDOUT, cwd=ROOT, env=environment)
 
 
