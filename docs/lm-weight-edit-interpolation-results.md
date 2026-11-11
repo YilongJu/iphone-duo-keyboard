@@ -2,21 +2,24 @@
 
 ## Summary
 
-An interpolation coefficient does not meet the clean-word rule on dev, on any of three fine-tunes.
-On fresh held-out cases the SmolLM2 fine-tune meets that rule by itself, and interpolation does not
-add to it.
+At its own tuned setting, an interpolation coefficient does not meet the clean-word rule on dev,
+on any of three fine-tunes. On fresh held-out cases the SmolLM2 fine-tune meets that rule at its
+tuned setting, and the chosen coefficient does not add clean words to it.
 
 What to do:
 
-1. Do not ship an interpolated model. At the chosen coefficient, a = 0.9, it matches the fine-tune
-   on the generated cases within noise. On SmolLM2 it changes more clean held-out sentences.
-2. Treat the 3 clean dev words of SmolLM2 (954 or 955 against 957) as noise. On the held-out
-   set the same file keeps 952 clean cases against 945 for the engine alone.
+1. Do not ship an interpolated model. At the chosen coefficient, a = 0.9, the paired tests do not
+   separate it from the fine-tune on generated cases. On SmolLM2 it changes more clean held-out
+   sentences.
+2. Do not reject the SmolLM2 fine-tune over its 2 clean dev words (955 against 957). On the
+   held-out set the same file keeps 952 clean cases against 945 for the engine alone. The two
+   sets differ in their clean categories, and neither paired test separates the arm from the control.
 3. Keep the distilgpt2 fine-tune out. It keeps fewer clean cases than the engine alone on dev (945
    against 957) and on the held-out set (935 against 945), and interpolation does not repair that.
 4. If real typos matter more than real-word slips, test a lower re-ranker weight in the
-   fine-tuning round. Weight 0.5 on the unchanged SmolLM2 fine-tune repairs 1,310 of 1,500 held-out
-   GitHub misspellings against 1,247. It costs 47 real-word slips and 62 clean sentences.
+   fine-tuning round. Weight 0.5 with margins 1, 0, 0 on the unchanged SmolLM2 fine-tune repairs
+   1,310 of 1,500 held-out GitHub misspellings against 1,247. It costs 47 generated real-word slips,
+   129 GitHub real-word typos (250 against 379) and 62 clean sentences.
 
 This report does not settle phone time or memory, a second SmolLM2 seed, or Q4_K_M files. Every
 file here is Q3_K_M.
@@ -78,12 +81,20 @@ it does not reach the control's 957.
 | `d-wise-0.9`, chosen | 946 | 427 | 251 | 6,494 | 1.01 | 371 |
 | `d-lora` seed 2 | 950 | 429 | 241 | 6,486 | 1.00 | 328 |
 | `d2-wise-0.9`, chosen | 949 | 429 | 244 | 6,478 | 0.98 | 351 |
+| `s-lora-weight-1.0`, chosen calibration-only candidate | 952 | 426 | 258 | 6,537 | 1.00 | 389 |
+
+The design's main comparison is the chosen calibration-only candidate: the fine-tune with the same
+extra selection on the stopping cases. That rule chose weight 1.0 for SmolLM2, the tuned setting
+itself for distilgpt2 seed 1 (weight 1.5) and for seed 2 (weight 1.0). Not one of the three meets
+the clean rule on dev. So neither pre-set selection, of a coefficient or of a weight, gives a
+model that meets it.
 
 Across each whole grid, the clean count lies between 944 and 956. Not one of the 27 grid arms
 meets the clean rule and keeps more than half the gain. The count of grid values is a description
 of dev, read nine times per fine-tune.
 
-The clean differences are small against their noise. At a = 0.9, SmolLM2 turns 14 clean dev cases
+The paired tests do not separate these arms from the control on clean cases, and they do not
+show that the arms are equal to it either. At a = 0.9, SmolLM2 turns 14 clean dev cases
 wrong and 11 right against the control (exact McNemar p = 0.69). distilgpt2 seed 1 turns 19 wrong
 and 8 right (p = 0.052). The stock models in the typed format also sit below the control, at 948
 and 954. So a return toward the stock weights cannot restore the control's count.
@@ -94,7 +105,8 @@ The re-ranker adds weight times the model score to the engine score. A lower wei
 unchanged fine-tune meets the clean rule on dev where the interpolation does not.
 
 Table 3. The fine-tune at re-ranker weight 0.5 on dev. Each row is the best tuning-split setting
-of that weight under the clean rule. The selection rule on the stopping cases did not choose these
+of that weight under the clean rule, so its margins differ from the tuned setting too (1, 0, 0 or
+2, 0, 0 against 2, 4, 2 or 1, 4, 2). The table does not separate the weight from the margins. The selection rule on the stopping cases did not choose these
 rows, so they are readings of dev after the fact. The lower the weight, the more clean words kept
 and the fewer real-word slips repaired.
 
@@ -165,16 +177,21 @@ lower coefficient repairs more GitHub misspellings and changes more clean senten
 | `d-lora-weight-0.5` | 57 / 25 (0.00053) | 45 / 12 (1.3e-05) | 22 / 26 (0.67) | 19 / 10 (0.14) | 25 / 70 (4.3e-06) | 48 / 122 (1.3e-08) |
 | `d-wise-0.9` | 65 / 51 (0.23) | 22 / 7 (0.0081) | 21 / 26 (0.56) | 9 / 1 (0.021) | 20 / 15 (0.5) | 26 / 21 (0.56) |
 
-Four readings of these tables:
+Five readings of these tables:
 
 - Clean words: `s-lora` keeps 952 of 972 clean cases and 427 of 429 clean symbols, against 945
   and 421 for the control. `s-wise-0.9` keeps 948 and 427. So interpolation is not needed for the
-  clean rule on this set, and it does not add clean words.
+  clean rule on this set, and a = 0.9 does not add clean words.
+- Clean categories: against the control, `s-lora` keeps 5 fewer common words (295 against 300) on
+  the held-out set, as on dev. It keeps 7 more names and terms (67 against 60), 2 more rare words
+  and 3 more two-word cases. So the held-out count rises through other categories, and the loss
+  of common words stays.
 - Clean running text: the control changes 332 of 26,060 words, `s-lora` 116, `s-wise-0.9` 140 and
   `s-lora-weight-0.5` 182. Against `s-lora`, `s-wise-0.9` leaves 2 more sentences unchanged and
   changes 22 more (p = 0.00004).
-- Real typos: `s-lora` repairs 1,247 of 1,500 GitHub misspellings, below the control's 1,274
-  (p = 0.036). `s-wise-0.9` repairs 1,265, `s-wise-0.7-common` 1,282 and `s-lora-weight-0.5` 1,310.
+- GitHub misspellings: `s-lora` repairs 1,247 of 1,500, below the control's 1,274 (p = 0.036).
+  `s-wise-0.9` repairs 1,265, `s-wise-0.7-common` 1,282 and `s-lora-weight-0.5` 1,310. On the
+  1,000 `github_real_word` cases the order reverses: 379 for `s-lora`, 398, 340 and 250.
   On the 721 Mitton pairs the SmolLM2 arms from the fine-tune get 354 to 359, against 368 for the
   control, and none differs from the control at p under 0.05.
 - distilgpt2: `d-lora` keeps 935 clean cases and `d-wise-0.9` keeps 939, both below the control's
@@ -191,6 +208,9 @@ Four readings of these tables:
   checkpoint. So a count on the stopping cases is optimistic.
 - The rows "found on dev after the fact" were picked by reading dev. Only their held-out numbers
   are free of that pick.
+- The held-out plan does not hold a = 0.9 at the setting of `s-lora`. `s-wise-0.9` differs from
+  `s-lora` in its weights and in one margin (1 against 2), so its 20 extra changed sentences
+  cannot be assigned to the weights alone.
 - The held-out clean rule compares counts of a few cases. `s-lora` turns 9 clean cases wrong and
   16 right against the control (p = 0.23).
 - The fine-tune's own held-out candidate is its Q4_K_M file at another setting. This report used
