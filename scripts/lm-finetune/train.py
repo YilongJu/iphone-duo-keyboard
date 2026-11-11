@@ -173,6 +173,80 @@ def make_batch(items: list[dict], pad: int, device) -> dict:
     }
 
 
+def make_packed_batch(items: list[dict], pad: int, device) -> dict:
+    """The same lists as make_batch, with each list as one sequence: the first text once, then
+    every reading. A 4D attention mask lets a reading's tokens see the first text and the earlier
+    tokens of the same reading only, and the position ids restart after the first text for each
+    reading. So each reading gets the scores it gets alone, from fewer tokens and kernels."""
+    sequences, positions, spans = [], [], []
+    rows, owners, targets, last_rows, list_of_sequence, engine = [], [], [], [], [], []
+    reading_number = 0
+    for list_index, item in enumerate(items):
+        prefix = item["prefix"]
+        tokens, places, item_spans = list(prefix), list(range(len(prefix))), []
+        for reading_index, reading in enumerate(item["readings"]):
+            start = len(tokens)
+            tokens.extend(reading)
+            places.extend(range(len(prefix), len(prefix) + len(reading)))
+            item_spans.append((start, len(reading)))
+            for offset, token in enumerate(reading):
+                # The first token follows the last token of the first text.
+                rows.append((list_index, len(prefix) - 1 if offset == 0 else start + offset - 1))
+                owners.append(reading_number)
+                targets.append(token)
+            last_rows.append((list_index, start + len(reading) - 1))
+            list_of_sequence.append(list_index)
+            engine.append(item["engine"][reading_index])
+            reading_number += 1
+        sequences.append(tokens)
+        positions.append(places)
+        spans.append((len(prefix), item_spans))
+    width = max(len(s) for s in sequences)
+    input_ids = torch.full((len(sequences), width), pad, dtype=torch.long)
+    position_ids = torch.zeros((len(sequences), width), dtype=torch.long)
+    mask = torch.zeros((len(sequences), 1, width, width), dtype=torch.bool)
+    for index, (sequence, places, (prefix_length, item_spans)) in enumerate(zip(sequences, positions, spans)):
+        input_ids[index, :len(sequence)] = torch.tensor(sequence)
+        position_ids[index, :len(sequence)] = torch.tensor(places)
+        mask[index, 0, :prefix_length, :prefix_length] = torch.tril(torch.ones(prefix_length, prefix_length, dtype=torch.bool))
+        for start, length in item_spans:
+            mask[index, 0, start:start + length, :prefix_length] = True
+            mask[index, 0, start:start + length, start:start + length] = torch.tril(torch.ones(length, length, dtype=torch.bool))
+        # A padding place sees itself only, so its attention row is never empty.
+        for place in range(len(sequence), width):
+            mask[index, 0, place, place] = True
+    return {
+        "packed": True, "input_ids": input_ids.to(device), "position_ids": position_ids.to(device), "mask": mask.to(device),
+        "rows": torch.tensor(rows, dtype=torch.long, device=device),
+        "owners": torch.tensor(owners, dtype=torch.long, device=device),
+        "targets": torch.tensor(targets, dtype=torch.long, device=device),
+        "last_rows": torch.tensor(last_rows, dtype=torch.long, device=device),
+        "list_of_sequence": torch.tensor(list_of_sequence, dtype=torch.long, device=device),
+        "engine": torch.tensor(engine, dtype=torch.float32, device=device),
+        "list_targets": torch.tensor([item["target"] for item in items], dtype=torch.long, device=device),
+        "lists": len(items), "sequences": reading_number,
+    }
+
+
+def micro_batches(items: list[dict], micro_lists: int, micro_tokens: int | None, packed: bool) -> list[list[dict]]:
+    """Splits the lists of one step into micro-batches. The step's gradient is the sum over its
+    lists, so the split does not change it. With a token budget, the lists go shortest first, and
+    a micro-batch grows while its padded size stays within the budget."""
+    if micro_tokens is None:
+        return [items[start:start + micro_lists] for start in range(0, len(items), micro_lists)]
+    if not packed:
+        raise SystemExit("--micro-tokens needs --packed")
+    length = lambda item: len(item["prefix"]) + sum(len(r) for r in item["readings"])
+    groups, current = [], []
+    for item in sorted(items, key=length):
+        if current and (len(current) + 1) * length(item) > micro_tokens:
+            groups.append(current)
+            current = []
+        current.append(item)
+    groups.append(current)
+    return groups
+
+
 def reading_scores(model, batch: dict, space_tokens: torch.Tensor, low_precision: bool = True):
     """The two model scores of every reading sequence, as lm_score.c gives them: the log
     probability of the reading's tokens, and the log probability that the next token starts
@@ -180,7 +254,11 @@ def reading_scores(model, batch: dict, space_tokens: torch.Tensor, low_precision
     body = model.get_base_model().base_model if hasattr(model, "get_base_model") else model.base_model
     head = model.get_output_embeddings()
     with torch.autocast("cuda", dtype=torch.bfloat16, enabled=low_precision):
-        hidden = body(input_ids=batch["input_ids"], attention_mask=batch["attention_mask"]).last_hidden_state
+        if batch.get("packed"):
+            hidden = body(input_ids=batch["input_ids"], attention_mask=batch["mask"],
+                          position_ids=batch["position_ids"]).last_hidden_state
+        else:
+            hidden = body(input_ids=batch["input_ids"], attention_mask=batch["attention_mask"]).last_hidden_state
     # The output layer runs in float32: bfloat16 logits near 50 round in steps of 0.25.
     with torch.autocast("cuda", enabled=False):
         token_logits = head(hidden[batch["rows"][:, 0], batch["rows"][:, 1]].float())
@@ -208,13 +286,14 @@ def logits_of_lists(model, batch: dict, space_tokens: torch.Tensor) -> tuple[tor
     return table, table > float("-inf")
 
 
-def evaluate(model, items: list[dict], pad: int, space_tokens, device) -> dict:
+def evaluate(model, items: list[dict], pad: int, space_tokens, device, maker=None) -> dict:
+    maker = maker or make_batch
     model.eval()
     loss_sum, right, engine_right = 0.0, 0, 0
     with torch.no_grad():
         for start in range(0, len(items), BATCH_LISTS):
             chunk = items[start:start + BATCH_LISTS]
-            batch = make_batch(chunk, pad, device)
+            batch = maker(chunk, pad, device)
             table, _ = logits_of_lists(model, batch, space_tokens)
             loss_sum += float(F.cross_entropy(table, batch["list_targets"], reduction="sum"))
             right += int((table.argmax(1) == batch["list_targets"]).sum())
@@ -233,6 +312,12 @@ def main():
     parser.add_argument("--data", type=Path, required=True)
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--memory-gb", type=float, default=3.0, help="cap of the PyTorch allocator on the GPU")
+    parser.add_argument("--packed", action="store_true",
+                        help="one sequence per list with a 4D attention mask (make_packed_batch), for deep models")
+    parser.add_argument("--micro-lists", type=int, default=MICRO_LISTS, help="lists per micro-batch")
+    parser.add_argument("--micro-tokens", type=int, help="with --packed: padded tokens per micro-batch, in place of --micro-lists")
+    parser.add_argument("--check-packing", action="store_true",
+                        help="compare the packed and the separate scores on 64 stopping lists in float32, then stop")
     parser.add_argument("--max-steps", type=int, help="stop after this many steps, for a smoke test")
     parser.add_argument("--limit-lists", type=int, help="use only this many training lists, for a smoke test")
     arguments = parser.parse_args()
@@ -286,6 +371,22 @@ def main():
     train_items = encode(train_lists, tokenizer, start_token, arguments.prompt_format, arguments.no_context)
     tune_items = encode(stop_lists, tokenizer, start_token, arguments.prompt_format, arguments.no_context)
     encode_seconds = time.monotonic() - started
+    maker = make_packed_batch if arguments.packed else make_batch
+
+    if arguments.check_packing:
+        model.eval()
+        largest = 0.0
+        with torch.no_grad():
+            for start in range(0, 64, 8):
+                chunk = tune_items[start:start + 8]
+                separate = reading_scores(model, make_batch(chunk, pad, device), space_tokens, low_precision=False)
+                packed = reading_scores(model, make_packed_batch(chunk, pad, device), space_tokens, low_precision=False)
+                for a, b in zip(separate, packed):
+                    largest = max(largest, float((a - b).abs().max()))
+        print(json.dumps({"check": "packing", "lists": 64, "largest_difference": largest}), flush=True)
+        if largest > 1e-3:
+            raise SystemExit("the packed scores differ from the separate scores")
+        return
 
     steps_per_epoch = math.ceil(len(train_items) / BATCH_LISTS)
     total_steps = steps_per_epoch * MAX_EPOCHS
@@ -296,7 +397,7 @@ def main():
 
     arguments.out.mkdir(parents=True, exist_ok=True)
     log = (arguments.out / "train-log.jsonl").open("w", encoding="utf-8")
-    first = evaluate(model, tune_items, pad, space_tokens, device)
+    first = evaluate(model, tune_items, pad, space_tokens, device, maker)
     first.update({"step": 0})
     log.write(json.dumps(first) + "\n")
     print("step 0", json.dumps(first), flush=True)
@@ -311,8 +412,8 @@ def main():
             step_items = [train_items[i] for i in order[start:start + BATCH_LISTS]]
             optimizer.zero_grad(set_to_none=True)
             loss_sum = 0.0
-            for micro in range(0, len(step_items), MICRO_LISTS):
-                batch = make_batch(step_items[micro:micro + MICRO_LISTS], pad, device)
+            for micro_items in micro_batches(step_items, arguments.micro_lists, arguments.micro_tokens, arguments.packed):
+                batch = maker(micro_items, pad, device)
                 table, _ = logits_of_lists(model, batch, space_tokens)
                 # The mean over the lists of the whole step.
                 loss = F.cross_entropy(table, batch["list_targets"], reduction="sum") / len(step_items)
@@ -327,7 +428,7 @@ def main():
                 peak_used = max(peak_used, gpu_memory_used_mib())
                 print(f"step {step} of {total_steps}, loss {float(loss):.4f}, {time.monotonic() - train_started:.0f} s", flush=True)
             if step % EVALUATE_EVERY == 0 or step == total_steps:
-                result = evaluate(model, tune_items, pad, space_tokens, device)
+                result = evaluate(model, tune_items, pad, space_tokens, device, maker)
                 result.update({"step": step, "seconds": round(time.monotonic() - train_started, 1)})
                 log.write(json.dumps(result) + "\n")
                 log.flush()
@@ -354,14 +455,16 @@ def main():
         named = dict(model.named_parameters())
         for name, value in best["state"].items():
             named[name].copy_(value.to(device))
-    final = evaluate(model, tune_items, pad, space_tokens, device)
+    final = evaluate(model, tune_items, pad, space_tokens, device, maker)
     if arguments.method == "lora":
         model = model.merge_and_unload()
     model.to("cpu").save_pretrained(arguments.out / "hf", safe_serialization=True)
     tokenizer.save_pretrained(arguments.out / "hf")
     result = {
         "base": base, "method": arguments.method, "settings": settings, "seed": arguments.seed,
-        "batch_lists": BATCH_LISTS, "micro_lists": MICRO_LISTS, "warmup_steps": WARMUP_STEPS, "max_epochs": MAX_EPOCHS,
+        "batch_lists": BATCH_LISTS, "micro_lists": arguments.micro_lists, "micro_tokens": arguments.micro_tokens,
+        "packed": arguments.packed,
+        "warmup_steps": WARMUP_STEPS, "max_epochs": MAX_EPOCHS,
         "evaluate_every": EVALUATE_EVERY, "patience": PATIENCE, "gradient_clip": GRADIENT_CLIP,
         "prompt_format": arguments.prompt_format, "no_context": arguments.no_context,
         "start_token": start_token, "space_tokens": len(space_ids),
