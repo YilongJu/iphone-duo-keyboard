@@ -1,0 +1,131 @@
+{
+ "note": "Every file and setting below was fixed before the held-out set of round 2 was read. Chosen by the pre-set rule on the stopping cases: s-wise-0.9, d-wise-0.9, s-lora-weight-1.0 (calibration-only), and d-lora (its calibration-only choice is its tuned setting). Found on dev after the fact, so the held-out read is their first untouched test: s-wise-0.7-common (a = 0.7 at the tuned setting of the fine-tune), s-lora-weight-0.5 and d-lora-weight-0.5 (the fine-tune at re-ranker weight 0.5). References: control (engine alone), s-stock, s-lora, d-stock, d-lora at their tuning-split settings. All model files are Q3_K_M.",
+ "arms": [
+  {
+   "name": "control",
+   "model": null,
+   "prompt_format": null,
+   "setting": null
+  },
+  {
+   "name": "s-stock",
+   "model": "smollm2-stock.Q3_K_M.gguf",
+   "prompt_format": "typed",
+   "setting": {
+    "weight": 0.75,
+    "margin_from_typed": 3,
+    "margin_to_typed": 4,
+    "margin_other": 2,
+    "space_after": 1
+   }
+  },
+  {
+   "name": "s-lora",
+   "model": "smollm2-lora-seed1.Q3_K_M.gguf",
+   "prompt_format": "typed",
+   "setting": {
+    "weight": 1.5,
+    "margin_from_typed": 2,
+    "margin_to_typed": 4,
+    "margin_other": 2,
+    "space_after": 1
+   }
+  },
+  {
+   "name": "s-lora-weight-1.0",
+   "model": "smollm2-lora-seed1.Q3_K_M.gguf",
+   "prompt_format": "typed",
+   "setting": {
+    "weight": 1.0,
+    "margin_from_typed": 0,
+    "margin_to_typed": 2,
+    "margin_other": 2,
+    "space_after": 1
+   }
+  },
+  {
+   "name": "s-lora-weight-0.5",
+   "model": "smollm2-lora-seed1.Q3_K_M.gguf",
+   "prompt_format": "typed",
+   "setting": {
+    "weight": 0.5,
+    "margin_from_typed": 1,
+    "margin_to_typed": 0,
+    "margin_other": 0,
+    "space_after": 1
+   }
+  },
+  {
+   "name": "s-wise-0.9",
+   "model": "s-wise-0.9.Q3_K_M.gguf",
+   "prompt_format": "typed",
+   "setting": {
+    "weight": 1.5,
+    "margin_from_typed": 1,
+    "margin_to_typed": 4,
+    "margin_other": 2,
+    "space_after": 1
+   }
+  },
+  {
+   "name": "s-wise-0.7-common",
+   "model": "s-wise-0.7.Q3_K_M.gguf",
+   "prompt_format": "typed",
+   "setting": {
+    "weight": 1.5,
+    "margin_from_typed": 2,
+    "margin_to_typed": 4,
+    "margin_other": 2,
+    "space_after": 1
+   }
+  },
+  {
+   "name": "d-stock",
+   "model": "distilgpt2.Q3_K_M.gguf",
+   "prompt_format": "typed",
+   "setting": {
+    "weight": 0.3,
+    "margin_from_typed": 3,
+    "margin_to_typed": 2,
+    "margin_other": 0,
+    "space_after": 1
+   }
+  },
+  {
+   "name": "d-lora",
+   "model": "lora-seed1.Q3_K_M.gguf",
+   "prompt_format": "typed",
+   "setting": {
+    "weight": 1.5,
+    "margin_from_typed": 1,
+    "margin_to_typed": 4,
+    "margin_other": 2,
+    "space_after": 1
+   }
+  },
+  {
+   "name": "d-lora-weight-0.5",
+   "model": "lora-seed1.Q3_K_M.gguf",
+   "prompt_format": "typed",
+   "setting": {
+    "weight": 0.5,
+    "margin_from_typed": 1,
+    "margin_to_typed": 0,
+    "margin_other": 0,
+    "space_after": 1
+   }
+  },
+  {
+   "name": "d-wise-0.9",
+   "model": "d-wise-0.9.Q3_K_M.gguf",
+   "prompt_format": "typed",
+   "setting": {
+    "weight": 1.5,
+    "margin_from_typed": 1,
+    "margin_to_typed": 4,
+    "margin_other": 2,
+    "space_after": 1
+   }
+  }
+ ]
+}
