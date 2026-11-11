@@ -180,12 +180,13 @@ def run(arguments) -> None:
         right = 0
         with torch.no_grad():
             for start in range(0, len(items), t.BATCH_LISTS):
-                chunk = items[start:start + t.BATCH_LISTS]
-                cross_entropy, hinge, table = loss_of(chunk)
-                sums["cross_entropy"] += float(cross_entropy)
-                sums["hinge"] += float(hinge)
-                targets = torch.tensor([item["target"] for item in chunk], device=device)
-                right += int((table.argmax(1) == targets).sum())
+                # The micro-batches of a training step, so the stopping loss needs the same memory.
+                for chunk in t.micro_batches(items[start:start + t.BATCH_LISTS], arguments.micro_lists, arguments.micro_tokens, arguments.packed):
+                    cross_entropy, hinge, table = loss_of(chunk)
+                    sums["cross_entropy"] += float(cross_entropy)
+                    sums["hinge"] += float(hinge)
+                    targets = torch.tensor([item["target"] for item in chunk], device=device)
+                    right += int((table.argmax(1) == targets).sum())
         model.train()
         loss = (sums["cross_entropy"] + (weight or 0.0) * sums["hinge"]) / len(items)
         return {"loss": loss, "cross_entropy": sums["cross_entropy"] / len(items), "hinge": sums["hinge"] / len(items),

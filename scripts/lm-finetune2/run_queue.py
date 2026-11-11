@@ -25,7 +25,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts" / "lm-finetune2"))
 from gpu_lock import GpuLock, now  # noqa: E402
 
-GPU_LIMIT_MIB = 22500
+GPU_LIMIT_MIB = 22300
 CONTEXT_MARGIN_MIB = 400
 BASH = r"C:\Program Files\Git\bin\bash.exe"
 
@@ -40,7 +40,7 @@ def train(arm: dict, arguments) -> subprocess.Popen:
     out = ROOT / "build" / "lm-finetune2" / "models" / arm["name"]
     log = (ROOT / "build" / "lm-finetune2" / "logs" / f"train-{arm['name']}.log").open("w", encoding="utf-8")
     command = [sys.executable, str(ROOT / "scripts" / "lm-finetune2" / "train2.py"), "--base", "smollm2-135m",
-               "--method", arm["method"], "--seed", str(arm["seed"]), "--packed", "--micro-tokens", "1500",
+               "--method", arm["method"], "--seed", str(arm["seed"]), "--packed", "--micro-tokens", str(arm["micro_tokens"]),
                "--memory-gb", str(arm["memory_gb"]), "--data", str(arguments.round1 / "build" / "lm-finetune" / "data"),
                "--gpu-lock", str(arguments.lock), "--lock-held-by-parent", "--out", str(out), *arm.get("extra", [])]
     environment = {**os.environ, "OMP_NUM_THREADS": "2", "MKL_NUM_THREADS": "2", "PYTHONUNBUFFERED": "1"}
