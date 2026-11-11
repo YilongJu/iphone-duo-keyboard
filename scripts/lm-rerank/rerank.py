@@ -35,12 +35,18 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts" / "typing-evaluation"))
-from score import load_cases, score  # noqa: E402
+from score import load_cases, normalize, score  # noqa: E402
 
 CASES = ROOT / "scripts" / "typing-evaluation" / "cases"
 # Only the dev half. The test half stays unread.
 CASE_FILES = [CASES / "english.dev.jsonl", CASES / "english-symbols.dev.jsonl"]
 LEXICON = ROOT / "Shared" / "lexicon-english.bin"
+# The work area "AI and software" that the keyboard ships with: its words as a supplement of the
+# lexicon, and their preferred capitals (docs/domain-pack-design.md).
+SUPPLEMENT = ROOT / "Shared" / "supplement-ai-software.bin"
+CAPITALS_TABLE = ROOT / "Shared" / "supplement-ai-software.tsv"
+# The dev cases of that work area. A case with `scoring` "case" is right only with its capitals.
+DOMAIN_CASES = CASES / "english-domain.dev.jsonl"
 # Readings per correction that the language model scores, as in the phone measurement (8 candidates).
 READINGS = 8
 
@@ -61,13 +67,24 @@ GRID = {
 # ---- The engine ----
 
 class Engine:
-    def __init__(self, shim: Path, lexicon: Path):
+    def __init__(self, shim: Path, lexicon: Path, supplement: Path | None = None, use_supplement: bool = True):
+        """`supplement` is a supplement lexicon, as Shared/supplement-ai-software.bin. One shim
+        holds one lexicon and one supplement for the whole process, so two engines of one shim
+        must name the same files. `use_supplement` says whether this engine reads with the
+        supplement: each call lays it over the lexicon or takes it off first."""
         self.library = ctypes.CDLL(str(shim))
         self.library.shim_open.argtypes = [ctypes.c_char_p]
         self.library.shim_readings.argtypes = [ctypes.c_char_p, ctypes.c_char_p, ctypes.c_int, ctypes.c_char_p, ctypes.c_int]
         self.library.shim_correct.argtypes = [ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p, ctypes.c_int]
         if self.library.shim_open(str(lexicon).encode()) != 1:
             raise SystemExit(f"{lexicon} is not a valid lexicon file")
+        self.use_supplement = None
+        if supplement is not None:
+            self.library.shim_set_supplement.argtypes = [ctypes.c_char_p]
+            self.library.shim_use_supplement.argtypes = [ctypes.c_int]
+            if self.library.shim_set_supplement(str(supplement).encode()) != 1:
+                raise SystemExit(f"{supplement} is not a valid supplement of {lexicon}")
+            self.use_supplement = use_supplement
         self.buffer = ctypes.create_string_buffer(1 << 16)
         self.cache: dict[tuple[str, str], list[dict] | None] = {}
 
@@ -75,6 +92,8 @@ class Engine:
         key = (previous_word, typed)
         if key in self.cache:
             return self.cache[key]
+        if self.use_supplement is not None and self.library.shim_use_supplement(int(self.use_supplement)) != 1:
+            raise SystemExit("the shim holds no supplement")
         count = self.library.shim_readings(previous_word.encode(), typed.encode(), READINGS, self.buffer, len(self.buffer))
         if count < 0:
             raise SystemExit("the readings do not fit the buffer")
@@ -395,6 +414,114 @@ def word_before_space(text: str) -> str:
     return head[start:].lower()
 
 
+def should_auto_capitalize(before: str) -> bool:
+    """`shouldAutoCapitalize` of Shared/KeyboardTextLogic.swift for a field that capitalizes
+    sentences: whether the keyboard types the next letter as a capital by itself."""
+    if not before or before[-1] in "\n\r":
+        return True
+    if not before[-1].isspace():
+        return False
+    trimmed = before.rstrip(" \t")
+    return not trimmed or trimmed[-1] in ".!?\n\r"
+
+
+def restoring_capitals(corrected: str, typed: str) -> str:
+    """`restoringCapitals` of Shared/KeyboardTextLogic.swift."""
+    typed_words = [w for w in typed.split(" ") if w]
+    words = [w for w in corrected.split(" ") if w]
+
+    def capitalized(word: str) -> str:
+        return word[:1].upper() + word[1:]
+
+    if len(words) == len(typed_words):
+        words = [capitalized(w) if t[:1].isupper() else w for w, t in zip(words, typed_words)]
+    elif typed_words and typed_words[0][:1].isupper() and words:
+        words[0] = capitalized(words[0])
+    return " ".join(capitalized(w) if w == "i" or w.startswith("i'") else w for w in words)
+
+
+class PreferredCapitals:
+    """The preferred capitals of the words of a supplement, and the rule that gives a typed word
+    one of its forms: `PreferredCapitals` of Shared/PreferredCapitals.swift.
+
+    A word of the table has a preferred form, as "GPU", "PyTorch" and "vLLM". The keyboard
+    writes one of three forms: lower case, the preferred form, or all capitals. The typed
+    capitals pick the form. A capital that the keyboard typed by itself at the start of a
+    sentence is not a capital the person asked for."""
+
+    def __init__(self, path: Path):
+        self.entries: dict[str, tuple[str, bool]] = {}
+        lines = path.read_text(encoding="utf-8").splitlines()
+        if lines[0].split("\t") != ["word", "zipf", "preferred", "everyday"]:
+            raise SystemExit(f"{path} does not have the columns word, zipf, preferred, everyday")
+        for line in lines[1:]:
+            word, _, preferred, everyday = line.split("\t")
+            if preferred:
+                if preferred.lower() != word or everyday not in ("0", "1"):
+                    raise SystemExit(f"{path}: the row of {word!r} is not valid")
+                self.entries[word] = (preferred, everyday == "1")
+
+    def form(self, word: str, typed: str, automatic_first: bool) -> str:
+        """The form of `word` to show. `word` is the keyboard's text for the typed word `typed`
+        after restoring_capitals, and `automatic_first` says that the keyboard typed the first
+        letter as a capital by itself."""
+        lower = word.lower()
+        entry = self.entries.get(lower)
+        if entry is None or not word.isascii() or not word.isalpha():
+            return word
+        preferred, everyday = entry
+        # A corrected slip of another length keeps only the case of its first letter. The
+        # keyboard never corrects a word with a capital after its first letter.
+        if len(typed) == len(lower):
+            capitals = [c.isupper() for c in typed]
+        else:
+            capitals = [typed[:1].isupper()] + [False] * (len(lower) - 1)
+        count = sum(capitals)
+        if count == 0:
+            return word
+        if count == len(lower) and count >= 2:
+            return lower.upper()
+        if count == 1 and capitals[0] and (automatic_first or everyday):
+            # The one capital is the keyboard's own, or the word is also an everyday word.
+            return word if everyday else preferred
+        if count == 1:
+            return preferred
+        to_preferred = sum(a != b.isupper() for a, b in zip(capitals, preferred))
+        to_all_capitals = len(lower) - count
+        return lower.upper() if to_all_capitals < to_preferred else preferred
+
+    def latch(self, restored: str, typed: str, text_before: str) -> str:
+        """Gives each word of `restored` its form. With another count of words than `typed`,
+        only the first word gets one, from the first typed word."""
+        words = [w for w in restored.split(" ") if w]
+        typed_words = [w for w in typed.split(" ") if w]
+        if not words or not typed_words:
+            return restored
+        if len(words) != len(typed_words):
+            words[0] = self.form(words[0], typed_words[0], should_auto_capitalize(text_before))
+            return " ".join(words)
+        before = text_before
+        for index, typed_word in enumerate(typed_words):
+            words[index] = self.form(words[index], typed_word, should_auto_capitalize(before))
+            before += words[index] + " "
+        return " ".join(words)
+
+
+def word_with_inner_capital(before: str) -> str | None:
+    """`wordWithInnerCapital` of Shared/KeyboardTextLogic.swift: the word of letters right before
+    the cursor that holds a capital after its first letter and starts a word of its own.
+    Autocorrection does not read such a word, and the preferred capitals still give it a form."""
+    start = len(before)
+    while start > 0 and before[start - 1].isascii() and before[start - 1].isalpha():
+        start -= 1
+    word = before[start:]
+    if len(word) < 2 or not any(c.isupper() for c in word[1:]):
+        return None
+    if start > 0 and not (before[start - 1].isspace() or before[start - 1] in "([{\""):
+        return None
+    return word
+
+
 @dataclass
 class RecentWord:
     typed: str
@@ -402,10 +529,18 @@ class RecentWord:
     context: str
 
 
-def type_case(case: dict, engine: Engine, chooser) -> str:
+def type_case(case: dict, engine: Engine, chooser, capitals: "PreferredCapitals | None" = None,
+              keep_capitals: bool = False) -> str:
     """Types one case and returns the text the field holds after the context. `chooser` takes
     the readings, the text before the span and the typed span (lower case, as the engine reads
-    it) and returns the reading to show."""
+    it) and returns the reading to show.
+
+    Without `keep_capitals` a corrected word comes out in lower case, which the scorer of the
+    lower-case cases does not see. With it the field gets the capitals of the typed words, as the
+    keyboard writes them (restoring_capitals). `capitals` also gives the words of a supplement
+    their preferred form, and it needs `keep_capitals`."""
+    if capitals is not None and not keep_capitals:
+        raise SystemExit("the preferred capitals need keep_capitals")
     start = case["context"] + " " if case["context"] else ""
     document = start
     recent: RecentWord | None = None
@@ -417,6 +552,11 @@ def type_case(case: dict, engine: Engine, chooser) -> str:
             if word is None:
                 if earlier is not None and character in SYMBOLS_BESIDE_LETTERS and before.endswith(earlier.context):
                     recent = earlier
+                elif capitals is not None:
+                    cased = word_with_inner_capital(before)
+                    if cased is not None:
+                        head = before[:len(before) - len(cased)]
+                        document = head + capitals.form(cased, cased, should_auto_capitalize(head))
             else:
                 typed_span, shown_span = word, word
                 if (earlier is not None and before.endswith(earlier.context + word)
@@ -431,6 +571,11 @@ def type_case(case: dict, engine: Engine, chooser) -> str:
                     if readings is not None:
                         reading = chooser(readings, text_before, typed_span.lower())
                 final = reading if reading is not None else shown_span
+                if keep_capitals:
+                    final = (restoring_capitals(reading, typed_span) if reading is not None
+                             else restoring_capitals(shown_span, shown_span))
+                    if capitals is not None:
+                        final = capitals.latch(final, typed_span, text_before)
                 final_words = [w for w in final.split(" ") if w]
                 if final != shown_span:
                     document = text_before + final
@@ -449,8 +594,30 @@ CLEAN_CATEGORIES = {"clean_common", "clean_rare", "clean_names_and_terms", "clea
                     "clean_symbol_token", "clean_bracket_or_dot_word"}
 
 
-def run(cases: list[dict], engine: Engine, chooser) -> dict[str, str]:
-    return {case["id"]: type_case(case, engine, chooser) for case in cases}
+def run(cases: list[dict], engine: Engine, chooser, capitals: "PreferredCapitals | None" = None,
+        keep_capitals: bool = False) -> dict[str, str]:
+    return {case["id"]: type_case(case, engine, chooser, capitals, keep_capitals) for case in cases}
+
+
+def case_is_right(case: dict, output: str) -> bool:
+    """Whether an output is right for a case. A case with `scoring` "case" needs the intended
+    capitals. Every other case needs the intended letters, as score.py counts it."""
+    if case.get("scoring") == "case":
+        return output.strip() == case["intended"].strip()
+    return normalize("english", output) == normalize("english", case["intended"])
+
+
+def tally_by_group(cases: list[dict], outputs: dict[str, str]) -> dict:
+    """Right cases and cases per category and per group, for cases that name their `group`."""
+    categories: dict[str, list[int]] = {}
+    groups: dict[str, list[int]] = {}
+    for case in cases:
+        right = int(case_is_right(case, outputs[case["id"]]))
+        for table, key in ((categories, case["category"]), (groups, case["group"])):
+            entry = table.setdefault(key, [0, 0])
+            entry[0] += right
+            entry[1] += 1
+    return {"categories": categories, "groups": groups, "right": sum(v[0] for v in categories.values()), "cases": len(cases)}
 
 
 def fold_of(case: dict) -> int:

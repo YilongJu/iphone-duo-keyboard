@@ -71,7 +71,7 @@ GROUPS = ["clean", "letter_slips", "space_slips", "symbol_slips", "clean_symbols
 # in run 42985401738 (lead 8). Right cases per group, then all dev cases. The lexicon adds 5 engine
 # cases ("youre" to "you're"); with the model the total stays 6,542.
 PUBLISHED = {"engine only": [957, 1943, 1299, 1131, 427, 6074], "with the model": [953, 2057, 1387, 1165, 428, 6542]}
-TASKS = ["english", "english-symbols"]
+TASKS = ["english", "english-symbols", "english-domain"]
 
 
 def read_jsonl(path: Path) -> list[dict]:
@@ -154,10 +154,13 @@ def main():
     arguments = parser.parse_args()
     arguments.out.mkdir(parents=True, exist_ok=True)
 
+    # The published numbers count the cases of english.dev.jsonl and english-symbols.dev.jsonl.
+    # The cases of the work area have their own table, and the case-by-case check holds all.
     cases = rerank.load_cases(rerank.CASE_FILES)
-    if any(case["split"] != "dev" for case in cases):
+    domain = rerank.load_cases([rerank.DOMAIN_CASES])
+    if any(case["split"] != "dev" for case in cases + domain):
         raise SystemExit("a case outside the dev half")
-    by_id = {case["id"]: case for case in cases}
+    by_id = {case["id"]: case for case in cases + domain}
     reference = load_run(arguments.reference, arguments.reference_name)
     other = load_run(arguments.other, arguments.other_name)
     for run in (reference, other):
@@ -187,13 +190,30 @@ def main():
                      f"numbers {expected} (this run {got}).")
     lines.append("")
 
-    lines += ["Table 2. Cases whose outputs differ between the two runs.", "",
+    domain_groups = sorted({case["group"] for case in domain})
+    lines += ["Table 1b. Right dev cases of the work area per group. The group capitals counts the capitals too.", "",
+              "| Run | " + " | ".join(domain_groups) + " | all |", "| --- |" + " --- |" * (len(domain_groups) + 1)]
+    for run in (reference, other):
+        for kind in ("engine only", "with the model"):
+            tally = rerank.tally_by_group(domain, run[kind])
+            cells = [f"{tally['groups'][g][0]}/{tally['groups'][g][1]}" for g in domain_groups]
+            lines.append(f"| {run['name']}, {kind} | " + " | ".join(cells) + f" | {tally['right']}/{tally['cases']} |")
+    lines.append("")
+
+    lines += ["Table 2. Cases whose outputs differ between the two runs. A case of the work area that is about "
+              "capitals differs when its capitals differ.", "",
               "| Run | differ after normalization | differ in letter case only |", "| --- | --- | --- |"]
     for kind in ("engine only", "with the model"):
         normalized, case_only = 0, 0
         for case_id in by_id:
             a, b = reference[kind][case_id], other[kind][case_id]
-            if normalize("english", a) != normalize("english", b):
+            if by_id[case_id].get("scoring") == "case":
+                a, b = a.strip(), b.strip()
+                if a != b:
+                    normalized += 1
+                    differences["cases"].append({"run": kind, "id": case_id, reference["name"]: a, other["name"]: b,
+                                                 "intended": by_id[case_id]["intended"]})
+            elif normalize("english", a) != normalize("english", b):
                 normalized += 1
                 differences["cases"].append({"run": kind, "id": case_id, reference["name"]: a, other["name"]: b,
                                              "intended": by_id[case_id]["intended"]})

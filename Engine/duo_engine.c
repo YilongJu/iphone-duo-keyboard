@@ -36,6 +36,9 @@
 #define NO_WORD 0xFFFFFFFFu
 /* Marks a state whose last two words are not a pair that a later word depends on. */
 #define NO_PAIR 0xFFFFFFFFu
+/* Set in the number of a word that only the supplement holds. The rest of the number is the
+   word's place in the supplement's word table. */
+#define SUPPLEMENT_BIT 0x40000000u
 
 /* ---- Reading the lexicon bytes ---- */
 
@@ -212,6 +215,7 @@ int duo_lexicon_open_checked_before(duo_lexicon *lexicon, const void *data, size
     lexicon->triples = lexicon->contexts;
     if (version == VERSION_TRIPLES) lexicon->triples += ((size_t)context_count + 1) * CONTEXT_BYTES;
     lexicon->strings = lexicon->triples + (size_t)triple_count * TRIPLE_BYTES;
+    lexicon->supplement = NULL;
     return 1;
 }
 
@@ -267,6 +271,29 @@ int duo_lexicon_open(duo_lexicon *lexicon, const void *data, size_t size) {
         if (triple_word(lexicon, triple) >= word_count) return 0;
     }
     return 1;
+}
+
+/* ---- The supplement ---- */
+
+int duo_lexicon_set_supplement(duo_lexicon *lexicon, const duo_lexicon *supplement) {
+    if (lexicon == NULL) return 0;
+    if (supplement == NULL) {
+        lexicon->supplement = NULL;
+        return 1;
+    }
+    if (lexicon->model != 0 || supplement->model != 0 || supplement->version != VERSION_PAIRS) return 0;
+    if (supplement->pair_count != 0 || supplement->supplement != NULL || supplement == lexicon) return 0;
+    if (lexicon->word_count >= SUPPLEMENT_BIT || supplement->word_count >= SUPPLEMENT_BIT) return 0;
+    for (uint32_t index = 0; index < supplement->node_count; index++) {
+        if (read_u16(supplement->nodes + NODE_BYTES * (size_t)index + 10) > 1) return 0;
+    }
+    lexicon->supplement = supplement;
+    return 1;
+}
+
+/* Whether a word number names a word that only the supplement holds. */
+static int in_supplement(uint32_t word) {
+    return word != NO_WORD && (word & SUPPLEMENT_BIT) != 0;
 }
 
 /* ---- Parameters ---- */
@@ -463,10 +490,13 @@ typedef struct {
     int end;          /* typed position right after the word */
     uint32_t node;    /* the lexicon node whose words the typed text stands for */
     float cost;       /* total cost of the slips this match assumes */
+    int supplement;   /* 1 when the node is a node of the supplement */
+    uint32_t twin;    /* for a node of the supplement: the main lexicon's node of the same spelling, or NO_WORD */
 } edge_t;
 
 typedef struct {
-    const duo_lexicon *lexicon;
+    const duo_lexicon *lexicon;  /* the lexicon whose letter tree the walk follows */
+    const duo_lexicon *main;     /* for a walk of the supplement: the main lexicon, and NULL otherwise */
     const duo_params *params;
     const char *typed;  /* the typed text from the word's first position on */
     int length;         /* count of typed bytes from that position to the end */
@@ -535,6 +565,8 @@ static float omission_cost(const walk_t *walk, char letter, int depth) {
     return walk->params->omission + (depth == 0 ? walk->params->first_letter_extra : 0.0f);
 }
 
+static uint32_t find_exact_node(const duo_lexicon *lexicon, const char *letters, int length);
+
 static void walk_node(walk_t *walk, uint32_t node_index, int depth) {
     node_t node = node_at(walk->lexicon, node_index);
     const duo_params *params = walk->params;
@@ -551,6 +583,8 @@ static void walk_node(walk_t *walk, uint32_t node_index, int depth) {
                 edge->end = walk->start + consumed;
                 edge->node = node_index;
                 edge->cost = cost;
+                edge->supplement = walk->main != NULL;
+                edge->twin = walk->main != NULL ? find_exact_node(walk->main, walk->letters, depth) : NO_WORD;
             }
         }
     }
@@ -603,6 +637,7 @@ static int find_edges(
     const char *typed, int length, int start, edge_t *edges) {
     walk_t walk;
     walk.lexicon = lexicon;
+    walk.main = NULL;
     walk.params = params;
     walk.typed = typed + start;
     walk.length = length - start;
@@ -620,6 +655,12 @@ static int find_edges(
         else walk.rows[0][b] = walk.rows[0][b - 1] + insertion_cost(&walk, consumed - 1) + params->first_letter_extra;
     }
     walk_node(&walk, 0, 0);
+    if (lexicon->supplement != NULL) {
+        /* The same walk over the supplement's letter tree. The first row does not change. */
+        walk.lexicon = lexicon->supplement;
+        walk.main = lexicon;
+        walk_node(&walk, 0, 0);
+    }
     return walk.edge_count;
 }
 
@@ -696,6 +737,12 @@ static void start_followers(
     followers->own_only = previous == NO_WORD
         || (followers->mixed && (lexicon->pair_count == 0 || params->pair_weight <= 0.0f));
     if (followers->own_only) return;
+    if (in_supplement(previous)) {
+        /* A word that only the supplement holds has no listed pair, so every word after it
+           gets the estimate. A lexicon with a supplement uses the mixed model. */
+        followers->estimate_base = logf(followers->own_share);
+        return;
+    }
 
     if (followers->mixed) {
         followers->estimate_base = logf(followers->own_share);
@@ -802,6 +849,7 @@ static float word_after(
     float own = word_log_probability(lexicon, word);
     int back_off_model = lexicon->model == MODEL_BACK_OFF;
     if (previous == NO_WORD || (!back_off_model && lexicon->pair_count == 0)) return own;
+    if (in_supplement(previous)) return params->pair_weight > 0.0f ? own + logf(1.0f - params->pair_weight) : own;
     float reading_cost = params->reading_cost_weight * word_reading_cost(lexicon, word);
     float weight = 0.0f;
     if (back_off_model && context != NO_PAIR) {
@@ -831,6 +879,47 @@ static float word_after(
     }
     if (back_off_model) return weight + word_back_off(lexicon, previous) + own;
     return params->pair_weight > 0.0f ? own + logf(1.0f - params->pair_weight) : own;
+}
+
+/* The log probability of the supplement's word `word` after the word `previous`: the value of a
+   word without a listed pair in the mixed model, as next_follower gives it. */
+static float supplement_word_value(
+    const duo_lexicon *lexicon, const duo_params *params, uint32_t previous, uint32_t word) {
+    float own = word_log_probability(lexicon->supplement, word);
+    if (previous == NO_WORD || lexicon->pair_count == 0 || params->pair_weight <= 0.0f) return own;
+    return own + logf(1.0f - params->pair_weight);
+}
+
+/* The most probable word that exactly these letters spell, in the lexicon or its supplement,
+   after the word `previous`, and its log probability. A spelling that both hold gives the
+   main lexicon's word at the higher of the two values, so the word keeps its pairs. Returns 0
+   when neither holds the letters. */
+static int exact_word(
+    const duo_lexicon *lexicon, const duo_params *params, uint32_t previous, const char *letters, int length,
+    uint32_t *word, float *log_probability) {
+    int found = 0;
+    uint32_t node = find_exact_node(lexicon, letters, length);
+    if (node != NO_WORD) {
+        best_word(lexicon, params, previous, node, word, log_probability);
+        found = 1;
+    }
+    if (lexicon->supplement != NULL) {
+        uint32_t extra = find_exact_node(lexicon->supplement, letters, length);
+        if (extra != NO_WORD) {
+            uint32_t extra_word = node_at(lexicon->supplement, extra).first_word;
+            float value = supplement_word_value(lexicon, params, previous, extra_word);
+            if (!found) *word = extra_word | SUPPLEMENT_BIT;
+            if (!found || value > *log_probability) *log_probability = value;
+            found = 1;
+        }
+    }
+    return found;
+}
+
+/* Whether the lexicon or its supplement holds a word with exactly these letters. */
+static int is_known_word(const duo_lexicon *lexicon, const char *letters, int length) {
+    if (find_exact_node(lexicon, letters, length) != NO_WORD) return 1;
+    return lexicon->supplement != NULL && find_exact_node(lexicon->supplement, letters, length) != NO_WORD;
 }
 
 /* The two sentence marks of a back-off lexicon sit under spellings that nobody can type. */
@@ -928,7 +1017,8 @@ static int write_reading(
             piece = typed + state->kept_start;
             piece_length = (size_t)(state->kept_end - state->kept_start);
         } else {
-            piece = word_text(lexicon, state->word);
+            piece = in_supplement(state->word)
+                ? word_text(lexicon->supplement, state->word & ~SUPPLEMENT_BIT) : word_text(lexicon, state->word);
             piece_length = strlen(piece);
         }
         int needs_space = params->spaces_between_words && used > 0 && !joined;
@@ -960,17 +1050,22 @@ static int cost_before_word(const duo_params *params, char symbol, float *cost) 
 }
 
 /* Reads a typed word with a symbol or digit key as text typed on purpose: a key right before
-   a known word, as in "[note", or a digit right after a known word, as in "mp3". Returns the
-   node of the word and the cost of the key, or NO_WORD for any other text. */
-static uint32_t word_beside_symbol(
-    const duo_lexicon *lexicon, const duo_params *params, const char *letters, int length, float *cost) {
-    if (length < 2) return NO_WORD;
-    if (cost_before_word(params, letters[0], cost)) return find_exact_node(lexicon, letters + 1, length - 1);
+   a known word, as in "[note", or a digit right after a known word, as in "mp3". Returns 1,
+   the place of the known word's first letter in `letters`, and the cost of the key, or 0 for
+   any other text. The known word is one letter shorter than the typed word. */
+static int word_beside_symbol(
+    const duo_lexicon *lexicon, const duo_params *params, const char *letters, int length, int *first, float *cost) {
+    if (length < 2) return 0;
+    if (cost_before_word(params, letters[0], cost)) {
+        *first = 1;
+        return is_known_word(lexicon, letters + 1, length - 1);
+    }
     if (is_digit(letters[length - 1])) {
         *cost = params->digit_after_word;
-        return find_exact_node(lexicon, letters, length - 1);
+        *first = 0;
+        return is_known_word(lexicon, letters, length - 1);
     }
-    return NO_WORD;
+    return 0;
 }
 
 /* The log probability of a typed word that holds a known word with a symbol or digit key
@@ -980,12 +1075,14 @@ static uint32_t word_beside_symbol(
    second one by margin_unknown. Typed text whose words are all known gets margin_known as a
    whole, so the unknown text counts that much lower here. In typed text with an unknown word
    beside this one, the whole text gets margin_unknown, as it does without a symbol key.
-   `node` and `symbol_cost` come from word_beside_symbol. */
+   `known` is the known word inside the typed word, of `length` - 1 letters, and `symbol_cost`
+   the cost of the key, both from word_beside_symbol. */
 static float score_beside_symbol(
-    const duo_lexicon *lexicon, const duo_params *params, uint32_t previous, uint32_t node,
+    const duo_lexicon *lexicon, const duo_params *params, uint32_t previous, const char *known,
     float symbol_cost, int length, uint32_t *word) {
     float log_probability;
-    best_word(lexicon, params, previous, node, word, &log_probability);
+    /* word_beside_symbol found the word, so exact_word finds it too. */
+    if (!exact_word(lexicon, params, previous, known, length - 1, word, &log_probability)) abort();
     float on_purpose = log_probability - symbol_cost;
     float unknown = params->unknown_word + params->unknown_letter * (float)length
         - (params->margin_known - params->margin_unknown);
@@ -1039,6 +1136,32 @@ typedef struct {
     float cost;
 } target_t;
 
+/* Adds the reading that goes on from `from` with one word over `edge` to each target cell.
+   `index` is the place of `from` in the cell at `start`. Returns 1 when a cell took it. */
+static int reach_targets(
+    const duo_params *params, const state_t *from, int start, int index, const edge_t *edge,
+    uint32_t word, uint32_t pair, float log_probability, const target_t *targets, int target_count, int beam) {
+    state_t state;
+    state.score = from->score + log_probability - edge->cost - (edge->cost > 0.0f ? params->slipped_word : 0.0f);
+    state.word = word;
+    state.pair = pair;
+    state.from_position = start;
+    state.from_state = index;
+    state.kept_start = -1;
+    state.kept_end = -1;
+    state.slips = from->slips + edge->cost + (edge->cost > 0.0f ? params->slipped_word : 0.0f);
+    int added = 0;
+    for (int target = 0; target < target_count; target++) {
+        state_t reached = state;
+        if (targets[target].cost != 0.0f) {
+            reached.score -= targets[target].cost;
+            reached.slips += targets[target].cost;
+        }
+        added |= add_state(targets[target].cell, beam, reached);
+    }
+    return added;
+}
+
 /* Finds the best reading of typed[0..length). Returns 1 and fills `result`, or 0 on failure.
    When the lexicon cannot read the text to its end, the unreadable parts are kept as typed.
    A `pool` that is not NULL also receives every reading that the search keeps at the end of
@@ -1074,22 +1197,23 @@ static int decode(
             word_start = start == 0 || typed[start - 1] == ' ';
             keep = word_start;
             while (kept_end < length && typed[kept_end] != ' ') kept_end++;
-            if (keep && find_exact_node(lexicon, typed + start, kept_end - start) != NO_WORD) keep = 0;
+            if (keep && is_known_word(lexicon, typed + start, kept_end - start)) keep = 0;
         }
         if (keep && typed[start] != ' ') {
             int next = kept_end < length && typed[kept_end] == ' ' ? kept_end + 1 : kept_end;
             /* A known word with a symbol or digit key beside it, as in ".net" and "mp3", is
                text typed on purpose: the word at the cost of the key. Any other text is unknown. */
-            uint32_t word_node = NO_WORD;
+            int beside = 0, known_first = 0;
             float symbol_cost = 0.0f;
             if (params->spaces_between_words) {
-                word_node = word_beside_symbol(lexicon, params, typed + start, kept_end - start, &symbol_cost);
+                beside = word_beside_symbol(lexicon, params, typed + start, kept_end - start, &known_first, &symbol_cost);
             }
             for (int index = 0; index < cell->count; index++) {
                 state_t state;
-                if (word_node != NO_WORD) {
+                if (beside) {
                     state.score = cell->states[index].score + score_beside_symbol(
-                        lexicon, params, cell->states[index].word, word_node, symbol_cost, kept_end - start, &state.word);
+                        lexicon, params, cell->states[index].word, typed + start + known_first, symbol_cost,
+                        kept_end - start, &state.word);
                 } else {
                     state.score = cell->states[index].score + params->unknown_word
                         + params->unknown_letter * (float)(kept_end - start);
@@ -1146,6 +1270,17 @@ static int decode(
             }
             for (int index = 0; index < cell->count; index++) {
                 const state_t *from = &cell->states[index];
+                if (edge->supplement) {
+                    /* A node of the supplement holds one word. A spelling that the main lexicon
+                       also holds goes on as the main lexicon's word, so the cell keeps the
+                       better of the two values and the word keeps its pairs. */
+                    uint32_t extra_word = node_at(lexicon->supplement, edge->node).first_word;
+                    uint32_t word = edge->twin != NO_WORD
+                        ? node_at(lexicon, edge->twin).first_word : (extra_word | SUPPLEMENT_BIT);
+                    reach_targets(params, from, start, index, edge, word, NO_PAIR,
+                                  supplement_word_value(lexicon, params, from->word, extra_word), targets, target_count, beam);
+                    continue;
+                }
                 /* Every word of the node goes on as its own reading, because the word that is
                    most probable here is not always the word of the best whole reading. */
                 followers_t followers;
@@ -1154,25 +1289,10 @@ static int decode(
                 int estimated;
                 start_followers(&followers, lexicon, params, from->word, from->pair, edge->node);
                 while (next_follower(&followers, &word, &log_probability, &pair, &estimated)) {
-                    state_t state;
-                    state.score = from->score + log_probability - edge->cost
-                        - (edge->cost > 0.0f ? params->slipped_word : 0.0f);
-                    state.word = word;
-                    state.pair = pair != NO_PAIR && pair_matters_later(lexicon, pair) ? pair : NO_PAIR;
-                    state.from_position = start;
-                    state.from_state = index;
-                    state.kept_start = -1;
-                    state.kept_end = -1;
-                    state.slips = from->slips + edge->cost + (edge->cost > 0.0f ? params->slipped_word : 0.0f);
-                    int added = 0;
-                    for (int target = 0; target < target_count; target++) {
-                        state_t reached = state;
-                        if (targets[target].cost != 0.0f) {
-                            reached.score -= targets[target].cost;
-                            reached.slips += targets[target].cost;
-                        }
-                        added |= add_state(targets[target].cell, beam, reached);
-                    }
+                    int added = reach_targets(
+                        params, from, start, index, edge, word,
+                        pair != NO_PAIR && pair_matters_later(lexicon, pair) ? pair : NO_PAIR,
+                        log_probability, targets, target_count, beam);
                     /* A back-off estimate that no cell takes ends the node's estimates: the
                        later ones are lower, and a full cell only gets harder to enter. */
                     if (estimated && !added) followers.skip_estimates = 1;
@@ -1250,7 +1370,10 @@ static int english_input_length(const char *typed) {
 
 static uint32_t find_word(const duo_lexicon *lexicon, const char *letters, int length) {
     uint32_t node = find_exact_node(lexicon, letters, length);
-    return node == NO_WORD ? NO_WORD : node_at(lexicon, node).first_word;
+    if (node != NO_WORD) return node_at(lexicon, node).first_word;
+    if (lexicon->supplement == NULL) return NO_WORD;
+    node = find_exact_node(lexicon->supplement, letters, length);
+    return node == NO_WORD ? NO_WORD : (node_at(lexicon->supplement, node).first_word | SUPPLEMENT_BIT);
 }
 
 /* ---- English ---- */
@@ -1267,19 +1390,16 @@ static float score_as_typed(
     while (start < length) {
         int end = start;
         while (end < length && typed[end] != ' ') end++;
-        uint32_t node = find_exact_node(lexicon, typed + start, end - start);
+        uint32_t word;
+        float log_probability;
         float symbol_cost = 0.0f;
-        uint32_t beside = node == NO_WORD
-            ? word_beside_symbol(lexicon, params, typed + start, end - start, &symbol_cost) : NO_WORD;
-        if (node != NO_WORD) {
-            uint32_t word;
-            float log_probability;
-            best_word(lexicon, params, previous, node, &word, &log_probability);
+        int known_first = 0;
+        if (exact_word(lexicon, params, previous, typed + start, end - start, &word, &log_probability)) {
             score += log_probability;
             previous = word;
-        } else if (beside != NO_WORD) {
-            uint32_t word;
-            score += score_beside_symbol(lexicon, params, previous, beside, symbol_cost, end - start, &word);
+        } else if (word_beside_symbol(lexicon, params, typed + start, end - start, &known_first, &symbol_cost)) {
+            score += score_beside_symbol(
+                lexicon, params, previous, typed + start + known_first, symbol_cost, end - start, &word);
             previous = word;
         } else {
             score += params->unknown_word + params->unknown_letter * (float)(end - start);
@@ -1416,7 +1536,7 @@ static void add_apostrophe_readings(
                     word[place] = '\'';
                     memcpy(word + place + 1, typed + start + place, (size_t)(word_length - place));
                     word[word_length + 1] = 0;
-                    if (find_exact_node(lexicon, word, word_length + 1) == NO_WORD) continue;
+                    if (!is_known_word(lexicon, word, word_length + 1)) continue;
                     if (!replace_word(typed, start, end, word, text)) continue;
                     int all_known;
                     float score = score_as_typed(lexicon, params, text, (int)strlen(text), previous, &all_known);
@@ -1428,7 +1548,7 @@ static void add_apostrophe_readings(
                     if (typed[index] != '\'') word[bare_length++] = typed[index];
                 }
                 word[bare_length] = 0;
-                if (bare_length >= 1 && find_exact_node(lexicon, word, bare_length) != NO_WORD
+                if (bare_length >= 1 && is_known_word(lexicon, word, bare_length)
                     && replace_word(typed, start, end, word, text)) {
                     int all_known;
                     float score = score_as_typed(lexicon, params, text, (int)strlen(text), previous, &all_known);

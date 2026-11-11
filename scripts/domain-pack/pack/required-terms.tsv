@@ -1,0 +1,4 @@
+# Words the user asked for by name. The corpus does not decide them, and build_pack.py gives each
+# one the frequency REQUESTED_ZIPF. One lower-case word per line, then a tab and the source.
+ultrathink	requested by the user
+ultracode	requested by the user

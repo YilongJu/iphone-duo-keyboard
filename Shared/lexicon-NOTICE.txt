@@ -28,3 +28,27 @@ lexicon-english.bin
   - Wikipedia's machine-readable list of common misspellings, CC BY-SA 4.0,
     https://en.wikipedia.org/wiki/Wikipedia:Lists_of_common_misspellings/For_machines
     The build removes these misspellings from the word list.
+
+supplement-ai-software.bin and supplement-ai-software.tsv
+
+  The words of the work area "AI and software", their frequencies and their preferred capitals.
+  Built by scripts/domain-pack/build_pack.py from the word counts of three kinds of public text,
+  which scripts/domain-pack/collect_corpus.py reads in the GitHub workflow
+  .github/workflows/domain-pack-corpus.yml. scripts/domain-pack/pack/ai-software.sources.json
+  names every source with its count of words, and each repository with its commit and licence.
+
+  - arXiv abstracts of cs.CL, cs.LG, cs.AI and cs.SE, through the arXiv API. arXiv metadata, the
+    abstract included, is under CC0 1.0 (https://info.arxiv.org/help/api/tou.html).
+  - Posts and comments of the Stack Exchange sites ai, genai, datascience, devops and
+    softwareengineering, from the data dump of 2024-04 on the Internet Archive
+    (https://archive.org/details/stackexchange). The content is under CC BY-SA 4.0, and older
+    posts under CC BY-SA 3.0 and 2.5 (https://stackoverflow.com/help/licensing).
+  - The documentation of 18 open-source projects on GitHub, under the Apache License 2.0, the
+    MIT license or CC BY 4.0, as ai-software.sources.json says for each one.
+
+  The build also reads the wordfreq frequencies and the Wikipedia misspellings list named above,
+  the SymSpell pair list, and the Tatoeba English sentences (CC BY 2.0 FR, https://tatoeba.org)
+  for the letter case of a word in everyday text. The two files hold single words with numbers
+  and no text of a source. They are under CC BY-SA 4.0, as the Stack Exchange content and the
+  wordfreq data are. The two words of scripts/domain-pack/pack/required-terms.tsv come from the
+  user of the keyboard and from no text.

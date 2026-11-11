@@ -5,6 +5,9 @@ The harness is rerank.py as it is: its Python copy of the keyboard's correction 
 shim and its scorer lm_score. This script only runs the control and the one tuned setting, and
 records each correction on the way.
 
+The cases are the dev halves of english.jsonl and english-symbols.jsonl, and of english-domain.jsonl,
+the cases of the work area "AI and software". The work area is on, as the keyboard ships.
+
 Outputs in --out:
     control.dev.jsonl    the engine's own choice, as rerank.py writes it
     reranked.dev.jsonl   the tuned rule with the model, as rerank.py writes it
@@ -47,15 +50,21 @@ def main():
     parser.add_argument("--out", type=Path, required=True)
     arguments = parser.parse_args()
 
-    cases = rerank.load_cases(rerank.CASE_FILES)
+    # The dev cases of english.dev.jsonl and english-symbols.dev.jsonl, and those of the work area.
+    existing = rerank.load_cases(rerank.CASE_FILES)
+    domain = rerank.load_cases([rerank.DOMAIN_CASES])
+    cases = existing + domain
     if any(case["split"] != "dev" for case in cases):
         raise SystemExit("a case outside the dev half")
-    engine = rerank.Engine(arguments.shim, rerank.LEXICON)
+    # The keyboard ships with the work area "AI and software" on: its supplement over the
+    # lexicon, and its preferred capitals in the field.
+    engine = rerank.Engine(arguments.shim, rerank.LEXICON, rerank.SUPPLEMENT, use_supplement=True)
+    capitals = rerank.PreferredCapitals(rerank.CAPITALS_TABLE)
     model = rerank.LanguageModel(arguments.lm, arguments.model, arguments.threads, no_context=False,
                                  prompt_format=PROMPT_FORMAT)
     arguments.out.mkdir(parents=True, exist_ok=True)
 
-    control = rerank.run(cases, engine, rerank.engine_choice)
+    control = rerank.run(cases, engine, rerank.engine_choice, capitals, keep_capitals=True)
     rerank.write_predictions(arguments.out / "control.dev.jsonl", cases, control)
 
     trace: list[dict] = []
@@ -97,7 +106,7 @@ def main():
                 step += 1
             return choice
 
-        reranked[case["id"]] = rerank.type_case(case, engine, chooser)
+        reranked[case["id"]] = rerank.type_case(case, engine, chooser, capitals, keep_capitals=True)
     rerank.write_predictions(arguments.out / "reranked.dev.jsonl", cases, reranked)
 
     with (arguments.out / "trace.dev.jsonl").open("w", encoding="utf-8") as file:
@@ -107,7 +116,8 @@ def main():
 
     result = {
         "setting": TUNED.__dict__, "prompt_format": PROMPT_FORMAT, "lm_ready": model.ready,
-        "control": rerank.summarize(cases, control), "reranked": rerank.summarize(cases, reranked),
+        "control": rerank.summarize(existing, control), "reranked": rerank.summarize(existing, reranked),
+        "domain_control": rerank.tally_by_group(domain, control), "domain_reranked": rerank.tally_by_group(domain, reranked),
         "corrections_read_by_the_model": len(trace), "distinct_requests": len(requests),
         "lm_report": model.close(),
     }
@@ -115,6 +125,8 @@ def main():
     for name in ("control", "reranked"):
         print(name, result[name]["right"], "of", result[name]["cases"], json.dumps(
             {group: f"{entry['right']}/{entry['cases']}" for group, entry in result[name]["groups"].items()}))
+        print("  work area:", json.dumps({group: f"{right}/{count}" for group, (right, count) in
+                                          result["domain_" + name]["groups"].items()}))
     print(len(trace), "corrections read by the model,", len(requests), "distinct requests")
 
 

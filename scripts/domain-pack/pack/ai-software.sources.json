@@ -1,0 +1,632 @@
+{
+ "columns": [
+  "documents",
+  "sentences",
+  "words"
+ ],
+ "sources": {
+  "github:huggingface/transformers": {
+   "group": "docs-ai",
+   "build": [
+    612,
+    17140,
+    220514
+   ],
+   "dev": [
+    94,
+    3387,
+    38882
+   ],
+   "test": [
+    74,
+    2007,
+    26460
+   ]
+  },
+  "github:huggingface/peft": {
+   "group": "docs-ai",
+   "build": [
+    63,
+    2178,
+    33489
+   ],
+   "dev": [
+    7,
+    139,
+    2157
+   ],
+   "test": [
+    12,
+    198,
+    3458
+   ]
+  },
+  "github:huggingface/smolagents": {
+   "group": "docs-ai",
+   "build": [
+    17,
+    728,
+    9994
+   ],
+   "dev": [
+    3,
+    124,
+    934
+   ],
+   "test": [
+    2,
+    109,
+    1291
+   ]
+  },
+  "github:vllm-project/vllm": {
+   "group": "docs-ai",
+   "build": [
+    198,
+    9987,
+    119365
+   ],
+   "dev": [
+    28,
+    1728,
+    19829
+   ],
+   "test": [
+    22,
+    877,
+    10945
+   ]
+  },
+  "github:ggml-org/llama.cpp": {
+   "group": "docs-ai",
+   "build": [
+    83,
+    3552,
+    39425
+   ],
+   "dev": [
+    15,
+    1141,
+    11944
+   ],
+   "test": [
+    12,
+    246,
+    2939
+   ]
+  },
+  "github:ollama/ollama": {
+   "group": "docs-ai",
+   "build": [
+    51,
+    1583,
+    13137
+   ],
+   "dev": [
+    6,
+    178,
+    1172
+   ],
+   "test": [
+    8,
+    212,
+    2127
+   ]
+  },
+  "github:langchain-ai/docs": {
+   "group": "docs-ai",
+   "build": [
+    616,
+    27013,
+    256541
+   ],
+   "dev": [
+    82,
+    3895,
+    38150
+   ],
+   "test": [
+    77,
+    3057,
+    29599
+   ]
+  },
+  "github:run-llama/llama_index": {
+   "group": "docs-ai",
+   "build": [
+    1292,
+    15606,
+    196525
+   ],
+   "dev": [
+    162,
+    1622,
+    21237
+   ],
+   "test": [
+    163,
+    1857,
+    24158
+   ]
+  },
+  "github:microsoft/autogen": {
+   "group": "docs-ai",
+   "build": [
+    73,
+    2139,
+    29373
+   ],
+   "dev": [
+    7,
+    203,
+    3213
+   ],
+   "test": [
+    13,
+    202,
+    3005
+   ]
+  },
+  "github:openai/openai-cookbook": {
+   "group": "docs-ai",
+   "build": [
+    327,
+    19885,
+    290567
+   ],
+   "dev": [
+    67,
+    3492,
+    54239
+   ],
+   "test": [
+    47,
+    3201,
+    49283
+   ]
+  },
+  "github:openai/openai-agents-python": {
+   "group": "docs-ai",
+   "build": [
+    333,
+    7436,
+    46085
+   ],
+   "dev": [
+    33,
+    614,
+    2482
+   ],
+   "test": [
+    34,
+    489,
+    1851
+   ]
+  },
+  "github:anthropics/claude-cookbooks": {
+   "group": "docs-ai",
+   "build": [
+    152,
+    7341,
+    125506
+   ],
+   "dev": [
+    21,
+    1091,
+    18519
+   ],
+   "test": [
+    22,
+    846,
+    13161
+   ]
+  },
+  "github:openai/codex": {
+   "group": "docs-software",
+   "build": [
+    13,
+    54,
+    634
+   ],
+   "dev": [
+    1,
+    12,
+    256
+   ],
+   "test": [
+    1,
+    1,
+    6
+   ]
+  },
+  "github:google-gemini/gemini-cli": {
+   "group": "docs-software",
+   "build": [
+    72,
+    4939,
+    49466
+   ],
+   "dev": [
+    8,
+    436,
+    4395
+   ],
+   "test": [
+    16,
+    951,
+    11578
+   ]
+  },
+  "github:astral-sh/uv": {
+   "group": "docs-software",
+   "build": [
+    65,
+    3374,
+    38222
+   ],
+   "dev": [
+    5,
+    190,
+    2083
+   ],
+   "test": [
+    11,
+    341,
+    3979
+   ]
+  },
+  "github:kubernetes/website": {
+   "group": "docs-software",
+   "build": [
+    1390,
+    38640,
+    475972
+   ],
+   "dev": [
+    176,
+    7037,
+    80575
+   ],
+   "test": [
+    156,
+    6052,
+    72915
+   ]
+  },
+  "github:docker/docs": {
+   "group": "docs-software",
+   "build": [
+    878,
+    42738,
+    501031
+   ],
+   "dev": [
+    111,
+    5834,
+    66057
+   ],
+   "test": [
+    124,
+    5928,
+    64355
+   ]
+  },
+  "github:github/docs": {
+   "group": "docs-software",
+   "build": [
+    3050,
+    90158,
+    1134773
+   ],
+   "dev": [
+    399,
+    10965,
+    139107
+   ],
+   "test": [
+    361,
+    11872,
+    147540
+   ]
+  },
+  "arxiv:cs.CL": {
+   "group": "arxiv",
+   "build": [
+    6388,
+    53512,
+    1202577
+   ],
+   "dev": [
+    845,
+    7159,
+    159961
+   ],
+   "test": [
+    767,
+    6245,
+    141740
+   ]
+  },
+  "arxiv:cs.LG": {
+   "group": "arxiv",
+   "build": [
+    6390,
+    54005,
+    1223984
+   ],
+   "dev": [
+    804,
+    6695,
+    152422
+   ],
+   "test": [
+    806,
+    6837,
+    153840
+   ]
+  },
+  "arxiv:cs.AI": {
+   "group": "arxiv",
+   "build": [
+    6466,
+    56175,
+    1252767
+   ],
+   "dev": [
+    778,
+    6768,
+    151474
+   ],
+   "test": [
+    756,
+    6598,
+    147235
+   ]
+  },
+  "arxiv:cs.SE": {
+   "group": "arxiv",
+   "build": [
+    6433,
+    54488,
+    1226769
+   ],
+   "dev": [
+    810,
+    6877,
+    155140
+   ],
+   "test": [
+    757,
+    6478,
+    146773
+   ]
+  },
+  "stackexchange:ai": {
+   "group": "questions-ai",
+   "build": [
+    44379,
+    241371,
+    3979232
+   ],
+   "dev": [
+    5495,
+    29636,
+    491446
+   ],
+   "test": [
+    5563,
+    30392,
+    503381
+   ]
+  },
+  "stackexchange:genai": {
+   "group": "questions-ai",
+   "build": [
+    1044,
+    5149,
+    74622
+   ],
+   "dev": [
+    124,
+    542,
+    8222
+   ],
+   "test": [
+    124,
+    635,
+    9423
+   ]
+  },
+  "stackexchange:datascience": {
+   "group": "questions-ai",
+   "build": [
+    129160,
+    647399,
+    9185061
+   ],
+   "dev": [
+    16020,
+    80073,
+    1134353
+   ],
+   "test": [
+    15948,
+    79568,
+    1133895
+   ]
+  },
+  "stackexchange:devops": {
+   "group": "questions-software",
+   "build": [
+    20010,
+    102319,
+    1415079
+   ],
+   "dev": [
+    2391,
+    12064,
+    167199
+   ],
+   "test": [
+    2344,
+    11893,
+    166190
+   ]
+  },
+  "stackexchange:softwareengineering": {
+   "group": "questions-software",
+   "build": [
+    629459,
+    3035830,
+    48425840
+   ],
+   "dev": [
+    78504,
+    380073,
+    6064695
+   ],
+   "test": [
+    78834,
+    377158,
+    6005999
+   ]
+  }
+ },
+ "licences": {
+  "arxiv": "CC0-1.0 (arXiv metadata, https://info.arxiv.org/help/api/tou.html)",
+  "stack_exchange": "CC-BY-SA-4.0 (posts before 2018-05-02: CC-BY-SA-3.0 and 2.5, https://stackoverflow.com/help/licensing)",
+  "repositories": {
+   "huggingface/transformers": {
+    "licence": "Apache-2.0",
+    "commit": "a065282cd638049aa1ba6efd465d097542a4f065",
+    "folders": [
+     "docs/source/en"
+    ]
+   },
+   "huggingface/peft": {
+    "licence": "Apache-2.0",
+    "commit": "34d342a6156bd77a83f093b5be21fd8396edc451",
+    "folders": [
+     "docs/source"
+    ]
+   },
+   "huggingface/smolagents": {
+    "licence": "Apache-2.0",
+    "commit": "96f33faaf028479119ec8d34507b47694cf14e34",
+    "folders": [
+     "docs/source/en"
+    ]
+   },
+   "vllm-project/vllm": {
+    "licence": "Apache-2.0",
+    "commit": "52a9ce94fe29ea0a3d8dde04fdf1c25cdc215164",
+    "folders": [
+     "docs"
+    ]
+   },
+   "ggml-org/llama.cpp": {
+    "licence": "MIT",
+    "commit": "cb44fdb1892eebca072e0949875a60c11245a8bb",
+    "folders": [
+     "docs",
+     "tools",
+     "examples"
+    ]
+   },
+   "ollama/ollama": {
+    "licence": "MIT",
+    "commit": "8a89b76cc7359805e48357ba7e5b99e845a4c211",
+    "folders": [
+     "docs"
+    ]
+   },
+   "langchain-ai/docs": {
+    "licence": "MIT",
+    "commit": "26911aac9b521651687f718d36e70d3cb896ac50",
+    "folders": [
+     "src/oss"
+    ]
+   },
+   "run-llama/llama_index": {
+    "licence": "MIT",
+    "commit": "baeabbfe26241a6916e13e2a8c8156a02e0602cd",
+    "folders": [
+     "docs"
+    ]
+   },
+   "microsoft/autogen": {
+    "licence": "CC-BY-4.0",
+    "commit": "d07c667a3239ea4ab7af62a53b0f4ff205a1f23d",
+    "folders": [
+     "python/docs",
+     "docs"
+    ]
+   },
+   "openai/openai-cookbook": {
+    "licence": "MIT",
+    "commit": "2658c92cd4cd562504571b9d7491fc51524a7dc9",
+    "folders": [
+     "articles",
+     "examples"
+    ]
+   },
+   "openai/openai-agents-python": {
+    "licence": "MIT",
+    "commit": "64fbde5d02b42ae5f9db668eb0184cdb3fc9d775",
+    "folders": [
+     "docs"
+    ]
+   },
+   "anthropics/claude-cookbooks": {
+    "licence": "MIT",
+    "commit": "ce8b2629efe8b24048b127b4c79af1e9cbab93d4",
+    "folders": [
+     "."
+    ]
+   },
+   "openai/codex": {
+    "licence": "Apache-2.0",
+    "commit": "392ced7d3a9160fd35d40c606359869215f50522",
+    "folders": [
+     "docs"
+    ]
+   },
+   "google-gemini/gemini-cli": {
+    "licence": "Apache-2.0",
+    "commit": "cde401adeae75c3dd470dfbf1a6ef389f89a48f9",
+    "folders": [
+     "docs"
+    ]
+   },
+   "astral-sh/uv": {
+    "licence": "Apache-2.0",
+    "commit": "f45ea9bd5335a60832c10cfb359b8e58bc358810",
+    "folders": [
+     "docs"
+    ]
+   },
+   "kubernetes/website": {
+    "licence": "CC-BY-4.0",
+    "commit": "18f8e9f6d2b0bc9d33e82ceac8abcfffdf8c1ca8",
+    "folders": [
+     "content/en/docs"
+    ]
+   },
+   "docker/docs": {
+    "licence": "Apache-2.0",
+    "commit": "883f543b00313242655d2864a7982c43dba01b14",
+    "folders": [
+     "content"
+    ]
+   },
+   "github/docs": {
+    "licence": "CC-BY-4.0",
+    "commit": "2b4f2c7398e04ee8d02adca7440e4286d20c78b9",
+    "folders": [
+     "content"
+    ]
+   }
+  }
+ },
+ "held_out_sentences_left_out_for_a_build_twin": 19622
+}

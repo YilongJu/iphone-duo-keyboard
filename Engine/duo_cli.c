@@ -2,7 +2,7 @@
  Runs the typing engine over many inputs, for the evaluation in scripts/typing-evaluation.
 
  Usage:
-     duo_cli english LEXICON [name=value ...] < input.tsv > output.tsv
+     duo_cli english LEXICON [supplement=FILE] [name=value ...] < input.tsv > output.tsv
      duo_cli pinyin  LEXICON [name=value ...] < input.tsv > output.tsv
 
  English input lines:  id <TAB> previous word (may be empty) <TAB> typed text
@@ -10,6 +10,8 @@
  Output lines:         id <TAB> the engine's text
 
  A name=value argument sets one field of duo_params, such as missing_space=4.5.
+ The argument supplement=FILE lays the lexicon file FILE over the English lexicon as its
+ supplement (duo_lexicon_set_supplement).
 
  After the last input the program writes one line to the error stream: the count of inputs and
  the processor time per input, without the time to load and check the lexicon.
@@ -72,6 +74,17 @@ int main(int argc, char **argv) {
             return 2;
         }
         *equals = 0;
+        if (strcmp(argv[index], "supplement") == 0) {
+            static duo_lexicon supplement;
+            size_t supplement_size;
+            void *supplement_data = read_file(equals + 1, &supplement_size);
+            if (!english || supplement_data == NULL || !duo_lexicon_open(&supplement, supplement_data, supplement_size)
+                || !duo_lexicon_set_supplement(&lexicon, &supplement)) {
+                fprintf(stderr, "duo_cli: %s is not a valid supplement of %s\n", equals + 1, argv[2]);
+                return 1;
+            }
+            continue;
+        }
         if (!duo_params_set(&params, argv[index], (float)atof(equals + 1))) {
             fprintf(stderr, "duo_cli: unknown parameter %s\n", argv[index]);
             return 2;

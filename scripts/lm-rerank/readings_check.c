@@ -2,7 +2,8 @@
  Checks duo_english_readings against duo_correct_english on many inputs. Build it with the
  memory checks of the compiler, as the evaluation workflow builds the engine.
 
- Usage: readings_check LEXICON < input.tsv
+ Usage: readings_check LEXICON [SUPPLEMENT] < input.tsv
+ With SUPPLEMENT the check lays that lexicon file over LEXICON (duo_lexicon_set_supplement).
  Input lines, as for Engine/duo_cli.c: id <TAB> previous word <TAB> typed text
 
  For each input the check asks for 8 readings and for 2 readings, and stops with exit code 1
@@ -54,21 +55,41 @@ static int check(const duo_lexicon *lexicon, const duo_params *params, const cha
     return 0;
 }
 
-int main(int argc, char **argv) {
-    if (argc != 2) {
-        fprintf(stderr, "usage: readings_check LEXICON < input.tsv\n");
-        return 2;
-    }
-    FILE *file = fopen(argv[1], "rb");
-    if (file == NULL) return 1;
+/* Reads a whole file. Returns its bytes and sets `size`, or NULL. */
+static void *read_file(const char *path, size_t *size) {
+    FILE *file = fopen(path, "rb");
+    if (file == NULL) return NULL;
     fseek(file, 0, SEEK_END);
     long length = ftell(file);
     fseek(file, 0, SEEK_SET);
-    void *data = malloc((size_t)length);
-    if (data == NULL || fread(data, 1, (size_t)length, file) != (size_t)length) return 1;
+    void *data = length > 0 ? malloc((size_t)length) : NULL;
+    if (data != NULL && fread(data, 1, (size_t)length, file) != (size_t)length) {
+        free(data);
+        data = NULL;
+    }
     fclose(file);
-    duo_lexicon lexicon;
-    if (!duo_lexicon_open(&lexicon, data, (size_t)length)) return 1;
+    *size = data != NULL ? (size_t)length : 0;
+    return data;
+}
+
+int main(int argc, char **argv) {
+    if (argc != 2 && argc != 3) {
+        fprintf(stderr, "usage: readings_check LEXICON [SUPPLEMENT] < input.tsv\n");
+        return 2;
+    }
+    size_t size, supplement_size;
+    void *data = read_file(argv[1], &size);
+    duo_lexicon lexicon, supplement;
+    if (data == NULL || !duo_lexicon_open(&lexicon, data, size)) return 1;
+    void *supplement_data = NULL;
+    if (argc == 3) {
+        supplement_data = read_file(argv[2], &supplement_size);
+        if (supplement_data == NULL || !duo_lexicon_open(&supplement, supplement_data, supplement_size)
+            || !duo_lexicon_set_supplement(&lexicon, &supplement)) {
+            fprintf(stderr, "readings_check: %s is not a valid supplement of %s\n", argv[2], argv[1]);
+            return 1;
+        }
+    }
     duo_params params = duo_english_params();
 
     char line[4096];
@@ -91,5 +112,6 @@ int main(int argc, char **argv) {
     printf("readings_check: %ld inputs, %.2f readings per input at a capacity of 8, every rule held\n", inputs,
            inputs > 0 ? (double)readings / (double)inputs : 0.0);
     free(data);
+    free(supplement_data);
     return 0;
 }

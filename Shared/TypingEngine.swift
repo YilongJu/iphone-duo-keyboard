@@ -41,11 +41,44 @@ final class TypingLexicon {
 
 /// English autocorrection through the C typing engine.
 final class EnglishTypingEngine {
+    /// The mapped lexicon file. The engine's tables point into its bytes.
     private let lexicon: TypingLexicon
+    /// The engine's own copy of the lexicon's tables, with the supplement laid over them. Two
+    /// engines can share one lexicon file and differ in their supplement.
+    private var tables: duo_lexicon
+    /// The supplement that is laid over the lexicon now, or nil.
+    private(set) var supplement: TypingLexicon?
+    /// The supplement's tables at a fixed place in memory, because the C engine keeps a pointer
+    /// to them for as long as the supplement is on.
+    private let supplementTables = UnsafeMutablePointer<duo_lexicon>.allocate(capacity: 1)
     private var params = duo_english_params()
 
-    init(lexicon: TypingLexicon) {
+    /// `supplement` is a small lexicon of words that the main lexicon lacks or holds at too low
+    /// a frequency, as the words of a work area (`duo_lexicon_set_supplement`).
+    init(lexicon: TypingLexicon, supplement: TypingLexicon? = nil) {
         self.lexicon = lexicon
+        tables = lexicon.lexicon
+        supplementTables.initialize(to: duo_lexicon())
+        setSupplement(supplement)
+    }
+
+    deinit {
+        supplementTables.deinitialize(count: 1)
+        supplementTables.deallocate()
+    }
+
+    /// Lays a supplement over the lexicon, or takes the supplement off with nil. A file that
+    /// the engine refuses as a supplement is a fault of the build, so it stops the process.
+    func setSupplement(_ supplement: TypingLexicon?) {
+        self.supplement = supplement
+        guard let supplement else {
+            duo_lexicon_set_supplement(&tables, nil)
+            return
+        }
+        supplementTables.pointee = supplement.lexicon
+        guard duo_lexicon_set_supplement(&tables, supplementTables) == 1 else {
+            fatalError("the supplement is not a valid supplement of the English lexicon")
+        }
     }
 
     /// Reads typed text and returns the text the person most likely meant. The result equals
@@ -58,7 +91,7 @@ final class EnglishTypingEngine {
     /// Text with any other character is outside the engine's input, and the result is nil.
     func reading(previousWord: String, typed: String) -> String? {
         var result = duo_result()
-        guard duo_correct_english(&lexicon.lexicon, &params, previousWord, typed, &result) == 1 else { return nil }
+        guard duo_correct_english(&tables, &params, previousWord, typed, &result) == 1 else { return nil }
         return TypingLexicon.text(of: &result)
     }
 
@@ -70,7 +103,7 @@ final class EnglishTypingEngine {
         precondition(limit >= 2, "the list holds the text as typed and the engine's choice")
         var buffer = [duo_reading](repeating: duo_reading(), count: limit)
         let count = buffer.withUnsafeMutableBufferPointer { pointer in
-            duo_english_readings(&lexicon.lexicon, &params, previousWord, typed, pointer.baseAddress, Int32(limit))
+            duo_english_readings(&tables, &params, previousWord, typed, pointer.baseAddress, Int32(limit))
         }
         guard count > 0 else { return nil }
         let readings = (0..<Int(count)).map { index in

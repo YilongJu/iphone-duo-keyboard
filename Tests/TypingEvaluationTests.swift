@@ -12,8 +12,8 @@ import XCTest
 /// test types both. `xcodebuild test` passes a variable to the test process when its name
 /// starts with `TEST_RUNNER_`.
 ///
-/// The English cases go through the keyboard as it ships, with the bundled language model
-/// re-ranking the engine's readings, into `<name>.<half>.jsonl`. A model that does not load
+/// The English cases go through the keyboard as it ships, with the work area "AI and software"
+/// on and the bundled language model re-ranking the engine's readings, into `<name>.<half>.jsonl`. A model that does not load
 /// fails the test. The same cases also go through the engine alone, as the keyboard types
 /// before its model is ready, into `<name>.<half>.engine-only.jsonl`. Every correction that
 /// went to the model is written to `<name>.<half>.trace.jsonl`, for scripts/lm-keyboard/compare.py.
@@ -177,11 +177,28 @@ final class TypingEvaluationTests: XCTestCase {
         try typeEnglishCases(named: "english-symbols")
     }
 
-    private func type(_ cases: [EnglishCase], with spellChecker: SpellChecking, before: (EnglishCase) -> Void) -> [Output] {
+    /// The cases of the vocabulary pack "AI and software": words of the pack typed right and
+    /// with a slip, their preferred capitals, and everyday words near them. The field
+    /// capitalizes sentences, as most fields do, because the rule of the preferred capitals
+    /// reads a capital at the start of a sentence as the keyboard's own. A cases folder without
+    /// the files skips them.
+    func testEnglishDomainCasesThroughTheTypingController() throws {
+        let (casesFolder, _) = try folders()
+        guard FileManager.default.fileExists(atPath: casesFolder.appendingPathComponent("english-domain.dev.jsonl").path) else {
+            throw XCTSkip("english-domain.dev.jsonl is not in the cases folder")
+        }
+        try typeEnglishCases(named: "english-domain", autocapitalization: .sentences)
+    }
+
+    private func type(
+        _ cases: [EnglishCase], with spellChecker: SpellChecking, autocapitalization: UITextAutocapitalizationType = .none,
+        before: (EnglishCase) -> Void
+    ) -> [Output] {
         cases.map { item in
             before(item)
             let start = item.context.isEmpty ? "" : item.context + " "
             let document = FakeDocument(before: start)
+            document.autocapitalizationType = autocapitalization
             let keyboardView = KeyboardView()
             let controller = KeyboardTextController(
                 keyboardView: keyboardView, document: document, spellChecker: spellChecker,
@@ -194,11 +211,13 @@ final class TypingEvaluationTests: XCTestCase {
         }
     }
 
-    private func typeEnglishCases(named name: String) throws {
+    private func typeEnglishCases(named name: String, autocapitalization: UITextAutocapitalizationType = .none) throws {
         let (casesFolder, outputFolder) = try folders()
         let halves = try halves()
         let model = try loadedModel()
         let engine = EnglishTypingEngine(lexicon: TypingLexicon(resource: "lexicon-english", fullCheck: false))
+        // The keyboard ships with this work area on. Both checkers below lay it over the engine.
+        let workArea = WorkArea.aiAndSoftware()
         // The person keeps no word in these runs, and the words of other tests stay out.
         let storeName = "TypingEvaluationTests"
         UserDefaults().removePersistentDomain(forName: storeName)
@@ -209,8 +228,9 @@ final class TypingEvaluationTests: XCTestCase {
             let reranker = EnglishReranker(scorer: model, rule: KeyboardLanguageModel.rule)
             let recorder = TraceRecorder()
             reranker.onTrace = { recorder.record($0) }
-            let shipping = EngineSpellChecker(engine: engine, reranker: reranker, store: store)
-            let outputs = type(cases, with: shipping) { item in
+            let shipping = EngineSpellChecker(engine: engine, reranker: reranker, store: store, workArea: workArea)
+            XCTAssertTrue(shipping.workAreaIsOn, "\(name) \(half)")
+            let outputs = type(cases, with: shipping, autocapitalization: autocapitalization) { item in
                 recorder.caseID = item.id
                 recorder.step = 0
             }
@@ -227,8 +247,8 @@ final class TypingEvaluationTests: XCTestCase {
             XCTAssertEqual(statistics.readCount, recorder.lines.count, "\(name) \(half)")
             XCTAssertGreaterThan(statistics.readCount, 0, "\(name) \(half)")
 
-            let engineOnly = EngineSpellChecker(engine: engine, reranker: nil, store: store)
-            let engineOutputs = type(cases, with: engineOnly) { _ in }
+            let engineOnly = EngineSpellChecker(engine: engine, reranker: nil, store: store, workArea: workArea)
+            let engineOutputs = type(cases, with: engineOnly, autocapitalization: autocapitalization) { _ in }
             try write(engineOutputs, to: outputFolder.appendingPathComponent("\(name).\(half).engine-only.jsonl"))
         }
     }
@@ -246,6 +266,7 @@ final class TypingEvaluationTests: XCTestCase {
         }
         let model = try loadedModel()
         let engine = EnglishTypingEngine(lexicon: TypingLexicon(resource: "lexicon-english", fullCheck: false))
+        let workArea = WorkArea.aiAndSoftware()
         let storeName = "TypingEvaluationTests"
         UserDefaults().removePersistentDomain(forName: storeName)
         let store = try XCTUnwrap(UserDefaults(suiteName: storeName))
@@ -256,14 +277,14 @@ final class TypingEvaluationTests: XCTestCase {
                     EnglishCase(id: $0.id, context: $0.context, typed: withNextWord ? $0.typed + " " + $0.nextWord : $0.typed)
                 }
                 let reranker = EnglishReranker(scorer: model, rule: KeyboardLanguageModel.rule)
-                let shipping = EngineSpellChecker(engine: engine, reranker: reranker, store: store)
+                let shipping = EngineSpellChecker(engine: engine, reranker: reranker, store: store, workArea: workArea)
                 try write(type(typedCases, with: shipping) { _ in },
                           to: outputFolder.appendingPathComponent("\(name).\(half)\(suffix).jsonl"))
                 let statistics = reranker.statistics
                 XCTAssertEqual(statistics.notReadyCount + statistics.refusedCount + statistics.failedCount, 0,
                                "\(name) \(half)\(suffix): \(statistics.lastProblem ?? "")")
                 XCTAssertGreaterThan(statistics.readCount, 0, "\(name) \(half)\(suffix)")
-                let engineOnly = EngineSpellChecker(engine: engine, reranker: nil, store: store)
+                let engineOnly = EngineSpellChecker(engine: engine, reranker: nil, store: store, workArea: workArea)
                 try write(type(typedCases, with: engineOnly) { _ in },
                           to: outputFolder.appendingPathComponent("\(name).\(half)\(suffix).engine-only.jsonl"))
             }

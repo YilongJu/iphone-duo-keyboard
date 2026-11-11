@@ -7,7 +7,7 @@ name: Language model in the keyboard
 # check. Only the dev half is typed and scored. Every unit test runs as well.
 on:
   push:
-    branches: [engine/lm-keyboard, engine/apostrophe-words]
+    branches: [engine/lm-keyboard, engine/apostrophe-words, engine/domain-pack]
   workflow_dispatch:
 
 concurrency:
@@ -133,7 +133,7 @@ jobs:
   keyboard:
     name: Unit tests, the dev cases through the keyboard code with the model, and the harness on the same machine
     runs-on: xcode-27
-    timeout-minutes: 150
+    timeout-minutes: 300
     steps:
       - uses: actions/checkout@v7
       - name: Install XcodeGen

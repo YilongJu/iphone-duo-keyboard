@@ -13,21 +13,61 @@
 
 static void *lexicon_bytes;
 static duo_lexicon lexicon;
+static void *supplement_bytes;
+static duo_lexicon supplement;
 static duo_params params;
 
-/* Opens the lexicon file with the full check. Returns 1, or 0 when the file is not valid. */
-int shim_open(const char *path) {
+/* Reads a whole file. Returns its bytes and sets `size`, or NULL. */
+static void *read_file(const char *path, size_t *size) {
     FILE *file = fopen(path, "rb");
-    if (file == NULL) return 0;
+    if (file == NULL) return NULL;
     fseek(file, 0, SEEK_END);
     long length = ftell(file);
     fseek(file, 0, SEEK_SET);
-    lexicon_bytes = length > 0 ? malloc((size_t)length) : NULL;
-    int read = lexicon_bytes != NULL && fread(lexicon_bytes, 1, (size_t)length, file) == (size_t)length;
+    void *bytes = length > 0 ? malloc((size_t)length) : NULL;
+    int read = bytes != NULL && fread(bytes, 1, (size_t)length, file) == (size_t)length;
     fclose(file);
-    if (!read) return 0;
+    if (!read) {
+        free(bytes);
+        return NULL;
+    }
+    *size = (size_t)length;
+    return bytes;
+}
+
+/* Opens the lexicon file with the full check. Returns 1, or 0 when the file is not valid. */
+int shim_open(const char *path) {
+    size_t size;
+    lexicon_bytes = read_file(path, &size);
+    if (lexicon_bytes == NULL) return 0;
     params = duo_english_params();
-    return duo_lexicon_open(&lexicon, lexicon_bytes, (size_t)length);
+    return duo_lexicon_open(&lexicon, lexicon_bytes, size);
+}
+
+/* Lays the lexicon file `path` over the open lexicon as its supplement, after shim_open, with
+   the full check. An empty path takes the supplement off. Returns 1, or 0 when the file is not
+   a valid supplement. */
+int shim_set_supplement(const char *path) {
+    if (path == NULL || path[0] == 0) return duo_lexicon_set_supplement(&lexicon, NULL);
+    size_t size;
+    void *bytes = read_file(path, &size);
+    static duo_lexicon opened;
+    if (bytes == NULL || !duo_lexicon_open(&opened, bytes, size)) {
+        free(bytes);
+        return 0;
+    }
+    duo_lexicon_set_supplement(&lexicon, NULL);
+    free(supplement_bytes);
+    supplement_bytes = bytes;
+    supplement = opened;
+    return duo_lexicon_set_supplement(&lexicon, &supplement);
+}
+
+/* Lays the supplement that shim_set_supplement loaded over the lexicon (1) or takes it off (0),
+   without reading the file again. Returns 1, or 0 when no supplement is loaded. */
+int shim_use_supplement(int on) {
+    if (supplement_bytes == NULL) return 0;
+    return duo_lexicon_set_supplement(&lexicon, on ? &supplement : NULL);
 }
 
 /* Sets one English parameter by its field name, after shim_open. Returns 1, or 0 for an unknown name. */

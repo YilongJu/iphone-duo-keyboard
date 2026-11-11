@@ -1,0 +1,161 @@
+name: Domain pack
+
+# Measures the vocabulary pack "AI and software" through the Linux harness of scripts/lm-rerank:
+# the cases of cases/english-domain and cases/english-domain-stream, the existing English dev
+# cases and the apostrophe words, each with the pack off and on, with the engine alone and with
+# the keyboard's SmolLM2 fine-tune. docs/domain-pack-design.md describes the measurement.
+# GitHub starts a dispatched workflow only from the default branch, so a push starts this one,
+# and HALF below names the half. The test half is read once, for the pack that the dev half chose.
+on:
+  push:
+    branches: [engine/domain-pack]
+    paths:
+      - 'Engine/**'
+      - 'Shared/lexicon-english.bin'
+      - 'Shared/supplement-ai-software.*'
+      - 'scripts/lm-rerank/**'
+      - 'scripts/lm-keyboard/harness_trace.py'
+      - 'scripts/typing-evaluation/**'
+      - 'scripts/domain-pack/check_supplement.py'
+      - 'scripts/domain-pack/build_merged_lexicon.py'
+      - 'scripts/domain-pack/variants/**'
+      - '.github/workflows/domain-pack.yml'
+
+env:
+  HALF: dev
+  # The commit of engine/lm-keyboard that this branch starts from: the engine before the supplement.
+  BASE: 4cfa7ef
+
+concurrency:
+  group: domain-pack-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  engine:
+    name: Engine checks, and the engine alone with the pack off and on
+    runs-on: ubuntu-24.04
+    timeout-minutes: 240
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Build the engine, the engine before the supplement, the shim and the readings check
+        run: |
+          set -euo pipefail
+          mkdir -p build/engine build/base-engine
+          for file in duo_engine.c duo_engine.h duo_cli.c; do git show "$BASE:Engine/$file" > "build/base-engine/$file"; done
+          gcc -std=c11 -O2 -Wall -Wextra -Werror build/base-engine/duo_engine.c build/base-engine/duo_cli.c -lm -o build/engine/duo_cli_base
+          gcc -std=c11 -O2 -Wall -Wextra -Werror Engine/duo_engine.c Engine/duo_cli.c -lm -o build/engine/duo_cli
+          bash scripts/lm-rerank/build_on_linux.sh
+      - name: Without a supplement, the engine gives the outputs of the engine before the change
+        run: |
+          set -euo pipefail
+          for task in english english-symbols english-apostrophe-words pinyin; do
+            python3 scripts/typing-evaluation/run_duo_engine.py --task "$task" --half dev --cli build/engine/duo_cli_base --name base > /dev/null
+            python3 scripts/typing-evaluation/run_duo_engine.py --task "$task" --half dev --cli build/engine/duo_cli --name new > /dev/null
+            cmp "build/typing-evaluation/duo-engine/base.$task.dev.jsonl" "build/typing-evaluation/duo-engine/new.$task.dev.jsonl"
+            echo "$task dev: the outputs are the same, $(wc -l < "build/typing-evaluation/duo-engine/new.$task.dev.jsonl") cases"
+          done
+      - name: The checks of the supplement and of the preferred capitals hold, and fail on the engine before the change
+        run: |
+          set -euo pipefail
+          python3 scripts/domain-pack/check_supplement.py --cli build/engine/duo_cli
+          if python3 scripts/domain-pack/check_supplement.py --cli build/engine/duo_cli_base --only engine; then
+            echo "error: the checks pass on the engine before the change" >&2
+            exit 1
+          fi
+          echo "the checks fail on the engine before the change, as they must"
+      - name: Check duo_english_readings with the supplement under the memory checks
+        run: |
+          set -euo pipefail
+          python3 - > build/lm-rerank/readings-input.tsv <<'EOF'
+          import json
+          for name in ["english.dev.jsonl", "english-symbols.dev.jsonl", "english-apostrophe-words.dev.jsonl", "english-domain.dev.jsonl"]:
+              for line in open("scripts/typing-evaluation/cases/" + name, encoding="utf-8"):
+                  case = json.loads(line)
+                  words = [w for w in case["context"].lower().split(" ") if w]
+                  previous = words[-1] if words and words[-1].isalpha() else ""
+                  print(f"{case['id']}\t{previous}\t{case['typed'].lower()}")
+          EOF
+          build/lm-rerank/readings_check Shared/lexicon-english.bin < build/lm-rerank/readings-input.tsv
+          build/lm-rerank/readings_check Shared/lexicon-english.bin Shared/supplement-ai-software.bin < build/lm-rerank/readings-input.tsv
+      - name: Type the cases with the engine alone, with the pack off, on, and merged into the lexicon
+        run: |
+          set -euo pipefail
+          python3 scripts/domain-pack/build_merged_lexicon.py --out build/domain-pack/lexicon-english-merged.bin | tee build/domain-pack/merged.txt
+          cp build/lm-rerank/libduo_shim.so build/lm-rerank/libduo_shim_merged.so
+          python3 scripts/lm-rerank/domain_pack.py --shim build/lm-rerank/libduo_shim.so --half "$HALF" \
+            --merged-lexicon build/domain-pack/lexicon-english-merged.bin --merged-shim build/lm-rerank/libduo_shim_merged.so \
+            --out build/lm-rerank/domain-pack/engine
+          python3 scripts/lm-rerank/domain_pack_table.py "build/lm-rerank/domain-pack/engine/result.$HALF.json" \
+            | tee "build/lm-rerank/domain-pack/engine/table.$HALF.md" >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: domain-pack-engine-${{ env.HALF }}
+          path: |
+            build/lm-rerank/domain-pack/engine
+            build/domain-pack/merged.txt
+          if-no-files-found: error
+
+  rerank:
+    name: SmolLM2 fine-tune through the harness, with the pack off and on
+    runs-on: ubuntu-24.04
+    timeout-minutes: 340
+    steps:
+      - uses: actions/checkout@v7
+      - name: Build llama.cpp b4846, the scorer and the engine shim
+        run: bash scripts/lm-rerank/build_on_linux.sh llama
+      - name: Fetch the SmolLM2 fine-tune and check its SHA-256 value
+        run: bash scripts/ci/fetch_language_model.sh model
+      - name: Type the cases through the harness
+        run: |
+          set -euo pipefail
+          export LD_LIBRARY_PATH="$PWD/build/lm-rerank/llama/lib"
+          lscpu | grep -E 'Model name' | tee runner.txt
+          python3 scripts/lm-rerank/domain_pack.py --shim build/lm-rerank/libduo_shim.so --lm build/lm-rerank/lm_score \
+            --model Shared/smollm2-lora-typed-seed1.Q4_K_M.gguf --threads 4 --half "$HALF" --out build/lm-rerank/domain-pack/rerank
+          mv runner.txt build/lm-rerank/domain-pack/rerank/
+          python3 scripts/lm-rerank/domain_pack_table.py "build/lm-rerank/domain-pack/rerank/result.$HALF.json" \
+            | tee "build/lm-rerank/domain-pack/rerank/table.$HALF.md" >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: domain-pack-rerank-${{ env.HALF }}
+          path: build/lm-rerank/domain-pack/rerank
+          if-no-files-found: error
+
+  shares:
+    # The same words at other frequencies: the share of domain text in a person's text that
+    # build_pack.py assumes. Only the new cases are typed, on the dev half.
+    name: Share of domain text ${{ matrix.share }}
+    if: ${{ github.event.head_commit.message != '' && contains(github.event.head_commit.message, '[shares]') }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 240
+    strategy:
+      fail-fast: false
+      matrix:
+        share: ['0.03', '0.1', '1.0']
+    steps:
+      - uses: actions/checkout@v7
+      - name: Build llama.cpp b4846, the scorer and the engine shim
+        run: bash scripts/lm-rerank/build_on_linux.sh llama
+      - name: Fetch the SmolLM2 fine-tune and check its SHA-256 value
+        run: bash scripts/ci/fetch_language_model.sh model
+      - name: Type the new dev cases through the harness
+        run: |
+          set -euo pipefail
+          export LD_LIBRARY_PATH="$PWD/build/lm-rerank/llama/lib"
+          variant="scripts/domain-pack/variants/share-${{ matrix.share }}"
+          python3 scripts/lm-rerank/domain_pack.py --shim build/lm-rerank/libduo_shim.so --lm build/lm-rerank/lm_score \
+            --model Shared/smollm2-lora-typed-seed1.Q4_K_M.gguf --threads 4 --half dev --only-new \
+            --supplement "$variant/supplement-ai-software.bin" --table "$variant/supplement-ai-software.tsv" \
+            --out build/lm-rerank/domain-pack/share
+          python3 scripts/lm-rerank/domain_pack_table.py build/lm-rerank/domain-pack/share/result.dev.json \
+            | tee build/lm-rerank/domain-pack/share/table.dev.md >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: domain-pack-share-${{ matrix.share }}
+          path: build/lm-rerank/domain-pack/share
+          if-no-files-found: error
