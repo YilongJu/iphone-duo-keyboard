@@ -33,8 +33,13 @@ LOGS = ROOT / "build" / "lm-finetune2" / "logs"
 
 
 def pid_alive(pid: int) -> bool:
-    answer = subprocess.run(["tasklist", "/FI", f"PID eq {pid}", "/NH"], capture_output=True, text=True)
-    return str(pid) in answer.stdout
+    # One empty answer of tasklist does not show that the process ended, so the check asks three times.
+    for _ in range(3):
+        answer = subprocess.run(["tasklist", "/FI", f"PID eq {pid}", "/NH"], capture_output=True, text=True)
+        if str(pid) in answer.stdout:
+            return True
+        time.sleep(5)
+    return False
 
 
 class Adopted:
