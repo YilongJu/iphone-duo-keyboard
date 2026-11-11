@@ -1,0 +1,68 @@
+{
+  "github_sha256": "98219d275a49ad28fca832891876c255581b890d893b6d9c974ceb454ba2909d",
+  "wikipedia_sha256": "061ec33aa12a4aea718a7bb121360812c8348770833e730124af1eecdc2cd380",
+  "github": {
+    "english_typo_edits": 255056,
+    "one_word_edits": 199297,
+    "plain_pairs": 123505,
+    "select_github_misspelling_usable": 13706,
+    "select_github_misspelling_kept": 1500,
+    "select_github_misspelling_with_context": 1187,
+    "select_github_real_word_usable": 1982,
+    "select_github_real_word_kept": 1000,
+    "select_github_real_word_with_context": 820,
+    "holdout_github_misspelling_usable": 14596,
+    "holdout_github_misspelling_kept": 1500,
+    "holdout_github_misspelling_with_context": 1160,
+    "holdout_github_real_word_usable": 1962,
+    "holdout_github_real_word_kept": 1000,
+    "holdout_github_real_word_with_context": 815
+  },
+  "mitton_remainder": {
+    "birkbeck_dev": {
+      "usable": 7451,
+      "round1": 300,
+      "remainder": 7010,
+      "kept": 300
+    },
+    "birkbeck_test": {
+      "usable": 7069,
+      "round1": 300,
+      "remainder": 6633,
+      "kept": 300
+    },
+    "holbrook_dev": {
+      "usable": 382,
+      "round1": 300,
+      "remainder": 78,
+      "kept": 78
+    },
+    "holbrook_test": {
+      "usable": 346,
+      "round1": 300,
+      "remainder": 43,
+      "kept": 43
+    },
+    "aspell_dev": {
+      "usable": 151,
+      "round1": 151,
+      "remainder": 0,
+      "kept": 0
+    },
+    "aspell_test": {
+      "usable": 142,
+      "round1": 142,
+      "remainder": 0,
+      "kept": 0
+    }
+  },
+  "wikipedia": {
+    "pairs": 2455,
+    "usable": 1600
+  },
+  "mitton_files_sha256": {
+    "missp.dat": "ed7d8c91961a1201632351943571e77af2011cdf45d24304c4d7cad6cf77ea15",
+    "holbrook-missp.dat": "e2f0f0564954d049a1f663f3c7e72899382570a4fe575015169b1117de85ae3c",
+    "aspell.dat": "0198fa5c343f82f0541ae39a0116b534e14bfadc54144377cadee2bd6d288988"
+  }
+}
