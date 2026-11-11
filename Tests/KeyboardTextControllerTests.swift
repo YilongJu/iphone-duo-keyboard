@@ -1191,31 +1191,34 @@ final class KeyboardLayoutTests: XCTestCase {
             XCTAssertEqual(KeyboardView.style(forWidth: 951, device: .phone, landscape: landscape), .split)
         }
         XCTAssertNil(KeyboardView.splitGap(forWidth: 951, device: .phone))
-        // The heights of the four iPhone Duo keyboards, as they were before the iPad rules.
-        XCTAssertEqual(KeyboardView.preferredHeight(forWidth: 669, compactHeight: false, device: .phone, landscape: false), 289.1, accuracy: 0.1)
-        XCTAssertEqual(KeyboardView.preferredHeight(forWidth: 951, compactHeight: false, device: .phone, landscape: true), 290.6, accuracy: 0.1)
+        // The heights of the open iPhone Duo keyboards on the 13.5-unit wide layout. The iPad
+        // rules must not change them.
+        XCTAssertEqual(KeyboardView.preferredHeight(forWidth: 669, compactHeight: false, device: .phone, landscape: false), 309.6, accuracy: 0.1)
+        XCTAssertEqual(KeyboardView.preferredHeight(forWidth: 951, compactHeight: false, device: .phone, landscape: true), 304.9, accuracy: 0.1)
     }
 
     func testTheSplitKeysOfAnIPadStayWithinReachOfAThumb() {
         // On an iPad mini in landscape the keys stop at 52 points and the middle takes the rest.
+        let wide = KeyboardSpec.shared.wide.units
         let gap = KeyboardLayout.padSplitGap(forWidth: 1133)
-        XCTAssertEqual(1133 / (14.5 + gap), 52, accuracy: 0.001)
+        XCTAssertEqual(1133 / (wide + gap), 52, accuracy: 0.001)
         let layout = KeyboardLayout.make(style: .split, layer: .letters, showsGlobe: true, splitGap: gap)
-        XCTAssertEqual(layout.units, 14.5 + gap, accuracy: 0.001)
+        XCTAssertEqual(layout.units, wide + gap, accuracy: 0.001)
         for row in layout.rows {
-            XCTAssertEqual(row.reduce(0) { $0 + $1.weight }, 14.5 + gap, accuracy: 0.001)
+            XCTAssertEqual(row.reduce(0) { $0 + $1.weight }, wide + gap, accuracy: 0.001)
         }
         // A narrow split keyboard keeps the middle of the layout file.
         XCTAssertEqual(KeyboardLayout.padSplitGap(forWidth: 951), 6)
     }
 
     func testEverySplitRowHasOneEmptyMiddleAndTheSameWidth() {
+        let units = KeyboardSpec.shared.wide.units + KeyboardSpec.shared.metrics.splitGapUnits
         for layer in [KeyboardLayer.letters, .symbols, .more] {
             let layout = KeyboardLayout.make(style: .split, layer: layer, showsGlobe: true)
-            XCTAssertEqual(layout.units, 20.5)
+            XCTAssertEqual(layout.units, units, accuracy: 0.0001)
             for row in layout.rows {
                 XCTAssertEqual(row.filter { $0.kind == .gap }.count, 1)
-                XCTAssertEqual(row.reduce(0) { $0 + $1.weight }, 20.5, accuracy: 0.0001)
+                XCTAssertEqual(row.reduce(0) { $0 + $1.weight }, units, accuracy: 0.0001)
             }
         }
     }
