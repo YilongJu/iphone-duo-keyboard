@@ -129,8 +129,8 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
         refreshCaption()
     }
 
-    /// Reads each finished sentence and proposes a fix. Without a proofreader the keyboard
-    /// does not propose anything.
+    /// Reads each finished sentence, and the sentence that the person is still writing when they
+    /// pause, and proposes a fix. Without a proofreader the keyboard does not propose anything.
     var proofreader: SentenceProofreading?
 
     /// A fix that the proofreader proposed for the sentence right before the cursor. The
@@ -147,6 +147,11 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
     private var proofreadSentence: String?
     /// The reasons for a missing answer that the space bar has shown already.
     private var shownProofreadNotes: Set<String> = []
+    /// Seconds without a key press before the keyboard reads the sentence that the person is
+    /// still writing. A sentence that ends in a mark is read at once.
+    var proofreadPauseSeconds: Double = 1.0
+    /// The wait for a pause in the typing. Each key press starts it again. The tests wait for it.
+    private(set) var pauseTask: Task<Void, Never>?
 
     private var previousInsertWasSpace = false
     private var lastSpaceTime: TimeInterval = 0
@@ -329,13 +334,29 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
         commitPinyinLetters()
     }
 
-    // MARK: Proofreading of a finished sentence
+    // MARK: Proofreading of a sentence
 
     /// Starts a request when a sentence has just ended right before the cursor.
     private func proofreadFinishedSentence() {
+        proofread(KeyboardTextLogic.finishedSentence(before: document.textBeforeCursor))
+    }
+
+    /// Waits for a pause in the typing, then reads the sentence that the person is still
+    /// writing. Each key press calls this, so the wait starts again with every key.
+    private func proofreadAfterAPause() {
+        pauseTask?.cancel()
+        guard proofreader != nil else { return }
+        let seconds = proofreadPauseSeconds
+        pauseTask = Task { [weak self] in
+            try? await Task.sleep(nanoseconds: UInt64(seconds * 1_000_000_000))
+            guard let self, !Task.isCancelled else { return }
+            self.proofread(KeyboardTextLogic.unfinishedSentence(before: self.document.textBeforeCursor))
+        }
+    }
+
+    private func proofread(_ found: String?) {
         guard let proofreader, pinyinBuffer.isEmpty, pending == nil,
-            let sentence = KeyboardTextLogic.finishedSentence(before: document.textBeforeCursor),
-            sentence != proofreadSentence
+            let sentence = found, sentence != proofreadSentence
         else { return }
         proofreadSentence = sentence
         proofreadTask?.cancel()
@@ -355,7 +376,7 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
         // The person may have typed on while the model read the sentence. The fix is shown only
         // while the same sentence still ends right before the cursor.
         guard pinyinBuffer.isEmpty,
-            KeyboardTextLogic.finishedSentence(before: document.textBeforeCursor) == sentence,
+            KeyboardTextLogic.sentenceToProofread(before: document.textBeforeCursor) == sentence,
             let corrected = KeyboardTextLogic.acceptedProofreading(of: sentence, answer: answer)
         else { return }
         // In Chinese text a typing slip gives a character with the same sound, so a fix may
@@ -652,7 +673,10 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
         // A person types a space after a period out of habit, so a space keeps the fix on the
         // row. The fix then replaces the sentence and keeps the spaces after it.
         if text != " " { clearProofreadSuggestion() }
-        defer { proofreadFinishedSentence() }
+        defer {
+            proofreadFinishedSentence()
+            proofreadAfterAPause()
+        }
         if var replacement = pending {
             // A replacement is still running. The typed character joins the ones that wait for the delete.
             replacement.typed.append(text)
@@ -667,6 +691,7 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
     }
 
     func keyboardView(_ keyboardView: KeyboardView, didSelectCandidateAt index: Int) {
+        defer { proofreadAfterAPause() }
         if proofreadSuggestion != nil {
             applyProofreadSuggestion()
             return
@@ -676,6 +701,7 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
 
     func keyboardViewDeleteBackward(_ keyboardView: KeyboardView) {
         clearProofreadSuggestion()
+        defer { proofreadAfterAPause() }
         guard pending == nil else { return }
         if !pinyinBuffer.isEmpty {
             pinyinBuffer.removeLast()
