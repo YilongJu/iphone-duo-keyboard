@@ -15,12 +15,14 @@ import argparse
 import json
 import sys
 import time
+from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts" / "lm-rerank"))
 sys.path.insert(0, str(ROOT / "scripts" / "lm-finetune"))
 import rerank  # noqa: E402
+from features import FeatureScorer  # noqa: E402
 
 CASES = ROOT / "scripts" / "typing-evaluation" / "cases"
 TEST_FILES = [CASES / "english.test.jsonl", CASES / "english-symbols.test.jsonl"]
@@ -33,7 +35,8 @@ def main():
     parser.add_argument("--shim", type=Path, required=True)
     parser.add_argument("--lm", type=Path, required=True)
     parser.add_argument("--models", type=Path, required=True, help="the folder that holds the model files the plan names")
-    parser.add_argument("--threads", type=int, default=4)
+    parser.add_argument("--threads", type=int, default=2, help="threads of each lm_score")
+    parser.add_argument("--workers", type=int, default=2, help="arms read at the same time")
     parser.add_argument("--out", type=Path, required=True)
     arguments = parser.parse_args()
     if (arguments.out / "result.json").exists():
@@ -41,38 +44,52 @@ def main():
 
     plan = json.loads(arguments.plan.read_text(encoding="utf-8"))
     for arm in plan["arms"]:
-        if arm["model"] is not None and not (arguments.models / arm["model"]).exists():
-            raise SystemExit(f"the model file {arm['model']} of {arm['name']} is missing")
-    sets = {"test": rerank.load_cases(TEST_FILES), "published_test": rerank.load_cases([PUBLISHED_TEST])}
-    for cases in sets.values():
+        for key in ("model", "features"):
+            if arm.get(key) is not None and not (arguments.models / arm[key]).exists():
+                raise SystemExit(f"the file {arm[key]} of {arm['name']} is missing")
+    for cases in load_sets().values():
         if any(case["split"] != "test" for case in cases):
             raise SystemExit("a case outside the test half")
-    engine = rerank.Engine(arguments.shim, rerank.LEXICON)
     arguments.out.mkdir(parents=True, exist_ok=True)
-    result = {"plan": plan, "cases": {name: len(cases) for name, cases in sets.items()}, "arms": {}}
+    result = {"plan": plan, "cases": {name: len(cases) for name, cases in load_sets().items()}, "arms": {}}
     started = time.monotonic()
-    for arm in plan["arms"]:
-        if arm["setting"] is None:
-            chooser, scorer = rerank.engine_choice, None
-        else:
-            scorer = None
-            if arm["model"] is not None:
-                scorer = rerank.LanguageModel(arguments.lm, arguments.models / arm["model"], arguments.threads,
-                                              arm["no_context"], arm["prompt_format"])
-            chooser = rerank.setting_chooser(rerank.Setting(**arm["setting"]), scorer)
-        entry = {}
-        for name, cases in sets.items():
-            predictions = rerank.run(cases, engine, chooser)
-            with (arguments.out / f"{arm['name']}.{name}.jsonl").open("w", encoding="utf-8") as file:
-                for case_id, output in predictions.items():
-                    file.write(json.dumps({"id": case_id, "output": output}) + "\n")
-            entry[name] = rerank.summarize(cases, predictions)
-        if scorer is not None:
-            entry["lm_report"] = scorer.close()
-        result["arms"][arm["name"]] = entry
-        print(arm["name"], json.dumps({name: entry[name]["right"] for name in sets}), flush=True)
+    jobs = [(arm, arguments) for arm in plan["arms"]]
+    # Each arm runs in its own process with its own engine and scorer.
+    with ProcessPoolExecutor(arguments.workers) as pool:
+        for name, entry in pool.map(read_arm, jobs):
+            result["arms"][name] = entry
+            print(name, json.dumps({key: entry[key]["right"] for key in ("test", "published_test")}), flush=True)
     result["seconds"] = round(time.monotonic() - started, 1)
     (arguments.out / "result.json").write_text(json.dumps(result, indent=2), encoding="utf-8")
+
+
+def load_sets() -> dict[str, list[dict]]:
+    return {"test": rerank.load_cases(TEST_FILES), "published_test": rerank.load_cases([PUBLISHED_TEST])}
+
+
+def read_arm(job) -> tuple[str, dict]:
+    arm, arguments = job
+    engine = rerank.Engine(arguments.shim, rerank.LEXICON)
+    if arm["setting"] is None:
+        chooser, scorer = rerank.engine_choice, None
+    else:
+        scorer = None
+        if arm["model"] is not None:
+            scorer = rerank.LanguageModel(arguments.lm, arguments.models / arm["model"], arguments.threads,
+                                          arm["no_context"], arm["prompt_format"])
+        elif arm.get("features") is not None:
+            scorer = FeatureScorer(json.loads((arguments.models / arm["features"]).read_text(encoding="utf-8")))
+        chooser = rerank.setting_chooser(rerank.Setting(**arm["setting"]), scorer)
+    entry = {}
+    for name, cases in load_sets().items():
+        predictions = rerank.run(cases, engine, chooser)
+        with (arguments.out / f"{arm['name']}.{name}.jsonl").open("w", encoding="utf-8") as file:
+            for case_id, output in predictions.items():
+                file.write(json.dumps({"id": case_id, "output": output}) + "\n")
+        entry[name] = rerank.summarize(cases, predictions)
+    if isinstance(scorer, rerank.LanguageModel):
+        entry["lm_report"] = scorer.close()
+    return arm["name"], entry
 
 
 if __name__ == "__main__":
