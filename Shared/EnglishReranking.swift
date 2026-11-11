@@ -101,10 +101,54 @@ struct RerankRule: Equatable {
     let marginOther: Double
     /// True adds the probability of a space after the reading to its model score.
     let usesSpaceAfter: Bool
+    /// The apostrophe step after the margins, or nil without it. `apostrophe_step` of
+    /// scripts/lm-rerank/rerank.py.
+    let apostrophe: ApostropheStep?
+
+    /// The step that compares the choice with the readings of the same typed letters and other
+    /// apostrophes, the twins, as "it's going" for the typed "its going".
+    struct ApostropheStep: Equatable {
+        enum Scope: Equatable {
+            /// Every correction, and a twin may change any word of the span.
+            case everyCorrection
+            /// A span of two or more typed words, and a twin changes the first word alone. The
+            /// model then reads the word after the changed word, and "its" alone stays as typed.
+            case firstWordOfSpan
+        }
+
+        enum Score: Equatable {
+            /// The model's log probability, with the space-after term when the rule uses it.
+            case model
+            /// The same, less the reading's slip cost.
+            case modelLessSlipCost
+        }
+
+        let scope: Scope
+        let score: Score
+        /// The lead in step score that the best twin needs to replace the choice.
+        let margin: Double
+    }
+
+    init(weight: Double, marginFromTyped: Double, marginToTyped: Double, marginOther: Double, usesSpaceAfter: Bool,
+         apostrophe: ApostropheStep? = nil) {
+        self.weight = weight
+        self.marginFromTyped = marginFromTyped
+        self.marginToTyped = marginToTyped
+        self.marginOther = marginOther
+        self.usesSpaceAfter = usesSpaceAfter
+        self.apostrophe = apostrophe
+    }
 
     /// The setting tuned for distilgpt2 Q3_K_M on the dev half (scripts/lm-rerank/README.md).
     static let distilgpt2 = RerankRule(
         weight: 1.0, marginFromTyped: 24, marginToTyped: 0, marginOther: 2, usesSpaceAfter: true)
+
+    /// The distilgpt2 setting with the apostrophe step, its scope, score and margin chosen on the
+    /// dev half of cases/english-apostrophe-words (docs/apostrophe-words-design.md). The keyboard
+    /// uses this rule.
+    static let distilgpt2WithApostrophes = RerankRule(
+        weight: 1.0, marginFromTyped: 24, marginToTyped: 0, marginOther: 2, usesSpaceAfter: true,
+        apostrophe: ApostropheStep(scope: .firstWordOfSpan, score: .modelLessSlipCost, margin: 1))
 
     /// Engine score plus the weighted model score.
     func combined(_ reading: EnglishReading, _ score: CandidateScore) -> Double {
@@ -124,10 +168,59 @@ struct RerankRule: Equatable {
         for index in combinedScores.indices.dropFirst() where combinedScores[index] > combinedScores[best] {
             best = index
         }
-        if best == chosen { return chosen }
-        let margin = readings[chosen].asTyped
-            ? marginFromTyped : (readings[best].asTyped ? marginToTyped : marginOther)
-        return combinedScores[best] - combinedScores[chosen] >= margin ? best : chosen
+        var choice = chosen
+        if best != chosen {
+            let margin = readings[chosen].asTyped
+                ? marginFromTyped : (readings[best].asTyped ? marginToTyped : marginOther)
+            if combinedScores[best] - combinedScores[chosen] >= margin { choice = best }
+        }
+        // With weight 0 the harness does not ask the model, and the step needs the model.
+        guard let apostrophe, weight != 0 else { return choice }
+        return apostropheStep(apostrophe, readings, scores, choice: choice)
+    }
+
+    /// Whether `text` is a twin of the typed text: the same letters and other apostrophes. In
+    /// the scope `firstWordOfSpan` only the first word may differ, and the span holds two words
+    /// or more. `is_twin` of scripts/lm-rerank/rerank.py.
+    static func isTwin(_ text: String, of typed: String, scope: ApostropheStep.Scope) -> Bool {
+        guard text != typed else { return false }
+        func letters(_ word: Substring) -> String { word.replacingOccurrences(of: "'", with: "") }
+        switch scope {
+        case .everyCorrection:
+            return letters(Substring(text)) == letters(Substring(typed))
+        case .firstWordOfSpan:
+            let words = text.split(separator: " ", omittingEmptySubsequences: false)
+            let typedWords = typed.split(separator: " ", omittingEmptySubsequences: false)
+            return typedWords.count >= 2 && words.count == typedWords.count
+                && Array(words.dropFirst()) == Array(typedWords.dropFirst()) && letters(words[0]) == letters(typedWords[0])
+        }
+    }
+
+    /// The model score, with the space-after term when the rule uses it, and less the slip cost
+    /// for the score `modelLessSlipCost`. The engine's word statistics do not count: they come
+    /// from a list of word pairs without a single contraction.
+    private func stepScore(_ step: ApostropheStep, _ reading: EnglishReading, _ score: CandidateScore) -> Double {
+        let value = score.logProbability + (usesSpaceAfter ? score.spaceAfter : 0.0)
+        return step.score == .modelLessSlipCost ? value - reading.slipCost : value
+    }
+
+    /// The twin with the highest step score, the first one on a tie, replaces the choice when its
+    /// step score leads by the margin. The text as typed is never a twin.
+    private func apostropheStep(_ step: ApostropheStep, _ readings: [EnglishReading], _ scores: [CandidateScore], choice: Int) -> Int {
+        guard let typed = readings.first(where: { $0.asTyped }) else {
+            preconditionFailure("the readings hold no reading as typed")
+        }
+        var twin: Int?
+        for index in readings.indices where index != choice && !readings[index].asTyped
+            && Self.isTwin(readings[index].text, of: typed.text, scope: step.scope) {
+            if let current = twin, stepScore(step, readings[index], scores[index]) <= stepScore(step, readings[current], scores[current]) {
+                continue
+            }
+            twin = index
+        }
+        guard let twin else { return choice }
+        let lead = stepScore(step, readings[twin], scores[twin]) - stepScore(step, readings[choice], scores[choice])
+        return lead >= step.margin ? twin : choice
     }
 }
 
@@ -210,7 +303,7 @@ final class EnglishReranker {
     /// it on the space bar.
     var onModelError: (String) -> Void = { _ in }
 
-    init(scorer: CandidateScoring, rule: RerankRule = .distilgpt2) {
+    init(scorer: CandidateScoring, rule: RerankRule = .distilgpt2WithApostrophes) {
         self.scorer = scorer
         self.rule = rule
     }

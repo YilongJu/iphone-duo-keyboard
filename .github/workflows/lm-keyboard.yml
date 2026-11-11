@@ -7,7 +7,7 @@ name: Language model in the keyboard
 # check. Only the dev half is typed and scored. Every unit test runs as well.
 on:
   push:
-    branches: [engine/lm-keyboard]
+    branches: [engine/lm-keyboard, engine/apostrophe-words]
   workflow_dispatch:
 
 concurrency:
@@ -175,6 +175,9 @@ jobs:
                 --cases "$cases/$task.dev.jsonl" --predictions "$out/$task.dev$run.jsonl" \
                 --json "$out/$task.dev$run.summary.json"
             done
+          done
+          for run in "" ".engine-only"; do
+            python3 scripts/typing-evaluation/score_apostrophe_words.py               --cases "$cases/english-apostrophe-words.dev.jsonl"               --word "$out/english-apostrophe-words.dev$run.jsonl"               --next-word "$out/english-apostrophe-words.dev.next-word$run.jsonl"               --json "$out/english-apostrophe-words.dev$run.summary.json"
           done
           cp build/language-model-test/simulator.txt "$out/language-model-test-simulator.txt"
       - uses: actions/upload-artifact@v7

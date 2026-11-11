@@ -26,8 +26,11 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts" / "lm-rerank"))
 import rerank  # noqa: E402
 
-# The setting tuned for distilgpt2 Q3_K_M (scripts/lm-rerank/README.md, Table 2).
-TUNED = rerank.Setting(weight=1.0, margin_from_typed=24, margin_to_typed=0, margin_other=2, space_after=1)
+# The setting tuned for distilgpt2 Q3_K_M (scripts/lm-rerank/README.md, Table 2), with the
+# apostrophe step tuned on the apostrophe words (docs/apostrophe-words-design.md). The keyboard's
+# RerankRule.distilgpt2WithApostrophes holds the same numbers.
+TUNED = rerank.Setting(weight=1.0, margin_from_typed=24, margin_to_typed=0, margin_other=2, space_after=1,
+                       margin_apostrophe=1.0, apostrophe_scope="next", apostrophe_score="slips")
 
 
 def main():
