@@ -267,11 +267,38 @@ stopping cases, that the fine-tune did not get. Two controls separate these expl
 
 ## Shared held-out cases of the second fine-tuning round
 
-The second fine-tuning round (branch `engine/lm-finetune2`) builds new held-out cases. When they
-exist, its scripts score these arms on them: the control, the chosen coefficient of each base, the
-chosen calibration-only candidate, both fine-tunes, both stock models, and the dev rows of the
-first table. Every coefficient and setting is fixed before that read. This design does not build
-held-out cases of its own, and it does not read the test half.
+The second fine-tuning round (branch `engine/lm-finetune2`) built a held-out set, final since
+2026-11-11. Its `read_holdout.py` scores the arms of `scripts/lm-weight-edit/holdout-plan.json`
+on it, once. That plan was committed before the read. This design does not build held-out cases
+of its own, and it does not read the test half of round 1.
+
+Table 5. The arms of the held-out read. Every file is Q3_K_M in the typed format.
+
+| Arm | File and setting | How it was fixed |
+| --- | --- | --- |
+| `control` | The engine alone | Reference |
+| `s-stock`, `d-stock` | Stock weights at the tuning-split setting | Reference, a = 0 |
+| `s-lora`, `d-lora` | LoRA fine-tune at the tuning-split setting | Reference, a = 1 |
+| `s-wise-0.9`, `d-wise-0.9` | Interpolation at a = 0.9, tuning-split setting | Chosen by the selection rule on the stopping cases |
+| `s-lora-weight-1.0` | SmolLM2 fine-tune at weight 1.0, margins 0, 2, 2 | Chosen calibration-only candidate. For distilgpt2 that choice is `d-lora` itself. |
+| `s-wise-0.7-common` | Interpolation at a = 0.7 at the setting of `s-lora` | Found on dev after the fact |
+| `s-lora-weight-0.5`, `d-lora-weight-0.5` | Fine-tune at weight 0.5, margins 1, 0, 0 | Found on dev after the fact |
+
+Both chosen coefficients missed the clean rule on dev, so the held-out read cannot confirm a pass
+of the selection rule. It serves two other purposes. It compares the arms on cases that no model
+has scored. And it is the first untouched test of the three rows found on dev after the fact.
+
+Criteria on the held-out set, fixed before the read, for each arm against the control there:
+
+- Clean rule: its right cases in the generated groups clean and clean symbols are each at least
+  the control's.
+- Gain kept: its share of the generated-case gain between a = 0 and a = 1 of its base is above 0.5.
+- Changed words of the clean running text (4,000 sentences): reported against the control and
+  against the fine-tune. A lower count is better.
+- Real typos: right `github_misspelling` cases and right Mitton pairs, reported against the control
+  and against the fine-tune.
+
+The report does not choose a file from these numbers.
 
 ## Quantization and the phone path
 
