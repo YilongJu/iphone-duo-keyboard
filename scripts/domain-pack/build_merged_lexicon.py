@@ -60,7 +60,7 @@ def main():
     words, pairs = read_lexicon(arguments.lexicon)
     added = raised = 0
     for line in arguments.table.read_text(encoding="utf-8").splitlines()[1:]:
-        word, zipf, _, _ = line.split("\t")
+        word, zipf = line.split("\t")[:2]
         value = (float(zipf) - 9) * math.log(10)
         if word not in words:
             added += 1

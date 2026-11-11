@@ -18,27 +18,51 @@ struct PreferredCapitals {
     }
 
     private let entries: [String: Entry]
+    /// The words that the base lexicon lacks. The language model may not change one of them
+    /// when the person typed it (`keepingNewWords`).
+    let newWords: Set<String>
 
-    init(entries: [String: Entry]) {
+    init(entries: [String: Entry], newWords: Set<String> = []) {
         self.entries = entries
+        self.newWords = newWords
     }
 
     /// Reads a table of scripts/domain-pack/build_pack.py: one header line, then one line per
-    /// word with the word, its frequency, its preferred form or nothing, and the everyday mark.
-    /// The table ships inside the app, so a line that breaks this format stops the process.
+    /// word with the word, its frequency, its preferred form or nothing, the everyday mark, and
+    /// the mark of a word new to the base lexicon. The table ships inside the app, so a line that
+    /// breaks this format stops the process.
     init(table: String) {
         var entries: [String: Entry] = [:]
+        var newWords: Set<String> = []
         let lines = table.split(separator: "\n", omittingEmptySubsequences: true)
-        precondition(lines.first == "word\tzipf\tpreferred\teveryday", "the table of preferred capitals has other columns")
+        precondition(lines.first == "word\tzipf\tpreferred\teveryday\tnew", "the table of preferred capitals has other columns")
         for line in lines.dropFirst() {
             let fields = line.split(separator: "\t", omittingEmptySubsequences: false)
-            precondition(fields.count == 4, "a line of the table of preferred capitals has \(fields.count) fields")
+            precondition(fields.count == 5, "a line of the table of preferred capitals has \(fields.count) fields")
+            precondition(fields[4] == "0" || fields[4] == "1", "the line of \(fields[0]) in the table of preferred capitals is not valid")
+            if fields[4] == "1" { newWords.insert(String(fields[0])) }
             guard !fields[2].isEmpty else { continue }
             precondition(fields[2].lowercased() == fields[0] && (fields[3] == "0" || fields[3] == "1"),
                          "the line of \(fields[0]) in the table of preferred capitals is not valid")
             entries[String(fields[0])] = Entry(preferred: String(fields[2]), everyday: fields[3] == "1")
         }
         self.entries = entries
+        self.newWords = newWords
+    }
+
+    /// The readings that the language model may choose from. `typed` is the typed span in lower
+    /// case. A typed word that only the supplement holds is a word the person meant, and the
+    /// model knows such a word less well than the pack does. So a reading stays only when it
+    /// holds every such typed word. The text as typed and the engine's own choice always stay.
+    /// `keeping_new_words` of scripts/lm-rerank/rerank.py is the same step for the harness.
+    func keepingNewWords(_ readings: [EnglishReading], typed: String) -> [EnglishReading] {
+        let words = typed.split(separator: " ").filter { newWords.contains(String($0)) }
+        guard !words.isEmpty else { return readings }
+        return readings.filter { reading in
+            if reading.asTyped || reading.chosen { return true }
+            let readingWords = reading.text.split(separator: " ")
+            return words.allSatisfy { readingWords.contains($0) }
+        }
     }
 
     /// The table `<resource>.tsv` of the bundle. The keyboard cannot give a word of the pack its

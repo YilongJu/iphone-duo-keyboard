@@ -18,7 +18,7 @@ jobs:
   harness:
     name: Linux harness with the tuned rule, and the keyboard's scorer against lm_score
     runs-on: ubuntu-24.04
-    timeout-minutes: 90
+    timeout-minutes: 180
     steps:
       - uses: actions/checkout@v7
       - name: Build llama.cpp b4846, lm_score, the engine shim, and the keyboard's scorer
@@ -75,7 +75,7 @@ jobs:
     # The same harness on an ARM processor, which computes like the phone and the simulator.
     name: ARM Linux harness with the tuned rule, and the keyboard's scorer against lm_score
     runs-on: ubuntu-24.04-arm
-    timeout-minutes: 90
+    timeout-minutes: 180
     steps:
       - uses: actions/checkout@v7
       - name: Build llama.cpp b4846, lm_score, the engine shim, and the keyboard's scorer

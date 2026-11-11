@@ -1,6 +1,6 @@
 {
  "domain_share": 0.3,
- "frequency_share": 0.3,
+ "frequency_share": 1.0,
  "source_groups": [
   "arxiv",
   "docs-ai",
@@ -26,7 +26,7 @@
    "pairs": 0,
    "bytes": 138343
   },
-  "supplement table bytes": 34792,
+  "supplement table bytes": 38414,
   "phrases": 1310
  },
  "seed_check": {

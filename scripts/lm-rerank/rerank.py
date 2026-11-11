@@ -467,11 +467,18 @@ class PreferredCapitals:
 
     def __init__(self, path: Path):
         self.entries: dict[str, tuple[str, bool]] = {}
+        # The words that the base lexicon lacks. The language model may not change one of them
+        # when the person typed it (keeping_new_words).
+        self.new_words: set[str] = set()
         lines = path.read_text(encoding="utf-8").splitlines()
-        if lines[0].split("\t") != ["word", "zipf", "preferred", "everyday"]:
-            raise SystemExit(f"{path} does not have the columns word, zipf, preferred, everyday")
+        if lines[0].split("\t") != ["word", "zipf", "preferred", "everyday", "new"]:
+            raise SystemExit(f"{path} does not have the columns word, zipf, preferred, everyday, new")
         for line in lines[1:]:
-            word, _, preferred, everyday = line.split("\t")
+            word, _, preferred, everyday, new = line.split("\t")
+            if new not in ("0", "1"):
+                raise SystemExit(f"{path}: the row of {word!r} is not valid")
+            if new == "1":
+                self.new_words.add(word)
             if preferred:
                 if preferred.lower() != word or everyday not in ("0", "1"):
                     raise SystemExit(f"{path}: the row of {word!r} is not valid")
@@ -515,6 +522,18 @@ class PreferredCapitals:
         to_all_capitals = len(letters) - count
         return lower.upper() if to_all_capitals < to_preferred else preferred
 
+    def keeping_new_words(self, readings: list[dict], typed: str) -> list[dict]:
+        """The readings that the language model may choose from: `keepingNewWords` of
+        Shared/PreferredCapitals.swift. A typed word that only the supplement holds is a word
+        the person meant, and the model knows such a word less well than the pack does. So a
+        reading stays only when it holds every such typed word. The text as typed and the
+        engine's own choice always stay."""
+        words = [word for word in typed.split(" ") if word in self.new_words]
+        if not words:
+            return readings
+        return [reading for reading in readings if reading["as_typed"] or reading["chosen"]
+                or all(word in reading["text"].split(" ") for word in words)]
+
     def latch(self, restored: str, typed: str, text_before: str) -> str:
         """Gives each word of `restored` its form. With another count of words than `typed`,
         only the first word gets one, from the first typed word."""
@@ -555,7 +574,7 @@ class RecentWord:
 
 
 def type_case(case: dict, engine: Engine, chooser, capitals: "PreferredCapitals | None" = None,
-              keep_capitals: bool = False) -> str:
+              keep_capitals: bool = False, protect_new_words: bool = True) -> str:
     """Types one case and returns the text the field holds after the context. `chooser` takes
     the readings, the text before the span and the typed span (lower case, as the engine reads
     it) and returns the reading to show.
@@ -563,7 +582,9 @@ def type_case(case: dict, engine: Engine, chooser, capitals: "PreferredCapitals 
     Without `keep_capitals` a corrected word comes out in lower case, which the scorer of the
     lower-case cases does not see. With it the field gets the capitals of the typed words, as the
     keyboard writes them (restoring_capitals). `capitals` also gives the words of a supplement
-    their preferred form, and it needs `keep_capitals`."""
+    their preferred form, and it needs `keep_capitals`. With `capitals`, the chooser gets only
+    the readings that keep a typed word new in the pack (keeping_new_words), as in the keyboard.
+    `protect_new_words` False leaves that step out, for a comparison."""
     if capitals is not None and not keep_capitals:
         raise SystemExit("the preferred capitals need keep_capitals")
     start = case["context"] + " " if case["context"] else ""
@@ -594,6 +615,8 @@ def type_case(case: dict, engine: Engine, chooser, capitals: "PreferredCapitals 
                 if len(typed_span) >= 2:
                     readings = engine.readings(word_before_space(text_before), typed_span.lower())
                     if readings is not None:
+                        if capitals is not None and protect_new_words:
+                            readings = capitals.keeping_new_words(readings, typed_span.lower())
                         reading = chooser(readings, text_before, typed_span.lower())
                 final = reading if reading is not None else shown_span
                 if keep_capitals:
@@ -621,8 +644,8 @@ CLEAN_CATEGORIES = {"clean_common", "clean_rare", "clean_names_and_terms", "clea
 
 
 def run(cases: list[dict], engine: Engine, chooser, capitals: "PreferredCapitals | None" = None,
-        keep_capitals: bool = False) -> dict[str, str]:
-    return {case["id"]: type_case(case, engine, chooser, capitals, keep_capitals) for case in cases}
+        keep_capitals: bool = False, protect_new_words: bool = True) -> dict[str, str]:
+    return {case["id"]: type_case(case, engine, chooser, capitals, keep_capitals, protect_new_words) for case in cases}
 
 
 def case_is_right(case: dict, output: str) -> bool:

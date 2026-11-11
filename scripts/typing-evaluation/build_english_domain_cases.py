@@ -196,7 +196,7 @@ def read_table() -> tuple[dict[str, tuple[str, bool]], dict[str, str], list[str]
     raised) of each corpus word, and the requested words."""
     table = {}
     for line in TABLE.read_text(encoding="utf-8").splitlines()[1:]:
-        word, _, preferred, everyday = line.split("\t")
+        word, _, preferred, everyday, _ = line.split("\t")
         table[word] = (preferred, everyday == "1")
     kinds = {}
     lines = (PACK / "ai-software.terms.tsv").read_text(encoding="utf-8").splitlines()

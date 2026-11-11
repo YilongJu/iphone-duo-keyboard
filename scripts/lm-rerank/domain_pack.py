@@ -5,7 +5,9 @@ Four configurations type every case, through the keyboard rules of rerank.py:
 - engine, pack on: the same with the supplement Shared/supplement-ai-software.bin laid over the
   lexicon and the preferred capitals of Shared/supplement-ai-software.tsv.
 - model, pack off and model, pack on: the same two with the keyboard's SmolLM2 fine-tune and its
-  tuned rule (harness_trace.TUNED), as the keyboard ships.
+  tuned rule (harness_trace.TUNED), as the keyboard ships. With the pack on, the model may not
+  change a typed word that is new in the pack (rerank.PreferredCapitals.keeping_new_words).
+- model, pack on, unprotected (with --also-unprotected): the same without that protection.
 
 Cases:
 - cases/english-domain.HALF.jsonl: the new groups, one count per category and group. A case with
@@ -96,6 +98,9 @@ def main():
                              "also types every case with it, without a supplement")
     parser.add_argument("--merged-shim", type=Path,
                         help="a second copy of the shim for --merged-lexicon: one shim holds one lexicon")
+    parser.add_argument("--also-unprotected", action="store_true",
+                        help="also type with the model, the pack on, and the model free to change a typed word new "
+                             "in the pack (the configuration \"model, pack on, unprotected\")")
     parser.add_argument("--stream-limit", type=int,
                         help="type only this many sentences of each stream, for a short check of the script")
     parser.add_argument("--only-new", action="store_true",
@@ -143,14 +148,20 @@ def main():
               "setting": harness_trace.TUNED.__dict__, "configurations": {}}
     outputs = {}
     started = time.monotonic()
-    for chooser_name, chooser in choosers.items():
-        for pack in ("off", "on"):
-            name = f"{chooser_name}, pack {pack}"
+    plan = [(chooser_name, pack, True) for chooser_name in choosers for pack in ("off", "on")]
+    if arguments.also_unprotected:
+        if "model" not in choosers:
+            raise SystemExit("--also-unprotected needs the model")
+        plan.append(("model", "on", False))
+    for chooser_name, pack, protect in plan:
+        chooser = choosers[chooser_name]
+        for _ in (0,):
+            name = f"{chooser_name}, pack {pack}" + ("" if protect else ", unprotected")
             engine = engines[pack]
             table = capitals if pack == "on" else None
 
             def run(cases):
-                return rerank.run(cases, engine, chooser, table, keep_capitals=True)
+                return rerank.run(cases, engine, chooser, table, keep_capitals=True, protect_new_words=protect)
 
             entry = {}
             shown = {"domain": run(domain), "stream": run(stream)}
@@ -164,7 +175,7 @@ def main():
                 shown["apostrophe_next_word"] = run(next_cases)
                 entry["apostrophe"] = {"word": apostrophe_words.tally(apostrophe, shown["apostrophe_word"]),
                                        "next_word": apostrophe_words.tally(next_cases, shown["apostrophe_next_word"])}
-                if pack == "off":
+                if pack == "off" and protect:
                     # The typing of this script keeps the typed capitals in the field, and the
                     # harness of the pinned numbers does not. With the pack off, the two must give
                     # the same letters for every existing case.
@@ -180,7 +191,8 @@ def main():
                 line["existing"] = entry["existing"]["right"]
                 line["apostrophe"] = [entry["apostrophe"]["word"]["right"], entry["apostrophe"]["next_word"]["right"]]
             print(name, json.dumps(line), f"{time.monotonic() - started:.0f} s", flush=True)
-            with (arguments.out / f"outputs.{half}.{chooser_name}-pack-{pack}.jsonl").open("w", encoding="utf-8") as file:
+            suffix = "" if protect else "-unprotected"
+            with (arguments.out / f"outputs.{half}.{chooser_name}-pack-{pack}{suffix}.jsonl").open("w", encoding="utf-8") as file:
                 for kind, values in shown.items():
                     for case_id, output in values.items():
                         file.write(json.dumps({"set": kind, "id": case_id, "output": output}) + "\n")

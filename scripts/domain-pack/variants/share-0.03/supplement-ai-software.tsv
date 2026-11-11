@@ -1,1810 +1,1810 @@
-word	zipf	preferred	everyday
-abac	1.77	ABAC	0
-ablate	1.64		0
-ablating	1.84		0
-ablation	2.93		0
-ablations	2.87		0
-abstractions	2.80		0
-abstractive	1.56		0
-accessors	1.60		0
-accuracies	2.22		0
-achieves	3.77		0
-actionability	1.59		0
-activations	3.18		0
-adaboost	1.73	AdaBoost	0
-adamw	1.99	AdamW	0
-adapter	3.76		0
-adapter's	1.56		0
-adapters	3.52		0
-adaptively	2.55		0
-adaptivity	1.58		0
-admins	3.26		0
-adversarial	3.20		0
-adversarially	1.87		0
-afaik	2.52	AFAIK	0
-affordance	1.57		0
-agent's	3.58		0
-agentdojo	1.75	AgentDojo	0
-agentic	3.72		0
-ai's	2.45	AI's	0
-aleatoric	1.73		0
-alexnet	1.73	AlexNet	0
-alfworld	2.28	ALFWorld	0
-allocatable	2.05		0
-allocator	2.15		0
-allowlist	2.95		0
-alphago	2.31	AlphaGo	0
-alphazero	2.17	AlphaZero	0
-amortizes	1.61		0
-annotate	2.30		0
-annotates	1.58		0
-annotation	3.19		0
-annotations	3.17		0
-annotator	1.87		0
-annotators	2.41		0
-anns	1.93	ANNs	0
-anonymization	1.74		0
-anonymize	1.58		0
-ansible	3.56	Ansible	0
-answerability	1.68		0
-anthropic	3.18	Anthropic	0
-anthropic's	2.34	Anthropic's	0
-antipattern	1.71		0
-api	4.60	API	0
-api's	2.53	API's	0
-apis	3.49	APIs	0
-apiserver	2.48		0
-apparmor	2.49	AppArmor	0
-append	2.76		0
-appending	2.38		0
-appends	2.37		0
-application's	2.71		0
-approvals	3.38		0
-approver	1.75		0
-approvers	1.93		0
-approximator	1.90		0
-approximators	1.78		0
-appworld	1.91	AppWorld	0
-apriori	1.54		0
-architecting	1.68		0
-architectures	3.47		0
-argmax	2.00		0
-args	2.32		0
-artifactory	2.74	Artifactory	0
-arxiv	2.37	arXiv	0
-async	3.24		0
-asynchronous	2.99		0
-asynchronously	2.44		0
-attestations	2.74		0
-auc	2.88	AUC	0
-auditability	1.94		0
-auditable	2.57		0
-aufs	2.17	AUFS	0
-auprc	1.77	AUPRC	0
-auroc	2.77	AUROC	0
-authenticate	3.23		0
-authenticates	2.27		0
-authenticating	2.41		0
-authentication	3.86		0
-authorizer	1.96		0
-autocompletion	2.09		0
-autoencoder	2.78		0
-autoencoders	2.54		0
-autoformalization	1.53		0
-autogen	3.28	AutoGen	0
-automate	3.21		0
-automates	2.33		0
-automating	2.66		0
-automations	1.72		0
-automl	1.75	AutoML	0
-autonomously	2.71		0
-autoregressive	3.00		0
-autoregressively	2.05		0
-autoresearch	1.91		0
-autoscale	1.80		0
-autoscaler	2.29		0
-autoscaling	2.65		0
-awq	1.87	AWQ	0
-aws	3.79	AWS	0
-aws's	1.62	AWS's	0
-azure	3.82	Azure	1
-azure's	1.96	Azure's	0
-backbones	2.95		0
-backend	3.86		0
-backend's	1.52		0
-backends	3.18		0
-backoff	2.30		0
-backport	1.71		0
-backprop	2.13		0
-backpropagate	1.70		0
-backpropagation	2.73		0
-backslash	2.15		0
-backslashes	1.94		0
-backtest	1.51		0
-backticks	1.62		0
-balancer	2.97		0
-balancers	2.20		0
-barto	2.18	Barto	0
-barto's	1.73	Barto's	0
-baseline	3.73		0
-baseline's	1.93		0
-baselines	3.63		0
-batched	2.73		0
-batching	2.57		0
-batchnorm	1.64		0
-batchsize	1.67		0
-bayes	2.66	Bayes	0
-bayesian	2.99	Bayesian	0
-bazel	1.65	Bazel	0
-beir	1.73	BEIR	0
-bellman	2.43	Bellman	0
-benchmark	3.92		0
-benchmark's	2.10		0
-benchmarking	2.75		0
-benchmarks	3.88		0
-bengio	1.60	Bengio	0
-bertscore	1.72	BERTScore	0
-bfcl	1.94	BFCL	0
-bidirectional	2.75		0
-bigcodebench	1.52	BigCodeBench	0
-bigquery	2.26	BigQuery	0
-bilevel	1.75		0
-bimanual	1.66		0
-binaries	3.17		0
-bitbucket	2.85		0
-bitsandbytes	2.61		0
-bitwise	2.10		0
-blas	2.46	BLAS	0
-blockwise	1.54		0
-bnns	1.54	BNNs	0
-boilerplate	2.54		0
-boolean	3.59		0
-booleans	1.79		0
-bootstrapping	2.35		0
-bottleneck	3.09		0
-bottlenecked	1.88		0
-bounded	3.51		0
-bounding	2.76		0
-bpmn	1.74	BPMN	0
-btrfs	2.13	Btrfs	0
-bugfix	2.03		0
-buildkit	2.84	BuildKit	0
-buildx	2.63	Buildx	0
-busybox	1.69		0
-bytecode	2.60		0
-cache	4.00		0
-cacheable	1.55		0
-cached	3.27		0
-caches	2.92		0
-caching	3.40		0
-calibrates	2.09		0
-calibration	3.36		0
-callable	2.77		0
-callback	3.14		0
-callbacks	2.71		0
-camelcase	1.50	camelCase	0
-canonicalization	1.65		0
-cartpole	1.85		0
-catboost	1.92		0
-categorical	3.09		0
-causal	3.35		0
-cbow	1.62	CBOW	0
-centos	2.42	CentOS	0
-centroids	2.00		0
-ceph	1.81	Ceph	0
-changelog	2.36		0
-changeset	1.64		0
-chatbot	3.00		0
-chatbots	2.45		0
-chatgpt	4.09	ChatGPT	0
-chatgpt's	2.53	ChatGPT's	0
-checkable	1.98		0
-checkpoint	3.46		0
-checkpoint's	2.21		0
-checkpointed	1.63		0
-checkpointing	2.43		0
-checkpoints	3.29		0
-chroot	1.75		0
-chunked	2.23		0
-chunking	2.59		0
-cicd	2.08	CICD	0
-cidr	2.34	CIDR	0
-circleci	2.29	CircleCI	0
-classifier	3.42		0
-classifier's	1.60		0
-classifiers	2.98		0
-claude's	2.47	Claude's	0
-cleartext	1.69		0
-cli	4.39	CLI	0
-cli's	2.78	CLI's	0
-cloudbees	1.77	CloudBees	0
-cloudformation	2.52	CloudFormation	0
-cloudfront	2.10	CloudFront	0
-cloudwatch	2.64	CloudWatch	0
-cluster	3.99		0
-cluster's	2.28		0
-clustering	3.25		0
-clusterip	1.90	ClusterIP	0
-clusterrole	2.27	ClusterRole	0
-cncf	2.12	CNCF	0
-cni	2.48	CNI	0
-cnns	2.69	CNNs	0
-codebase	3.17		0
-codebases	2.63		0
-codebert	1.62	CodeBERT	0
-codebook	2.35		0
-codebooks	2.06		0
-codepipeline	1.82	CodePipeline	0
-codepoint	1.77		0
-codepoints	1.73		0
-codeql	2.52	CodeQL	0
-codespace	2.88		0
-codex	4.31	Codex	0
-cohere	2.59	Cohere	0
-colab	3.05		0
-collator	2.01		0
-commandline	1.64		0
-commands	3.99		0
-committer	2.06		0
-committers	2.16		0
-compaction	2.95		0
-compilable	1.59		0
-completions	3.35		0
-composability	2.13		0
-composable	2.30		0
-compose	3.62	Compose	1
-compositionality	1.58		0
-computation	3.47		0
-computationally	2.86		0
-compute	3.63		0
-computes	2.83		0
-concat	1.56		0
-concatenate	2.36		0
-concatenated	2.53		0
-concatenates	1.58		0
-concatenating	2.11		0
-concatenation	2.46		0
-concurrency	2.97		0
-conda	2.36		0
-config	3.81		0
-configmap	2.83	ConfigMap	0
-configmaps	2.21	ConfigMaps	0
-configs	3.33		0
-configurable	2.90		0
-configuration	4.44		0
-configurations	3.61		0
-configure	3.99		0
-configured	3.75		0
-configures	2.88		0
-configuring	3.07		0
-connectionist	1.76		0
-constrain	2.88		0
-constrains	2.40		0
-constraint	3.37		0
-constraints	3.87		0
-constructor	3.05		0
-container	4.30		0
-container's	2.80		0
-containerd	3.04		0
-containerization	2.01		0
-containerize	2.29		0
-containerized	2.76		0
-containerizing	1.77		0
-containers	3.93		0
-contextual	3.17		0
-contextualized	2.29		0
-contextually	2.32		0
-continuations	2.41		0
-contrastive	2.89		0
-controllability	2.18		0
-conv	2.47		0
-conversational	3.20		0
-convnet	1.86	ConvNet	0
-convnets	1.63	ConvNets	0
-convolution	2.97		0
-convolutional	3.16		0
-convolutions	2.48		0
-copilot	3.07	Copilot	1
-coredns	2.43	CoreDNS	0
-corpora	2.93		0
-correctness	3.40		0
-cors	2.03	CORS	0
-cosine	2.94		0
-counterfactual	2.87		0
-covariance	2.71		0
-covariate	2.19		0
-covariates	2.13		0
-cpu	3.76	CPU	0
-cpython	2.54	CPython	0
-credential	3.23		0
-cron	2.63		0
-cronjob	1.91		0
-crontab	1.68		0
-crossentropy	1.74		0
-cryptographically	2.00		0
-csproj	1.57		0
-csv	3.03	CSV	0
-csvs	1.64	CSVs	0
-cuas	1.81	CUAs	0
-cuda	3.41	CUDA	0
-cudnn	1.78		0
-cves	2.38	CVEs	0
-cvss	1.92	CVSS	0
-cyclomatic	1.79		0
-daemon	3.33		0
-daemon's	1.82		0
-daemonset	2.64	DaemonSet	0
-daemonsets	1.86	DaemonSets	0
-dafny	1.66	Dafny	0
-dashboards	2.57		0
-database's	1.61		0
-databricks	2.46	Databricks	0
-dataclass	2.38		0
-datadog	2.30	Datadog	0
-dataframe	2.79		0
-dataframes	1.99		0
-dataloader	1.70		0
-datapoint	1.86		0
-datapoints	2.10		0
-datascience	1.51		0
-dataset	4.13		0
-dataset's	1.93		0
-datasets	3.77		0
-datasource	1.62		0
-datastore	2.03		0
-datatype	2.01		0
-datetime	1.86		0
-dbscan	2.04	DBSCAN	0
-ddpg	1.98	DDPG	0
-debiasing	1.70		0
-debug	3.37		0
-debugging	3.39		0
-declarative	2.95		0
-declaratively	1.66		0
-decodability	1.62		0
-decodable	2.02		0
-decode	3.09		0
-decoder	3.24		0
-decoder's	1.65		0
-decoders	2.28		0
-decodes	2.25		0
-decoding	3.49		0
-decompilation	1.77		0
-decomposes	2.72		0
-decompositions	2.06		0
-decouple	2.32		0
-decoupled	2.57		0
-decouples	2.45		0
-deduplicate	1.69		0
-deduplicated	1.56		0
-deduplication	2.12		0
-deepfake	1.78		0
-deepseek	2.65	DeepSeek	0
-deepswe	1.62	DeepSWE	0
-default	4.53		0
-defaults	3.67		0
-degrades	2.74		0
-deltanet	1.88	DeltaNet	0
-denoise	1.81		0
-denoiser	2.01		0
-denoising	2.89		0
-dependabot	2.23	Dependabot	0
-dependencies	4.14		0
-dependency	3.92		0
-deploy	3.72		0
-deployment	3.98		0
-deployments	3.30		0
-deprecate	2.85		0
-deprecated	3.24		0
-deprecations	1.97		0
-deps	1.75		0
-depthwise	1.50		0
-deserialization	1.94		0
-deserialize	1.92		0
-detectably	1.52		0
-deterministic	3.48		0
-deterministically	2.32		0
-detr	2.08	DETR	0
-devops	3.71	DevOps	0
-dflash	2.20	DFlash	0
-dhi	2.79	DHI	0
-diagnostics	3.39		0
-diarization	1.76		0
-dict	2.73		0
-dicts	1.78		0
-differentiable	2.66		0
-diffs	2.36		0
-diffusion	3.63		0
-digitalocean	2.04	DigitalOcean	0
-dimensionality	2.82		0
-directories	3.62		0
-directory	4.16		0
-disable	3.53		0
-disables	2.63		0
-disaggregated	2.34		0
-disallows	1.99		0
-disambiguate	1.84		0
-disambiguated	1.85		0
-discretization	2.06		0
-discretize	1.59		0
-discriminability	1.54		0
-discriminative	2.56		0
-discriminator	2.66		0
-disentanglement	1.66		0
-disentangles	1.56		0
-disjoint	2.51		0
-distilbert	1.83	DistilBERT	0
-distillation	3.26		0
-distills	2.34		0
-distractors	1.96		0
-distribution's	1.72		0
-distributional	2.62		0
-distributionally	1.55		0
-distributions	3.59		0
-dnn	2.32	DNN	0
-dnns	1.85	DNNs	0
-dns	3.30	DNS	0
-docker	4.53	Docker	0
-docker's	2.59	Docker's	0
-dockerfile	3.39	Dockerfile	0
-dockerfiles	2.47	Dockerfiles	0
-dockerhub	2.15		0
-dockerize	1.65		0
-dockerized	1.91		0
-docs	3.52		0
-docstring	2.67		0
-docstrings	2.06		0
-documentation	4.51		0
-dotfiles	1.80		0
-dotnet	1.92		0
-downsample	1.54		0
-downsampled	1.53		0
-downsampling	2.01		0
-downvote	2.23		0
-downvoted	2.01		0
-downvoter	1.66		0
-downvotes	1.89		0
-downvoting	1.75		0
-dqn	2.80	DQN	0
-dra	2.64	DRA	0
-drafter	2.32		0
-dropdown	2.93		0
-dsls	1.93	DSLs	0
-dspark	2.18	DSpark	0
-dtw	1.79	DTW	0
-dtype	2.50		0
-dvcs	1.76	DVCS	0
-dynamically	3.33		0
-dynamodb	1.83	DynamoDB	0
-ecs	2.86	ECS	0
-editable	2.80		0
-eks	2.45	EKS	0
-elasticsearch	2.74	Elasticsearch	0
-elb	2.29	ELB	0
-elbo	1.94	ELBO	0
-elicitation	2.48		0
-embed	2.95		0
-embedder	1.67		0
-embedding	3.82		0
-embeddings	3.87		0
-embeds	2.38		0
-empirically	3.01		0
-enablement	2.20		0
-encode	3.13		0
-encoder	3.45		0
-encoder's	1.78		0
-encoders	2.88		0
-encodes	2.74		0
-encodings	2.44		0
-endpoint	3.68		0
-endpoints	3.38		0
-ensembling	1.98		0
-entailment	1.96		0
-enterprise's	2.16		0
-entra	2.41	Entra	0
-entrypoint	2.51		0
-entrypoints	1.52		0
-enum	2.82		0
-enums	1.95		0
-env	2.97		0
-environment's	2.10		0
-epochs	2.91		0
-equivariance	1.88		0
-equivariant	2.09		0
-eslint	1.56	ESLint	0
-estimator	2.85		0
-estimators	2.62		0
-etcd	2.92		0
-eval	2.93		0
-evals	2.68		0
-evaluates	3.16		0
-evaluator	2.83		0
-evaluators	2.46		0
-exchangeability	1.70		0
-executability	2.10		0
-executable	3.71		0
-executables	3.05		0
-executes	3.18		0
-explainability	2.30		0
-explainable	2.46		0
-exploitability	1.90		0
-expressiveness	2.35		0
-expressivity	2.24		0
-extension's	2.37		0
-extractors	2.23		0
-face's	2.11	Face's	0
-factorized	2.10		0
-factorizes	1.63		0
-factuality	1.91		0
-failover	2.07		0
-faiss	1.87	FAISS	0
-fallback	3.20		0
-fallbacks	2.23		0
-falsifiable	1.94		0
-fargate	2.47	Fargate	0
-fastapi	2.59	FastAPI	0
-fasttext	1.66		0
-fedavg	1.61	FedAvg	0
-feedforward	2.29		0
-fetches	2.61		0
-filebeat	1.67	Filebeat	0
-filenames	2.39		0
-filesystem	3.33		0
-filesystems	2.30		0
-finalizer	2.02		0
-finalizers	1.96		0
-findable	1.78		0
-finetune	2.47		0
-finetuned	2.40		0
-finetuning	2.95		0
-firestore	2.08	Firestore	0
-flakiness	1.85		0
-flashattention	2.10	FlashAttention	0
-fluentd	1.97		0
-formalize	2.64		0
-formalizes	1.91		0
-formatter	2.16		0
-formulates	2.42		0
-fqdn	1.92	FQDN	0
-framework's	2.01		0
-frameworks	3.41		0
-framings	1.66		0
-frontend	3.11		0
-frontends	2.14		0
-frontmatter	2.54		0
-fsdp	2.55	FSDP	0
-fullstack	1.58		0
-function's	2.05		0
-fuzzer	1.73		0
-fuzzers	1.86		0
-fuzzing	2.55		0
-gans	2.41	GANs	0
-gating	2.63		0
-gaussian	3.17	Gaussian	0
-gaussians	1.71	Gaussians	0
-gcp	2.64	GCP	0
-gemini	4.16	Gemini	0
-gemm	2.21	GEMM	0
-genai	3.55	GenAI	0
-generalises	1.64		0
-generalizability	2.15		0
-generalizable	2.34		0
-generalization	3.24		0
-generalize	2.96		0
-generalizes	2.67		0
-generative	3.67		0
-generator's	1.76		0
-gensim	2.13		0
-gepa	1.98	GEPA	0
-ggml	2.70	GGML	0
-gguf	3.15	GGUF	0
-gitflow	2.01		0
-github	4.07	GitHub	0
-github's	2.46	GitHub's	0
-gitignore	1.98		0
-gitlab	3.31	GitLab	0
-gitlab's	1.75	GitLab's	0
-gitops	2.01	GitOps	0
-glibc	2.55		0
-gnn	2.29	GNN	0
-gnns	2.19	GNNs	0
-golang	2.37	Golang	0
-gpg	2.22	GPG	0
-gpt	3.54	GPT	0
-gptq	2.22	GPTQ	0
-gpts	2.34	GPTs	0
-gpu	3.88	GPU	0
-gpu's	1.91	GPU's	0
-gpus	3.55	GPUs	0
-gqa	2.27	GQA	0
-gradient	3.67		0
-gradients	3.22		0
-gradle	2.20	Gradle	0
-grafana	2.67	Grafana	0
-granularities	1.89		0
-granularity	2.74		0
-graph's	1.86		0
-graphql	2.39	GraphQL	0
-graphrag	2.33	GraphRAG	0
-graphviz	1.90		0
-grep	2.27		0
-gridsearchcv	1.92	GridSearchCV	0
-gridworld	1.53		0
-grok	2.31		0
-grpc	2.73	gRPC	0
-grpo	2.98	GRPO	0
-guardrail	2.81		0
-guardrails	3.15		0
-gunicorn	1.99	Gunicorn	0
-gzip	1.87		0
-hadamard	2.19	Hadamard	0
-hallucinate	2.47		0
-hallucinated	2.26		0
-hallucination	3.00		0
-handoff	3.07		0
-handoffs	2.93		0
-haproxy	2.00	HAProxy	0
-hardcode	1.75		0
-hardcoded	2.49		0
-hardcoding	1.70		0
-harmfulness	1.84		0
-harnesses	2.89		0
-hashes	2.78		0
-hashicorp	2.25		0
-hashmap	1.52		0
-hdbscan	1.54	HDBSCAN	0
-hdfs	1.83	HDFS	0
-headers	3.12		0
-healthcheck	2.04		0
-healthchecks	1.55		0
-heatmap	1.84		0
-heatmaps	1.54		0
-heroku	2.07	Heroku	0
-heterogeneous	3.25		0
-heuristic	2.97		0
-heuristics	2.74		0
-hitl	2.40	HITL	0
-hmac	1.57	HMAC	0
-hnsw	1.78	HNSW	0
-hopfield	1.79	Hopfield	0
-hostname	2.85		0
-hostnames	2.20		0
-hotfix	2.50		0
-hotfixes	1.80		0
-hotpotqa	2.04	HotpotQA	0
-huggingface	2.99		0
-humaneval	2.24	HumanEval	0
-hypergraph	1.74		0
-hypernetwork	1.66		0
-hyperparameter	2.80		0
-hyperparameters	2.95		0
-hyperplane	2.09		0
-hypersphere	1.64		0
-hypervisor	2.45		0
-hypervisors	1.57		0
-hypervolume	1.50		0
-icl	2.46	ICL	0
-iclr	1.71	ICLR	0
-ide	3.36	IDE	0
-ide's	2.05	IDE's	0
-idempotence	1.55		0
-idempotency	2.18		0
-idempotent	2.27		0
-identifiability	2.03		0
-ides	2.71	IDEs	1
-idp	2.77	IdP	0
-ifeval	1.58	IFEval	0
-image's	2.30		0
-imagenet	2.49	ImageNet	0
-imbalanced	2.69		0
-immutability	2.15		0
-immutable	3.03		0
-implementations	3.47		0
-importances	1.68		0
-improves	3.82		0
-imputing	1.72		0
-incremented	2.20		0
-incrementing	1.83		0
-indexeddb	1.61	IndexedDB	0
-indexer	2.34		0
-indirection	1.96		0
-infeasible	2.32		0
-inference	4.04		0
-inferencing	2.13		0
-infers	2.32		0
-influxdb	1.72	InfluxDB	0
-informativeness	1.71		0
-ingress	3.01		0
-init	2.86		0
-initialisation	2.00		0
-initialise	1.71		0
-initialised	1.80		0
-initialization	3.47		0
-initialize	3.28		0
-initialized	3.04		0
-initializer	1.71		0
-initializers	1.57		0
-initializes	2.57		0
-initializing	2.65		0
-injects	2.74		0
-inline	3.51		0
-inlined	1.70		0
-inlining	1.58		0
-inotify	1.83		0
-inpainting	2.61		0
-inputs	3.80		0
-inspectable	2.17		0
-install	4.21		0
-installable	2.47		0
-installer	3.05		0
-installs	3.21		0
-instance's	2.10		0
-instantiate	3.02		0
-instantiated	2.51		0
-instantiates	2.04		0
-instantiating	2.02		0
-instantiation	2.72		0
-instantiations	1.56		0
-instructgpt	1.65	InstructGPT	0
-instrumenting	2.00		0
-integrates	3.12		0
-integrations	3.14		0
-intellij	1.91	IntelliJ	0
-intellisense	1.62		0
-interactively	2.41		0
-interleave	1.87		0
-interleaved	2.29		0
-interleaves	1.54		0
-interpolate	2.11		0
-interpolating	2.04		0
-interpretability	2.83		0
-interpretable	3.00		0
-invariance	2.53		0
-invariants	2.46		0
-invocation	3.11		0
-invocations	2.84		0
-iptables	2.28		0
-istio	2.21	Istio	0
-iterable	1.64		0
-iterate	2.94		0
-iterates	2.36		0
-iterating	3.27		0
-iterative	3.19		0
-iteratively	2.95		0
-iterator	2.34		0
-jaccard	2.10	Jaccard	0
-jacobian	2.16	Jacobian	0
-jailbreaking	2.52		0
-jailbreaks	1.92		0
-javadoc	1.65		0
-jdk	2.14	JDK	0
-jepa	1.91	JEPA	0
-jetbrains	2.34	JetBrains	0
-jev	2.64	Jev	0
-jev's	1.80	Jev's	0
-jfrog	2.30	JFrog	0
-jinja	2.35	Jinja	0
-jira	2.59	Jira	0
-jmeter	1.59	JMeter	0
-json	4.01	JSON	0
-jsonl	2.42	JSONL	0
-jsonpath	1.63	JSONPath	0
-jupyter	2.81	Jupyter	0
-jvm	2.48	JVM	0
-jwt	2.46	JWT	0
-kaggle	2.49	Kaggle	0
-kaiming	1.55	Kaiming	0
-kanban	2.40	Kanban	0
-karpathy's	1.70	Karpathy's	0
-keepalive	1.86		0
-keras	3.02	Keras	0
-kernel	3.67		0
-kernel's	1.67		0
-kernels	3.27		0
-keybindings	2.01		0
-keycloak	1.77	Keycloak	0
-keypair	1.54		0
-keypoint	1.80		0
-keypoints	1.78		0
-keyring	2.56		0
-kibana	2.10	Kibana	0
-knn	2.46	KNN	0
-kotlin	2.52	Kotlin	0
-kronecker	2.02	Kronecker	0
-kube	1.74		0
-kubeadm	3.10		0
-kubeconfig	2.58		0
-kubectl	3.21		0
-kubelet	3.43		0
-kubernetes	4.08	Kubernetes	0
-kustomize	1.94		0
-kv	3.46	KV	0
-kwargs	2.38		0
-lambda	3.24		0
-lambdas	2.13		0
-langchain	3.31	LangChain	0
-langgraph	2.93	LangGraph	0
-langsmith	2.89	LangSmith	0
-latency	3.58		0
-latent	3.51		0
-latents	2.37		0
-layer's	2.44		0
-layernorm	1.73	LayerNorm	0
-layerwise	2.11		0
-ldap	2.40	LDAP	0
-learnability	1.72		0
-learnable	2.78		0
-lecun	1.69	LeCun	0
-lemmas	1.86		0
-letsencrypt	1.69		0
-levenshtein	1.79	Levenshtein	0
-leverages	3.06		0
-lexer	1.85		0
-lfs	2.36	LFS	0
-libc	2.39		0
-librispeech	1.75	LibriSpeech	0
-lifecycle	3.36		0
-lifecycles	2.09		0
-lightgbm	2.17	LightGBM	0
-likelihoods	1.86		0
-linter	2.18		0
-linters	1.80		0
-linting	2.25		0
-listwise	1.89		0
-livecodebench	2.00	LiveCodeBench	0
-liveness	2.39		0
-llada	1.60	LLaDA	0
-llama	3.43	Llama	1
-llamaindex	3.41	LlamaIndex	0
-llava	2.59	LLaVA	0
-llm	4.37	LLM	0
-llm's	2.89	LLM's	0
-llms	4.17	LLMs	0
-llvm	2.39	LLVM	0
-loadbalancer	2.31	LoadBalancer	0
-localhost	2.54		0
-localizes	2.16		0
-localstorage	1.66	localStorage	0
-lockfile	3.30		0
-locomo	1.93	LoCoMo	0
-logit	2.73		0
-logits	3.11		0
-logprobs	2.44		0
-logs	4.06		0
-logstash	2.10		0
-longbench	1.86	LongBench	0
-longmemeval	1.62	LongMemEval	0
-lookahead	2.07		0
-lookup	3.02		0
-lookups	2.40		0
-loop's	1.65		0
-loopback	2.37		0
-lora	3.83	LoRA	0
-lpips	1.62	LPIPS	0
-lru	2.00	LRU	0
-lsh	1.87	LSH	0
-lstm	3.16	LSTM	0
-lstms	2.34	LSTMs	0
-lxc	1.95	LXC	0
-macos	3.48	macOS	0
-mahalanobis	1.65	Mahalanobis	0
-maintainability	2.64		0
-maintainable	2.40		0
-maintainer	2.57		0
-maintainers	2.78		0
-makefile	2.04		0
-manually	3.76		0
-mappings	2.75		0
-mariadb	2.11	MariaDB	0
-markdown	3.20	Markdown	0
-matcher	2.09		0
-matchers	1.99		0
-materialization	1.91		0
-mathjax	1.67	MathJax	0
-matmul	2.35		0
-matplotlib	2.01		0
-matrices	3.29		0
-mbpp	1.90	MBPP	0
-mcnemar	1.77	McNemar	0
-mcp	4.00	MCP	0
-mcts	2.57	MCTS	0
-mdp	2.68	MDP	0
-mdps	2.18	MDPs	0
-meta's	2.27	Meta's	0
-metadata	3.92		0
-metamodel	1.71		0
-metrics	3.87		0
-microservice	2.83		0
-microservices	2.93		0
-middleware	3.17		0
-midjourney	2.35	Midjourney	0
-milvus	2.49	Milvus	0
-minibatch	2.10		0
-minibatches	1.61		0
-minikube	2.48		0
-minimax	2.63		0
-minimizer	1.72		0
-miou	1.69	mIoU	0
-misaligned	2.43		0
-misalignment	2.52		0
-miscalibrated	1.62		0
-miscalibration	1.73		0
-misclassifications	1.58		0
-misconfiguration	2.02		0
-misconfigured	1.79		0
-missingness	1.98		0
-misspecification	1.73		0
-mistral	2.88	Mistral	0
-mitigates	2.51		0
-mitigations	2.06		0
-mixin	2.23		0
-mixins	2.12		0
-mixtral	2.01	Mixtral	0
-mlflow	2.54	MLflow	0
-mllms	2.62	MLLMs	0
-mlops	1.71	MLOps	0
-mlp	2.82	MLP	0
-mlps	2.14	MLPs	0
-mlx	2.69	MLX	0
-mmlu	2.12	MMLU	0
-mnist	2.60	MNIST	0
-mobilenet	1.84	MobileNet	0
-modalities	2.94		0
-modality	2.89		0
-model's	3.72		0
-models	4.81		0
-modernbert	1.69	ModernBERT	0
-modularize	1.81		0
-mongodb	2.95	MongoDB	0
-monitorability	1.71		0
-monorepo	2.25		0
-monorepos	1.63		0
-monotonically	2.28		0
-monotonicity	1.88		0
-mopd	1.89	MOPD	0
-msbuild	1.84	MSBuild	0
-mssql	1.92	MSSQL	0
-msvc	2.00	MSVC	0
-mteb	1.63	MTEB	0
-mtp	2.48	MTP	0
-mujoco	1.58	MuJoCo	0
-multiagent	1.73		0
-multiclass	2.38		0
-multicollinearity	1.89		0
-multilabel	1.87		0
-multiline	1.99		0
-multilingual	3.14		0
-multimodal	3.61		0
-multimodality	1.74		0
-multinomial	2.02		0
-multiplications	2.24		0
-multiprocessing	1.76		0
-multiscale	2.12		0
-mutable	2.63		0
-mutating	2.59		0
-myapp	1.54	MyApp	0
-mysql	3.04	MySQL	0
-nagios	2.02	Nagios	0
-namespace	3.55		0
-namespaced	2.40		0
-namespaces	3.01		0
-namespacing	1.52		0
-nanoseconds	2.31		0
-natively	2.70		0
-nccl	2.41	NCCL	0
-ndcg	1.64	NDCG	0
-ndk	2.16	NDK	0
-nemotron	2.00	Nemotron	0
-nested	3.34		0
-neural	4.00		0
-neurips	1.69	NeurIPS	0
-neuroevolution	1.55		0
-neuromorphic	1.68		0
-neurosymbolic	1.76		0
-newline	2.14		0
-newlines	1.81		0
-ng's	1.73	Ng's	0
-nginx	3.24		0
-ngram	1.84		0
-ngrams	1.59		0
-nlp	3.03	NLP	0
-nltk	2.57		0
-nlu	2.00	NLU	0
-nn's	1.56	NN's	0
-nns	2.38	NNs	0
-node	4.06		0
-node's	2.52		0
-nodejs	2.34		0
-nodeport	2.26	NodePort	0
-nodes	3.89		0
-nonconvex	1.77		0
-nondeterministic	1.79		0
-normalization	3.10		0
-normalizer	1.70		0
-normalizes	2.41		0
-norvig	1.70	Norvig	0
-notebook's	2.12		0
-npm	3.09		0
-npu	2.70	NPU	0
-npus	2.03	NPUs	0
-nuget	2.41	NuGet	0
-nullable	1.79		0
-nulls	1.95		0
-numa	2.64	NUMA	0
-numerics	1.50		0
-numpy	2.85		0
-nuscenes	1.55	nuScenes	0
-nvidia	3.40	NVIDIA	0
-oauth	2.97	OAuth	0
-observability	2.94		0
-oci	2.67	OCI	0
-offloading	2.71		0
-offloads	1.85		0
-ogbench	1.63	OGBench	0
-oidc	2.57	OIDC	0
-okta	1.97	Okta	0
-ollama	3.98	Ollama	0
-olmo	1.96	OLMo	0
-onboarding	2.50		0
-onnx	2.19	ONNX	0
-oov	1.77	OOV	0
-opd	2.71	OPD	0
-openai	4.18	OpenAI	0
-openai's	3.10	OpenAI's	0
-openapi	2.49	OpenAPI	0
-opencl	2.58	OpenCL	0
-openclaw	2.61	OpenClaw	0
-opencode	2.64	OpenCode	0
-opencv	2.10	OpenCV	0
-openhands	1.78	OpenHands	0
-openid	2.02	OpenID	0
-openmp	2.10	OpenMP	0
-openrouter	2.51	OpenRouter	0
-openshift	2.44	OpenShift	0
-openssh	1.83	OpenSSH	0
-openstack	2.38	OpenStack	0
-opentelemetry	2.90	OpenTelemetry	0
-openvino	2.79	OpenVINO	0
-openwebtext	1.51	OpenWebText	0
-operationalize	2.17		0
-operationalizes	1.92		0
-opsd	2.27	OPSD	0
-optimality	2.37		0
-optimisations	1.56		0
-optimiser	1.72		0
-optimization	3.82		0
-optimizations	2.80		0
-optimizer	3.06		0
-optimizers	2.52		0
-optimizes	2.66		0
-optionally	3.25		0
-orchestrates	2.10		0
-orchestration	3.17		0
-orchestrator	2.94		0
-orchestrators	1.91		0
-orderings	1.83		0
-orthogonality	2.21		0
-orthogonalization	1.73		0
-outperforming	2.98		0
-outperforms	3.52		0
-output	4.46		0
-outputs	3.91		0
-outputted	1.94		0
-outputting	2.34		0
-overfit	2.55		0
-overfits	1.65		0
-overfitted	1.70		0
-overfitting	3.10		0
-overridden	2.73		0
-override	3.50		0
-overrides	3.34		0
-oversample	1.50		0
-oversampling	2.13		0
-overwrite	2.69		0
-overwrites	2.07		0
-overwriting	2.14		0
-owasp	1.82	OWASP	0
-package's	2.57		0
-paginated	1.67		0
-pairwise	2.91		0
-pandoc	1.57	Pandoc	0
-parallelism	2.99		0
-parallelizable	1.83		0
-parallelization	2.12		0
-parallelize	1.84		0
-parallelized	1.73		0
-parameter	3.99		0
-parameterised	1.54		0
-parameterization	2.25		0
-parameterizations	1.78		0
-parameterize	1.73		0
-parameterized	2.49		0
-parameters	4.16		0
-parametrized	1.91		0
-params	2.69		0
-parse	3.18		0
-parseable	1.76		0
-parsed	2.75		0
-parser	3.14		0
-parsers	2.62		0
-parses	2.55		0
-parsing	3.20		0
-pathwise	1.64		0
-pddl	1.54	PDDL	0
-pdes	1.97	PDEs	0
-peer's	1.87		0
-peft	3.64	PEFT	0
-perceptron	2.61		0
-perceptrons	2.01		0
-performant	2.49		0
-permissions	3.53		0
-permuted	1.68		0
-perplexity	2.93		0
-persistentvolume	2.35	PersistentVolume	0
-persistentvolumeclaim	2.28	PersistentVolumeClaim	0
-perturbation	2.74		0
-perturbations	2.82		0
-perturbs	1.69		0
-pfx	1.70		0
-phpmyadmin	1.58		0
-piecewise	2.24		0
-pii	2.44	PII	0
-pinecone	2.59	Pinecone	0
-pinn	1.74	PINN	0
-pinns	1.60	PINNs	0
-pipeline's	1.94		0
-pipelines	3.47		0
-placeholders	2.53		0
-plaintext	3.24		0
-playbooks	2.54		0
-plotly	1.59		0
-pluggable	1.93		0
-plugin	3.72		0
-plugin's	1.86		0
-plugins	3.44		0
-pod	3.97	Pod	1
-pod's	2.78	Pod's	0
-podman	2.29	Podman	0
-pods	3.83		0
-podspec	1.78	PodSpec	0
-pointwise	2.25		0
-policy's	2.31		0
-pomdp	1.97	POMDP	0
-pomdps	1.86	POMDPs	0
-populates	1.95		0
-posix	2.34	POSIX	0
-postconditions	1.56		0
-posteriors	1.70		0
-postgres	2.84	Postgres	0
-postgresql	2.87	PostgreSQL	0
-powershell	3.10	PowerShell	0
-ppo	2.59	PPO	0
-prebuilt	2.29		0
-precisions	1.91		0
-precompiled	1.60		0
-precompute	1.54		0
-precomputed	2.25		0
-preconfigured	1.68		0
-predefined	3.06		0
-preemption	2.41		0
-prefetch	1.80		0
-prefetching	1.61		0
-prefill	3.10		0
-prefilling	2.18		0
-prefix	3.50		0
-prefixed	2.56		0
-prefixes	2.91		0
-prepend	2.02		0
-prepended	2.13		0
-preprocess	2.25		0
-preprocessed	1.95		0
-preprocessing	2.99		0
-preprocessor	2.29		0
-preregistered	2.23		0
-prespecified	2.04		0
-pretrain	2.06		0
-pretrained	3.48		0
-pretraining	3.24		0
-primitives	2.74		0
-prioritizing	3.26		0
-priors	2.79		0
-probabilistic	3.01		0
-probabilities	3.27		0
-processor's	1.75		0
-programmatically	2.56		0
-project's	3.48		0
-prompt	4.40		0
-prompt's	1.96		0
-promptfoo	2.53	Promptfoo	0
-prompts	3.91		0
-proposer	2.14		0
-protobuf	1.90		0
-prover	2.05		0
-provers	1.82		0
-provider's	2.46		0
-provisioned	2.68		0
-provisioner	2.24		0
-provisioners	1.94		0
-provisioning	3.03		0
-proxied	1.81		0
-proxying	1.82		0
-prs	2.93	PRs	0
-pseudocode	2.54		0
-psnr	1.88	PSNR	0
-ptq	2.03	PTQ	0
-pvcs	2.10	PVCs	0
-pycharm	1.91	PyCharm	0
-pydantic	3.07	Pydantic	0
-pypi	3.14	PyPI	0
-pypy	2.36	PyPy	0
-pyspark	1.56		0
-pytest	2.00		0
-python	4.37	Python	0
-pythonic	1.80	Pythonic	0
-pytorch	3.33	PyTorch	0
-pytorch's	1.87	PyTorch's	0
-qdrant	2.50	Qdrant	0
-qemu	2.25	QEMU	0
-qiskit	1.78	Qiskit	0
-qlora	2.53	QLoRA	0
-qps	1.85	QPS	0
-quadratically	1.83		0
-quantifies	2.31		0
-quantile	2.16		0
-quantiles	1.70		0
-quantization	3.61		0
-quantize	2.76		0
-quantized	3.25		0
-quantizer	1.97		0
-quantizes	2.13		0
-quantizing	2.40		0
-queries	3.73		0
-query	4.02		0
-query's	1.78		0
-queryable	1.79		0
-querying	2.93		0
-quickstart	2.81		0
-qwen	2.83	Qwen	0
-rabbitmq	2.10	RabbitMQ	0
-rag	3.62	RAG	1
-rbac	2.61	RBAC	0
-rcnn	1.54	RCNN	0
-rdbms	2.12	RDBMS	0
-rdma	2.32	RDMA	0
-reachability	2.23		0
-readme	2.87	README	0
-readonly	1.74		0
-readouts	2.12		0
-realtime	3.26		0
-reasoning	4.16		0
-rebase	2.34		0
-rebasing	1.76		0
-recency	2.16		0
-recognizer	1.69		0
-recommender	2.42		0
-recommenders	1.67		0
-recompilation	1.62		0
-recompile	1.91		0
-recomputation	2.09		0
-recompute	2.05		0
-recomputed	1.89		0
-recomputes	1.84		0
-recomputing	2.01		0
-reconstructs	2.35		0
-recoverability	2.02		0
-recursive	3.02		0
-recursively	2.61		0
-redact	2.29		0
-redaction	2.51		0
-redis	3.09	Redis	0
-refactor	2.78		0
-refactored	2.08		0
-refactoring	3.02		0
-refactorings	2.01		0
-refactors	1.64		0
-refines	2.54		0
-reformulates	2.01		0
-reframes	1.87		0
-regex	2.80		0
-regexes	1.85		0
-registries	2.86		0
-regression	3.67		0
-regressions	2.79		0
-regressor	2.12		0
-regressors	1.79		0
-regularisation	2.17		0
-regularization	2.97		0
-regularize	1.98		0
-regularized	2.10		0
-regularizer	2.12		0
-regularizers	1.68		0
-reimplement	1.64		0
-reinforcement	3.58		0
-relabeling	2.01		0
-relu	2.87	ReLU	0
-remoting	1.75		0
-reparameterization	1.55		0
-replanning	1.70		0
-replayable	1.84		0
-replicaset	2.56	ReplicaSet	0
-repo	3.52		0
-repo's	1.60		0
-repos	2.89		0
-repositories	3.78		0
-repository	4.23		0
-repository's	2.72		0
-reproducibility	2.93		0
-reproducible	3.20		0
-request's	2.50		0
-rerank	2.40		0
-reranker	2.52		0
-rerankers	1.95		0
-reranking	2.69		0
-rerunning	1.77		0
-resample	1.93		0
-resampled	1.66		0
-resampling	2.37		0
-rescale	2.11		0
-rescales	1.88		0
-rescaling	2.06		0
-resending	1.61		0
-reshapes	1.91		0
-resharper	1.53		0
-resize	2.71		0
-resizes	1.64		0
-resizing	2.26		0
-resnet	2.41	ResNet	0
-resolver	3.09		0
-resolvers	2.32		0
-restarts	2.77		0
-resumable	2.07		0
-retraining	2.94		0
-retries	2.94		0
-retrievable	1.97		0
-retrieval	3.86		0
-retrievals	2.11		0
-retriever	3.11		0
-retriever's	1.55		0
-retrievers	2.58		0
-retrieves	2.83		0
-retry	3.17		0
-retrying	2.43		0
-reusability	2.11		0
-reusable	3.28		0
-reuse	3.46		0
-reuses	2.68		0
-revisable	1.54		0
-reweighting	2.17		0
-reweights	1.67		0
-rewording	2.09		0
-rgba	1.63	RGBA	0
-rhel	2.04	RHEL	0
-rkhs	1.50	RKHS	0
-rl	3.58	RL	0
-rlhf	2.30	RLHF	0
-rlvr	2.60	RLVR	0
-rmse	2.54	RMSE	0
-rmsnorm	1.93	RMSNorm	0
-rmsprop	1.68	RMSProp	0
-rnn	2.87	RNN	0
-rnns	2.46	RNNs	0
-roadmap	3.28		0
-robotwin	1.53	RoboTwin	0
-robustness	3.32		0
-rocm	2.93	ROCm	0
-rollout	3.13		0
-rollouts	3.00		0
-rootless	2.39		0
-routable	1.61		0
-routing	3.59		0
-rpc	2.49	RPC	0
-rpcs	1.61	RPCs	0
-rubric	2.91		0
-rubrics	2.53		0
-ruleset	2.38		0
-rulesets	2.29		0
-run's	2.39		0
-runnable	2.61		0
-runtime	3.95		0
-runtime's	1.91		0
-runtimes	2.67		0
-rust's	1.68	Rust's	0
-sagemaker	2.22	SageMaker	0
-saliency	1.95		0
-saltstack	1.84	SaltStack	0
-sandbox	3.93		0
-sandbox's	2.24		0
-sandboxed	2.54		0
-sandboxes	3.14		0
-sandboxing	3.38		0
-sarsa	2.26	SARSA	0
-sbert	2.03	SBERT	0
-sbom	2.45	SBOM	0
-sboms	2.05	SBOMs	0
-scalability	2.96		0
-scalable	3.22		0
-scalar	2.95		0
-schedulable	1.78		0
-scheduler	3.24		0
-schedulers	2.05		0
-schema	3.68		0
-schemas	2.92		0
-scienceworld	1.76	ScienceWorld	0
-scifact	1.55	SciFact	0
-scikit	2.10		0
-scim	2.80	SCIM	0
-scipy	1.90		0
-scoped	2.99		0
-sdk	4.03	SDK	0
-sdk's	2.68	SDK's	0
-sdks	2.48	SDKs	0
-sdlc	2.27	SDLC	0
-seccomp	2.53		0
-selects	3.33		0
-selinux	2.50	SELinux	0
-semantic	3.81		0
-semantically	2.90		0
-sentencepiece	1.70	SentencePiece	0
-separability	2.00		0
-serializable	2.05		0
-serialization	2.67		0
-serialize	2.52		0
-serialized	2.86		0
-serializer	1.66		0
-serializes	1.98		0
-serializing	1.79		0
-server's	2.68		0
-serverless	2.73		0
-serviceaccount	2.57	ServiceAccount	0
-session's	2.43		0
-setuptools	2.12		0
-sft	3.09	SFT	0
-sgd	2.56	SGD	0
-sglang	1.93	SGLang	0
-shap	2.25	SHAP	0
-shapley	2.03	Shapley	0
-sharded	2.47		0
-sharding	2.41		0
-sidecars	1.82		0
-sigmoid	2.87		0
-skill's	2.38		0
-skillsbench	1.58	SkillsBench	0
-sklearn	2.66		0
-sklearn's	1.80		0
-slms	2.24	SLMs	0
-slsa	2.08	SLSA	0
-snns	1.85	SNNs	0
-softmax	3.04		0
-solvability	1.61		0
-solver	3.09		0
-solver's	1.67		0
-sonarqube	2.18	SonarQube	0
-sonatype	1.59	Sonatype	0
-sota	2.56	SOTA	0
-sparql	1.85	SPARQL	0
-sparse	3.45		0
-sparsity	2.62		0
-spatiotemporal	2.20		0
-specifier	2.16		0
-specifiers	2.60		0
-specify	3.84		0
-spectrogram	2.05		0
-spectrograms	1.66		0
-speedup	2.83		0
-speedups	2.43		0
-splatting	1.56	Splatting	0
-splunk	2.09	Splunk	0
-sql	3.49	SQL	0
-sqlalchemy	2.74	SQLAlchemy	0
-sqlite	3.00	SQLite	0
-sqs	2.22	SQS	0
-sres	1.83	SREs	0
-ssh	3.40	SSH	0
-ssim	1.67	SSIM	0
-ssms	1.67	SSMS	0
-stackexchange	2.47	StackExchange	0
-stackoverflow	2.69	StackOverflow	0
-staleness	1.83		0
-standardizes	2.05		0
-standardscaler	1.54	StandardScaler	0
-stateful	2.89		0
-statefulset	2.76	StatefulSet	0
-statefulsets	1.87	StatefulSets	0
-statically	2.55		0
-stationarity	1.87		0
-stderr	2.39		0
-stdin	2.47		0
-stdout	2.52		0
-stepsize	1.62		0
-stochastic	3.22		0
-stochasticity	1.97		0
-stopwords	1.63		0
-storageclass	2.30	StorageClass	0
-streamable	2.38	Streamable	0
-streamlit	1.75	Streamlit	0
-strided	1.55		0
-structs	2.24		0
-structured	3.90		0
-subagent	3.15		0
-subagent's	2.32		0
-subagents	3.14		0
-subclassing	1.99		0
-subcommand	2.58		0
-subcommands	2.43		0
-subdirectories	2.33		0
-subdirectory	2.66		0
-subdomain	2.39		0
-subdomains	2.04		0
-subgoal	1.67		0
-subgoals	1.68		0
-subgraph	2.50		0
-subgraphs	2.24		0
-sublinear	1.76		0
-submodule	2.38		0
-submodules	2.39		0
-subnet	2.77		0
-subnets	2.37		0
-suboptimal	2.51		0
-suboptimality	1.72		0
-subproblem	1.58		0
-subproblems	1.69		0
-subprocess	2.43		0
-subresource	2.25		0
-subresources	1.73		0
-subsampling	1.75		0
-subsequences	1.58		0
-subspace	2.92		0
-subspaces	2.32		0
-subtask	2.36		0
-subtasks	2.54		0
-subtree	2.11		0
-subtrees	1.63		0
-subword	2.15		0
-subwords	2.06		0
-summarization	2.98		0
-summarizer	1.79		0
-surprisal	1.94		0
-sutskever	1.56	Sutskever	0
-svd	2.61	SVD	0
-svm	2.76	SVM	0
-svms	2.00	SVMs	0
-svn	2.42	SVN	0
-sycophancy	2.28		0
-symlink	2.35		0
-symlinks	2.24		0
-synchronizes	1.82		0
-syntactically	2.20		0
-syntax	3.54		0
-syntaxes	1.77		0
-synthesizes	2.54		0
-sysadmins	1.68		0
-syscall	1.59		0
-syscalls	2.02		0
-syslog	1.96		0
-sysml	1.63	SysML	0
-tabular	2.86		0
-taints	2.24		0
-tanh	2.26		0
-tarball	2.15		0
-tarballs	1.95		0
-tasks	4.32		0
-taxonomies	2.27		0
-tdd	2.66	TDD	0
-teamcity	2.27	TeamCity	0
-telemetry	3.23		0
-templated	1.99		0
-templating	2.56		0
-tensor	3.36		0
-tensorboard	1.61		0
-tensorflow	3.02		0
-tensorrt	1.50	TensorRT	0
-tensors	3.07		0
-terraform	3.40	Terraform	1
-testability	1.87		0
-testbed	2.57		0
-testbench	1.58		0
-testcontainers	2.36	Testcontainers	0
-tfidf	1.96	TFIDF	0
-tfms	1.98	TFMs	0
-tfvc	1.84	TFVC	0
-theano	1.78	Theano	0
-thread's	1.98		0
-thresholding	1.98		0
-timeouts	2.65		0
-timeseries	2.08		0
-timestamp	2.85		0
-timestamped	1.93		0
-timestamps	2.63		0
-timestep	2.39		0
-timesteps	2.29		0
-tldr	1.89	TLDR	0
-tmpfs	2.10		0
-toggles	2.27		0
-token	4.19		0
-tokenisation	1.94		0
-tokeniser	2.09		0
-tokenization	2.75		0
-tokenize	2.38		0
-tokenized	2.15		0
-tokenizer	3.13		0
-tokenizers	2.31		0
-tokenizing	1.80		0
-tokens	4.18		0
-tolerations	2.18		0
-toml	2.68	TOML	0
-tool's	2.78		0
-toolchain	2.58		0
-toolchains	1.84		0
-toolkit	3.13		0
-toolset	2.21		0
-toolsets	1.60		0
-torchao	2.19		0
-torchvision	1.80		0
-traceability	2.54		0
-traceback	1.86		0
-tracker	3.70		0
-tractability	1.61		0
-tractable	2.41		0
-traefik	2.35	Traefik	0
-trainable	3.31		0
-trajectories	3.49		0
-transcribes	2.08		0
-transductive	1.57		0
-transferability	2.19		0
-transformer	3.54		0
-transformer's	1.96		0
-transformers	3.64	Transformers	0
-transitive	2.79		0
-traversal	2.46		0
-triaging	1.85		0
-triviaqa	1.63	TriviaQA	0
-trpo	1.51	TRPO	0
-truncates	2.19		0
-truncating	2.15		0
-truncation	2.72		0
-tsfms	2.04	TSFMs	0
-ttft	2.38	TTFT	0
-ttl	2.74	TTL	0
-tui	3.53	TUI	0
-tuple	2.53		0
-tuples	2.33		0
-twilio	2.14	Twilio	0
-typeerror	1.82	TypeError	0
-typesafe	1.70		0
-typescript	2.69	TypeScript	0
-ultracode	4.50		0
-ultrathink	4.50		0
-unauthenticated	2.21		0
-uncached	2.09		0
-uncomment	1.94		0
-uncommenting	2.11		0
-unconstrained	2.39		0
-underexplored	2.74		0
-underfitting	1.98		0
-underperforms	1.79		0
-undersampling	1.76		0
-underspecified	2.07		0
-unigram	1.77		0
-unimodal	2.01		0
-uninformative	1.95		0
-uninitialized	1.80		0
-unitree	1.62	Unitree	0
-unlabeled	2.62		0
-unlabelled	1.99		0
-unlearning	2.62		0
-unmerged	1.90		0
-unnormalized	1.72		0
-unoptimized	1.55		0
-unprivileged	2.10		0
-unsatisfiable	1.66		0
-unset	2.70		0
-unstructured	2.86		0
-unsupported	3.02		0
-untrusted	2.81		0
-untuned	1.65		0
-updatable	1.64		0
-upsampling	1.93		0
-upscaling	1.98		0
-upvote	3.26		0
-upvoted	2.08		0
-url's	1.89	URL's	0
-urls	3.22	URLs	0
-usecase	1.98		0
-user's	3.41		0
-userdata	1.76		0
-userland	1.63		0
-userspace	1.91		0
-uuid	2.42	UUID	0
-uuids	2.08	UUIDs	0
-uv	4.26		0
-vae	2.55	VAE	0
-vaes	2.11	VAEs	0
-validate	3.44		0
-validates	2.83		0
-validation	3.87		0
-validations	2.40		0
-validator	2.31		0
-valueerror	1.76	ValueError	0
-variables	4.04		0
-variadic	1.73		0
-variational	2.73		0
-vars	2.44		0
-vcpu	2.09	vCPU	0
-vec	2.32		0
-vectorization	1.85		0
-vectorize	1.79		0
-vectorized	1.98		0
-vectorizer	1.78		0
-vectors	3.48		0
-vectorstore	2.33		0
-verbose	2.78		0
-verbosity	2.48		0
-verifiability	1.77		0
-verifiable	3.00		0
-verifications	2.06		0
-verifier	2.99		0
-verifiers	2.49		0
-verifies	2.70		0
-versioned	2.81		0
-versioning	2.93		0
-vgg	1.89	VGG	0
-virtualbox	2.34	VirtualBox	0
-virtualenv	1.77		0
-virtualisation	1.56		0
-vla	2.53	VLA	0
-vlas	1.84	VLAs	0
-vllm	3.65	vLLM	0
-vllm's	2.53	vLLM's	0
-vlm	2.66	VLM	0
-vlms	2.87	VLMs	0
-vm	3.39	VM	0
-vm's	1.90	VM's	0
-vms	2.86	VMs	0
-vpc	2.69	VPC	0
-vpcs	1.63	VPCs	0
-vram	3.05	VRAM	0
-vscode	1.91	VSCode	0
-vsphere	2.10	vSphere	0
-vsts	2.11	VSTS	0
-vulkan	2.99	Vulkan	0
-vulnerabilities	3.29		0
-wasserstein	2.15	Wasserstein	0
-watermarking	2.48		0
-weaviate	2.61	Weaviate	0
-webapp	2.02		0
-webassembly	1.91	WebAssembly	0
-webhook	3.28		0
-webhooks	2.92		0
-webrtc	2.33	WebRTC	0
-webserver	2.26		0
-webservers	1.52		0
-webservice	1.66		0
-webshop	2.01	WebShop	0
-websocket	3.34		0
-websockets	1.94		0
-webui	2.24	WebUI	0
-weights	4.00		0
-weka	1.78	Weka	0
-whitespace	2.57		0
-wikidata	1.69	Wikidata	0
-wordings	1.90		0
-wordpiece	1.53	WordPiece	0
-workaround	3.00		0
-workarounds	2.35		0
-workflow	4.05		0
-workflows	3.75		0
-workloads	3.20		0
-workspace	3.77		0
-workspaces	2.76		0
-writable	2.48		0
-writeable	1.54		0
-wsl	2.95	WSL	0
-xgb	1.58	XGB	0
-xgboost	2.70	XGBoost	0
-xlnet	1.72	XLNet	0
-xpu	2.07	XPU	0
-yaml	3.30	YAML	0
-yml	2.20		0
-zenodo	1.51	Zenodo	0
-zmq	1.86	ZMQ	0
-zsh	2.26		0
+word	zipf	preferred	everyday	new
+abac	1.77	ABAC	0	1
+ablate	1.64		0	0
+ablating	1.84		0	1
+ablation	2.93		0	0
+ablations	2.87		0	0
+abstractions	2.80		0	0
+abstractive	1.56		0	1
+accessors	1.60		0	1
+accuracies	2.22		0	0
+achieves	3.77		0	0
+actionability	1.59		0	1
+activations	3.18		0	0
+adaboost	1.73	AdaBoost	0	1
+adamw	1.99	AdamW	0	1
+adapter	3.76		0	0
+adapter's	1.56		0	1
+adapters	3.52		0	0
+adaptively	2.55		0	0
+adaptivity	1.58		0	0
+admins	3.26		0	0
+adversarial	3.20		0	0
+adversarially	1.87		0	1
+afaik	2.52	AFAIK	0	0
+affordance	1.57		0	1
+agent's	3.58		0	0
+agentdojo	1.75	AgentDojo	0	1
+agentic	3.72		0	1
+ai's	2.45	AI's	0	0
+aleatoric	1.73		0	1
+alexnet	1.73	AlexNet	0	1
+alfworld	2.28	ALFWorld	0	1
+allocatable	2.05		0	0
+allocator	2.15		0	0
+allowlist	2.95		0	1
+alphago	2.31	AlphaGo	0	1
+alphazero	2.17	AlphaZero	0	1
+amortizes	1.61		0	0
+annotate	2.30		0	0
+annotates	1.58		0	0
+annotation	3.19		0	0
+annotations	3.17		0	0
+annotator	1.87		0	0
+annotators	2.41		0	0
+anns	1.93	ANNs	0	1
+anonymization	1.74		0	1
+anonymize	1.58		0	1
+ansible	3.56	Ansible	0	0
+answerability	1.68		0	1
+anthropic	3.18	Anthropic	0	0
+anthropic's	2.34	Anthropic's	0	1
+antipattern	1.71		0	1
+api	4.60	API	0	0
+api's	2.53	API's	0	1
+apis	3.49	APIs	0	0
+apiserver	2.48		0	1
+apparmor	2.49	AppArmor	0	1
+append	2.76		0	0
+appending	2.38		0	0
+appends	2.37		0	0
+application's	2.71		0	1
+approvals	3.38		0	0
+approver	1.75		0	0
+approvers	1.93		0	1
+approximator	1.90		0	1
+approximators	1.78		0	1
+appworld	1.91	AppWorld	0	1
+apriori	1.54		0	1
+architecting	1.68		0	1
+architectures	3.47		0	0
+argmax	2.00		0	1
+args	2.32		0	1
+artifactory	2.74	Artifactory	0	1
+arxiv	2.37	arXiv	0	0
+async	3.24		0	0
+asynchronous	2.99		0	0
+asynchronously	2.44		0	0
+attestations	2.74		0	0
+auc	2.88	AUC	0	0
+auditability	1.94		0	1
+auditable	2.57		0	1
+aufs	2.17	AUFS	0	1
+auprc	1.77	AUPRC	0	1
+auroc	2.77	AUROC	0	1
+authenticate	3.23		0	0
+authenticates	2.27		0	0
+authenticating	2.41		0	0
+authentication	3.86		0	0
+authorizer	1.96		0	1
+autocompletion	2.09		0	1
+autoencoder	2.78		0	1
+autoencoders	2.54		0	1
+autoformalization	1.53		0	1
+autogen	3.28	AutoGen	0	1
+automate	3.21		0	0
+automates	2.33		0	0
+automating	2.66		0	0
+automations	1.72		0	1
+automl	1.75	AutoML	0	1
+autonomously	2.71		0	0
+autoregressive	3.00		0	1
+autoregressively	2.05		0	1
+autoresearch	1.91		0	1
+autoscale	1.80		0	1
+autoscaler	2.29		0	1
+autoscaling	2.65		0	1
+awq	1.87	AWQ	0	1
+aws	3.79	AWS	0	1
+aws's	1.62	AWS's	0	1
+azure	3.82	Azure	1	0
+azure's	1.96	Azure's	0	1
+backbones	2.95		0	0
+backend	3.86		0	0
+backend's	1.52		0	1
+backends	3.18		0	1
+backoff	2.30		0	1
+backport	1.71		0	1
+backprop	2.13		0	1
+backpropagate	1.70		0	1
+backpropagation	2.73		0	1
+backslash	2.15		0	0
+backslashes	1.94		0	0
+backtest	1.51		0	1
+backticks	1.62		0	1
+balancer	2.97		0	0
+balancers	2.20		0	0
+barto	2.18	Barto	0	0
+barto's	1.73	Barto's	0	1
+baseline	3.73		0	0
+baseline's	1.93		0	1
+baselines	3.63		0	0
+batched	2.73		0	0
+batching	2.57		0	0
+batchnorm	1.64		0	1
+batchsize	1.67		0	1
+bayes	2.66	Bayes	0	0
+bayesian	2.99	Bayesian	0	0
+bazel	1.65	Bazel	0	1
+beir	1.73	BEIR	0	1
+bellman	2.43	Bellman	0	0
+benchmark	3.92		0	0
+benchmark's	2.10		0	1
+benchmarking	2.75		0	0
+benchmarks	3.88		0	0
+bengio	1.60	Bengio	0	1
+bertscore	1.72	BERTScore	0	1
+bfcl	1.94	BFCL	0	1
+bidirectional	2.75		0	0
+bigcodebench	1.52	BigCodeBench	0	1
+bigquery	2.26	BigQuery	0	1
+bilevel	1.75		0	1
+bimanual	1.66		0	1
+binaries	3.17		0	0
+bitbucket	2.85		0	1
+bitsandbytes	2.61		0	1
+bitwise	2.10		0	1
+blas	2.46	BLAS	0	0
+blockwise	1.54		0	1
+bnns	1.54	BNNs	0	1
+boilerplate	2.54		0	0
+boolean	3.59		0	0
+booleans	1.79		0	1
+bootstrapping	2.35		0	0
+bottleneck	3.09		0	0
+bottlenecked	1.88		0	1
+bounded	3.51		0	0
+bounding	2.76		0	0
+bpmn	1.74	BPMN	0	1
+btrfs	2.13	Btrfs	0	1
+bugfix	2.03		0	1
+buildkit	2.84	BuildKit	0	1
+buildx	2.63	Buildx	0	1
+busybox	1.69		0	1
+bytecode	2.60		0	0
+cache	4.00		0	0
+cacheable	1.55		0	1
+cached	3.27		0	0
+caches	2.92		0	0
+caching	3.40		0	0
+calibrates	2.09		0	0
+calibration	3.36		0	0
+callable	2.77		0	0
+callback	3.14		0	0
+callbacks	2.71		0	0
+camelcase	1.50	camelCase	0	1
+canonicalization	1.65		0	1
+cartpole	1.85		0	1
+catboost	1.92		0	1
+categorical	3.09		0	0
+causal	3.35		0	0
+cbow	1.62	CBOW	0	1
+centos	2.42	CentOS	0	1
+centroids	2.00		0	0
+ceph	1.81	Ceph	0	1
+changelog	2.36		0	0
+changeset	1.64		0	1
+chatbot	3.00		0	0
+chatbots	2.45		0	0
+chatgpt	4.09	ChatGPT	0	1
+chatgpt's	2.53	ChatGPT's	0	1
+checkable	1.98		0	0
+checkpoint	3.46		0	0
+checkpoint's	2.21		0	1
+checkpointed	1.63		0	1
+checkpointing	2.43		0	1
+checkpoints	3.29		0	0
+chroot	1.75		0	1
+chunked	2.23		0	0
+chunking	2.59		0	0
+cicd	2.08	CICD	0	1
+cidr	2.34	CIDR	0	1
+circleci	2.29	CircleCI	0	1
+classifier	3.42		0	0
+classifier's	1.60		0	1
+classifiers	2.98		0	0
+claude's	2.47	Claude's	0	0
+cleartext	1.69		0	1
+cli	4.39	CLI	0	0
+cli's	2.78	CLI's	0	1
+cloudbees	1.77	CloudBees	0	1
+cloudformation	2.52	CloudFormation	0	1
+cloudfront	2.10	CloudFront	0	1
+cloudwatch	2.64	CloudWatch	0	1
+cluster	3.99		0	0
+cluster's	2.28		0	1
+clustering	3.25		0	0
+clusterip	1.90	ClusterIP	0	1
+clusterrole	2.27	ClusterRole	0	1
+cncf	2.12	CNCF	0	1
+cni	2.48	CNI	0	1
+cnns	2.69	CNNs	0	1
+codebase	3.17		0	0
+codebases	2.63		0	1
+codebert	1.62	CodeBERT	0	1
+codebook	2.35		0	1
+codebooks	2.06		0	1
+codepipeline	1.82	CodePipeline	0	1
+codepoint	1.77		0	1
+codepoints	1.73		0	1
+codeql	2.52	CodeQL	0	1
+codespace	2.88		0	1
+codex	4.31	Codex	0	0
+cohere	2.59	Cohere	0	0
+colab	3.05		0	1
+collator	2.01		0	0
+commandline	1.64		0	1
+commands	3.99		0	0
+committer	2.06		0	0
+committers	2.16		0	0
+compaction	2.95		0	0
+compilable	1.59		0	1
+completions	3.35		0	0
+composability	2.13		0	1
+composable	2.30		0	1
+compose	3.62	Compose	1	0
+compositionality	1.58		0	1
+computation	3.47		0	0
+computationally	2.86		0	0
+compute	3.63		0	0
+computes	2.83		0	0
+concat	1.56		0	1
+concatenate	2.36		0	0
+concatenated	2.53		0	0
+concatenates	1.58		0	0
+concatenating	2.11		0	0
+concatenation	2.46		0	0
+concurrency	2.97		0	0
+conda	2.36		0	1
+config	3.81		0	0
+configmap	2.83	ConfigMap	0	1
+configmaps	2.21	ConfigMaps	0	1
+configs	3.33		0	1
+configurable	2.90		0	0
+configuration	4.44		0	0
+configurations	3.61		0	0
+configure	3.99		0	0
+configured	3.75		0	0
+configures	2.88		0	0
+configuring	3.07		0	0
+connectionist	1.76		0	1
+constrain	2.88		0	0
+constrains	2.40		0	0
+constraint	3.37		0	0
+constraints	3.87		0	0
+constructor	3.05		0	0
+container	4.30		0	0
+container's	2.80		0	1
+containerd	3.04		0	1
+containerization	2.01		0	0
+containerize	2.29		0	1
+containerized	2.76		0	0
+containerizing	1.77		0	1
+containers	3.93		0	0
+contextual	3.17		0	0
+contextualized	2.29		0	0
+contextually	2.32		0	0
+continuations	2.41		0	0
+contrastive	2.89		0	0
+controllability	2.18		0	0
+conv	2.47		0	0
+conversational	3.20		0	0
+convnet	1.86	ConvNet	0	1
+convnets	1.63	ConvNets	0	1
+convolution	2.97		0	0
+convolutional	3.16		0	0
+convolutions	2.48		0	0
+copilot	3.07	Copilot	1	0
+coredns	2.43	CoreDNS	0	1
+corpora	2.93		0	0
+correctness	3.40		0	0
+cors	2.03	CORS	0	1
+cosine	2.94		0	0
+counterfactual	2.87		0	0
+covariance	2.71		0	0
+covariate	2.19		0	1
+covariates	2.13		0	0
+cpu	3.76	CPU	0	0
+cpython	2.54	CPython	0	1
+credential	3.23		0	0
+cron	2.63		0	1
+cronjob	1.91		0	1
+crontab	1.68		0	1
+crossentropy	1.74		0	1
+cryptographically	2.00		0	0
+csproj	1.57		0	1
+csv	3.03	CSV	0	0
+csvs	1.64	CSVs	0	1
+cuas	1.81	CUAs	0	1
+cuda	3.41	CUDA	0	0
+cudnn	1.78		0	1
+cves	2.38	CVEs	0	1
+cvss	1.92	CVSS	0	1
+cyclomatic	1.79		0	1
+daemon	3.33		0	0
+daemon's	1.82		0	1
+daemonset	2.64	DaemonSet	0	1
+daemonsets	1.86	DaemonSets	0	1
+dafny	1.66	Dafny	0	1
+dashboards	2.57		0	0
+database's	1.61		0	1
+databricks	2.46	Databricks	0	1
+dataclass	2.38		0	1
+datadog	2.30	Datadog	0	1
+dataframe	2.79		0	1
+dataframes	1.99		0	1
+dataloader	1.70		0	1
+datapoint	1.86		0	1
+datapoints	2.10		0	1
+datascience	1.51		0	1
+dataset	4.13		0	0
+dataset's	1.93		0	1
+datasets	3.77		0	0
+datasource	1.62		0	1
+datastore	2.03		0	1
+datatype	2.01		0	0
+datetime	1.86		0	1
+dbscan	2.04	DBSCAN	0	1
+ddpg	1.98	DDPG	0	1
+debiasing	1.70		0	1
+debug	3.37		0	0
+debugging	3.39		0	0
+declarative	2.95		0	0
+declaratively	1.66		0	1
+decodability	1.62		0	1
+decodable	2.02		0	1
+decode	3.09		0	0
+decoder	3.24		0	0
+decoder's	1.65		0	1
+decoders	2.28		0	0
+decodes	2.25		0	0
+decoding	3.49		0	0
+decompilation	1.77		0	1
+decomposes	2.72		0	0
+decompositions	2.06		0	0
+decouple	2.32		0	0
+decoupled	2.57		0	0
+decouples	2.45		0	0
+deduplicate	1.69		0	1
+deduplicated	1.56		0	1
+deduplication	2.12		0	1
+deepfake	1.78		0	1
+deepseek	2.65	DeepSeek	0	1
+deepswe	1.62	DeepSWE	0	1
+default	4.53		0	0
+defaults	3.67		0	0
+degrades	2.74		0	0
+deltanet	1.88	DeltaNet	0	1
+denoise	1.81		0	1
+denoiser	2.01		0	1
+denoising	2.89		0	1
+dependabot	2.23	Dependabot	0	1
+dependencies	4.14		0	0
+dependency	3.92		0	0
+deploy	3.72		0	0
+deployment	3.98		0	0
+deployments	3.30		0	0
+deprecate	2.85		0	0
+deprecated	3.24		0	0
+deprecations	1.97		0	1
+deps	1.75		0	1
+depthwise	1.50		0	1
+deserialization	1.94		0	1
+deserialize	1.92		0	1
+detectably	1.52		0	1
+deterministic	3.48		0	0
+deterministically	2.32		0	0
+detr	2.08	DETR	0	1
+devops	3.71	DevOps	0	0
+dflash	2.20	DFlash	0	1
+dhi	2.79	DHI	0	1
+diagnostics	3.39		0	0
+diarization	1.76		0	1
+dict	2.73		0	0
+dicts	1.78		0	1
+differentiable	2.66		0	0
+diffs	2.36		0	0
+diffusion	3.63		0	0
+digitalocean	2.04	DigitalOcean	0	1
+dimensionality	2.82		0	0
+directories	3.62		0	0
+directory	4.16		0	0
+disable	3.53		0	0
+disables	2.63		0	0
+disaggregated	2.34		0	0
+disallows	1.99		0	0
+disambiguate	1.84		0	0
+disambiguated	1.85		0	0
+discretization	2.06		0	1
+discretize	1.59		0	1
+discriminability	1.54		0	1
+discriminative	2.56		0	0
+discriminator	2.66		0	0
+disentanglement	1.66		0	0
+disentangles	1.56		0	1
+disjoint	2.51		0	0
+distilbert	1.83	DistilBERT	0	1
+distillation	3.26		0	0
+distills	2.34		0	1
+distractors	1.96		0	1
+distribution's	1.72		0	1
+distributional	2.62		0	0
+distributionally	1.55		0	1
+distributions	3.59		0	0
+dnn	2.32	DNN	0	1
+dnns	1.85	DNNs	0	1
+dns	3.30	DNS	0	0
+docker	4.53	Docker	0	0
+docker's	2.59	Docker's	0	1
+dockerfile	3.39	Dockerfile	0	1
+dockerfiles	2.47	Dockerfiles	0	1
+dockerhub	2.15		0	1
+dockerize	1.65		0	1
+dockerized	1.91		0	1
+docs	3.52		0	0
+docstring	2.67		0	1
+docstrings	2.06		0	1
+documentation	4.51		0	0
+dotfiles	1.80		0	1
+dotnet	1.92		0	1
+downsample	1.54		0	1
+downsampled	1.53		0	1
+downsampling	2.01		0	1
+downvote	2.23		0	1
+downvoted	2.01		0	1
+downvoter	1.66		0	1
+downvotes	1.89		0	1
+downvoting	1.75		0	1
+dqn	2.80	DQN	0	1
+dra	2.64	DRA	0	1
+drafter	2.32		0	0
+dropdown	2.93		0	0
+dsls	1.93	DSLs	0	1
+dspark	2.18	DSpark	0	1
+dtw	1.79	DTW	0	1
+dtype	2.50		0	1
+dvcs	1.76	DVCS	0	1
+dynamically	3.33		0	0
+dynamodb	1.83	DynamoDB	0	1
+ecs	2.86	ECS	0	0
+editable	2.80		0	0
+eks	2.45	EKS	0	1
+elasticsearch	2.74	Elasticsearch	0	1
+elb	2.29	ELB	0	1
+elbo	1.94	ELBO	0	1
+elicitation	2.48		0	0
+embed	2.95		0	0
+embedder	1.67		0	1
+embedding	3.82		0	0
+embeddings	3.87		0	0
+embeds	2.38		0	0
+empirically	3.01		0	0
+enablement	2.20		0	0
+encode	3.13		0	0
+encoder	3.45		0	0
+encoder's	1.78		0	1
+encoders	2.88		0	0
+encodes	2.74		0	0
+encodings	2.44		0	1
+endpoint	3.68		0	0
+endpoints	3.38		0	0
+ensembling	1.98		0	1
+entailment	1.96		0	0
+enterprise's	2.16		0	0
+entra	2.41	Entra	0	1
+entrypoint	2.51		0	1
+entrypoints	1.52		0	1
+enum	2.82		0	0
+enums	1.95		0	1
+env	2.97		0	1
+environment's	2.10		0	1
+epochs	2.91		0	0
+equivariance	1.88		0	1
+equivariant	2.09		0	1
+eslint	1.56	ESLint	0	1
+estimator	2.85		0	0
+estimators	2.62		0	0
+etcd	2.92		0	1
+eval	2.93		0	1
+evals	2.68		0	1
+evaluates	3.16		0	0
+evaluator	2.83		0	0
+evaluators	2.46		0	0
+exchangeability	1.70		0	1
+executability	2.10		0	1
+executable	3.71		0	0
+executables	3.05		0	0
+executes	3.18		0	0
+explainability	2.30		0	1
+explainable	2.46		0	0
+exploitability	1.90		0	1
+expressiveness	2.35		0	0
+expressivity	2.24		0	0
+extension's	2.37		0	1
+extractors	2.23		0	0
+face's	2.11	Face's	0	0
+factorized	2.10		0	0
+factorizes	1.63		0	1
+factuality	1.91		0	0
+failover	2.07		0	0
+faiss	1.87	FAISS	0	1
+fallback	3.20		0	0
+fallbacks	2.23		0	0
+falsifiable	1.94		0	0
+fargate	2.47	Fargate	0	1
+fastapi	2.59	FastAPI	0	1
+fasttext	1.66		0	1
+fedavg	1.61	FedAvg	0	1
+feedforward	2.29		0	1
+fetches	2.61		0	0
+filebeat	1.67	Filebeat	0	1
+filenames	2.39		0	0
+filesystem	3.33		0	0
+filesystems	2.30		0	1
+finalizer	2.02		0	1
+finalizers	1.96		0	1
+findable	1.78		0	0
+finetune	2.47		0	1
+finetuned	2.40		0	1
+finetuning	2.95		0	1
+firestore	2.08	Firestore	0	1
+flakiness	1.85		0	0
+flashattention	2.10	FlashAttention	0	1
+fluentd	1.97		0	1
+formalize	2.64		0	0
+formalizes	1.91		0	0
+formatter	2.16		0	0
+formulates	2.42		0	0
+fqdn	1.92	FQDN	0	1
+framework's	2.01		0	1
+frameworks	3.41		0	0
+framings	1.66		0	1
+frontend	3.11		0	0
+frontends	2.14		0	1
+frontmatter	2.54		0	1
+fsdp	2.55	FSDP	0	1
+fullstack	1.58		0	1
+function's	2.05		0	1
+fuzzer	1.73		0	1
+fuzzers	1.86		0	1
+fuzzing	2.55		0	0
+gans	2.41	GANs	0	1
+gating	2.63		0	0
+gaussian	3.17	Gaussian	0	0
+gaussians	1.71	Gaussians	0	1
+gcp	2.64	GCP	0	1
+gemini	4.16	Gemini	0	0
+gemm	2.21	GEMM	0	1
+genai	3.55	GenAI	0	1
+generalises	1.64		0	0
+generalizability	2.15		0	1
+generalizable	2.34		0	0
+generalization	3.24		0	0
+generalize	2.96		0	0
+generalizes	2.67		0	0
+generative	3.67		0	0
+generator's	1.76		0	1
+gensim	2.13		0	1
+gepa	1.98	GEPA	0	1
+ggml	2.70	GGML	0	1
+gguf	3.15	GGUF	0	1
+gitflow	2.01		0	1
+github	4.07	GitHub	0	0
+github's	2.46	GitHub's	0	1
+gitignore	1.98		0	1
+gitlab	3.31	GitLab	0	1
+gitlab's	1.75	GitLab's	0	1
+gitops	2.01	GitOps	0	1
+glibc	2.55		0	1
+gnn	2.29	GNN	0	1
+gnns	2.19	GNNs	0	1
+golang	2.37	Golang	0	1
+gpg	2.22	GPG	0	1
+gpt	3.54	GPT	0	1
+gptq	2.22	GPTQ	0	1
+gpts	2.34	GPTs	0	1
+gpu	3.88	GPU	0	0
+gpu's	1.91	GPU's	0	1
+gpus	3.55	GPUs	0	0
+gqa	2.27	GQA	0	1
+gradient	3.67		0	0
+gradients	3.22		0	0
+gradle	2.20	Gradle	0	1
+grafana	2.67	Grafana	0	1
+granularities	1.89		0	1
+granularity	2.74		0	0
+graph's	1.86		0	1
+graphql	2.39	GraphQL	0	1
+graphrag	2.33	GraphRAG	0	1
+graphviz	1.90		0	1
+grep	2.27		0	0
+gridsearchcv	1.92	GridSearchCV	0	1
+gridworld	1.53		0	1
+grok	2.31		0	0
+grpc	2.73	gRPC	0	1
+grpo	2.98	GRPO	0	1
+guardrail	2.81		0	0
+guardrails	3.15		0	0
+gunicorn	1.99	Gunicorn	0	1
+gzip	1.87		0	1
+hadamard	2.19	Hadamard	0	1
+hallucinate	2.47		0	0
+hallucinated	2.26		0	0
+hallucination	3.00		0	0
+handoff	3.07		0	0
+handoffs	2.93		0	0
+haproxy	2.00	HAProxy	0	1
+hardcode	1.75		0	1
+hardcoded	2.49		0	1
+hardcoding	1.70		0	1
+harmfulness	1.84		0	0
+harnesses	2.89		0	0
+hashes	2.78		0	0
+hashicorp	2.25		0	1
+hashmap	1.52		0	1
+hdbscan	1.54	HDBSCAN	0	1
+hdfs	1.83	HDFS	0	1
+headers	3.12		0	0
+healthcheck	2.04		0	1
+healthchecks	1.55		0	1
+heatmap	1.84		0	1
+heatmaps	1.54		0	1
+heroku	2.07	Heroku	0	1
+heterogeneous	3.25		0	0
+heuristic	2.97		0	0
+heuristics	2.74		0	0
+hitl	2.40	HITL	0	1
+hmac	1.57	HMAC	0	1
+hnsw	1.78	HNSW	0	1
+hopfield	1.79	Hopfield	0	1
+hostname	2.85		0	0
+hostnames	2.20		0	1
+hotfix	2.50		0	0
+hotfixes	1.80		0	1
+hotpotqa	2.04	HotpotQA	0	1
+huggingface	2.99		0	1
+humaneval	2.24	HumanEval	0	1
+hypergraph	1.74		0	1
+hypernetwork	1.66		0	1
+hyperparameter	2.80		0	1
+hyperparameters	2.95		0	1
+hyperplane	2.09		0	0
+hypersphere	1.64		0	1
+hypervisor	2.45		0	0
+hypervisors	1.57		0	1
+hypervolume	1.50		0	1
+icl	2.46	ICL	0	1
+iclr	1.71	ICLR	0	1
+ide	3.36	IDE	0	1
+ide's	2.05	IDE's	0	1
+idempotence	1.55		0	1
+idempotency	2.18		0	1
+idempotent	2.27		0	0
+identifiability	2.03		0	1
+ides	2.71	IDEs	1	0
+idp	2.77	IdP	0	1
+ifeval	1.58	IFEval	0	1
+image's	2.30		0	1
+imagenet	2.49	ImageNet	0	1
+imbalanced	2.69		0	0
+immutability	2.15		0	0
+immutable	3.03		0	0
+implementations	3.47		0	0
+importances	1.68		0	1
+improves	3.82		0	0
+imputing	1.72		0	0
+incremented	2.20		0	0
+incrementing	1.83		0	0
+indexeddb	1.61	IndexedDB	0	1
+indexer	2.34		0	0
+indirection	1.96		0	0
+infeasible	2.32		0	0
+inference	4.04		0	0
+inferencing	2.13		0	1
+infers	2.32		0	0
+influxdb	1.72	InfluxDB	0	1
+informativeness	1.71		0	0
+ingress	3.01		0	0
+init	2.86		0	0
+initialisation	2.00		0	0
+initialise	1.71		0	0
+initialised	1.80		0	0
+initialization	3.47		0	0
+initialize	3.28		0	0
+initialized	3.04		0	0
+initializer	1.71		0	1
+initializers	1.57		0	1
+initializes	2.57		0	0
+initializing	2.65		0	0
+injects	2.74		0	0
+inline	3.51		0	0
+inlined	1.70		0	1
+inlining	1.58		0	1
+inotify	1.83		0	1
+inpainting	2.61		0	1
+inputs	3.80		0	0
+inspectable	2.17		0	1
+install	4.21		0	0
+installable	2.47		0	1
+installer	3.05		0	0
+installs	3.21		0	0
+instance's	2.10		0	1
+instantiate	3.02		0	0
+instantiated	2.51		0	0
+instantiates	2.04		0	0
+instantiating	2.02		0	0
+instantiation	2.72		0	0
+instantiations	1.56		0	0
+instructgpt	1.65	InstructGPT	0	1
+instrumenting	2.00		0	0
+integrates	3.12		0	0
+integrations	3.14		0	0
+intellij	1.91	IntelliJ	0	1
+intellisense	1.62		0	1
+interactively	2.41		0	0
+interleave	1.87		0	0
+interleaved	2.29		0	0
+interleaves	1.54		0	0
+interpolate	2.11		0	0
+interpolating	2.04		0	0
+interpretability	2.83		0	1
+interpretable	3.00		0	0
+invariance	2.53		0	0
+invariants	2.46		0	0
+invocation	3.11		0	0
+invocations	2.84		0	0
+iptables	2.28		0	1
+istio	2.21	Istio	0	1
+iterable	1.64		0	1
+iterate	2.94		0	0
+iterates	2.36		0	0
+iterating	3.27		0	0
+iterative	3.19		0	0
+iteratively	2.95		0	0
+iterator	2.34		0	0
+jaccard	2.10	Jaccard	0	1
+jacobian	2.16	Jacobian	0	0
+jailbreaking	2.52		0	0
+jailbreaks	1.92		0	1
+javadoc	1.65		0	1
+jdk	2.14	JDK	0	1
+jepa	1.91	JEPA	0	1
+jetbrains	2.34	JetBrains	0	1
+jev	2.64	Jev	0	1
+jev's	1.80	Jev's	0	1
+jfrog	2.30	JFrog	0	1
+jinja	2.35	Jinja	0	0
+jira	2.59	Jira	0	0
+jmeter	1.59	JMeter	0	1
+json	4.01	JSON	0	1
+jsonl	2.42	JSONL	0	1
+jsonpath	1.63	JSONPath	0	1
+jupyter	2.81	Jupyter	0	1
+jvm	2.48	JVM	0	1
+jwt	2.46	JWT	0	1
+kaggle	2.49	Kaggle	0	1
+kaiming	1.55	Kaiming	0	1
+kanban	2.40	Kanban	0	0
+karpathy's	1.70	Karpathy's	0	1
+keepalive	1.86		0	1
+keras	3.02	Keras	0	1
+kernel	3.67		0	0
+kernel's	1.67		0	1
+kernels	3.27		0	0
+keybindings	2.01		0	0
+keycloak	1.77	Keycloak	0	1
+keypair	1.54		0	1
+keypoint	1.80		0	1
+keypoints	1.78		0	1
+keyring	2.56		0	0
+kibana	2.10	Kibana	0	1
+knn	2.46	KNN	0	1
+kotlin	2.52	Kotlin	0	0
+kronecker	2.02	Kronecker	0	0
+kube	1.74		0	1
+kubeadm	3.10		0	1
+kubeconfig	2.58		0	1
+kubectl	3.21		0	1
+kubelet	3.43		0	1
+kubernetes	4.08	Kubernetes	0	0
+kustomize	1.94		0	1
+kv	3.46	KV	0	1
+kwargs	2.38		0	1
+lambda	3.24		0	0
+lambdas	2.13		0	0
+langchain	3.31	LangChain	0	1
+langgraph	2.93	LangGraph	0	1
+langsmith	2.89	LangSmith	0	1
+latency	3.58		0	0
+latent	3.51		0	0
+latents	2.37		0	1
+layer's	2.44		0	1
+layernorm	1.73	LayerNorm	0	1
+layerwise	2.11		0	1
+ldap	2.40	LDAP	0	0
+learnability	1.72		0	1
+learnable	2.78		0	1
+lecun	1.69	LeCun	0	1
+lemmas	1.86		0	0
+letsencrypt	1.69		0	1
+levenshtein	1.79	Levenshtein	0	1
+leverages	3.06		0	0
+lexer	1.85		0	0
+lfs	2.36	LFS	0	1
+libc	2.39		0	1
+librispeech	1.75	LibriSpeech	0	1
+lifecycle	3.36		0	0
+lifecycles	2.09		0	1
+lightgbm	2.17	LightGBM	0	1
+likelihoods	1.86		0	0
+linter	2.18		0	1
+linters	1.80		0	1
+linting	2.25		0	1
+listwise	1.89		0	1
+livecodebench	2.00	LiveCodeBench	0	1
+liveness	2.39		0	1
+llada	1.60	LLaDA	0	1
+llama	3.43	Llama	1	0
+llamaindex	3.41	LlamaIndex	0	1
+llava	2.59	LLaVA	0	1
+llm	4.37	LLM	0	1
+llm's	2.89	LLM's	0	1
+llms	4.17	LLMs	0	1
+llvm	2.39	LLVM	0	1
+loadbalancer	2.31	LoadBalancer	0	1
+localhost	2.54		0	0
+localizes	2.16		0	0
+localstorage	1.66	localStorage	0	1
+lockfile	3.30		0	1
+locomo	1.93	LoCoMo	0	1
+logit	2.73		0	1
+logits	3.11		0	1
+logprobs	2.44		0	1
+logs	4.06		0	0
+logstash	2.10		0	1
+longbench	1.86	LongBench	0	1
+longmemeval	1.62	LongMemEval	0	1
+lookahead	2.07		0	1
+lookup	3.02		0	0
+lookups	2.40		0	0
+loop's	1.65		0	1
+loopback	2.37		0	1
+lora	3.83	LoRA	0	0
+lpips	1.62	LPIPS	0	1
+lru	2.00	LRU	0	1
+lsh	1.87	LSH	0	1
+lstm	3.16	LSTM	0	1
+lstms	2.34	LSTMs	0	1
+lxc	1.95	LXC	0	1
+macos	3.48	macOS	0	0
+mahalanobis	1.65	Mahalanobis	0	1
+maintainability	2.64		0	0
+maintainable	2.40		0	0
+maintainer	2.57		0	0
+maintainers	2.78		0	0
+makefile	2.04		0	1
+manually	3.76		0	0
+mappings	2.75		0	0
+mariadb	2.11	MariaDB	0	1
+markdown	3.20	Markdown	0	0
+matcher	2.09		0	0
+matchers	1.99		0	1
+materialization	1.91		0	0
+mathjax	1.67	MathJax	0	1
+matmul	2.35		0	1
+matplotlib	2.01		0	1
+matrices	3.29		0	0
+mbpp	1.90	MBPP	0	1
+mcnemar	1.77	McNemar	0	1
+mcp	4.00	MCP	0	1
+mcts	2.57	MCTS	0	1
+mdp	2.68	MDP	0	1
+mdps	2.18	MDPs	0	1
+meta's	2.27	Meta's	0	1
+metadata	3.92		0	0
+metamodel	1.71		0	1
+metrics	3.87		0	0
+microservice	2.83		0	1
+microservices	2.93		0	0
+middleware	3.17		0	0
+midjourney	2.35	Midjourney	0	1
+milvus	2.49	Milvus	0	1
+minibatch	2.10		0	1
+minibatches	1.61		0	1
+minikube	2.48		0	1
+minimax	2.63		0	1
+minimizer	1.72		0	0
+miou	1.69	mIoU	0	1
+misaligned	2.43		0	0
+misalignment	2.52		0	0
+miscalibrated	1.62		0	1
+miscalibration	1.73		0	1
+misclassifications	1.58		0	1
+misconfiguration	2.02		0	1
+misconfigured	1.79		0	1
+missingness	1.98		0	1
+misspecification	1.73		0	1
+mistral	2.88	Mistral	0	0
+mitigates	2.51		0	0
+mitigations	2.06		0	1
+mixin	2.23		0	1
+mixins	2.12		0	1
+mixtral	2.01	Mixtral	0	1
+mlflow	2.54	MLflow	0	1
+mllms	2.62	MLLMs	0	1
+mlops	1.71	MLOps	0	1
+mlp	2.82	MLP	0	1
+mlps	2.14	MLPs	0	1
+mlx	2.69	MLX	0	1
+mmlu	2.12	MMLU	0	1
+mnist	2.60	MNIST	0	1
+mobilenet	1.84	MobileNet	0	1
+modalities	2.94		0	0
+modality	2.89		0	0
+model's	3.72		0	0
+models	4.81		0	0
+modernbert	1.69	ModernBERT	0	1
+modularize	1.81		0	0
+mongodb	2.95	MongoDB	0	0
+monitorability	1.71		0	1
+monorepo	2.25		0	1
+monorepos	1.63		0	1
+monotonically	2.28		0	0
+monotonicity	1.88		0	0
+mopd	1.89	MOPD	0	1
+msbuild	1.84	MSBuild	0	1
+mssql	1.92	MSSQL	0	1
+msvc	2.00	MSVC	0	1
+mteb	1.63	MTEB	0	1
+mtp	2.48	MTP	0	1
+mujoco	1.58	MuJoCo	0	1
+multiagent	1.73		0	1
+multiclass	2.38		0	1
+multicollinearity	1.89		0	1
+multilabel	1.87		0	1
+multiline	1.99		0	1
+multilingual	3.14		0	0
+multimodal	3.61		0	0
+multimodality	1.74		0	1
+multinomial	2.02		0	1
+multiplications	2.24		0	0
+multiprocessing	1.76		0	0
+multiscale	2.12		0	0
+mutable	2.63		0	0
+mutating	2.59		0	0
+myapp	1.54	MyApp	0	1
+mysql	3.04	MySQL	0	0
+nagios	2.02	Nagios	0	1
+namespace	3.55		0	0
+namespaced	2.40		0	1
+namespaces	3.01		0	0
+namespacing	1.52		0	1
+nanoseconds	2.31		0	0
+natively	2.70		0	0
+nccl	2.41	NCCL	0	1
+ndcg	1.64	NDCG	0	1
+ndk	2.16	NDK	0	1
+nemotron	2.00	Nemotron	0	1
+nested	3.34		0	0
+neural	4.00		0	0
+neurips	1.69	NeurIPS	0	1
+neuroevolution	1.55		0	1
+neuromorphic	1.68		0	1
+neurosymbolic	1.76		0	1
+newline	2.14		0	0
+newlines	1.81		0	0
+ng's	1.73	Ng's	0	1
+nginx	3.24		0	0
+ngram	1.84		0	1
+ngrams	1.59		0	1
+nlp	3.03	NLP	0	0
+nltk	2.57		0	1
+nlu	2.00	NLU	0	1
+nn's	1.56	NN's	0	1
+nns	2.38	NNs	0	0
+node	4.06		0	0
+node's	2.52		0	1
+nodejs	2.34		0	0
+nodeport	2.26	NodePort	0	1
+nodes	3.89		0	0
+nonconvex	1.77		0	1
+nondeterministic	1.79		0	1
+normalization	3.10		0	0
+normalizer	1.70		0	0
+normalizes	2.41		0	0
+norvig	1.70	Norvig	0	1
+notebook's	2.12		0	1
+npm	3.09		0	1
+npu	2.70	NPU	0	1
+npus	2.03	NPUs	0	1
+nuget	2.41	NuGet	0	1
+nullable	1.79		0	1
+nulls	1.95		0	0
+numa	2.64	NUMA	0	0
+numerics	1.50		0	1
+numpy	2.85		0	1
+nuscenes	1.55	nuScenes	0	1
+nvidia	3.40	NVIDIA	0	0
+oauth	2.97	OAuth	0	1
+observability	2.94		0	0
+oci	2.67	OCI	0	1
+offloading	2.71		0	0
+offloads	1.85		0	0
+ogbench	1.63	OGBench	0	1
+oidc	2.57	OIDC	0	1
+okta	1.97	Okta	0	1
+ollama	3.98	Ollama	0	1
+olmo	1.96	OLMo	0	1
+onboarding	2.50		0	0
+onnx	2.19	ONNX	0	1
+oov	1.77	OOV	0	1
+opd	2.71	OPD	0	1
+openai	4.18	OpenAI	0	1
+openai's	3.10	OpenAI's	0	1
+openapi	2.49	OpenAPI	0	1
+opencl	2.58	OpenCL	0	0
+openclaw	2.61	OpenClaw	0	1
+opencode	2.64	OpenCode	0	1
+opencv	2.10	OpenCV	0	1
+openhands	1.78	OpenHands	0	1
+openid	2.02	OpenID	0	1
+openmp	2.10	OpenMP	0	1
+openrouter	2.51	OpenRouter	0	1
+openshift	2.44	OpenShift	0	1
+openssh	1.83	OpenSSH	0	1
+openstack	2.38	OpenStack	0	0
+opentelemetry	2.90	OpenTelemetry	0	1
+openvino	2.79	OpenVINO	0	1
+openwebtext	1.51	OpenWebText	0	1
+operationalize	2.17		0	1
+operationalizes	1.92		0	1
+opsd	2.27	OPSD	0	1
+optimality	2.37		0	0
+optimisations	1.56		0	0
+optimiser	1.72		0	0
+optimization	3.82		0	0
+optimizations	2.80		0	0
+optimizer	3.06		0	0
+optimizers	2.52		0	0
+optimizes	2.66		0	0
+optionally	3.25		0	0
+orchestrates	2.10		0	0
+orchestration	3.17		0	0
+orchestrator	2.94		0	0
+orchestrators	1.91		0	1
+orderings	1.83		0	0
+orthogonality	2.21		0	0
+orthogonalization	1.73		0	1
+outperforming	2.98		0	0
+outperforms	3.52		0	0
+output	4.46		0	0
+outputs	3.91		0	0
+outputted	1.94		0	0
+outputting	2.34		0	0
+overfit	2.55		0	1
+overfits	1.65		0	1
+overfitted	1.70		0	1
+overfitting	3.10		0	1
+overridden	2.73		0	0
+override	3.50		0	0
+overrides	3.34		0	0
+oversample	1.50		0	1
+oversampling	2.13		0	0
+overwrite	2.69		0	0
+overwrites	2.07		0	0
+overwriting	2.14		0	0
+owasp	1.82	OWASP	0	1
+package's	2.57		0	1
+paginated	1.67		0	0
+pairwise	2.91		0	0
+pandoc	1.57	Pandoc	0	1
+parallelism	2.99		0	0
+parallelizable	1.83		0	1
+parallelization	2.12		0	1
+parallelize	1.84		0	0
+parallelized	1.73		0	0
+parameter	3.99		0	0
+parameterised	1.54		0	1
+parameterization	2.25		0	1
+parameterizations	1.78		0	1
+parameterize	1.73		0	1
+parameterized	2.49		0	0
+parameters	4.16		0	0
+parametrized	1.91		0	0
+params	2.69		0	1
+parse	3.18		0	0
+parseable	1.76		0	1
+parsed	2.75		0	0
+parser	3.14		0	0
+parsers	2.62		0	0
+parses	2.55		0	0
+parsing	3.20		0	0
+pathwise	1.64		0	1
+pddl	1.54	PDDL	0	1
+pdes	1.97	PDEs	0	1
+peer's	1.87		0	1
+peft	3.64	PEFT	0	1
+perceptron	2.61		0	1
+perceptrons	2.01		0	1
+performant	2.49		0	1
+permissions	3.53		0	0
+permuted	1.68		0	0
+perplexity	2.93		0	0
+persistentvolume	2.35	PersistentVolume	0	1
+persistentvolumeclaim	2.28	PersistentVolumeClaim	0	1
+perturbation	2.74		0	0
+perturbations	2.82		0	0
+perturbs	1.69		0	0
+pfx	1.70		0	1
+phpmyadmin	1.58		0	1
+piecewise	2.24		0	0
+pii	2.44	PII	0	1
+pinecone	2.59	Pinecone	0	0
+pinn	1.74	PINN	0	1
+pinns	1.60	PINNs	0	1
+pipeline's	1.94		0	1
+pipelines	3.47		0	0
+placeholders	2.53		0	0
+plaintext	3.24		0	0
+playbooks	2.54		0	0
+plotly	1.59		0	1
+pluggable	1.93		0	1
+plugin	3.72		0	0
+plugin's	1.86		0	1
+plugins	3.44		0	0
+pod	3.97	Pod	1	0
+pod's	2.78	Pod's	0	1
+podman	2.29	Podman	0	1
+pods	3.83		0	0
+podspec	1.78	PodSpec	0	1
+pointwise	2.25		0	1
+policy's	2.31		0	0
+pomdp	1.97	POMDP	0	1
+pomdps	1.86	POMDPs	0	1
+populates	1.95		0	0
+posix	2.34	POSIX	0	0
+postconditions	1.56		0	1
+posteriors	1.70		0	0
+postgres	2.84	Postgres	0	1
+postgresql	2.87	PostgreSQL	0	0
+powershell	3.10	PowerShell	0	0
+ppo	2.59	PPO	0	1
+prebuilt	2.29		0	0
+precisions	1.91		0	0
+precompiled	1.60		0	1
+precompute	1.54		0	1
+precomputed	2.25		0	0
+preconfigured	1.68		0	1
+predefined	3.06		0	0
+preemption	2.41		0	0
+prefetch	1.80		0	1
+prefetching	1.61		0	1
+prefill	3.10		0	1
+prefilling	2.18		0	1
+prefix	3.50		0	0
+prefixed	2.56		0	0
+prefixes	2.91		0	0
+prepend	2.02		0	0
+prepended	2.13		0	1
+preprocess	2.25		0	1
+preprocessed	1.95		0	0
+preprocessing	2.99		0	0
+preprocessor	2.29		0	0
+preregistered	2.23		0	0
+prespecified	2.04		0	1
+pretrain	2.06		0	1
+pretrained	3.48		0	1
+pretraining	3.24		0	1
+primitives	2.74		0	0
+prioritizing	3.26		0	0
+priors	2.79		0	0
+probabilistic	3.01		0	0
+probabilities	3.27		0	0
+processor's	1.75		0	1
+programmatically	2.56		0	0
+project's	3.48		0	0
+prompt	4.40		0	0
+prompt's	1.96		0	1
+promptfoo	2.53	Promptfoo	0	1
+prompts	3.91		0	0
+proposer	2.14		0	0
+protobuf	1.90		0	1
+prover	2.05		0	0
+provers	1.82		0	0
+provider's	2.46		0	0
+provisioned	2.68		0	0
+provisioner	2.24		0	0
+provisioners	1.94		0	1
+provisioning	3.03		0	0
+proxied	1.81		0	1
+proxying	1.82		0	1
+prs	2.93	PRs	0	0
+pseudocode	2.54		0	1
+psnr	1.88	PSNR	0	1
+ptq	2.03	PTQ	0	1
+pvcs	2.10	PVCs	0	1
+pycharm	1.91	PyCharm	0	1
+pydantic	3.07	Pydantic	0	1
+pypi	3.14	PyPI	0	1
+pypy	2.36	PyPy	0	1
+pyspark	1.56		0	1
+pytest	2.00		0	1
+python	4.37	Python	0	0
+pythonic	1.80	Pythonic	0	1
+pytorch	3.33	PyTorch	0	1
+pytorch's	1.87	PyTorch's	0	1
+qdrant	2.50	Qdrant	0	1
+qemu	2.25	QEMU	0	1
+qiskit	1.78	Qiskit	0	1
+qlora	2.53	QLoRA	0	1
+qps	1.85	QPS	0	1
+quadratically	1.83		0	0
+quantifies	2.31		0	0
+quantile	2.16		0	1
+quantiles	1.70		0	1
+quantization	3.61		0	0
+quantize	2.76		0	0
+quantized	3.25		0	0
+quantizer	1.97		0	1
+quantizes	2.13		0	1
+quantizing	2.40		0	1
+queries	3.73		0	0
+query	4.02		0	0
+query's	1.78		0	1
+queryable	1.79		0	1
+querying	2.93		0	0
+quickstart	2.81		0	1
+qwen	2.83	Qwen	0	1
+rabbitmq	2.10	RabbitMQ	0	1
+rag	3.62	RAG	1	0
+rbac	2.61	RBAC	0	1
+rcnn	1.54	RCNN	0	1
+rdbms	2.12	RDBMS	0	1
+rdma	2.32	RDMA	0	1
+reachability	2.23		0	1
+readme	2.87	README	0	0
+readonly	1.74		0	1
+readouts	2.12		0	0
+realtime	3.26		0	0
+reasoning	4.16		0	0
+rebase	2.34		0	1
+rebasing	1.76		0	1
+recency	2.16		0	0
+recognizer	1.69		0	0
+recommender	2.42		0	1
+recommenders	1.67		0	1
+recompilation	1.62		0	0
+recompile	1.91		0	0
+recomputation	2.09		0	0
+recompute	2.05		0	0
+recomputed	1.89		0	0
+recomputes	1.84		0	1
+recomputing	2.01		0	0
+reconstructs	2.35		0	0
+recoverability	2.02		0	1
+recursive	3.02		0	0
+recursively	2.61		0	0
+redact	2.29		0	0
+redaction	2.51		0	0
+redis	3.09	Redis	0	1
+refactor	2.78		0	0
+refactored	2.08		0	0
+refactoring	3.02		0	0
+refactorings	2.01		0	1
+refactors	1.64		0	1
+refines	2.54		0	0
+reformulates	2.01		0	1
+reframes	1.87		0	1
+regex	2.80		0	0
+regexes	1.85		0	1
+registries	2.86		0	0
+regression	3.67		0	0
+regressions	2.79		0	0
+regressor	2.12		0	0
+regressors	1.79		0	1
+regularisation	2.17		0	0
+regularization	2.97		0	0
+regularize	1.98		0	0
+regularized	2.10		0	0
+regularizer	2.12		0	1
+regularizers	1.68		0	1
+reimplement	1.64		0	1
+reinforcement	3.58		0	0
+relabeling	2.01		0	1
+relu	2.87	ReLU	0	1
+remoting	1.75		0	1
+reparameterization	1.55		0	1
+replanning	1.70		0	1
+replayable	1.84		0	1
+replicaset	2.56	ReplicaSet	0	1
+repo	3.52		0	0
+repo's	1.60		0	1
+repos	2.89		0	0
+repositories	3.78		0	0
+repository	4.23		0	0
+repository's	2.72		0	1
+reproducibility	2.93		0	0
+reproducible	3.20		0	0
+request's	2.50		0	1
+rerank	2.40		0	1
+reranker	2.52		0	1
+rerankers	1.95		0	1
+reranking	2.69		0	1
+rerunning	1.77		0	0
+resample	1.93		0	1
+resampled	1.66		0	1
+resampling	2.37		0	1
+rescale	2.11		0	0
+rescales	1.88		0	1
+rescaling	2.06		0	0
+resending	1.61		0	0
+reshapes	1.91		0	0
+resharper	1.53		0	1
+resize	2.71		0	0
+resizes	1.64		0	0
+resizing	2.26		0	0
+resnet	2.41	ResNet	0	1
+resolver	3.09		0	0
+resolvers	2.32		0	0
+restarts	2.77		0	0
+resumable	2.07		0	1
+retraining	2.94		0	0
+retries	2.94		0	0
+retrievable	1.97		0	0
+retrieval	3.86		0	0
+retrievals	2.11		0	0
+retriever	3.11		0	0
+retriever's	1.55		0	1
+retrievers	2.58		0	0
+retrieves	2.83		0	0
+retry	3.17		0	0
+retrying	2.43		0	0
+reusability	2.11		0	0
+reusable	3.28		0	0
+reuse	3.46		0	0
+reuses	2.68		0	0
+revisable	1.54		0	1
+reweighting	2.17		0	1
+reweights	1.67		0	1
+rewording	2.09		0	0
+rgba	1.63	RGBA	0	1
+rhel	2.04	RHEL	0	1
+rkhs	1.50	RKHS	0	1
+rl	3.58	RL	0	0
+rlhf	2.30	RLHF	0	1
+rlvr	2.60	RLVR	0	1
+rmse	2.54	RMSE	0	1
+rmsnorm	1.93	RMSNorm	0	1
+rmsprop	1.68	RMSProp	0	1
+rnn	2.87	RNN	0	1
+rnns	2.46	RNNs	0	1
+roadmap	3.28		0	0
+robotwin	1.53	RoboTwin	0	1
+robustness	3.32		0	0
+rocm	2.93	ROCm	0	1
+rollout	3.13		0	0
+rollouts	3.00		0	1
+rootless	2.39		0	0
+routable	1.61		0	1
+routing	3.59		0	0
+rpc	2.49	RPC	0	1
+rpcs	1.61	RPCs	0	1
+rubric	2.91		0	0
+rubrics	2.53		0	0
+ruleset	2.38		0	0
+rulesets	2.29		0	1
+run's	2.39		0	0
+runnable	2.61		0	0
+runtime	3.95		0	0
+runtime's	1.91		0	1
+runtimes	2.67		0	1
+rust's	1.68	Rust's	0	1
+sagemaker	2.22	SageMaker	0	1
+saliency	1.95		0	0
+saltstack	1.84	SaltStack	0	1
+sandbox	3.93		0	0
+sandbox's	2.24		0	1
+sandboxed	2.54		0	1
+sandboxes	3.14		0	0
+sandboxing	3.38		0	1
+sarsa	2.26	SARSA	0	1
+sbert	2.03	SBERT	0	1
+sbom	2.45	SBOM	0	1
+sboms	2.05	SBOMs	0	1
+scalability	2.96		0	0
+scalable	3.22		0	0
+scalar	2.95		0	0
+schedulable	1.78		0	1
+scheduler	3.24		0	0
+schedulers	2.05		0	0
+schema	3.68		0	0
+schemas	2.92		0	0
+scienceworld	1.76	ScienceWorld	0	1
+scifact	1.55	SciFact	0	1
+scikit	2.10		0	1
+scim	2.80	SCIM	0	1
+scipy	1.90		0	1
+scoped	2.99		0	0
+sdk	4.03	SDK	0	0
+sdk's	2.68	SDK's	0	1
+sdks	2.48	SDKs	0	1
+sdlc	2.27	SDLC	0	1
+seccomp	2.53		0	1
+selects	3.33		0	0
+selinux	2.50	SELinux	0	1
+semantic	3.81		0	0
+semantically	2.90		0	0
+sentencepiece	1.70	SentencePiece	0	1
+separability	2.00		0	0
+serializable	2.05		0	1
+serialization	2.67		0	0
+serialize	2.52		0	0
+serialized	2.86		0	0
+serializer	1.66		0	1
+serializes	1.98		0	0
+serializing	1.79		0	0
+server's	2.68		0	0
+serverless	2.73		0	0
+serviceaccount	2.57	ServiceAccount	0	1
+session's	2.43		0	0
+setuptools	2.12		0	1
+sft	3.09	SFT	0	1
+sgd	2.56	SGD	0	0
+sglang	1.93	SGLang	0	1
+shap	2.25	SHAP	0	1
+shapley	2.03	Shapley	0	1
+sharded	2.47		0	1
+sharding	2.41		0	1
+sidecars	1.82		0	0
+sigmoid	2.87		0	0
+skill's	2.38		0	1
+skillsbench	1.58	SkillsBench	0	1
+sklearn	2.66		0	1
+sklearn's	1.80		0	1
+slms	2.24	SLMs	0	1
+slsa	2.08	SLSA	0	1
+snns	1.85	SNNs	0	1
+softmax	3.04		0	1
+solvability	1.61		0	1
+solver	3.09		0	0
+solver's	1.67		0	1
+sonarqube	2.18	SonarQube	0	1
+sonatype	1.59	Sonatype	0	1
+sota	2.56	SOTA	0	0
+sparql	1.85	SPARQL	0	1
+sparse	3.45		0	0
+sparsity	2.62		0	0
+spatiotemporal	2.20		0	0
+specifier	2.16		0	0
+specifiers	2.60		0	0
+specify	3.84		0	0
+spectrogram	2.05		0	0
+spectrograms	1.66		0	0
+speedup	2.83		0	0
+speedups	2.43		0	0
+splatting	1.56	Splatting	0	0
+splunk	2.09	Splunk	0	1
+sql	3.49	SQL	0	0
+sqlalchemy	2.74	SQLAlchemy	0	1
+sqlite	3.00	SQLite	0	0
+sqs	2.22	SQS	0	1
+sres	1.83	SREs	0	1
+ssh	3.40	SSH	0	0
+ssim	1.67	SSIM	0	1
+ssms	1.67	SSMS	0	1
+stackexchange	2.47	StackExchange	0	1
+stackoverflow	2.69	StackOverflow	0	0
+staleness	1.83		0	0
+standardizes	2.05		0	0
+standardscaler	1.54	StandardScaler	0	1
+stateful	2.89		0	1
+statefulset	2.76	StatefulSet	0	1
+statefulsets	1.87	StatefulSets	0	1
+statically	2.55		0	0
+stationarity	1.87		0	1
+stderr	2.39		0	1
+stdin	2.47		0	1
+stdout	2.52		0	1
+stepsize	1.62		0	1
+stochastic	3.22		0	0
+stochasticity	1.97		0	1
+stopwords	1.63		0	1
+storageclass	2.30	StorageClass	0	1
+streamable	2.38	Streamable	0	1
+streamlit	1.75	Streamlit	0	1
+strided	1.55		0	1
+structs	2.24		0	1
+structured	3.90		0	0
+subagent	3.15		0	0
+subagent's	2.32		0	1
+subagents	3.14		0	1
+subclassing	1.99		0	1
+subcommand	2.58		0	1
+subcommands	2.43		0	1
+subdirectories	2.33		0	0
+subdirectory	2.66		0	0
+subdomain	2.39		0	0
+subdomains	2.04		0	1
+subgoal	1.67		0	1
+subgoals	1.68		0	1
+subgraph	2.50		0	1
+subgraphs	2.24		0	1
+sublinear	1.76		0	1
+submodule	2.38		0	1
+submodules	2.39		0	1
+subnet	2.77		0	0
+subnets	2.37		0	1
+suboptimal	2.51		0	0
+suboptimality	1.72		0	1
+subproblem	1.58		0	0
+subproblems	1.69		0	1
+subprocess	2.43		0	1
+subresource	2.25		0	1
+subresources	1.73		0	1
+subsampling	1.75		0	1
+subsequences	1.58		0	0
+subspace	2.92		0	0
+subspaces	2.32		0	0
+subtask	2.36		0	1
+subtasks	2.54		0	1
+subtree	2.11		0	1
+subtrees	1.63		0	1
+subword	2.15		0	1
+subwords	2.06		0	1
+summarization	2.98		0	0
+summarizer	1.79		0	0
+surprisal	1.94		0	1
+sutskever	1.56	Sutskever	0	1
+svd	2.61	SVD	0	1
+svm	2.76	SVM	0	1
+svms	2.00	SVMs	0	1
+svn	2.42	SVN	0	1
+sycophancy	2.28		0	0
+symlink	2.35		0	1
+symlinks	2.24		0	1
+synchronizes	1.82		0	0
+syntactically	2.20		0	0
+syntax	3.54		0	0
+syntaxes	1.77		0	1
+synthesizes	2.54		0	0
+sysadmins	1.68		0	0
+syscall	1.59		0	1
+syscalls	2.02		0	1
+syslog	1.96		0	1
+sysml	1.63	SysML	0	1
+tabular	2.86		0	0
+taints	2.24		0	0
+tanh	2.26		0	0
+tarball	2.15		0	0
+tarballs	1.95		0	0
+tasks	4.32		0	0
+taxonomies	2.27		0	0
+tdd	2.66	TDD	0	1
+teamcity	2.27	TeamCity	0	1
+telemetry	3.23		0	0
+templated	1.99		0	1
+templating	2.56		0	1
+tensor	3.36		0	0
+tensorboard	1.61		0	1
+tensorflow	3.02		0	0
+tensorrt	1.50	TensorRT	0	1
+tensors	3.07		0	0
+terraform	3.40	Terraform	1	0
+testability	1.87		0	0
+testbed	2.57		0	0
+testbench	1.58		0	1
+testcontainers	2.36	Testcontainers	0	1
+tfidf	1.96	TFIDF	0	1
+tfms	1.98	TFMs	0	1
+tfvc	1.84	TFVC	0	1
+theano	1.78	Theano	0	1
+thread's	1.98		0	1
+thresholding	1.98		0	1
+timeouts	2.65		0	0
+timeseries	2.08		0	1
+timestamp	2.85		0	0
+timestamped	1.93		0	0
+timestamps	2.63		0	0
+timestep	2.39		0	1
+timesteps	2.29		0	1
+tldr	1.89	TLDR	0	1
+tmpfs	2.10		0	1
+toggles	2.27		0	0
+token	4.19		0	0
+tokenisation	1.94		0	1
+tokeniser	2.09		0	1
+tokenization	2.75		0	1
+tokenize	2.38		0	1
+tokenized	2.15		0	1
+tokenizer	3.13		0	1
+tokenizers	2.31		0	1
+tokenizing	1.80		0	1
+tokens	4.18		0	0
+tolerations	2.18		0	1
+toml	2.68	TOML	0	1
+tool's	2.78		0	1
+toolchain	2.58		0	1
+toolchains	1.84		0	1
+toolkit	3.13		0	0
+toolset	2.21		0	0
+toolsets	1.60		0	1
+torchao	2.19		0	1
+torchvision	1.80		0	1
+traceability	2.54		0	0
+traceback	1.86		0	1
+tracker	3.70		0	0
+tractability	1.61		0	0
+tractable	2.41		0	0
+traefik	2.35	Traefik	0	1
+trainable	3.31		0	0
+trajectories	3.49		0	0
+transcribes	2.08		0	0
+transductive	1.57		0	1
+transferability	2.19		0	0
+transformer	3.54		0	0
+transformer's	1.96		0	1
+transformers	3.64	Transformers	0	0
+transitive	2.79		0	0
+traversal	2.46		0	0
+triaging	1.85		0	1
+triviaqa	1.63	TriviaQA	0	1
+trpo	1.51	TRPO	0	1
+truncates	2.19		0	0
+truncating	2.15		0	0
+truncation	2.72		0	0
+tsfms	2.04	TSFMs	0	1
+ttft	2.38	TTFT	0	1
+ttl	2.74	TTL	0	0
+tui	3.53	TUI	0	0
+tuple	2.53		0	0
+tuples	2.33		0	0
+twilio	2.14	Twilio	0	1
+typeerror	1.82	TypeError	0	1
+typesafe	1.70		0	1
+typescript	2.69	TypeScript	0	0
+ultracode	4.50		0	1
+ultrathink	4.50		0	1
+unauthenticated	2.21		0	0
+uncached	2.09		0	1
+uncomment	1.94		0	1
+uncommenting	2.11		0	1
+unconstrained	2.39		0	0
+underexplored	2.74		0	1
+underfitting	1.98		0	1
+underperforms	1.79		0	1
+undersampling	1.76		0	1
+underspecified	2.07		0	1
+unigram	1.77		0	1
+unimodal	2.01		0	1
+uninformative	1.95		0	0
+uninitialized	1.80		0	0
+unitree	1.62	Unitree	0	1
+unlabeled	2.62		0	0
+unlabelled	1.99		0	0
+unlearning	2.62		0	0
+unmerged	1.90		0	1
+unnormalized	1.72		0	1
+unoptimized	1.55		0	1
+unprivileged	2.10		0	0
+unsatisfiable	1.66		0	0
+unset	2.70		0	0
+unstructured	2.86		0	0
+unsupported	3.02		0	0
+untrusted	2.81		0	0
+untuned	1.65		0	0
+updatable	1.64		0	1
+upsampling	1.93		0	1
+upscaling	1.98		0	1
+upvote	3.26		0	0
+upvoted	2.08		0	1
+url's	1.89	URL's	0	1
+urls	3.22	URLs	0	0
+usecase	1.98		0	1
+user's	3.41		0	0
+userdata	1.76		0	1
+userland	1.63		0	1
+userspace	1.91		0	1
+uuid	2.42	UUID	0	1
+uuids	2.08	UUIDs	0	1
+uv	4.26		0	0
+vae	2.55	VAE	0	1
+vaes	2.11	VAEs	0	1
+validate	3.44		0	0
+validates	2.83		0	0
+validation	3.87		0	0
+validations	2.40		0	0
+validator	2.31		0	1
+valueerror	1.76	ValueError	0	1
+variables	4.04		0	0
+variadic	1.73		0	1
+variational	2.73		0	0
+vars	2.44		0	0
+vcpu	2.09	vCPU	0	1
+vec	2.32		0	1
+vectorization	1.85		0	0
+vectorize	1.79		0	1
+vectorized	1.98		0	0
+vectorizer	1.78		0	1
+vectors	3.48		0	0
+vectorstore	2.33		0	1
+verbose	2.78		0	0
+verbosity	2.48		0	0
+verifiability	1.77		0	0
+verifiable	3.00		0	0
+verifications	2.06		0	0
+verifier	2.99		0	0
+verifiers	2.49		0	0
+verifies	2.70		0	0
+versioned	2.81		0	0
+versioning	2.93		0	0
+vgg	1.89	VGG	0	1
+virtualbox	2.34	VirtualBox	0	0
+virtualenv	1.77		0	1
+virtualisation	1.56		0	0
+vla	2.53	VLA	0	1
+vlas	1.84	VLAs	0	1
+vllm	3.65	vLLM	0	1
+vllm's	2.53	vLLM's	0	1
+vlm	2.66	VLM	0	1
+vlms	2.87	VLMs	0	1
+vm	3.39	VM	0	1
+vm's	1.90	VM's	0	1
+vms	2.86	VMs	0	1
+vpc	2.69	VPC	0	1
+vpcs	1.63	VPCs	0	1
+vram	3.05	VRAM	0	1
+vscode	1.91	VSCode	0	1
+vsphere	2.10	vSphere	0	1
+vsts	2.11	VSTS	0	1
+vulkan	2.99	Vulkan	0	0
+vulnerabilities	3.29		0	0
+wasserstein	2.15	Wasserstein	0	1
+watermarking	2.48		0	0
+weaviate	2.61	Weaviate	0	1
+webapp	2.02		0	1
+webassembly	1.91	WebAssembly	0	1
+webhook	3.28		0	1
+webhooks	2.92		0	1
+webrtc	2.33	WebRTC	0	0
+webserver	2.26		0	1
+webservers	1.52		0	1
+webservice	1.66		0	1
+webshop	2.01	WebShop	0	1
+websocket	3.34		0	1
+websockets	1.94		0	1
+webui	2.24	WebUI	0	1
+weights	4.00		0	0
+weka	1.78	Weka	0	0
+whitespace	2.57		0	0
+wikidata	1.69	Wikidata	0	1
+wordings	1.90		0	0
+wordpiece	1.53	WordPiece	0	1
+workaround	3.00		0	0
+workarounds	2.35		0	0
+workflow	4.05		0	0
+workflows	3.75		0	0
+workloads	3.20		0	0
+workspace	3.77		0	0
+workspaces	2.76		0	0
+writable	2.48		0	0
+writeable	1.54		0	0
+wsl	2.95	WSL	0	0
+xgb	1.58	XGB	0	1
+xgboost	2.70	XGBoost	0	1
+xlnet	1.72	XLNet	0	1
+xpu	2.07	XPU	0	1
+yaml	3.30	YAML	0	1
+yml	2.20		0	1
+zenodo	1.51	Zenodo	0	1
+zmq	1.86	ZMQ	0	1
+zsh	2.26		0	1

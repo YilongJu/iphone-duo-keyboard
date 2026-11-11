@@ -159,7 +159,8 @@ int duo_lexicon_open_checked_before(duo_lexicon *lexicon, const void *data, size
    it stays as typed, and a slip can be corrected into it. A word that only the supplement holds
    has no word pairs, so it gets its own probability after any word, as a word of the main file
    without a listed pair does. A word that both files hold gets the higher of its two values.
-   NULL takes the supplement off again.
+   A word of the supplement never joins typed words that are all known words: "hard coded" stays
+   two words, also when the supplement holds "hardcoded". NULL takes the supplement off again.
 
    Both files must use model 0 (the mixed model of English), and the supplement must be a file
    of version 2 without word pairs, with one word per spelling and no supplement of its own.
