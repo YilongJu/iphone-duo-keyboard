@@ -9,6 +9,8 @@ from pathlib import Path
 CATEGORIES = ["apostrophe_dropped_ambiguous", "clean_ambiguous_word", "apostrophe_added",
               "clean_ambiguous_contraction", "apostrophe_dropped"]
 EXISTING_GROUPS = ["clean", "letter_slips", "space_slips", "symbol_slips", "clean_symbols"]
+# The categories of the existing dev cases that no group holds.
+EXISTING_ALONE = ["apostrophe_missing", "real_word_slip"]
 
 
 def cell(entry) -> str:
@@ -39,13 +41,15 @@ def main():
     print()
     if any("existing" in entry for entry in runs.values()):
         print("### Right existing dev cases per group\n")
-        print("| Run | " + " | ".join(EXISTING_GROUPS) + " | all dev cases |")
-        print("| --- |" + " --- |" * (len(EXISTING_GROUPS) + 1))
+        print("| Run | " + " | ".join(EXISTING_GROUPS + EXISTING_ALONE) + " | all dev cases |")
+        print("| --- |" + " --- |" * (len(EXISTING_GROUPS) + len(EXISTING_ALONE) + 1))
         for name, entry in runs.items():
             if "existing" not in entry:
                 continue
             groups = entry["existing"]["groups"]
-            print(f"| {name} | " + " | ".join(f"{groups[g]['right']}/{groups[g]['cases']}" for g in EXISTING_GROUPS)
+            alone = entry["existing"]["categories"]
+            print(f"| {name} | " + " | ".join([f"{groups[g]['right']}/{groups[g]['cases']}" for g in EXISTING_GROUPS]
+                                            + [f"{alone[c]['right']}/{alone[c]['cases']}" for c in EXISTING_ALONE])
                   + f" | {entry['existing']['right']}/{entry['existing']['cases']} |")
         print()
         print(f"Settings that keep every existing category and the new controls: "

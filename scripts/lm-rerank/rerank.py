@@ -172,7 +172,8 @@ class Setting:
     # model then sees the word after the changed word, and a typed "its" alone stays as it is.
     apostrophe_scope: str = "all"
     # "model": the step compares the model scores alone. "slips": it also takes off each
-    # reading's slip cost, 0.5 for a missing apostrophe and 5.5 for an extra one.
+    # reading's slip cost, 0.5 for a missing apostrophe and 5.5 for an extra one. "slips_only":
+    # the slip costs alone, as the comparison without the model.
     apostrophe_score: str = "model"
 
 
@@ -252,10 +253,13 @@ def apostrophe_step(readings: list[dict], choice: dict, lm: dict, setting: Setti
     The engine's word statistics do not count. They come from a list of word pairs without a
     single contraction, so a contraction never gets a listed pair, and a word beside it never
     gets one either."""
-    if setting.apostrophe_score not in ("model", "slips"):
+    if setting.apostrophe_score not in ("model", "slips", "slips_only"):
         raise SystemExit(f"unknown apostrophe_score {setting.apostrophe_score!r}")
 
     def step_score(reading: dict) -> float:
+        # "slips_only" is the comparison without the model: the cheaper repair wins.
+        if setting.apostrophe_score == "slips_only":
+            return -reading["slips"]
         log_probability, space_after = lm[reading["text"]]
         value = log_probability + (space_after if setting.space_after else 0.0)
         return value - reading["slips"] if setting.apostrophe_score == "slips" else value

@@ -21,6 +21,7 @@ final class ApostropheStepRuleTests: XCTestCase {
                    apostrophe: RerankRule.ApostropheStep(scope: scope, score: score, margin: margin))
     }
 
+    @MainActor
     func testTheKeyboardUsesTheSettingChosenOnTheDevHalf() {
         XCTAssertEqual(RerankRule.distilgpt2WithApostrophes, RerankRule(
             weight: 1.0, marginFromTyped: 24, marginToTyped: 0, marginOther: 2, usesSpaceAfter: true,

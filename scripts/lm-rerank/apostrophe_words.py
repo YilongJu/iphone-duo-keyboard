@@ -44,7 +44,7 @@ GRID = [0.5, 1.0, 1.5, 2.0, 3.0, 4.0, 6.0, 8.0]
 # The settings of the step on the dev half: its scope, its score and its margin. The scope "all"
 # runs with the model score only, as the comparison for the scope "next".
 STEPS = ([("all", "model", margin) for margin in GRID]
-         + [("next", score, margin) for score in ("model", "slips") for margin in GRID])
+         + [("next", score, margin) for score in ("model", "slips", "slips_only") for margin in GRID])
 # The setting tuned for distilgpt2 Q3_K_M (scripts/lm-rerank/README.md, Table 2).
 TUNED = dict(weight=1.0, margin_from_typed=24, margin_to_typed=0, margin_other=2, space_after=1)
 
@@ -160,7 +160,7 @@ def main():
     parser.add_argument("--half", choices=["dev", "test"], required=True)
     parser.add_argument("--margin", type=float, help="the one margin_apostrophe of the test-half run")
     parser.add_argument("--scope", choices=["all", "next"], help="the one apostrophe_scope of the test-half run")
-    parser.add_argument("--score", choices=["model", "slips"], help="the one apostrophe_score of the test-half run")
+    parser.add_argument("--score", choices=["model", "slips", "slips_only"], help="the one apostrophe_score of the test-half run")
     parser.add_argument("--lexicon", type=Path, default=rerank.LEXICON)
     parser.add_argument("--shipped-lexicon", type=Path,
                         help="the lexicon of the keyboard as it ships, when it differs from --lexicon")
