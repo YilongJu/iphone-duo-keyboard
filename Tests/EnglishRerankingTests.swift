@@ -57,7 +57,27 @@ final class RerankRuleTests: XCTestCase {
         // The arm smollm2-lora-seed1 of scripts/lm-finetune/test-plan.json.
         XCTAssertEqual(KeyboardLanguageModel.rule,
                        RerankRule(weight: 1.0, marginFromTyped: 0, marginToTyped: 4, marginOther: 2, usesSpaceAfter: true,
-                                  apostrophe: RerankRule.ApostropheStep(scope: .firstWordOfSpan, score: .modelLessSlipCost, margin: 8)))
+                                  apostrophe: RerankRule.ApostropheStep(
+                                      scope: .firstWordOfSpan, score: .modelLessSlipCost, margin: 4, prompt: .stock)))
+    }
+
+    func testTheStockStepDecidesWithTheScoresOfItsOwnPrompt() {
+        let stock = RerankRule(
+            weight: 1.0, marginFromTyped: 0, marginToTyped: 4, marginOther: 2, usesSpaceAfter: false,
+            apostrophe: RerankRule.ApostropheStep(scope: .firstWordOfSpan, score: .model, margin: 1, prompt: .stock))
+        let readings = [reading("were going", -10, typed: true, chosen: true), reading("we're going", -15)]
+        // The scores of the margins keep the text as typed, and so would a step that read them.
+        var asked: [[Int]] = []
+        let choice = stock.choose(readings, model(-5, -20)) { indices in
+            asked.append(indices)
+            return self.model(-6, -4)
+        }
+        XCTAssertEqual(asked, [[0, 1]])
+        XCTAssertEqual(choice, 1)
+        // Without an answer of the stock prompt the choice of the margins stays.
+        XCTAssertEqual(stock.choose(readings, model(-5, -20)) { _ in nil }, 0)
+        // A lead under the margin keeps the choice.
+        XCTAssertEqual(stock.choose(readings, model(-5, -20)) { _ in self.model(-6, -5.01) }, 0)
     }
 
     func testTheSmolLM2RuleTakesAnyLeadAwayFromTheTextAsTyped() {
@@ -167,6 +187,15 @@ final class LanguageModelPromptTests: XCTestCase {
     func testABarInTheTextGivesNoPrompt() {
         XCTAssertNil(LanguageModelPrompt.make(textBefore: "a | b ", typed: "teh", readings: ["the"]))
         XCTAssertNil(LanguageModelPrompt.make(textBefore: "a ", typed: "te|h", readings: ["the"]))
+    }
+
+    func testTheStockPromptHoldsNoTypedSpan() {
+        let prompt = LanguageModelPrompt.makeStock(textBefore: "i think ", readings: ["were going", "we're going"])
+        XCTAssertEqual(prompt.context, "I think")
+        XCTAssertEqual(prompt.candidates, [" were going", " we're going"])
+        let opening = LanguageModelPrompt.makeStock(textBefore: "", readings: ["were going"])
+        XCTAssertEqual(opening.context, "")
+        XCTAssertEqual(opening.candidates, ["Were going"])
     }
 
     func testAnIOnlyAfterASpaceGetsItsCapital() {
