@@ -3,6 +3,9 @@
 The letter keys grow from 1/14.5 to 1/13.5 of the keyboard width, and the letters move toward
 the middle. Every digit and symbol key keeps the letters next to it that
 scripts/typing-evaluation/symbol_keys.py finds today, so the typing test cases stay valid.
+
+The script reads the 14.5-unit layout of the commit before b7ce57d, which applied its output to
+Shared/keyboard-layout.json. Run it only against that version of the file.
 """
 import copy
 import json
@@ -55,7 +58,7 @@ for layer, first, fourth_first in (("symbols", "more", "more"), ("more", "symbol
     rows[0]["keys"] = shortcuts
     old = current["wide"][layer]
     rows[1]["keys"] = number_row(old[1]["keys"][:13])
-    rows[2]["keys"] = [f("tab", 1.35)] + [c(k, 0.93) for k in old[2]["keys"][1:]]
+    rows[2]["keys"] = [f("tab", 1.41)] + [c(k, 0.93) for k in old[2]["keys"][1:]]
     rows[3]["keys"] = [c(k["c"], 1.0) for k in old[3]["keys"][:12]] + [f("return", 1.5)]
     rows[4]["keys"] = [f(fourth_first, 1.25)] + [c(k, 0.95) for k in old[4]["keys"][1:12]] + [f("up", 0.9), f("forwardDelete", 0.9)]
     rows[5]["keys"] = bottom_symbols
