@@ -9,7 +9,7 @@ Inputs:
     --reference DIR, --reference-name NAME   the run to compare against
     --other DIR, --other-name NAME           the run to compare
     --published                              also require the reference to give the numbers of
-                                             scripts/lm-rerank/README.md, Table 1
+                                             scripts/lm-finetune/README.md, Table 2, on engine/lm-finetune
 Outputs in --out:
     report.md          the tables, also written to standard output
     differences.json   every case and every correction that differs, with both runs' numbers
@@ -33,11 +33,12 @@ sys.path.insert(0, str(ROOT / "scripts" / "lm-rerank"))
 import rerank  # noqa: E402
 from score import normalize  # noqa: E402
 
-TUNED = {"weight": 1.0, "margin_from_typed": 24.0, "margin_to_typed": 0.0, "margin_other": 2.0}
+# The setting of the SmolLM2-135M LoRA fine-tune (harness_trace.py, KeyboardLanguageModel.rule).
+TUNED = {"weight": 1.0, "margin_from_typed": 0.0, "margin_to_typed": 4.0, "margin_other": 2.0}
 GROUPS = ["clean", "letter_slips", "space_slips", "symbol_slips", "clean_symbols"]
-# The harness numbers of scripts/lm-rerank/README.md, Table 1 (run 42877972004 at commit 6a000f7):
-# right cases per group, then all dev cases.
-PUBLISHED = {"engine only": [957, 1943, 1299, 1131, 427, 6069], "with the model": [958, 1975, 1316, 1139, 427, 6126]}
+# The harness numbers of the arm smollm2-lora-seed1 in scripts/lm-finetune/README.md, Table 2, on
+# the branch engine/lm-finetune: right cases per group, then all dev cases.
+PUBLISHED = {"engine only": [957, 1943, 1299, 1131, 427, 6069], "with the model": [954, 2057, 1388, 1165, 427, 6543]}
 TASKS = ["english", "english-symbols"]
 
 

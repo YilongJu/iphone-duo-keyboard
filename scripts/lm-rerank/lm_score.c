@@ -2,9 +2,14 @@
  Scores candidate texts with a language model through llama.cpp, for rerank.py.
 
  Usage: lm_score MODEL.gguf THREADS < requests > answers
+        lm_score MODEL.gguf THREADS tokens < requests > token lines
 
  Request line:  context <TAB> candidate 1 <TAB> candidate 2 ...
  Answer line:   log probability 1 <SPACE> space after 1 <TAB> log probability 2 <SPACE> space after 2 ...
+ Token line:    the token ids the model would read, as numbers with a space between them: first the
+                start token and the context, then one field per candidate. With "tokens" the
+                program loads the vocabulary only, and scripts/lm-finetune/check_parity.py compares
+                these ids with the ids of the training code.
 
  The context is the text before the candidates. The model reads the start-of-text token, then
  the context. A candidate follows the context after one space, or right after the start-of-text
@@ -133,8 +138,9 @@ static int tokenize(const struct llama_vocab *vocab, const char *text, llama_tok
 }
 
 int main(int argc, char **argv) {
-    if (argc != 3) {
-        fprintf(stderr, "usage: lm_score MODEL.gguf THREADS\n");
+    int tokens_only = argc == 4 && strcmp(argv[3], "tokens") == 0;
+    if (argc != 3 && !tokens_only) {
+        fprintf(stderr, "usage: lm_score MODEL.gguf THREADS [tokens]\n");
         return 2;
     }
     int threads = atoi(argv[2]);
@@ -150,6 +156,7 @@ int main(int argc, char **argv) {
     model_settings.split_mode = LLAMA_SPLIT_MODE_NONE;
     model_settings.use_mmap = true;
     model_settings.use_mlock = false;
+    model_settings.vocab_only = tokens_only;
     struct llama_model *model = llama_model_load_from_file(argv[1], model_settings);
     if (model == NULL) die("the model did not load");
     const struct llama_vocab *vocab = llama_model_get_vocab(model);
@@ -174,19 +181,23 @@ int main(int argc, char **argv) {
     }
     if (space_tokens == 0) die("no token starts with a space");
 
-    struct llama_context_params context_settings = llama_context_default_params();
-    context_settings.n_ctx = CONTEXT_SIZE;
-    context_settings.n_batch = BATCH_SIZE;
-    context_settings.n_ubatch = 512;
-    context_settings.n_seq_max = MAX_CANDIDATES + 1;
-    context_settings.n_threads = threads;
-    context_settings.n_threads_batch = threads;
-    context_settings.offload_kqv = false;
-    context_settings.flash_attn = true;
-    context_settings.no_perf = true;
-    struct llama_context *model_context = llama_init_from_model(model, context_settings);
-    if (model_context == NULL) die("the model state did not set up");
-    struct llama_batch batch = llama_batch_init(BATCH_SIZE, 0, 1);
+    struct llama_context *model_context = NULL;
+    struct llama_batch batch = {0};
+    if (!tokens_only) {
+        struct llama_context_params context_settings = llama_context_default_params();
+        context_settings.n_ctx = CONTEXT_SIZE;
+        context_settings.n_batch = BATCH_SIZE;
+        context_settings.n_ubatch = 512;
+        context_settings.n_seq_max = MAX_CANDIDATES + 1;
+        context_settings.n_threads = threads;
+        context_settings.n_threads_batch = threads;
+        context_settings.offload_kqv = false;
+        context_settings.flash_attn = true;
+        context_settings.no_perf = true;
+        model_context = llama_init_from_model(model, context_settings);
+        if (model_context == NULL) die("the model state did not set up");
+        batch = llama_batch_init(BATCH_SIZE, 0, 1);
+    }
 
     fprintf(stdout, "ready vocabulary=%d start=%d space_tokens=%d space_token=%d\n", vocabulary, start, space_tokens,
             space_token);
@@ -236,6 +247,19 @@ int main(int argc, char **argv) {
             if (count > MAX_CANDIDATE_TOKENS) die("a candidate gives more tokens than the limit");
             memcpy(candidate_tokens[candidate], tokens, sizeof(llama_token) * (size_t)count);
             candidate_lengths[candidate] = count;
+        }
+
+        if (tokens_only) {
+            for (int index = 0; index < context_count; index++) printf("%s%d", index == 0 ? "" : " ", context_tokens[index]);
+            for (int candidate = 0; candidate < candidates; candidate++) {
+                printf("\t");
+                for (int index = 0; index < candidate_lengths[candidate]; index++) {
+                    printf("%s%d", index == 0 ? "" : " ", candidate_tokens[candidate][index]);
+                }
+            }
+            printf("\n");
+            fflush(stdout);
+            continue;
         }
 
         double started = now_ms();
@@ -296,8 +320,10 @@ int main(int argc, char **argv) {
     fprintf(stderr, "lm_score: %ld tokens read, %.1f ms in the model and the scores\n", tokens_read, model_ms);
     fprintf(stderr, "lm_score: highest RssAnon %ld kB\n", highest_anon);
     fprintf(stderr, "lm_score: %ld lone-space tokens put in place of -1\n", space_repairs);
-    llama_batch_free(batch);
-    llama_free(model_context);
+    if (!tokens_only) {
+        llama_batch_free(batch);
+        llama_free(model_context);
+    }
     llama_model_free(model);
     free(space_first);
     return 0;

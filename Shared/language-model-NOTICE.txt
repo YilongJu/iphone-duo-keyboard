@@ -1,19 +1,26 @@
 The English corrections and the language model test of Duo Keyboard use one model file and one
-framework of other projects.
+framework, built on the work of other projects.
 The repository does not hold either file. scripts/ci/fetch_language_model.sh downloads both
 before a build, each from a fixed address, and checks each against a fixed SHA-256 value.
 
-distilgpt2.Q3_K_M.gguf
+smollm2-lora-typed-seed1.Q4_K_M.gguf
 
-  DistilGPT2 by Hugging Face, https://huggingface.co/distilbert/distilgpt2, an English language
-  model with 82 million weights, under the Apache License, Version 2.0
-  (http://www.apache.org/licenses/LICENSE-2.0).
+  SmolLM2-135M by Hugging Face, https://huggingface.co/HuggingFaceTB/SmolLM2-135M at commit
+  93efa2f097d58c2a74874c7e644dbc9b0cee75a2, an English language model with 135 million weights,
+  under the Apache License, Version 2.0 (http://www.apache.org/licenses/LICENSE-2.0).
 
-  Changes: the user mradermacher of huggingface.co converted the model to the GGUF file format
-  of llama.cpp and stored its weights with about 3 bits each (the setting Q3_K_M). The file comes
-  unchanged from
-  https://huggingface.co/mradermacher/distilgpt2-GGUF/resolve/524d576d63aa026274d5a1ee42414edf7f61e7c7/distilgpt2.Q3_K_M.gguf
-  SHA-256: a0fdd02371cf4b318445575ab917cd3cf4abf494e09c24f760f777eb641b2b85
+  Changes: this project trained a LoRA fine-tune of the model to re-rank the typing engine's
+  readings (scripts/lm-finetune on the branch engine/lm-finetune), merged the fine-tune into the
+  weights, converted the result to the GGUF file format of llama.cpp and stored its weights with
+  about 4 bits each (the setting Q4_K_M). The file comes from the release
+  lm-finetune-smollm2-lora-v1 of https://github.com/YilongJu/iphone-duo-keyboard:
+  https://github.com/YilongJu/iphone-duo-keyboard/releases/download/lm-finetune-smollm2-lora-v1/smollm2-lora-typed-seed1.Q4_K_M.gguf
+  105,453,504 bytes, SHA-256: fe82c0b617bdf19cf72b92148edbf9406c7547396ca7fac477485884431c07bb
+
+  The training text comes from sentences of Tatoeba, https://tatoeba.org, under the Creative
+  Commons Attribution 2.0 France licence (CC BY 2.0 FR,
+  https://creativecommons.org/licenses/by/2.0/fr/). The project generated typing slips from
+  those sentences.
 
 llama.framework
 

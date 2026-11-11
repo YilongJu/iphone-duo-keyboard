@@ -109,28 +109,55 @@ def language_model_text(text: str, at_start: bool) -> str:
     return text
 
 
+PROMPT_FORMATS = ("stock", "typed")
+
+
+def language_model_prompt(context: str, typed: str | None, prompt_format: str) -> str:
+    """The text the model reads before each reading. The stock format is the text before the
+    span. The typed format adds the typed span between two bars, as in "How much | sutar |", so
+    the model sees the letters the person typed (scripts/lm-finetune/train.py trains on it)."""
+    text = language_model_text(context, True)
+    if prompt_format == "stock":
+        return text
+    if prompt_format != "typed":
+        raise SystemExit(f"unknown prompt format {prompt_format!r}")
+    if typed is None or "|" in typed or "\t" in typed:
+        raise SystemExit(f"the typed format needs a typed span without a bar or a tab: {typed!r}")
+    if "|" in text:
+        raise SystemExit(f"the text before the span holds a bar: {text!r}")
+    return (text + " " if text else "") + "| " + typed + " |"
+
+
 class LanguageModel:
-    def __init__(self, program: Path, model: Path, threads: int, no_context: bool):
-        # With no_context the model reads each reading alone, after the start token only.
+    def __init__(self, program: Path, model: Path, threads: int, no_context: bool, prompt_format: str = "stock"):
+        # With no_context the model reads each reading alone, after the start token only (and
+        # the typed span in the typed format).
         self.no_context = no_context
+        if prompt_format not in PROMPT_FORMATS:
+            raise SystemExit(f"unknown prompt format {prompt_format!r}")
+        self.prompt_format = prompt_format
         self.process = subprocess.Popen([str(program), str(model), str(threads)], stdin=subprocess.PIPE,
                                         stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, encoding="utf-8")
         ready = self.process.stdout.readline()
         if not ready.startswith("ready"):
             raise SystemExit(f"lm_score did not start: {ready!r} {self.process.stderr.read()}")
         self.ready = ready.strip()
-        self.cache: dict[tuple[str, tuple[str, ...]], dict[str, tuple[float, float]]] = {}
+        self.cache: dict[tuple, dict[str, tuple[float, float]]] = {}
         self.requests = 0
         self.seconds = 0.0
 
-    def scores(self, context: str, candidates: list[str]) -> dict[str, tuple[float, float]]:
+    def reading_scores(self, context: str, readings: list[dict], typed: str | None) -> dict[str, tuple[float, float]]:
+        return self.scores(context, [r["text"] for r in readings], typed)
+
+    def scores(self, context: str, candidates: list[str], typed: str | None = None) -> dict[str, tuple[float, float]]:
         # A reading that opens the field gets its capital, also when the model does not see the text before it.
         opens_field = not context
         if self.no_context:
             context = ""
-        key = (context, tuple(sorted(candidates)), opens_field)
+        typed_key = typed if self.prompt_format == "typed" else None
+        key = (context, tuple(sorted(candidates)), opens_field, typed_key)
         if key not in self.cache:
-            lm_context = language_model_text(context, True)
+            lm_context = language_model_prompt(context, typed_key, self.prompt_format)
             lm_candidates = [language_model_text(c, opens_field) for c in key[1]]
             for text in [lm_context, *lm_candidates]:
                 if "\t" in text or "\n" in text:
@@ -165,7 +192,7 @@ class Setting:
     space_after: int
 
 
-def engine_choice(readings: list[dict], text_before: str) -> str:
+def engine_choice(readings: list[dict], text_before: str, typed: str | None = None) -> str:
     return next(r for r in readings if r["chosen"])["text"]
 
 
@@ -173,7 +200,7 @@ def oracle_chooser(target: str):
     """A chooser that knows the intended text: it takes the reading that keeps the field a
     prefix of the intended text, when the list holds one, and the engine's choice otherwise.
     Its score is an upper bound for any chooser over the same lists, one correction at a time."""
-    def chooser(readings: list[dict], text_before: str) -> str:
+    def chooser(readings: list[dict], text_before: str, typed: str | None = None) -> str:
         for reading in readings:
             if target.startswith(text_before + reading["text"] + " "):
                 return reading["text"]
@@ -181,18 +208,19 @@ def oracle_chooser(target: str):
     return chooser
 
 
-def setting_chooser(setting: Setting, model: LanguageModel | None):
-    def chooser(readings: list[dict], text_before: str) -> str:
-        return choose(readings, text_before.rstrip(" "), setting, model)
+def setting_chooser(setting: Setting, model):
+    """`model` is a LanguageModel, or any object with the same `reading_scores` method."""
+    def chooser(readings: list[dict], text_before: str, typed: str | None = None) -> str:
+        return choose(readings, text_before.rstrip(" "), setting, model, typed)
     return chooser
 
 
-def choose(readings: list[dict], context: str, setting: Setting, model: LanguageModel | None) -> str:
+def choose(readings: list[dict], context: str, setting: Setting, model, typed: str | None = None) -> str:
     chosen = next(r for r in readings if r["chosen"])
     if len(readings) == 1:
         return chosen["text"]
     # Weight 0 is the control without the model: the same margins on the engine score alone.
-    lm = model.scores(context, [r["text"] for r in readings]) if setting.weight != 0 else None
+    lm = model.reading_scores(context, readings, typed) if setting.weight != 0 else None
 
     def combined(reading: dict) -> float:
         if lm is None:
@@ -268,7 +296,8 @@ class RecentWord:
 
 def type_case(case: dict, engine: Engine, chooser) -> str:
     """Types one case and returns the text the field holds after the context. `chooser` takes
-    the readings and the text before the span and returns the reading to show."""
+    the readings, the text before the span and the typed span (lower case, as the engine reads
+    it) and returns the reading to show."""
     start = case["context"] + " " if case["context"] else ""
     document = start
     recent: RecentWord | None = None
@@ -292,7 +321,7 @@ def type_case(case: dict, engine: Engine, chooser) -> str:
                 if len(typed_span) >= 2:
                     readings = engine.readings(word_before_space(text_before), typed_span.lower())
                     if readings is not None:
-                        reading = chooser(readings, text_before)
+                        reading = chooser(readings, text_before, typed_span.lower())
                 final = reading if reading is not None else shown_span
                 final_words = [w for w in final.split(" ") if w]
                 if final != shown_span:
@@ -371,6 +400,8 @@ def main():
     parser.add_argument("--threads", type=int, default=4)
     parser.add_argument("--no-context", action="store_true",
                         help="the model reads each reading without the text before it, as a control")
+    parser.add_argument("--prompt-format", choices=PROMPT_FORMATS, default="stock",
+                        help="stock: the text before the span; typed: also the typed span (language_model_prompt)")
     parser.add_argument("--name", required=True)
     parser.add_argument("--out", type=Path, required=True)
     arguments = parser.parse_args()
@@ -387,7 +418,7 @@ def main():
     control = summarize(cases, control_predictions)
     print("control", json.dumps(control["groups"]), flush=True)
     result = {"name": arguments.name, "cases": [p.name for p in CASE_FILES], "readings_per_correction": READINGS,
-              "no_context": arguments.no_context, "control": control}
+              "no_context": arguments.no_context, "prompt_format": arguments.prompt_format, "control": control}
     write_predictions(arguments.out / "control.dev.jsonl", cases, control_predictions)
     calls = [len(r) for r in engine.cache.values() if r is not None]
     result["engine_calls"] = {"distinct_spans": len(calls), "mean_readings": sum(calls) / max(1, len(calls))}
@@ -409,7 +440,7 @@ def main():
                                        "fold_check": result["without_model"]["fold_check"]}), flush=True)
 
     if arguments.model is not None:
-        model = LanguageModel(arguments.lm, arguments.model, arguments.threads, arguments.no_context)
+        model = LanguageModel(arguments.lm, arguments.model, arguments.threads, arguments.no_context, arguments.prompt_format)
         result["lm_ready"] = model.ready
         settings = [Setting(*values) for values in itertools.product(*GRID.values())]
         rows = []

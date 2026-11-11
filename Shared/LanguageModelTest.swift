@@ -12,7 +12,8 @@ protocol LanguageModelMeasuring: AnyObject {
 /// describes the test and each of its result lines.
 ///
 /// The test only measures. It loads its own copy of the model when a run starts and frees it
-/// when the run ends, beside the model that re-ranks the English corrections.
+/// when the run ends. In the keyboard `onRunStart` frees the model that re-ranks the English
+/// corrections first and `onRunEnd` loads it again, so the process never holds two copies.
 ///
 /// Before the test's own lines come the lines of `keyboardLines`, which describe that model in
 /// this process. Each starts with "reranker" or "memory":
@@ -28,16 +29,21 @@ protocol LanguageModelMeasuring: AnyObject {
 ///               the engine's choice because the model was not ready, because the text was
 ///               outside the model's limits, or because of a model error
 ///   reranker    the requests, the tokens the model read, and the tokens put in place of -1
-///   memory      the memory of the process right before the test loads its own copy
+///   memory      the memory of the process with the keyboard's model, right before the test
+///               frees that model and loads its own copy
 @MainActor
 final class BundledLanguageModelTest: LanguageModelMeasuring {
     /// Name of the model file in the bundle, without ".gguf". scripts/ci/fetch_language_model.sh
     /// downloads the file before the build.
-    static let modelResource = "distilgpt2.Q3_K_M"
+    static let modelResource = "smollm2-lora-typed-seed1.Q4_K_M"
 
     /// Lines about the model that re-ranks the English corrections in this process. Without
     /// it the result holds the test's own lines only.
     var keyboardLines: (@MainActor () -> [String])?
+    /// Runs after the lines of `keyboardLines` and before the test loads its model.
+    var onRunStart: (@MainActor () -> Void)?
+    /// Runs after the test freed its model, before the last line reaches the stream's reader.
+    var onRunEnd: (@MainActor () -> Void)?
 
     func resultLines() -> AsyncStream<String> {
         let (stream, continuation) = AsyncStream.makeStream(of: String.self)
@@ -47,18 +53,31 @@ final class BundledLanguageModelTest: LanguageModelMeasuring {
         for line in keyboardLines?() ?? [] {
             continuation.yield(line)
         }
+        onRunStart?()
         guard let path = Bundle(for: BundledLanguageModelTest.self)
             .path(forResource: Self.modelResource, ofType: "gguf")
         else {
             // A missing file is a result line. The keyboard keeps running.
             continuation.yield("model       failed: \(Self.modelResource).gguf is missing from the bundle")
+            onRunEnd?()
             continuation.finish()
             return stream
+        }
+        // The C test writes to an inner stream on its own thread. The main thread passes each line
+        // on and runs `onRunEnd` once the test has freed its model.
+        let (testLines, testContinuation) = AsyncStream.makeStream(of: String.self)
+        let onRunEnd = self.onRunEnd
+        Task { @MainActor in
+            for await line in testLines {
+                continuation.yield(line)
+            }
+            onRunEnd?()
+            continuation.finish()
         }
         // The test takes several seconds, so it runs on its own thread and the keys keep
         // answering. A new thread gets a stack of 512 KB, and llama.cpp gets 2 MB here.
         let thread = Thread { @Sendable in
-            Self.run(modelPath: path, continuation: continuation)
+            Self.run(modelPath: path, continuation: testContinuation)
         }
         thread.stackSize = 2 << 20
         thread.qualityOfService = .userInitiated

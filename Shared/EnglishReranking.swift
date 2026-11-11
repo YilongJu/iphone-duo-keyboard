@@ -45,10 +45,8 @@ protocol CandidateScoring: AnyObject {
 /// The text that the language model reads for one correction: a context, and one candidate per
 /// reading of the typed span.
 ///
-/// `make` is the only place that decides this text. A model with another input format, such as
-/// a fine-tuned model that reads the text before the word, the typed letters and then the
-/// candidate, comes in by a change of `make` and of the model file. The rule's weight and margins
-/// were tuned for distilgpt2 with this format, so a new model needs its own tuning as well.
+/// `make` is the only place that decides this text. Another model with another input format comes
+/// in by a change of `make`, of the model file, and of the rule tuned for that model.
 struct LanguageModelPrompt: Equatable {
     /// The text the model reads after its start token. The scorer keeps the last 96 tokens.
     let context: String
@@ -56,24 +54,31 @@ struct LanguageModelPrompt: Equatable {
     /// the context, so a candidate holds the space that separates it from the context.
     let candidates: [String]
 
-    /// The format of the distilgpt2 tuning in scripts/lm-rerank/rerank.py: the text before the
-    /// span without the spaces at its end, then one space and the reading. Both texts get the
-    /// capitals a person sees in the field: the word "I" with its contractions, and the first
-    /// letter of the field. A reading that opens the field follows the start token directly.
+    /// The typed format of the SmolLM2 fine-tune: `language_model_prompt` of
+    /// scripts/lm-rerank/rerank.py with the format "typed", as scripts/lm-finetune trained it.
+    /// The context is the text before the span without the spaces at its end, one space, and the
+    /// typed span between two bars, as in "How much | sutar |". Each candidate is one space and the
+    /// reading, as in " sugar". The text before the span and the readings get the capitals a person
+    /// sees in the field: the word "I" with its contractions, and the first letter of the field.
+    /// The typed span stays as typed. With an empty text before the span the context is
+    /// "| sutar |", and a reading gets the capital of the field's first letter.
     ///
-    /// `textBefore` is the field's text before the typed span, `typed` the span as typed, in
-    /// lower case, and `readings` the engine's readings of the span. This format does not read
-    /// `typed`, and a fine-tuned format may.
-    static func make(textBefore: String, typed: String, readings: [String]) -> LanguageModelPrompt {
+    /// `textBefore` is the field's text before the typed span, `typed` the span as the engine reads
+    /// it, in lower case, and `readings` the engine's readings of the span. The result is nil when
+    /// the text before the span or the typed span holds a bar, which the format cannot hold. The
+    /// harness stops on such a text, and the model never saw one.
+    static func make(textBefore: String, typed: String, readings: [String]) -> LanguageModelPrompt? {
         var end = textBefore.endIndex
         while end > textBefore.startIndex, textBefore[textBefore.index(before: end)] == " " {
             end = textBefore.index(before: end)
         }
         let before = String(textBefore[..<end])
         let opensField = before.isEmpty
+        let text = withAutomaticCapitals(before, opensField: true)
+        guard !text.contains("|"), !typed.contains("|") else { return nil }
         return LanguageModelPrompt(
-            context: withAutomaticCapitals(before, opensField: true),
-            candidates: readings.map { (opensField ? "" : " ") + withAutomaticCapitals($0, opensField: opensField) })
+            context: (text.isEmpty ? "" : text + " ") + "| " + typed + " |",
+            candidates: readings.map { " " + withAutomaticCapitals($0, opensField: opensField) })
     }
 
     /// `language_model_text` of scripts/lm-rerank/rerank.py: words split at single spaces.
@@ -210,7 +215,7 @@ final class EnglishReranker {
     /// it on the space bar.
     var onModelError: (String) -> Void = { _ in }
 
-    init(scorer: CandidateScoring, rule: RerankRule = .distilgpt2) {
+    init(scorer: CandidateScoring, rule: RerankRule) {
         self.scorer = scorer
         self.rule = rule
     }
@@ -223,7 +228,11 @@ final class EnglishReranker {
         }
         guard readings.count > 1 else { return readings[chosen].text }
         let started = ProcessInfo.processInfo.systemUptime
-        let prompt = LanguageModelPrompt.make(textBefore: textBefore, typed: typed, readings: readings.map { $0.text })
+        guard let prompt = LanguageModelPrompt.make(textBefore: textBefore, typed: typed, readings: readings.map { $0.text })
+        else {
+            statistics.recordRefused("a bar in the text, which the model's format cannot hold")
+            return readings[chosen].text
+        }
         let result = scorer.score(prompt)
         var choice = chosen
         switch result {

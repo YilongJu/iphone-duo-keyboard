@@ -15,7 +15,7 @@ Outputs in --out:
 Usage, from the repository root, on Linux:
     LD_LIBRARY_PATH=$PWD/build/lm-rerank/llama/lib python3 scripts/lm-keyboard/harness_trace.py \
         --shim build/lm-rerank/libduo_shim.so --lm build/lm-rerank/lm_score \
-        --model build/lm-rerank/models/distilgpt2.Q3_K_M.gguf --out build/lm-keyboard/harness
+        --model Shared/smollm2-lora-typed-seed1.Q4_K_M.gguf --out build/lm-keyboard/harness
 """
 import argparse
 import json
@@ -26,8 +26,12 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts" / "lm-rerank"))
 import rerank  # noqa: E402
 
-# The setting tuned for distilgpt2 Q3_K_M (scripts/lm-rerank/README.md, Table 2).
-TUNED = rerank.Setting(weight=1.0, margin_from_typed=24, margin_to_typed=0, margin_other=2, space_after=1)
+# The setting of the SmolLM2-135M LoRA fine-tune, chosen on the tuning split (the arm
+# smollm2-lora-seed1 of scripts/lm-finetune/test-plan.json on the branch engine/lm-finetune).
+# KeyboardLanguageModel.rule holds the same numbers.
+TUNED = rerank.Setting(weight=1.0, margin_from_typed=0, margin_to_typed=4, margin_other=2, space_after=1)
+# The input format the model was trained on (language_model_prompt of rerank.py).
+PROMPT_FORMAT = "typed"
 
 
 def main():
@@ -43,7 +47,8 @@ def main():
     if any(case["split"] != "dev" for case in cases):
         raise SystemExit("a case outside the dev half")
     engine = rerank.Engine(arguments.shim, rerank.LEXICON)
-    model = rerank.LanguageModel(arguments.lm, arguments.model, arguments.threads, no_context=False)
+    model = rerank.LanguageModel(arguments.lm, arguments.model, arguments.threads, no_context=False,
+                                 prompt_format=PROMPT_FORMAT)
     arguments.out.mkdir(parents=True, exist_ok=True)
 
     control = rerank.run(cases, engine, rerank.engine_choice)
@@ -55,21 +60,22 @@ def main():
     for case in cases:
         step = 0
 
-        def chooser(readings, text_before):
+        def chooser(readings, text_before, typed):
             nonlocal step
             context = text_before.rstrip(" ")
-            choice = rerank.choose(readings, context, TUNED, model)
+            choice = rerank.choose(readings, context, TUNED, model, typed)
             if len(readings) > 1:
-                scores = model.scores(context, [r["text"] for r in readings])
+                scores = model.reading_scores(context, readings, typed)
                 opens_field = not context
-                lm_context = rerank.language_model_text(context, True)
+                lm_context = rerank.language_model_prompt(context, typed, PROMPT_FORMAT)
                 sorted_texts = sorted(r["text"] for r in readings)
                 requests["\t".join([lm_context, *[rerank.language_model_text(t, opens_field) for t in sorted_texts]])] = None
                 trace.append({
                     "id": case["id"], "step": step, "text_before": text_before, "context": lm_context,
                     "readings": [{
                         "text": r["text"],
-                        "candidate": ("" if opens_field else " ") + rerank.language_model_text(r["text"], opens_field),
+                        # lm_score puts one space before a candidate after a context that is not empty.
+                        "candidate": ("" if not lm_context else " ") + rerank.language_model_text(r["text"], opens_field),
                         "engine_score": r["score"], "as_typed": r["as_typed"], "chosen": r["chosen"],
                         "log_probability": scores[r["text"]][0], "space_after": scores[r["text"]][1],
                     } for r in readings],
@@ -87,7 +93,7 @@ def main():
     (arguments.out / "requests.tsv").write_text("".join(request + "\n" for request in requests), encoding="utf-8")
 
     result = {
-        "setting": TUNED.__dict__, "lm_ready": model.ready,
+        "setting": TUNED.__dict__, "prompt_format": PROMPT_FORMAT, "lm_ready": model.ready,
         "control": rerank.summarize(cases, control), "reranked": rerank.summarize(cases, reranked),
         "corrections_read_by_the_model": len(trace), "distinct_requests": len(requests),
         "lm_report": model.close(),
