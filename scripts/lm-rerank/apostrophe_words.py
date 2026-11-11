@@ -165,8 +165,9 @@ def main():
     parser.add_argument("--threads", type=int, default=4)
     parser.add_argument("--half", choices=["dev", "test"], required=True)
     parser.add_argument("--base", choices=list(BASES), required=True, help="the model's setting and input format")
-    parser.add_argument("--steps", choices=["all", "next-slips"], required=True,
-                        help="the dev grid: every scope and score, or the keyboard's scope next and score slips")
+    parser.add_argument("--steps", choices=["all", "next-slips", "prompts"], required=True,
+                        help="the dev grid: every scope and score; the keyboard's scope next and score slips; "
+                             "or the scope next with the scores model and slips for every prompt of the step")
     parser.add_argument("--margin", type=float, help="the one margin_apostrophe of the test-half run")
     parser.add_argument("--scope", choices=["all", "next"], help="the one apostrophe_scope of the test-half run")
     parser.add_argument("--score", choices=["model", "slips", "slips_only"], help="the one apostrophe_score of the test-half run")
@@ -239,16 +240,24 @@ def main():
                                "existing": existing_summary(existing, shipped_engine, chooser(shipped))})
             record("readings only", {"group": run_group(group, new_engine, chooser(shipped)),
                                      "existing": existing_summary(existing, new_engine, chooser(shipped))})
-            steps = STEPS if arguments.steps == "all" else [step for step in STEPS if step[:2] == ("next", "slips")]
+            if arguments.steps == "all":
+                steps = [(*step, "same") for step in STEPS]
+            elif arguments.steps == "next-slips":
+                steps = [(*step, "same") for step in STEPS if step[:2] == ("next", "slips")]
+            else:
+                steps = [("next", score, margin, prompt) for prompt in rerank.APOSTROPHE_PROMPTS
+                         for score in ("model", "slips") for margin in GRID]
         else:
             record("shipped", {"group": run_group(group, shipped_engine, chooser(shipped))})
-            steps = [(arguments.scope, arguments.score, arguments.margin)]
-        for scope, step_score, margin in steps:
-            setting = rerank.Setting(**TUNED, margin_apostrophe=margin, apostrophe_scope=scope, apostrophe_score=step_score)
+            steps = [(arguments.scope, arguments.score, arguments.margin, "same")]
+        for scope, step_score, margin, prompt in steps:
+            setting = rerank.Setting(**TUNED, margin_apostrophe=margin, apostrophe_scope=scope, apostrophe_score=step_score,
+                                     apostrophe_prompt=prompt)
             entry = {"group": run_group(group, new_engine, chooser(setting))}
             if arguments.half == "dev":
                 entry["existing"] = existing_summary(existing, new_engine, chooser(setting))
-            record(f"step {scope} {step_score} {margin:g}", entry)
+            # The prompt "same" keeps the names of the earlier runs.
+            record(f"step {scope} {step_score} {margin:g}" + ("" if prompt == "same" else f" {prompt}"), entry)
             print(f"  {time.monotonic() - started:.0f} s, {model.requests} model requests", flush=True)
 
         if arguments.half == "dev":

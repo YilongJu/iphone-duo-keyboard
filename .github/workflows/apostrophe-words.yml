@@ -9,7 +9,7 @@ name: Apostrophe words
 # MARGIN that the dev half chose.
 on:
   push:
-    branches: [engine/apostrophe-words, engine/lm-keyboard]
+    branches: [engine/apostrophe-words, engine/lm-keyboard, engine/apostrophe-prompt]
     paths:
       - 'Engine/**'
       - 'Shared/lexicon-english.bin'
@@ -20,6 +20,8 @@ on:
 env:
   # The test half was read once, in run 42979245575. Later runs read the dev half only.
   HALF: dev
+  # The dev grid of the model run: next-slips, or prompts for the prompts of the step.
+  STEPS: prompts
   MARGIN: ''
   SCOPE: ''
   SCORE: ''
@@ -113,7 +115,7 @@ jobs:
           git show 84b3e00:Shared/lexicon-english.bin > build/lm-rerank/lexicon-english-shipped.bin
           cp build/lm-rerank/libduo_shim.so build/lm-rerank/libduo_shim_shipped.so
           python3 scripts/lm-rerank/apostrophe_words.py --shim build/lm-rerank/libduo_shim.so --lm build/lm-rerank/lm_score             --shipped-shim build/lm-rerank/libduo_shim_shipped.so --shipped-lexicon build/lm-rerank/lexicon-english-shipped.bin \
-            --model "$(cat build/lm-rerank/model-path.txt)" --threads 4 --half "$half" "${margin[@]}"             --base smollm2-typed --steps next-slips \
+            --model "$(cat build/lm-rerank/model-path.txt)" --threads 4 --half "$half" "${margin[@]}"             --base smollm2-typed --steps "$STEPS" \
             --out build/lm-rerank/apostrophe-words/rerank
           python3 scripts/lm-rerank/apostrophe_words_table.py build/lm-rerank/apostrophe-words/rerank/result.$half.json \
             | tee build/lm-rerank/apostrophe-words/rerank/table.$half.md >> "$GITHUB_STEP_SUMMARY"

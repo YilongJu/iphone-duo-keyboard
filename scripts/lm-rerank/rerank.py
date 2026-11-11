@@ -149,6 +149,40 @@ class LanguageModel:
     def reading_scores(self, context: str, readings: list[dict], typed: str | None) -> dict[str, tuple[float, float]]:
         return self.scores(context, [r["text"] for r in readings], typed)
 
+    def prompt_scores(self, lm_context: str, candidates: list[str], opens_field: bool) -> dict[str, tuple[float, float]]:
+        """The scores of the candidates after a first text that the caller built."""
+        key = ("prompt", lm_context, tuple(sorted(candidates)), opens_field)
+        if key not in self.cache:
+            lm_candidates = [language_model_text(c, opens_field) for c in key[2]]
+            for text in [lm_context, *lm_candidates]:
+                if "\t" in text or "\n" in text:
+                    raise SystemExit(f"a text holds a tab or a line break: {text!r}")
+            started = time.monotonic()
+            self.process.stdin.write("\t".join([lm_context, *lm_candidates]) + "\n")
+            self.process.stdin.flush()
+            answer = self.process.stdout.readline()
+            self.seconds += time.monotonic() - started
+            self.requests += 1
+            fields = answer.rstrip("\n").split("\t")
+            if len(fields) != len(key[2]):
+                raise SystemExit(f"lm_score answered {answer!r} to {key}: {self.process.stderr.read()}")
+            self.cache[key] = {c: tuple(float(v) for v in f.split(" ")) for c, f in zip(key[2], fields)}
+        return self.cache[key]
+
+    def step_scores(self, context: str, texts: list[str], prompt: str) -> dict[str, tuple[float, float]]:
+        """The scores of the apostrophe step for the prompt "stock" or "reading" (Setting)."""
+        opens_field = not context
+        if self.no_context:
+            context = ""
+        if prompt == "stock":
+            return self.prompt_scores(language_model_prompt(context, None, "stock"), texts, opens_field)
+        if prompt == "reading":
+            scores = {}
+            for text in texts:
+                scores.update(self.prompt_scores(language_model_prompt(context, text, "typed"), [text], opens_field))
+            return scores
+        raise SystemExit(f"unknown apostrophe_prompt {prompt!r}")
+
     def scores(self, context: str, candidates: list[str], typed: str | None = None) -> dict[str, tuple[float, float]]:
         # A reading that opens the field gets its capital, also when the model does not see the text before it.
         opens_field = not context
@@ -202,6 +236,14 @@ class Setting:
     # reading's slip cost, 0.5 for a missing apostrophe and 5.5 for an extra one. "slips_only":
     # the slip costs alone, as the comparison without the model.
     apostrophe_score: str = "model"
+    # The text the model reads for the step's scores, in APOSTROPHE_PROMPTS. "same": the scores of
+    # the margins, in the format of the model. "stock": the text before the span alone, without
+    # the typed span. "reading": the typed format with each reading's own text in place of the
+    # typed span, so both forms of the word read as typed.
+    apostrophe_prompt: str = "same"
+
+
+APOSTROPHE_PROMPTS = ("same", "stock", "reading")
 
 
 def engine_choice(readings: list[dict], text_before: str, typed: str | None = None) -> str:
@@ -252,7 +294,8 @@ def choose(readings: list[dict], context: str, setting: Setting, model, typed: s
             margin = setting.margin_other
         choice = best if combined(best) - combined(chosen) >= margin else chosen
     if setting.margin_apostrophe is not None and lm is not None:
-        choice = apostrophe_step(readings, choice, lm, setting)
+        choice = apostrophe_step(readings, choice, lm, setting,
+                                 lambda texts: model.step_scores(context, texts, setting.apostrophe_prompt))
     return choice["text"]
 
 
@@ -271,7 +314,7 @@ def is_twin(text: str, typed: str, scope: str) -> bool:
             and words[0].replace("'", "") == typed_words[0].replace("'", ""))
 
 
-def apostrophe_step(readings: list[dict], choice: dict, lm: dict, setting: Setting) -> dict:
+def apostrophe_step(readings: list[dict], choice: dict, lm: dict, setting: Setting, step_scores=None) -> dict:
     """The apostrophe step. The twin with the highest step score, the first one in the list on a
     tie, replaces the choice when its step score leads the choice's by `margin_apostrophe`. The
     text as typed is never a twin. The step score is the model score, the log probability plus
@@ -283,6 +326,8 @@ def apostrophe_step(readings: list[dict], choice: dict, lm: dict, setting: Setti
     gets one either."""
     if setting.apostrophe_score not in ("model", "slips", "slips_only"):
         raise SystemExit(f"unknown apostrophe_score {setting.apostrophe_score!r}")
+    if setting.apostrophe_prompt not in APOSTROPHE_PROMPTS:
+        raise SystemExit(f"unknown apostrophe_prompt {setting.apostrophe_prompt!r}")
 
     def step_score(reading: dict) -> float:
         # "slips_only" is the comparison without the model: the cheaper repair wins.
@@ -296,6 +341,9 @@ def apostrophe_step(readings: list[dict], choice: dict, lm: dict, setting: Setti
     twins = [r for r in readings if r is not choice and not r["as_typed"] and is_twin(r["text"], typed, setting.apostrophe_scope)]
     if not twins:
         return choice
+    if setting.apostrophe_prompt != "same":
+        # The step reads the choice and the twins again, with its own prompt.
+        lm = step_scores([choice["text"], *[r["text"] for r in twins]])
     twin = max(twins, key=step_score)
     return twin if step_score(twin) - step_score(choice) >= setting.margin_apostrophe else choice
 
