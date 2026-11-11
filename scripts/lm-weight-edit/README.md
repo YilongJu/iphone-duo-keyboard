@@ -21,6 +21,14 @@ models, and run its `evaluate.py` and `check_parity.py` with outputs in this wor
 | `quant_loss.py` | Lists right at f16 and at Q3_K_M on the same 500 parity lists. |
 | `eval_edit.sh` | `evaluate.py` of the fine-tune in WSL: the tuning split picks the setting, then dev scores the arm. |
 | `eval_status.sh` | Progress of the WSL evaluations. |
+| `eval_extra.py`, `eval_extra.sh` | For one evaluated arm: the stopping cases at its tuned setting, dev at the common setting of its base, and the calibration-only candidates of a fine-tune. |
+| `export_convert.sh` | One conversion stream: export on the processor, `convert_edit.sh`, parity. `--status` prints each arm's state. |
+| `round2_queue.sh` | The WSL queue of the interpolation arms, the random-edit seeds and the reference rows. |
+| `interp_report.py` | The interpolation tables, the selection rule on the stopping cases and the dev criteria. |
+| `paired.py` | Exact McNemar test and grouped bootstrap interval for two arms on dev. |
+| `collect.py` | The table of every chosen arm. |
+| `copy_results.sh` | Copies results from WSL into `build/lm-weight-edit`. |
+| `with_gpu_lock.sh` | Runs a GPU command while it holds `build/gpu.lock` of the main checkout. |
 
 ## Commands
 
@@ -38,6 +46,23 @@ bash scripts/lm-weight-edit/convert_edit.sh NAME
 python scripts/lm-weight-edit/quant_loss.py build/lm-weight-edit/models/NAME/parity
 MSYS_NO_PATHCONV=1 wsl -d Ubuntu -- bash /mnt/d/Github/iphone-duo-keyboard/build/worktrees/lm-edit/scripts/lm-weight-edit/eval_edit.sh NAME NAME.Q3_K_M.gguf 2
 ```
+
+The interpolation arms and the random-edit seeds (`make_arms.py` writes `*-round2.json`):
+
+```bash
+bash scripts/lm-weight-edit/with_gpu_lock.sh "stopping-list scores" $PY scripts/lm-weight-edit/sweep.py     --base distilgpt2 --arms build/lm-weight-edit/arms/distilgpt2-round2.json --out build/lm-weight-edit/stop/distilgpt2-round2.jsonl
+bash scripts/lm-weight-edit/export_convert.sh smollm2-135m build/lm-weight-edit/arms/smollm2-round2.json s-wise-0.{1..9} s-random-1.0-seed{2..5}
+MSYS_NO_PATHCONV=1 wsl -d Ubuntu -- bash /mnt/d/Github/iphone-duo-keyboard/build/worktrees/lm-edit/scripts/lm-weight-edit/round2_queue.sh 4 references s-wise s-random
+MSYS_NO_PATHCONV=1 wsl -d Ubuntu -- bash /mnt/d/Github/iphone-duo-keyboard/build/worktrees/lm-edit/scripts/lm-weight-edit/copy_results.sh
+python scripts/lm-weight-edit/interp_report.py s d d2
+```
+
+These evaluations have not finished for any arm. `docs/lm-weight-edit-handoff.md` gives the state
+and the full resume commands. Run at most 4 jobs of 2 threads on the working desktop.
+
+After a fresh checkout on Windows, run `sed -i 's/
+$//' scripts/lm-weight-edit/*.sh` before WSL
+reads the shell files.
 
 `sweep.py` caps its GPU memory at 3.5 GB and runs at below-normal priority. An arm takes about
 40 s on the stopping split on an RTX 4090. `sweep.py` appends to its output and skips arms it has
