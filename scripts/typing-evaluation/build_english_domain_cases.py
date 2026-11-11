@@ -8,7 +8,9 @@ Sources:
   build/domain-pack/corpus/sentences.{dev,test}.jsonl. They come from documents that the pack
   builder never read, and the dev and test halves come from different documents.
 - Everyday sentences: Tatoeba English, as build_english_cases.py reads it. A sentence with an
-  even id feeds the dev half and one with an odd id the test half.
+  even id feeds the dev half and one with an odd id the test half. Only one pair of ids in five
+  feeds a case (build_pack.tatoeba_feeds_the_cases). The pack builder reads the other four for
+  the letter case of everyday words, so the everyday cases are new text for the pack.
 - The pack: Shared/supplement-ai-software.tsv and scripts/domain-pack/pack/*.tsv.
 
 A case holds the fields of build_english_cases.py and these:
@@ -39,9 +41,10 @@ neighbour_controls  everyday sentences with a common word one edit away from a w
     neighbour_clean                          the common word typed right. It must stay.
     neighbour_slip                           a slip of the common word. It must go to the common word.
     neighbour_slip_between                   a slip one edit away from both words
-    neighbour_slip_onto_term                 a slip of the common word that spells a word new in the
-                                             pack. With the pack the keyboard takes the typed
-                                             text for that word, so this category is the price of the pack.
+term_for_everyday_word  an everyday sentence where a slip of a common word spells a word new in the pack
+    neighbour_slip_onto_term                 "gpt" typed for "got". With the pack the keyboard takes
+                                             the typed text for the word of the pack, so this
+                                             group is the price of the pack. It is not a control.
 capitals            the preferred capitals of a word of the pack (scoring "case")
     capital_lower_stays                      "gpu" inside a sentence stays "gpu"
     capital_deliberate                       "Gpu" inside a sentence becomes "GPU"
@@ -54,14 +57,18 @@ capitals            the preferred capitals of a word of the pack (scoring "case"
                                              a slip in lower case becomes the word in lower case, and
                                              a slip with a capital becomes the preferred form
     capital_plain_word_keeps_capital         "Tokenizer" stays: the pack prefers lower case for it
+    capital_possessive                       "Gpu's" becomes "GPU's", and "gpu's" stays
+    capital_symbol_first                     "[ytorch" as the first word of the field becomes "PyTorch",
+                                             and inside a sentence "pytorch"
     capital_control_everyday_start, capital_control_everyday_deliberate, capital_control_everyday_lower
                                              a word of the pack that is also an everyday word, as "rag"
     capital_control_ordinary_word            a word outside the pack keeps its typed capital
     capital_control_collision_lower          "it", "us" and "ai" in lower case stay in lower case
 
-The stream files hold whole sentences in lower case without punctuation, typed word by word.
-Their measure is the count of words that the keyboard changes: `stream` is "technical" for the
-held-out technical sentences and "everyday" for Tatoeba sentences.
+The stream files hold whole sentences, typed word by word. Their measure is the count of words
+that the keyboard changes. `stream` is "technical" for held-out technical sentences in lower
+case without punctuation, "written" for other held-out technical sentences with the capitals
+and punctuation of their source, and "everyday" for Tatoeba sentences in lower case.
 
 Usage, from the repository root:
     uv run --with wordfreq python scripts/typing-evaluation/build_english_domain_cases.py
@@ -81,7 +88,7 @@ import keyboard_noise as noise
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 sys.path.insert(0, str(ROOT / "scripts" / "domain-pack"))
-from build_pack import read_base_lexicon  # noqa: E402
+from build_pack import read_base_lexicon, tatoeba_feeds_the_cases  # noqa: E402
 
 CORPUS = ROOT / "build" / "domain-pack" / "corpus"
 PACK = ROOT / "scripts" / "domain-pack" / "pack"
@@ -99,11 +106,13 @@ GROUPS = {
     "domain_phrases": ["phrase_clean", "phrase_space_missing", "phrase_space_to_letter", "phrase_space_transposed",
                        "term_space_extra", "term_letter_to_space", "hyphen_second_part_slip"],
     "required": ["required_clean", "required_clean_next_word", "required_slip_named", "required_slip", "required_control"],
-    "neighbour_controls": ["neighbour_clean", "neighbour_slip", "neighbour_slip_between", "neighbour_slip_onto_term"],
+    "neighbour_controls": ["neighbour_clean", "neighbour_slip", "neighbour_slip_between"],
+    "term_for_everyday_word": ["neighbour_slip_onto_term"],
     "capitals": ["capital_lower_stays", "capital_deliberate", "capital_sentence_start", "capital_inner",
                  "capital_preferred_stays", "capital_all_capitals_stay", "capital_two_capitals_nearest",
                  "capital_slip_lower", "capital_slip_deliberate", "capital_slip_sentence_start",
-                 "capital_plain_word_keeps_capital", "capital_control_everyday_start",
+                 "capital_plain_word_keeps_capital", "capital_possessive", "capital_symbol_first",
+                 "capital_control_everyday_start",
                  "capital_control_everyday_deliberate", "capital_control_everyday_lower",
                  "capital_control_ordinary_word", "capital_control_collision_lower"],
 }
@@ -125,6 +134,9 @@ CONTROL_CONTEXTS = {
     "test": ["an", "this", "he bought the", "they need an", "it looks", "a very"],
 }
 # Everyday words whose capital form is also a technical name. In lower case they stay in lower case.
+# A symbol or digit key beside the key of a first letter (symbol_keys.py), one per letter.
+SYMBOL_FOR_FIRST_LETTER = {"p": "[", "q": "1", "w": "2", "e": "3", "r": "4", "t": "5", "y": "6", "u": "7", "i": "8",
+                           "o": "9", "l": ";", "k": ",", "m": ",", "n": "."}
 COLLISION_WORDS = ["it", "us", "ai", "go", "rust", "swift", "python", "apple", "java", "spark", "meta", "git", "rag"]
 
 
@@ -197,13 +209,23 @@ def read_table() -> tuple[dict[str, tuple[str, bool]], dict[str, str], list[str]
     return table, kinds, requested
 
 
-def technical_sentences(half: str) -> list[dict]:
+def letters_of(text: str) -> str:
+    return re.sub(r"[^a-z]", "", text.lower())
+
+
+def technical_sentences(half: str, leave_out: set[str] = frozenset()) -> list[dict]:
+    """The held-out sentences of one half, each once, in a seeded order. `leave_out` holds the
+    letters of sentences that must stay out: the test half leaves out the sentences of the dev
+    half, because two documents can hold the same sentence."""
     rows = []
+    seen = set(leave_out)
     with (CORPUS / f"sentences.{half}.jsonl").open(encoding="utf-8") as file:
         for line in file:
             row = json.loads(line)
             text = row["text"]
-            if text.isascii() and "|" not in text and "\t" not in text:
+            letters = letters_of(text)
+            if text.isascii() and "|" not in text and "\t" not in text and letters not in seen:
+                seen.add(letters)
                 row["tokens"] = text.split()
                 rows.append(row)
     random.Random(f"{SEED}-{half}-technical").shuffle(rows)
@@ -418,6 +440,24 @@ def build_technical(builder: Builder, sentences: list[dict], table, kinds, phras
             builder.add("capital_slip_sentence_start", "", start_rng.choice(slips).capitalize(), cased[term], "the pack",
                         term=term, scoring="case")
 
+    # A possessive of the pack, as "gpu's" with the preferred form "GPU's". The contexts are
+    # written for this file, because few held-out sentences hold these words.
+    possessives = sorted(word for word, (preferred, everyday) in table.items()
+                         if preferred and not everyday and "'" in word and split_of(word) == half)
+    for term in possessives:
+        preferred = table[term][0]
+        builder.add("capital_possessive", "", term.capitalize(), preferred, "the pack", term=term, scoring="case")
+        builder.add("capital_possessive", "I like the", term.capitalize(), preferred, "the pack", term=term, scoring="case")
+        builder.add("capital_possessive", "I like the", term, term, "the pack", term=term, scoring="case")
+
+    # A symbol key in place of the first letter. At the start of the field the keyboard types the
+    # capital by itself, so the word gets its preferred form. Inside a sentence it stays in lower case.
+    symbol_terms = [term for term in start_terms if term[0] in SYMBOL_FOR_FIRST_LETTER and len(term) >= 5]
+    for term in symbol_terms[:60]:
+        typed = SYMBOL_FOR_FIRST_LETTER[term[0]] + term[1:]
+        builder.add("capital_symbol_first", "", typed, cased[term], "the pack", term=term, scoring="case")
+        builder.add("capital_symbol_first", "we use", typed, term, "the pack", term=term, scoring="case")
+
     used.clear()
     for row in sentences:
         tokens = row["tokens"]
@@ -528,7 +568,7 @@ def build_everyday(builder: Builder, sentences, table, kinds, requested: list[st
                 continue
             context = " ".join(words[:index])
             source = f"tatoeba:{sentence_id}"
-            if word in everyday_terms and take(f"everyday:{word}", 8):
+            if word in everyday_terms and take(f"everyday:{word}", 30):
                 builder.add("capital_control_everyday_deliberate", context, word.capitalize(), word.capitalize(), source,
                             term=word, scoring="case")
                 builder.add("capital_control_everyday_lower", context, word, word, source, term=word, scoring="case")
@@ -570,6 +610,23 @@ def build_stream(half: str, technical: list[dict], everyday) -> list[dict]:
                      "context": "", "typed": text, "intended": text, "source": source_of(row)})
         if len(rows) == 1000:
             break
+    # Other sentences, typed as their source wrote them, with capitals and punctuation.
+    used = {row["typed"] for row in rows}
+    written = 0
+    per_source = {}
+    for row in technical:
+        text = " ".join(row["tokens"])
+        words = len(row["tokens"])
+        if not 6 <= words <= 25 or per_source.get(row["source"], 0) >= 25 or any(c.isdigit() for c in text):
+            continue
+        if " ".join(t.strip(EDGE).lower() for t in row["tokens"]) in used:
+            continue
+        per_source[row["source"]] = per_source.get(row["source"], 0) + 1
+        rows.append({"id": f"endomstream-{half}-written-{written:04d}", "split": half, "stream": "written",
+                     "context": "", "typed": text, "intended": text, "source": source_of(row)})
+        written += 1
+        if written == 300:
+            break
     technical_count = len(rows)
     order = everyday[:]
     random.Random(f"{SEED}-{half}-stream").shuffle(order)
@@ -588,11 +645,17 @@ def main():
     phrases = [line.split("\t")[0] for line in (PACK / "ai-software.phrases.tsv").read_text(encoding="utf-8").splitlines()[1:]
                if "'" not in line.split("\t")[0]]
     everyday = base.load_sentences(set(top_n_list("en", 60000)))
+    # Only the Tatoeba sentences that the pack builder did not read.
+    everyday = {half: [sentence for sentence in sentences if tatoeba_feeds_the_cases(sentence[0])]
+                for half, sentences in everyday.items()}
     dev_texts = {tuple(words) for _, words in everyday["dev"]}
     everyday["test"] = [sentence for sentence in everyday["test"] if tuple(sentence[1]) not in dev_texts]
     OUTPUT_DIR.mkdir(exist_ok=True)
+    dev_letters: set[str] = set()
     for half in ("dev", "test"):
-        technical = technical_sentences(half)
+        technical = technical_sentences(half, dev_letters)
+        if half == "dev":
+            dev_letters = {letters_of(" ".join(row["tokens"])) for row in technical}
         builder = Builder(half, known)
         build_technical(builder, technical, table, kinds, phrases)
         build_required(builder, requested)
@@ -611,7 +674,7 @@ def main():
                 sample = next((case for case in cases if case["category"] == category), None)
                 shown = f"e.g. [{sample['context'][-40:]}] {sample['typed']!r} -> {sample['intended']!r}" if sample else ""
                 print(f"    {category:38s} {builder.count(category):4d}   {shown}")
-        for kind in ("technical", "everyday"):
+        for kind in ("technical", "written", "everyday"):
             rows = [row for row in stream if row["stream"] == kind]
             print(f"  stream {kind}: {len(rows)} sentences, {sum(len(row['typed'].split()) for row in rows)} words")
 

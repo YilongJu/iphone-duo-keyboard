@@ -806,16 +806,16 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
         // text stays, and only a lone "i" gets its capital.
         let restored = reading.map { KeyboardTextLogic.restoringCapitals(in: $0, from: typedSpan) }
             ?? KeyboardTextLogic.restoringCapitals(in: shownSpan, from: shownSpan)
-        // A word of the work area gets the form that the typed capitals ask for: "Pytorch" and
-        // "Pytorhc" become "PyTorch", and "pytorch" stays in lower case.
-        let latched = spellChecker.preferredCapitals?.latch(
-            restored, typed: typedSpan, textBefore: String(before.dropLast(shownSpan.count)),
-            type: document.autocapitalizationType) ?? restored
         // A word whose first letter was typed as a symbol key gets the capital that the
         // keyboard types by itself at that place, as in "[lease" at the start of a sentence.
-        let final = KeyboardTextLogic.capitalizingRepairedFirstLetters(
-            in: latched, from: typedSpan, textBefore: String(before.dropLast(shownSpan.count)),
+        let repaired = KeyboardTextLogic.capitalizingRepairedFirstLetters(
+            in: restored, from: typedSpan, textBefore: String(before.dropLast(shownSpan.count)),
             type: document.autocapitalizationType)
+        // A word of the work area gets the form that the typed capitals ask for: "Pytorch" and
+        // "Pytorhc" become "PyTorch", and "pytorch" stays in lower case.
+        let final = spellChecker.preferredCapitals?.latch(
+            repaired, typed: typedSpan, textBefore: String(before.dropLast(shownSpan.count)),
+            type: document.autocapitalizationType) ?? repaired
         let finalWords = final.split(separator: " ")
         if final != shownSpan {
             deleteBackward(count: shownSpan.count)

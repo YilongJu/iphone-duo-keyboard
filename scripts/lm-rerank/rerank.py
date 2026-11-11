@@ -440,6 +440,22 @@ def restoring_capitals(corrected: str, typed: str) -> str:
     return " ".join(capitalized(w) if w == "i" or w.startswith("i'") else w for w in words)
 
 
+def capitalizing_repaired_first_letters(corrected: str, typed: str, text_before: str) -> str:
+    """`capitalizingRepairedFirstLetters` of Shared/KeyboardTextLogic.swift for a field that
+    capitalizes sentences: a word whose first letter was typed as a symbol key gets the capital
+    that the keyboard types by itself at that place."""
+    typed_words = [w for w in typed.split(" ") if w]
+    words = [w for w in corrected.split(" ") if w]
+    if len(words) != len(typed_words):
+        return corrected
+    before = text_before
+    for index, word in enumerate(words):
+        if typed_words[index][0] in SYMBOLS_BESIDE_LETTERS and word[:1].isalpha() and should_auto_capitalize(before):
+            words[index] = word[:1].upper() + word[1:]
+        before += words[index] + " "
+    return " ".join(words)
+
+
 class PreferredCapitals:
     """The preferred capitals of the words of a supplement, and the rule that gives a typed word
     one of its forms: `PreferredCapitals` of Shared/PreferredCapitals.swift.
@@ -463,31 +479,40 @@ class PreferredCapitals:
 
     def form(self, word: str, typed: str, automatic_first: bool) -> str:
         """The form of `word` to show. `word` is the keyboard's text for the typed word `typed`
-        after restoring_capitals, and `automatic_first` says that the keyboard typed the first
-        letter as a capital by itself."""
+        after restoring_capitals and capitalizing_repaired_first_letters, and `automatic_first`
+        says that the keyboard typed the first letter as a capital by itself. An apostrophe is
+        not a letter of the rule, so "Gpu's" becomes "GPU's"."""
         lower = word.lower()
         entry = self.entries.get(lower)
-        if entry is None or not word.isascii() or not word.isalpha():
+        if entry is None or not all(c.isascii() and (c.isalpha() or c == "'") for c in word):
             return word
         preferred, everyday = entry
+        letters = [index for index, character in enumerate(lower) if character != "'"]
+        if not letters:
+            return word
         # A corrected slip of another length keeps only the case of its first letter. The
         # keyboard never corrects a word with a capital after its first letter.
         if len(typed) == len(lower):
-            capitals = [c.isupper() for c in typed]
+            capitals = [typed[index].isupper() for index in letters]
         else:
-            capitals = [typed[:1].isupper()] + [False] * (len(lower) - 1)
+            capitals = [typed[:1].isupper()] + [False] * (len(letters) - 1)
+        # A first letter that the keyboard read from a symbol key and capitalized by itself, as
+        # "[ytorch" at the start of a sentence, is the keyboard's own capital.
+        if typed[:1] and not typed[:1].isalpha() and word[letters[0]].isupper():
+            capitals[0] = True
+            automatic_first = True
         count = sum(capitals)
         if count == 0:
             return word
-        if count == len(lower) and count >= 2:
+        if count == len(letters) and count >= 2:
             return lower.upper()
         if count == 1 and capitals[0] and (automatic_first or everyday):
             # The one capital is the keyboard's own, or the word is also an everyday word.
             return word if everyday else preferred
         if count == 1:
             return preferred
-        to_preferred = sum(a != b.isupper() for a, b in zip(capitals, preferred))
-        to_all_capitals = len(lower) - count
+        to_preferred = sum(capital != preferred[index].isupper() for capital, index in zip(capitals, letters))
+        to_all_capitals = len(letters) - count
         return lower.upper() if to_all_capitals < to_preferred else preferred
 
     def latch(self, restored: str, typed: str, text_before: str) -> str:
@@ -574,6 +599,7 @@ def type_case(case: dict, engine: Engine, chooser, capitals: "PreferredCapitals 
                 if keep_capitals:
                     final = (restoring_capitals(reading, typed_span) if reading is not None
                              else restoring_capitals(shown_span, shown_span))
+                    final = capitalizing_repaired_first_letters(final, typed_span, text_before)
                     if capitals is not None:
                         final = capitals.latch(final, typed_span, text_before)
                 final_words = [w for w in final.split(" ") if w]

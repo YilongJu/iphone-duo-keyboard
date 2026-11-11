@@ -7,7 +7,8 @@ Inputs:
 - The wordfreq package: how frequent each word is in general English.
 - Wikipedia's list of common misspellings, as build_english_lexicon.py reads it.
 - The Tatoeba English sentences, as build_english_cases.py reads them: the letter case of a
-  word in everyday text.
+  word in everyday text. Four pairs of ids in five are read. The fifth pair feeds the everyday
+  cases of build_english_domain_cases.py, and this script does not read it.
 - pack/required-terms.tsv: the words the user asked for by name. The corpus does not decide them.
 
 Outputs:
@@ -145,6 +146,13 @@ def from_zipf(zipf: float) -> float:
     return 10 ** (zipf - 9) if zipf > 0 else 0.0
 
 
+def tatoeba_feeds_the_cases(sentence_id: int) -> bool:
+    """Whether a Tatoeba sentence may feed the cases of the pack: one pair of ids in five. The
+    other sentences give the pack its everyday letter case. So the everyday cases of
+    build_english_domain_cases.py come from sentences that this script never reads."""
+    return (sentence_id // 2) % 5 == 0
+
+
 def tatoeba_forms(words: set[str]) -> dict[str, Counter]:
     """The forms of the given lower-case words inside the sentences of everyday text."""
     if not TATOEBA.exists():
@@ -152,7 +160,10 @@ def tatoeba_forms(words: set[str]) -> dict[str, Counter]:
     forms = defaultdict(Counter)
     with bz2.open(TATOEBA, "rt", encoding="utf-8") as lines:
         for line in lines:
-            tokens = line.rstrip("\n").split("\t", 2)[2].split()
+            sentence_id, _, text = line.rstrip("\n").split("\t", 2)
+            if tatoeba_feeds_the_cases(int(sentence_id)):
+                continue
+            tokens = text.split()
             for token in tokens[1:]:
                 token = token.strip(EDGE)
                 if token.lower() in words:

@@ -1628,6 +1628,9 @@ int duo_convert_pinyin(
     const duo_lexicon *lexicon, const duo_params *params,
     const char *typed, duo_result *results, int capacity) {
     if (lexicon == NULL || params == NULL || typed == NULL || results == NULL || capacity < 1) return 0;
+    /* The candidates below read every edge as a node of the main lexicon. Only an English
+       lexicon takes a supplement, so a lexicon with one is not valid here. */
+    if (lexicon->supplement != NULL) return 0;
     size_t length = strlen(typed);
     if (length == 0 || length > DUO_MAX_TYPED) return 0;
     for (size_t index = 0; index < length; index++) {

@@ -51,8 +51,9 @@ struct PreferredCapitals {
     }
 
     /// The form of `word` to show. `word` is the keyboard's text for the typed word `typed`,
-    /// with the capital that `KeyboardTextLogic.restoringCapitals` gave it. `automaticFirst`
-    /// says that the keyboard typed the first letter as a capital by itself.
+    /// with the capital that `KeyboardTextLogic.restoringCapitals` or
+    /// `capitalizingRepairedFirstLetters` gave it. `automaticFirst` says that the keyboard typed
+    /// the first letter as a capital by itself.
     ///
     /// 1. Without a typed capital the word stays in lower case.
     /// 2. Typed in capitals only, the word stays in capitals.
@@ -62,23 +63,37 @@ struct PreferredCapitals {
     ///    capital on its first letter keeps it.
     /// 5. Two or more capitals: the preferred form or all capitals, whichever differs from the
     ///    typed capitals in fewer letters, and the preferred form on a tie.
+    ///
+    /// An apostrophe is not a letter of the rule, so "Gpu's" becomes "GPU's".
     func form(of word: String, typed: String, automaticFirst: Bool) -> String {
         let lower = word.lowercased()
-        guard let entry = entries[lower], word.allSatisfy({ $0.isASCII && $0.isLetter }) else { return word }
+        guard let entry = entries[lower], word.allSatisfy({ $0.isASCII && ($0.isLetter || $0 == "'") }) else { return word }
+        let lowerCharacters = Array(lower)
+        let typedCharacters = Array(typed)
+        let preferredCharacters = Array(entry.preferred)
+        let letters = lowerCharacters.indices.filter { lowerCharacters[$0] != "'" }
+        guard let firstLetter = letters.first else { return word }
         // A corrected slip of another length keeps only the case of its first letter. The
         // keyboard never corrects a word with a capital after its first letter.
-        let capitals: [Bool] = typed.count == lower.count
-            ? typed.map { $0.isUppercase }
-            : [typed.first?.isUppercase ?? false] + Array(repeating: false, count: lower.count - 1)
+        var capitals: [Bool] = typedCharacters.count == lowerCharacters.count
+            ? letters.map { typedCharacters[$0].isUppercase }
+            : [typed.first?.isUppercase ?? false] + Array(repeating: false, count: letters.count - 1)
+        var automatic = automaticFirst
+        // A first letter that the keyboard read from a symbol key and capitalized by itself,
+        // as "[ytorch" at the start of a sentence, is the keyboard's own capital.
+        if let typedFirst = typed.first, !typedFirst.isLetter, Array(word)[firstLetter].isUppercase {
+            capitals[0] = true
+            automatic = true
+        }
         let count = capitals.filter { $0 }.count
         if count == 0 { return word }
-        if count == lower.count, count >= 2 { return lower.uppercased() }
-        if count == 1, capitals[0], automaticFirst || entry.everyday {
+        if count == letters.count, count >= 2 { return lower.uppercased() }
+        if count == 1, capitals[0], automatic || entry.everyday {
             return entry.everyday ? word : entry.preferred
         }
         if count == 1 { return entry.preferred }
-        let toPreferred = zip(capitals, entry.preferred).filter { $0 != $1.isUppercase }.count
-        let toAllCapitals = lower.count - count
+        let toPreferred = zip(capitals, letters).filter { $0 != preferredCharacters[$1].isUppercase }.count
+        let toAllCapitals = letters.count - count
         return toAllCapitals < toPreferred ? lower.uppercased() : entry.preferred
     }
 
