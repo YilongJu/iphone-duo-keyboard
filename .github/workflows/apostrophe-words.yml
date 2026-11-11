@@ -19,6 +19,7 @@ on:
 env:
   HALF: dev
   MARGIN: ''
+  SCOPE: ''
 
 concurrency:
   group: apostrophe-words-${{ github.ref }}
@@ -70,7 +71,10 @@ jobs:
           EOF
           build/lm-rerank/readings_check Shared/lexicon-english.bin < build/lm-rerank/readings-input.tsv
       - name: Score the engine and the readings of the apostrophe words
-        run: python3 scripts/lm-rerank/apostrophe_words.py --shim build/lm-rerank/libduo_shim.so --half dev --out build/lm-rerank/apostrophe-words/engine
+        run: |
+          set -euo pipefail
+          cp build/lm-rerank/libduo_shim.so build/lm-rerank/libduo_shim_shipped.so
+          python3 scripts/lm-rerank/apostrophe_words.py --shim build/lm-rerank/libduo_shim.so --half dev             --shipped-shim build/lm-rerank/libduo_shim_shipped.so --shipped-lexicon build/base-engine/lexicon-english.bin             --out build/lm-rerank/apostrophe-words/engine
       - uses: actions/upload-artifact@v7
         with:
           name: apostrophe-words-engine
@@ -85,6 +89,8 @@ jobs:
     timeout-minutes: 300
     steps:
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
       - name: Build llama.cpp b4846, the scorer and the engine shim
         run: bash scripts/lm-rerank/build_on_linux.sh llama
       - name: Fetch distilgpt2 Q3_K_M
@@ -95,8 +101,11 @@ jobs:
           export LD_LIBRARY_PATH="$PWD/build/lm-rerank/llama/lib"
           half="$HALF"
           margin=()
-          if [ "$half" = test ]; then margin=(--margin "$MARGIN"); fi
-          python3 scripts/lm-rerank/apostrophe_words.py --shim build/lm-rerank/libduo_shim.so --lm build/lm-rerank/lm_score \
+          if [ "$half" = test ]; then margin=(--margin "$MARGIN" --scope "$SCOPE"); fi
+          # The lexicon of the keyboard as it ships on engine/lm-keyboard, for the shipped run.
+          git show 84b3e00:Shared/lexicon-english.bin > build/lm-rerank/lexicon-english-shipped.bin
+          cp build/lm-rerank/libduo_shim.so build/lm-rerank/libduo_shim_shipped.so
+          python3 scripts/lm-rerank/apostrophe_words.py --shim build/lm-rerank/libduo_shim.so --lm build/lm-rerank/lm_score             --shipped-shim build/lm-rerank/libduo_shim_shipped.so --shipped-lexicon build/lm-rerank/lexicon-english-shipped.bin \
             --model "$(cat build/lm-rerank/model-path.txt)" --threads 4 --half "$half" "${margin[@]}" \
             --out build/lm-rerank/apostrophe-words/rerank
           python3 scripts/lm-rerank/apostrophe_words_table.py build/lm-rerank/apostrophe-words/rerank/result.$half.json \

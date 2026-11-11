@@ -166,6 +166,10 @@ class Setting:
     # None leaves out the apostrophe step of choose(). A number is the lead in model score that
     # a reading of the typed letters with other apostrophes needs over the choice of the margins.
     margin_apostrophe: float | None = None
+    # "all": the step runs at every correction. "later": the step runs when the typed span holds
+    # two words, so the model sees the word after a word, or when the choice of the margins is
+    # not the text as typed. A typed "its" alone then stays until the next word comes.
+    apostrophe_scope: str = "all"
 
 
 def engine_choice(readings: list[dict], text_before: str) -> str:
@@ -215,7 +219,11 @@ def choose(readings: list[dict], context: str, setting: Setting, model: Language
             margin = setting.margin_other
         choice = best if combined(best) - combined(chosen) >= margin else chosen
     if setting.margin_apostrophe is not None and lm is not None:
-        choice = apostrophe_step(readings, choice, lm, setting)
+        if setting.apostrophe_scope not in ("all", "later"):
+            raise SystemExit(f"unknown apostrophe_scope {setting.apostrophe_scope!r}")
+        typed = next(r for r in readings if r["as_typed"])
+        if setting.apostrophe_scope == "all" or " " in typed["text"] or not choice["as_typed"]:
+            choice = apostrophe_step(readings, choice, lm, setting)
     return choice["text"]
 
 
