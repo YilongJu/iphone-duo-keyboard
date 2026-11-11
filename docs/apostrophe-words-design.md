@@ -7,15 +7,17 @@ common word, such as "its", "were" or "ill": 0 of 318 dev cases, also with the n
 The fix corrects the earlier word when the next word arrives. The language model compares the
 two forms of the typed letters with the word after them. With the next word typed, the keyboard
 gets 1,403 of 1,623 new dev cases right, where it got 608. It keeps the existing dev cases: no
-existing case turns wrong, and the total rises from 6,126 to 6,131.
+existing case turns wrong, and the total rises from 6,126 to 6,131. The setting was chosen
+among 24 on the same dev cases, so these are tuning numbers.
 
 What to do:
 
 1. Install a build of `engine/apostrophe-words` on the phone through TestFlight.
 2. Type "were going to be late", "ill call you", "whats happening" and "we were here". The
-   correction comes at the space after the second word. The dev cases predict "we're going"
-   (38 of 40 such cases), "i'll call" (39 of 40) and "what's happening" (18 of 20), and "we were
-   here" as typed (40 of 40 controls). The phone has not run these sentences.
+   correction comes at the space after the second word. Over all dev contexts of each pair,
+   the harness gets were/we're right in 38 of 40 cases, ill/i'll in 39 of 40 and whats/what's
+   in 18 of 20, and keeps the 40 "were" controls. These sentences are checks for the phone,
+   which has not run them.
 3. Type a word and the next word, see the correction, and press backspace once. Both words
    come back as shown before the correction, and the keyboard keeps them from then on.
 
@@ -61,7 +63,8 @@ Each case stores `next_word`, the word after the target word, with no punctuatio
 two. The sentences, the 4 to 12 word limit and the split by Tatoeba id come from
 `build_english_cases.py`. The contractions of the list also count as known words, because
 wordfreq splits "y'all" and "ma'am" into two tokens. "why's" and "ma'am" have no sentence with
-a next word, so they have no case.
+a next word, so they have no case. Tatoeba holds many sentences under two ids, so the builder
+leaves out 2,148 test sentences with the words of a dev sentence.
 
 The existing builder made no case of an ambiguous pair because of its frequency rule. It keeps
 a contraction only when the contraction is 1.0 Zipf more frequent than the form without the
@@ -140,14 +143,14 @@ With the word alone, the chosen setting equals the shipped rule plus the lexicon
 1,623 against 792. The setting with margin 0.5 gets 1,426, and it is out because it turns one
 `clean_ambiguous_word` case wrong.
 
-Table 5. Right existing dev cases, from the same run.
+Table 5. Right existing dev cases, from the same run. The last two categories belong to no group.
 
-| Run | clean | letter slips | space slips | symbol slips | clean symbols | all dev cases |
-| --- | --- | --- | --- | --- | --- | --- |
-| engine, shipped lexicon | 957/973 | 1943/2100 | 1299/1500 | 1131/1197 | 427/429 | 6069/6799 |
-| engine | 957/973 | 1943/2100 | 1299/1500 | 1131/1197 | 427/429 | 6074/6799 |
-| shipped | 958/973 | 1975/2100 | 1316/1500 | 1139/1197 | 427/429 | 6126/6799 |
-| chosen | 958/973 | 1975/2100 | 1316/1500 | 1139/1197 | 427/429 | 6131/6799 |
+| Run | clean | letter slips | space slips | symbol slips | clean symbols | apostrophe_missing | real_word_slip | all dev cases |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| engine, shipped lexicon | 957/973 | 1943/2100 | 1299/1500 | 1131/1197 | 427/429 | 250/300 | 62/300 | 6069/6799 |
+| engine | 957/973 | 1943/2100 | 1299/1500 | 1131/1197 | 427/429 | 255/300 | 62/300 | 6074/6799 |
+| shipped | 958/973 | 1975/2100 | 1316/1500 | 1139/1197 | 427/429 | 247/300 | 64/300 | 6126/6799 |
+| chosen | 958/973 | 1975/2100 | 1316/1500 | 1139/1197 | 427/429 | 252/300 | 64/300 | 6131/6799 |
 
 The 5 more cases are "youre" to "you're" in `apostrophe_missing`. Every step on the first word
 of a span turns no existing case wrong against the shipped run.

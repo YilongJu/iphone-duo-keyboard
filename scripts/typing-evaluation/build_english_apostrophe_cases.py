@@ -30,7 +30,8 @@ The sentences and the split are those of build_english_cases.py: Tatoeba English
 with an even id feeds the dev half and one with an odd id the test half, 4 to 12 plain words,
 every word among the 60,000 most frequent wordfreq tokens. The one change: the contractions of
 this file also count as known words, because wordfreq splits "y'all" and "ma'am" into two tokens
-and ranks "where're" below place 60,000.
+and ranks "where're" below place 60,000. A second change: a test sentence with the same words as
+a dev sentence stays out, because Tatoeba holds many sentences under two ids.
 
 Usage, from the repository root:
     uv run --with wordfreq python scripts/typing-evaluation/build_english_apostrophe_cases.py
@@ -153,6 +154,12 @@ def main():
         raise SystemExit(f"a contraction is listed twice: {sorted(overlap)}")
     vocabulary = set(top_n_list("en", 60000)) | set(AMBIGUOUS) | set(OTHER)
     sentences = load_sentences(vocabulary)
+    # Tatoeba holds the same sentence under several ids, often one even and one odd. A test
+    # sentence whose words equal those of a dev sentence would repeat a dev case, so it stays out.
+    dev_texts = {tuple(words) for _, words, _ in sentences["dev"]}
+    kept = [sentence for sentence in sentences["test"] if tuple(sentence[1]) not in dev_texts]
+    print(f"left out {len(sentences['test']) - len(kept)} test sentences with the words of a dev sentence")
+    sentences["test"] = kept
     OUTPUT_DIR.mkdir(exist_ok=True)
     for half in ("dev", "test"):
         cases, counts = build_half(half, sentences[half])
