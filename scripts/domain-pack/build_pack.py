@@ -16,7 +16,8 @@ Outputs:
 - scripts/domain-pack/pack/ai-software.phrases.tsv   the frequent word pairs of the domain text
 - scripts/domain-pack/pack/ai-software.report.json   counts of each rule, and the seed-word check
 - Shared/supplement-ai-software.bin                  the supplement lexicon for the engine
-- Shared/supplement-ai-software.tsv                  word, frequency and preferred capitals, for the keyboard
+- Shared/supplement-ai-software.tsv                  word, frequency, preferred capitals, and the mark of
+                                                     a word new to the base lexicon, for the keyboard
 
 Frequencies are on the Zipf scale: 3 means once per million words, 6 once per thousand.
 
@@ -72,6 +73,9 @@ NAME = "ai-software"
 # The share of domain text in the text of a person who works in the area. The dev cases of
 # docs/domain-pack-design.md compare several values.
 DOMAIN_SHARE = 0.3
+# The share of domain text that the frequencies of the pack assume. The words of the pack stay
+# those of DOMAIN_SHARE, so the two values can differ.
+FREQUENCY_SHARE = 1.0
 MINIMUM_ZIPF = 2.5
 RAISE_ZIPF = 1.0
 MINIMUM_SOURCES = 2
@@ -174,7 +178,7 @@ def tatoeba_forms(words: set[str]) -> dict[str, Counter]:
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--domain-share", type=float, default=DOMAIN_SHARE)
-    parser.add_argument("--frequency-share", type=float,
+    parser.add_argument("--frequency-share", type=float, default=FREQUENCY_SHARE,
                         help="write the frequencies for this share of domain text and keep the words of --domain-share, "
                              "to compare shares on one set of words")
     parser.add_argument("--out-shared", type=Path, default=ROOT / "Shared")
@@ -271,14 +275,20 @@ def main():
 
     # The supplement holds the corpus words and the requested words. A requested word is lower
     # case, so it has no preferred capitals.
-    shift = math.log10(arguments.frequency_share / share) if arguments.frequency_share else 0.0
-    entries = [(row["word"], round(row["zipf"] + shift, 2), row["preferred"], row["everyday"]) for row in rows]
-    entries += [(term, REQUESTED_ZIPF, "", 0) for term in requested]
+    shift = math.log10(arguments.frequency_share / share)
+    # The last value marks a word that the base lexicon lacks. The keyboard's language model
+    # may not change such a word when the person typed it.
+    entries = [(row["word"], round(row["zipf"] + shift, 2), row["preferred"], row["everyday"], int(row["kind"] == "new"))
+               for row in rows]
+    for term in requested:
+        if term in base:
+            raise SystemExit(f"required-terms.tsv: the base lexicon already holds {term!r}")
+        entries.append((term, REQUESTED_ZIPF, "", 0, 1))
     stats = write_lexicon(arguments.out_shared / f"supplement-{NAME}.bin",
-                          [(word, word, (zipf - 9) * math.log(10), 0.0) for word, zipf, _, _ in sorted(entries)], {}, MODEL_MIXED)
-    table = "".join(f"{word}\t{zipf:.2f}\t{preferred}\t{flag}\n" for word, zipf, preferred, flag in sorted(entries))
+                          [(word, word, (zipf - 9) * math.log(10), 0.0) for word, zipf, _, _, _ in sorted(entries)], {}, MODEL_MIXED)
+    table = "".join(f"{word}\t{zipf:.2f}\t{preferred}\t{flag}\t{new}\n" for word, zipf, preferred, flag, new in sorted(entries))
     (arguments.out_shared / f"supplement-{NAME}.tsv").write_text(
-        "word\tzipf\tpreferred\teveryday\n" + table, encoding="utf-8", newline="\n")
+        "word\tzipf\tpreferred\teveryday\tnew\n" + table, encoding="utf-8", newline="\n")
     report["supplement"] = stats
     report["supplement table bytes"] = (arguments.out_shared / f"supplement-{NAME}.tsv").stat().st_size
 
@@ -328,7 +338,7 @@ def main():
                           f"and its pack frequency is {to_zipf(share * rates.get(word, 0.0)):.2f}")
         else:
             seed[word] = f"not in the pack and not in the base lexicon: pack frequency {to_zipf(share * rates.get(word, 0.0)):.2f}"
-    result = {"domain_share": share, "frequency_share": arguments.frequency_share or share, "source_groups": groups,
+    result = {"domain_share": share, "frequency_share": arguments.frequency_share, "source_groups": groups,
               "rules": dict(report), "seed_check": seed}
     (arguments.out_pack / f"{NAME}.report.json").write_text(json.dumps(result, indent=1), encoding="utf-8", newline="\n")
     print(json.dumps(result, indent=1))

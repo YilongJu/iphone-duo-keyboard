@@ -499,6 +499,7 @@ typedef struct {
     const duo_lexicon *main;     /* for a walk of the supplement: the main lexicon, and NULL otherwise */
     const duo_params *params;
     const char *typed;  /* the typed text from the word's first position on */
+    const char *original;  /* the same span of the text as the person typed it, before a space was moved */
     int length;         /* count of typed bytes from that position to the end */
     int start;          /* the word's first position in the whole typed text */
     int has_symbol;     /* whether that typed text holds a symbol or digit key */
@@ -566,6 +567,23 @@ static float omission_cost(const walk_t *walk, char letter, int depth) {
 }
 
 static uint32_t find_exact_node(const duo_lexicon *lexicon, const char *letters, int length);
+static int is_known_word(const duo_lexicon *lexicon, const char *letters, int length);
+
+/* Whether the first `consumed` bytes, as the person typed them, hold a space and every word
+   between the spaces is a known word. A person who typed two known words meant two words, so a word of the supplement
+   does not join them: "hard coded" stays, also when the supplement holds "hardcoded". The main
+   lexicon keeps its own joins, as before the supplement. */
+static int typed_known_words(const walk_t *walk, int consumed) {
+    int spaces = 0;
+    int start = 0;
+    for (int index = 0; index <= consumed; index++) {
+        if (index < consumed && walk->original[index] != ' ') continue;
+        if (index < consumed) spaces++;
+        if (index == start || !is_known_word(walk->main, walk->original + start, index - start)) return 0;
+        start = index + 1;
+    }
+    return spaces > 0;
+}
 
 static void walk_node(walk_t *walk, uint32_t node_index, int depth) {
     node_t node = node_at(walk->lexicon, node_index);
@@ -578,6 +596,7 @@ static void walk_node(walk_t *walk, uint32_t node_index, int depth) {
             int consumed = depth - BAND + b;
             float cost = walk->rows[depth][b];
             if (consumed < 1 || consumed > walk->length || cost > budget) continue;
+            if (walk->main != NULL && cost > 0.0f && typed_known_words(walk, consumed)) continue;
             if (walk->edge_count < MAX_EDGES) {
                 edge_t *edge = &walk->edges[walk->edge_count++];
                 edge->end = walk->start + consumed;
@@ -631,15 +650,18 @@ static void walk_node(walk_t *walk, uint32_t node_index, int depth) {
     }
 }
 
-/* Fills `edges` with every lexicon node that the typed text from `start` on can stand for. */
+/* Fills `edges` with every lexicon node that the typed text from `start` on can stand for.
+   `original` is the text as the person typed it: `typed` itself, or the text before the search
+   moved one of its spaces. */
 static int find_edges(
     const duo_lexicon *lexicon, const duo_params *params,
-    const char *typed, int length, int start, edge_t *edges) {
+    const char *typed, const char *original, int length, int start, edge_t *edges) {
     walk_t walk;
     walk.lexicon = lexicon;
     walk.main = NULL;
     walk.params = params;
     walk.typed = typed + start;
+    walk.original = original + start;
     walk.length = length - start;
     walk.start = start;
     walk.edges = edges;
@@ -1162,12 +1184,13 @@ static int reach_targets(
     return added;
 }
 
-/* Finds the best reading of typed[0..length). Returns 1 and fills `result`, or 0 on failure.
+/* Finds the best reading of typed[0..length). `original` is the text as the person typed it,
+   which differs from `typed` in a search that moved a space. Returns 1 and fills `result`, or 0 on failure.
    When the lexicon cannot read the text to its end, the unreadable parts are kept as typed.
    A `pool` that is not NULL also receives every reading that the search keeps at the end of
    the text, one per last word. The pool does not change the result. */
 static int decode(
-    const duo_lexicon *lexicon, const duo_params *params, const char *typed, int length,
+    const duo_lexicon *lexicon, const duo_params *params, const char *typed, const char *original, int length,
     uint32_t previous_word, duo_result *result, reading_pool_t *pool) {
     int beam = params->beam < 1 ? 1 : (params->beam > MAX_BEAM ? MAX_BEAM : params->beam);
     cell_t *cells = (cell_t *)calloc((size_t)length + 1, sizeof(cell_t));
@@ -1245,7 +1268,7 @@ static int decode(
             }
         }
 
-        int edge_count = find_edges(lexicon, params, typed, length, start, edges);
+        int edge_count = find_edges(lexicon, params, typed, original, length, start, edges);
         for (int edge_index = 0; edge_index < edge_count; edge_index++) {
             const edge_t *edge = &edges[edge_index];
             target_t targets[2];
@@ -1437,7 +1460,7 @@ static int correct_english(
 
     duo_result reading;
     if (pool != NULL) pool->extra_slip = 0.0f;
-    if (decode(lexicon, params, typed, length, previous, &reading, pool)) {
+    if (decode(lexicon, params, typed, typed, length, previous, &reading, pool)) {
         float gain = reading.score - typed_score;
         if (strcmp(reading.text, typed) != 0 && gain >= margin && gain > best_gain) {
             best = reading;
@@ -1458,7 +1481,7 @@ static int correct_english(
             shifted[index] = typed[other];
             shifted[other] = ' ';
             if (english_input_length(shifted) == 0) continue;
-            if (!decode(lexicon, params, shifted, length, previous, &reading, pool)) continue;
+            if (!decode(lexicon, params, shifted, typed, length, previous, &reading, pool)) continue;
             float gain = reading.score - params->shifted_space - typed_score;
             if (strcmp(reading.text, typed) != 0 && gain >= margin && gain > best_gain) {
                 best = reading;
@@ -1638,14 +1661,14 @@ int duo_convert_pinyin(
     }
 
     int count = 0;
-    if (decode(lexicon, params, typed, (int)length, NO_WORD, &results[0], NULL)) count = 1;
+    if (decode(lexicon, params, typed, typed, (int)length, NO_WORD, &results[0], NULL)) count = 1;
     if (count == capacity) return count;
 
     /* The words that stand for the first letters only: exact spellings longest first, then
        the words that assume a slip. */
     edge_t *edges = (edge_t *)malloc(sizeof(edge_t) * MAX_EDGES);
     if (edges == NULL) return count;
-    int edge_count = find_edges(lexicon, params, typed, (int)length, 0, edges);
+    int edge_count = find_edges(lexicon, params, typed, typed, (int)length, 0, edges);
     qsort(edges, (size_t)edge_count, sizeof(edge_t), compare_edges_exact_then_longest);
     for (int edge_index = 0; edge_index < edge_count && count < capacity; edge_index++) {
         node_t node = node_at(lexicon, edges[edge_index].node);

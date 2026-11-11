@@ -8,13 +8,13 @@ import XCTest
 /// same cases).
 final class PreferredCapitalsTests: XCTestCase {
     private let capitals = PreferredCapitals(table: """
-        word\tzipf\tpreferred\teveryday
-        gpu\t4.9\tGPU\t0
-        gpu's\t3.5\tGPU's\t0
-        pytorch\t4.3\tPyTorch\t0
-        vllm\t4.6\tvLLM\t0
-        rag\t4.6\tRAG\t1
-        tokenizer\t4.1\t\t0
+        word\tzipf\tpreferred\teveryday\tnew
+        gpu\t4.9\tGPU\t0\t0
+        gpu's\t3.5\tGPU's\t0\t0
+        pytorch\t4.3\tPyTorch\t0\t1
+        vllm\t4.6\tvLLM\t0\t1
+        rag\t4.6\tRAG\t1\t0
+        tokenizer\t4.1\t\t0\t1
 
         """)
 
@@ -91,6 +91,26 @@ final class PreferredCapitalsTests: XCTestCase {
         XCTAssertEqual(form("[ytorch", corrected: "Pytorch"), "PyTorch")
         // Inside a sentence the keyboard types no capital, so the word stays in lower case.
         XCTAssertEqual(form("[ytorch", corrected: "pytorch"), "pytorch")
+    }
+
+    func testTheModelMayNotChangeATypedWordThatIsNewInThePack() {
+        func reading(_ text: String, typed: Bool = false, chosen: Bool = false) -> EnglishReading {
+            EnglishReading(text: text, score: 0, slipCost: 0, asTyped: typed, chosen: chosen)
+        }
+        func kept(_ readings: [EnglishReading], _ typed: String) -> [String] {
+            capitals.keepingNewWords(readings, typed: typed).map { $0.text }
+        }
+        XCTAssertEqual(kept([reading("pytorch", typed: true, chosen: true), reading("porch"), reading("torch")], "pytorch"), ["pytorch"])
+        // The engine's own choice stays, and so does a reading that keeps the new word.
+        XCTAssertEqual(
+            kept([reading("the pytorch", typed: true), reading("the porch", chosen: true), reading("they pytorch"), reading("the torch")],
+                 "the pytorch"),
+            ["the pytorch", "the porch", "they pytorch"])
+        // A slip is not a word of the pack, so every reading stays.
+        XCTAssertEqual(kept([reading("pytorhc", typed: true), reading("pytorch", chosen: true), reading("porch")], "pytorhc"),
+                       ["pytorhc", "pytorch", "porch"])
+        // A word that the base lexicon also holds is not protected.
+        XCTAssertEqual(kept([reading("gpu", typed: true, chosen: true), reading("gnu")], "gpu"), ["gpu", "gnu"])
     }
 
     func testEachWordOfASpanGetsItsForm() {

@@ -133,7 +133,9 @@ final class EngineSpellChecker: SpellChecking {
             // EnglishTypingEngine.readings holds exactly one chosen reading.
             return readings.first { $0.chosen }!.text
         }
-        return reranker.choose(readings: readings, textBefore: textBefore, typed: typed)
+        // The model may not change a typed word that is new in the work area.
+        let candidates = preferredCapitals?.keepingNewWords(readings, typed: typed) ?? readings
+        return reranker.choose(readings: candidates, textBefore: textBefore, typed: typed)
     }
 
     func learn(_ word: String) {

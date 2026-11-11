@@ -83,6 +83,7 @@ jobs:
       - name: Type the cases with the engine alone, with the pack off, on, and merged into the lexicon
         run: |
           set -euo pipefail
+          mkdir -p build/domain-pack
           python3 scripts/domain-pack/build_merged_lexicon.py --out build/domain-pack/lexicon-english-merged.bin | tee build/domain-pack/merged.txt
           cp build/lm-rerank/libduo_shim.so build/lm-rerank/libduo_shim_merged.so
           python3 scripts/lm-rerank/domain_pack.py --shim build/lm-rerank/libduo_shim.so --half "$HALF" \
@@ -100,9 +101,16 @@ jobs:
           if-no-files-found: error
 
   rerank:
-    name: SmolLM2 fine-tune through the harness, with the pack off and on
+    # Each share of domain text is one set of frequencies for the same words (build_pack.py
+    # --frequency-share). scripts/lm-rerank/domain_pack_shares.py picks the share from the dev
+    # results of this job. The test half is read for the chosen share alone.
+    name: SmolLM2 fine-tune through the harness, share of domain text ${{ matrix.share }}
     runs-on: ubuntu-24.04
-    timeout-minutes: 340
+    timeout-minutes: 350
+    strategy:
+      fail-fast: false
+      matrix:
+        share: ['0.03', '0.1', '0.3', '1.0']
     steps:
       - uses: actions/checkout@v7
       - name: Build llama.cpp b4846, the scorer and the engine shim
@@ -114,13 +122,12 @@ jobs:
           set -euo pipefail
           export LD_LIBRARY_PATH="$PWD/build/lm-rerank/llama/lib"
           lscpu | grep -E 'Model name' | tee runner.txt
-          python3 scripts/lm-rerank/domain_pack.py --shim build/lm-rerank/libduo_shim.so --lm build/lm-rerank/lm_score \
-            --model Shared/smollm2-lora-typed-seed1.Q4_K_M.gguf --threads 4 --half "$HALF" --out build/lm-rerank/domain-pack/rerank
+          variant="scripts/domain-pack/variants/share-${{ matrix.share }}"
+          python3 scripts/lm-rerank/domain_pack.py --shim build/lm-rerank/libduo_shim.so --lm build/lm-rerank/lm_score             --model Shared/smollm2-lora-typed-seed1.Q4_K_M.gguf --threads 4 --half "$HALF" --also-unprotected             --supplement "$variant/supplement-ai-software.bin" --table "$variant/supplement-ai-software.tsv"             --out build/lm-rerank/domain-pack/rerank
           mv runner.txt build/lm-rerank/domain-pack/rerank/
-          python3 scripts/lm-rerank/domain_pack_table.py "build/lm-rerank/domain-pack/rerank/result.$HALF.json" \
-            | tee "build/lm-rerank/domain-pack/rerank/table.$HALF.md" >> "$GITHUB_STEP_SUMMARY"
+          python3 scripts/lm-rerank/domain_pack_table.py "build/lm-rerank/domain-pack/rerank/result.$HALF.json"             | tee "build/lm-rerank/domain-pack/rerank/table.$HALF.md" >> "$GITHUB_STEP_SUMMARY"
       - name: Compare frequencies for the requested words, on the dev cases of the group required
-        if: env.HALF == 'dev'
+        if: env.HALF == 'dev' && matrix.share == '0.3'
         run: |
           set -euo pipefail
           export LD_LIBRARY_PATH="$PWD/build/lm-rerank/llama/lib"
@@ -129,41 +136,6 @@ jobs:
       - uses: actions/upload-artifact@v7
         if: always()
         with:
-          name: domain-pack-rerank-${{ env.HALF }}
+          name: domain-pack-rerank-${{ env.HALF }}-share-${{ matrix.share }}
           path: build/lm-rerank/domain-pack/rerank
-          if-no-files-found: error
-
-  shares:
-    # The same words at other frequencies: the share of domain text in a person's text that
-    # build_pack.py assumes. Only the new cases are typed, on the dev half.
-    name: Share of domain text ${{ matrix.share }}
-    if: ${{ github.event.head_commit.message != '' && contains(github.event.head_commit.message, '[shares]') }}
-    runs-on: ubuntu-24.04
-    timeout-minutes: 240
-    strategy:
-      fail-fast: false
-      matrix:
-        share: ['0.03', '0.1', '1.0']
-    steps:
-      - uses: actions/checkout@v7
-      - name: Build llama.cpp b4846, the scorer and the engine shim
-        run: bash scripts/lm-rerank/build_on_linux.sh llama
-      - name: Fetch the SmolLM2 fine-tune and check its SHA-256 value
-        run: bash scripts/ci/fetch_language_model.sh model
-      - name: Type the new dev cases through the harness
-        run: |
-          set -euo pipefail
-          export LD_LIBRARY_PATH="$PWD/build/lm-rerank/llama/lib"
-          variant="scripts/domain-pack/variants/share-${{ matrix.share }}"
-          python3 scripts/lm-rerank/domain_pack.py --shim build/lm-rerank/libduo_shim.so --lm build/lm-rerank/lm_score \
-            --model Shared/smollm2-lora-typed-seed1.Q4_K_M.gguf --threads 4 --half dev --only-new \
-            --supplement "$variant/supplement-ai-software.bin" --table "$variant/supplement-ai-software.tsv" \
-            --out build/lm-rerank/domain-pack/share
-          python3 scripts/lm-rerank/domain_pack_table.py build/lm-rerank/domain-pack/share/result.dev.json \
-            | tee build/lm-rerank/domain-pack/share/table.dev.md >> "$GITHUB_STEP_SUMMARY"
-      - uses: actions/upload-artifact@v7
-        if: always()
-        with:
-          name: domain-pack-share-${{ matrix.share }}
-          path: build/lm-rerank/domain-pack/share
           if-no-files-found: error

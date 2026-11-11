@@ -24,7 +24,7 @@ from lexicon_format import MODEL_MIXED, write_lexicon  # noqa: E402
 LEXICON = ROOT / "Shared" / "lexicon-english.bin"
 # word, Zipf frequency. "gpu" and "repo" are in the base lexicon, and the others are not.
 WORDS = [("pytorch", 4.3), ("ultrathink", 4.5), ("ultracode", 4.5), ("llm", 5.4), ("llms", 5.2), ("evals", 3.7),
-         ("gpu", 4.9), ("repo", 4.5)]
+         ("gpu", 4.9), ("repo", 4.5), ("hyperparameters", 4.5), ("hardcoded", 3.8), ("backpropagation", 3.8)]
 checks = 0
 
 
@@ -82,6 +82,12 @@ def check_engine(cli: Path) -> None:
         check(with_supplement("", "ultra think") == "ultra think", "'ultra think' typed as two words stays two words")
         check(with_supplement("the", "pyt orch") == "pytorch", "'pyt orch' reads as 'pytorch'")
         check(with_supplement("", "thepytorch") == "the pytorch", "'thepytorch' reads as 'the pytorch'")
+        # Two typed known words stay two words, also when the supplement holds them as one word.
+        for previous, words in (("more", "hyper parameters"), ("the", "hard coded"), ("the", "back propagation")):
+            check(with_supplement(previous, words) == words, f"with the supplement, '{words}' typed as two words stays two words")
+        check(with_supplement("the", "hyperparameters") == "hyperparameters", "'hyperparameters' typed as one word stays one word")
+        check(with_supplement("the", "hyper parameers") == "hyperparameters" or with_supplement("the", "hyper parameers") == "hyper parameters",
+              "'hyper parameers' reads as a form of the word")
         # A symbol key beside a word of the supplement, typed on purpose, stays.
         check(with_supplement("", "[pytorch") == "[pytorch", "'[pytorch' stays")
         # A word that both hold keeps the pairs of the base lexicon: the outputs agree with the
@@ -99,9 +105,9 @@ def check_capitals() -> None:
     import rerank
     with tempfile.TemporaryDirectory() as folder:
         table = Path(folder) / "table.tsv"
-        table.write_text("word\tzipf\tpreferred\teveryday\n"
-                         "gpu\t4.9\tGPU\t0\ngpu's\t3.5\tGPU's\t0\npytorch\t4.3\tPyTorch\t0\nvllm\t4.6\tvLLM\t0\n"
-                         "rag\t4.6\tRAG\t1\ntokenizer\t4.1\t\t0\n",
+        table.write_text("word\tzipf\tpreferred\teveryday\tnew\n"
+                         "gpu\t4.9\tGPU\t0\t0\ngpu's\t3.5\tGPU's\t0\t0\npytorch\t4.3\tPyTorch\t0\t1\nvllm\t4.6\tvLLM\t0\t1\n"
+                         "rag\t4.6\tRAG\t1\t0\ntokenizer\t4.1\t\t0\t1\n",
                          encoding="utf-8")
         capitals = rerank.PreferredCapitals(table)
     cases = [
@@ -133,6 +139,22 @@ def check_capitals() -> None:
     check(capitals.latch("the gpu", "the gpu", "I use ") == "the gpu", "lower case inside a sentence stays")
     check(capitals.latch("pytorch", "Py torch", "I use ") == "PyTorch", "a joined word takes the capital of the first typed word")
     check(rerank.restoring_capitals("pytorch is", "Pytorhc is") == "Pytorch is", "restoring_capitals keeps the typed capital")
+
+    def reading(text, as_typed=False, chosen=False):
+        return {"text": text, "as_typed": as_typed, "chosen": chosen}
+
+    def kept(readings, typed):
+        return [r["text"] for r in capitals.keeping_new_words(readings, typed)]
+
+    check(kept([reading("pytorch", True, True), reading("porch"), reading("torch")], "pytorch") == ["pytorch"],
+          "the model may not change a typed word that is new in the pack")
+    check(kept([reading("the pytorch", True), reading("the porch", chosen=True), reading("they pytorch"), reading("the torch")],
+               "the pytorch") == ["the pytorch", "the porch", "they pytorch"],
+          "the engine's choice and a reading that keeps the new word stay")
+    check(kept([reading("pytorhc", True), reading("pytorch", chosen=True), reading("porch")], "pytorhc")
+          == ["pytorhc", "pytorch", "porch"], "a slip is not a word of the pack, so every reading stays")
+    check(kept([reading("gpu", True, True), reading("gnu")], "gpu") == ["gpu", "gnu"],
+          "a word that the base lexicon also holds is not protected")
     check(rerank.capitalizing_repaired_first_letters("pytorch", "[ytorch", "") == "Pytorch"
           and rerank.capitalizing_repaired_first_letters("pytorch", "[ytorch", "we use ") == "pytorch",
           "a first letter typed as a symbol key gets its capital at the start of the field only")

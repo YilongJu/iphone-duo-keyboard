@@ -56,7 +56,7 @@ def main():
     for index, zipf in enumerate(ZIPFS):
         supplement = arguments.out / f"supplement-{zipf}.bin"
         words = [(word, word, ((zipf if word in requested else float(value)) - 9) * math.log(10), 0.0)
-                 for word, value, _, _ in sorted(rows)]
+                 for word, value, *_ in sorted(rows)]
         write_lexicon(supplement, words, {}, MODEL_MIXED)
         # One shim holds one supplement, so each frequency gets its own copy of the shim.
         shim = arguments.out / f"libduo_shim_{index}.so"
