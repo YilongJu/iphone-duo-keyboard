@@ -36,6 +36,35 @@ protocol SpellChecking: AnyObject {
     func learn(_ word: String)
     /// True for a word the person brought back after a correction.
     func keeps(_ word: String) -> Bool
+    /// The preferred capitals of the work area that is on, or nil without one.
+    var preferredCapitals: PreferredCapitals? { get }
+    /// Turns the work area on or off, and returns a short text that names the new state. The
+    /// result is nil for a checker without a work area.
+    func toggleWorkArea() -> String?
+}
+
+extension SpellChecking {
+    var preferredCapitals: PreferredCapitals? { nil }
+    func toggleWorkArea() -> String? { nil }
+}
+
+/// A work area: the words of one field of work that the keyboard reads beside its lexicon, with
+/// their preferred capitals. scripts/domain-pack/build_pack.py builds both files from public text
+/// of the field, and docs/domain-pack-design.md describes them.
+struct WorkArea {
+    /// The name on the space bar when the person turns the area on or off.
+    let title: String
+    /// The words of the area as a supplement of the English lexicon (`duo_lexicon_set_supplement`).
+    let supplement: TypingLexicon
+    let capitals: PreferredCapitals
+
+    /// The area "AI and software" of the app bundle.
+    static func aiAndSoftware() -> WorkArea {
+        WorkArea(
+            title: "AI and software",
+            supplement: TypingLexicon(resource: "supplement-ai-software", fullCheck: false),
+            capitals: PreferredCapitals.bundled(resource: "supplement-ai-software"))
+    }
 }
 
 /// English correction from the typing engine in Engine/duo_engine.c. The engine reads a
@@ -46,7 +75,12 @@ protocol SpellChecking: AnyObject {
 @MainActor
 final class EngineSpellChecker: SpellChecking {
     private static let keptWordsKey = "englishKeptWords"
+    /// True in the store after the person turned the work area off.
+    private static let workAreaOffKey = "workAreaOff"
     private let engine: EnglishTypingEngine
+    /// The work area of this checker, or nil. The engine reads its words while the area is on.
+    private let workArea: WorkArea?
+    private(set) var workAreaIsOn: Bool
     /// Re-ranks the engine's readings. Without it the engine's own choice stays.
     let reranker: EnglishReranker?
     /// Words the person brought back after a correction, kept across keyboard launches.
@@ -55,19 +89,40 @@ final class EngineSpellChecker: SpellChecking {
     /// back do not reach the keyboard or another test.
     private let store: UserDefaults
 
-    init(engine: EnglishTypingEngine, reranker: EnglishReranker?, store: UserDefaults) {
+    /// With a work area, the checker lays the area's supplement over the engine's lexicon, unless
+    /// the store says that the person turned the area off. The checker then owns the engine's
+    /// supplement, so another checker must not share that engine.
+    init(engine: EnglishTypingEngine, reranker: EnglishReranker?, store: UserDefaults, workArea: WorkArea? = nil) {
         self.engine = engine
         self.reranker = reranker
         self.store = store
+        self.workArea = workArea
         // A phone on which nobody has brought a word back yet does not have the stored list.
         keptWords = Set(store.stringArray(forKey: Self.keptWordsKey) ?? [])
+        // A store without the value gives false, so the area is on until the person turns it off.
+        workAreaIsOn = workArea != nil && !store.bool(forKey: Self.workAreaOffKey)
+        if let workArea {
+            engine.setSupplement(workAreaIsOn ? workArea.supplement : nil)
+        }
     }
 
-    /// The engine with the English lexicon of the app bundle.
+    /// The engine with the English lexicon and the work area "AI and software" of the app bundle.
     static func bundled(reranker: EnglishReranker?) -> EngineSpellChecker {
         EngineSpellChecker(
             engine: EnglishTypingEngine(lexicon: TypingLexicon(resource: "lexicon-english", fullCheck: false)),
-            reranker: reranker, store: .standard)
+            reranker: reranker, store: .standard, workArea: .aiAndSoftware())
+    }
+
+    var preferredCapitals: PreferredCapitals? {
+        workAreaIsOn ? workArea?.capitals : nil
+    }
+
+    func toggleWorkArea() -> String? {
+        guard let workArea else { return nil }
+        workAreaIsOn.toggle()
+        store.set(!workAreaIsOn, forKey: Self.workAreaOffKey)
+        engine.setSupplement(workAreaIsOn ? workArea.supplement : nil)
+        return "\(workArea.title) words \(workAreaIsOn ? "on" : "off")"
     }
 
     func reading(previousWord: String, typed: String, textBefore: String) -> String? {
@@ -174,6 +229,9 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
 
     /// The text that starts the language model test when a space follows it.
     static let languageModelTrigger = "duo:lm"
+
+    /// The text that turns the work area on or off when a space follows it.
+    static let workAreaTrigger = "duo:work"
 
     /// Runs the language model test. Without a measurer the trigger text is typed as any
     /// other text, and the test does not load a model.
@@ -512,6 +570,27 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
         return true
     }
 
+    // MARK: Work area
+
+    /// Turns the work area on or off when the trigger text stands right before the cursor as a
+    /// word of its own, takes the trigger text out of the field, and names the new state on the
+    /// space bar. A capital first letter also counts, as for the language model test. Returns
+    /// false when the space should be typed by the normal rules.
+    private func toggleWorkArea() -> Bool {
+        let before = document.textBeforeCursor
+        guard before.lowercased().hasSuffix(Self.workAreaTrigger) else { return false }
+        if let preceding = before.dropLast(Self.workAreaTrigger.count).last, !preceding.isWhitespace {
+            return false
+        }
+        guard let state = spellChecker.toggleWorkArea() else { return false }
+        lastCorrection = nil
+        recentWord = nil
+        previousInsertWasSpace = false
+        deleteBackward(count: Self.workAreaTrigger.count)
+        showNotice(state)
+        return true
+    }
+
     // MARK: Chinese
 
     private func refreshCandidates() {
@@ -643,6 +722,10 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
             updateAutoShift()
             return
         }
+        if text == " ", !chineseMode, toggleWorkArea() {
+            updateAutoShift()
+            return
+        }
         let now = ProcessInfo.processInfo.systemUptime
         if text == " ", !chineseMode, previousInsertWasSpace, now - lastSpaceTime < 1.5,
             KeyboardTextLogic.shouldReplaceDoubleSpace(before: document.textBeforeCursor) {
@@ -676,6 +759,21 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
             if let earlier, terminator.count == 1, let key = terminator.first,
                 KeyboardTextLogic.symbolsBesideLetters.contains(key), before.hasSuffix(earlier.context) {
                 recentWord = earlier
+            } else if let capitals = spellChecker.preferredCapitals,
+                let cased = KeyboardTextLogic.wordWithInnerCapital(before: before), !spellChecker.keeps(cased) {
+                // A word with a capital after its first letter is not read for slips. A word of
+                // the work area still gets the form that its typed capitals are nearest to, as
+                // "PyTorch" for "pyTorch".
+                let form = capitals.form(
+                    of: cased, typed: cased,
+                    automaticFirst: KeyboardTextLogic.shouldAutoCapitalize(
+                        before: String(before.dropLast(cased.count)), type: document.autocapitalizationType))
+                if form != cased {
+                    deleteBackward(count: cased.count)
+                    document.insertText(form)
+                    lastCorrection = Correction(original: cased, corrected: form, terminator: terminator)
+                    showNotice("\(cased) \u{2192} \(form)")
+                }
             }
             return
         }
@@ -708,10 +806,15 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
         // text stays, and only a lone "i" gets its capital.
         let restored = reading.map { KeyboardTextLogic.restoringCapitals(in: $0, from: typedSpan) }
             ?? KeyboardTextLogic.restoringCapitals(in: shownSpan, from: shownSpan)
+        // A word of the work area gets the form that the typed capitals ask for: "Pytorch" and
+        // "Pytorhc" become "PyTorch", and "pytorch" stays in lower case.
+        let latched = spellChecker.preferredCapitals?.latch(
+            restored, typed: typedSpan, textBefore: String(before.dropLast(shownSpan.count)),
+            type: document.autocapitalizationType) ?? restored
         // A word whose first letter was typed as a symbol key gets the capital that the
         // keyboard types by itself at that place, as in "[lease" at the start of a sentence.
         let final = KeyboardTextLogic.capitalizingRepairedFirstLetters(
-            in: restored, from: typedSpan, textBefore: String(before.dropLast(shownSpan.count)),
+            in: latched, from: typedSpan, textBefore: String(before.dropLast(shownSpan.count)),
             type: document.autocapitalizationType)
         let finalWords = final.split(separator: " ")
         if final != shownSpan {

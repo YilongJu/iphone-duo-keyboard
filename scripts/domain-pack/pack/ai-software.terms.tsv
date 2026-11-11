@@ -1,0 +1,1808 @@
+word	zipf	preferred	preferred_share	everyday	kind	domain_zipf	base_zipf	general_zipf	sources	documents
+models	5.81			0	raised	6.33	4.74	4.74	25	29827
+api	5.6	API	0.927	0	raised	6.13	3.68	3.68	26	22620
+default	5.53			0	raised	6.06	4.29	4.29	26	11765
+docker	5.53	Docker	0.744	0	raised	6.05	2.98	2.98	22	4072
+documentation	5.51			0	raised	6.03	3.95	3.95	27	13214
+output	5.46			0	raised	5.98	4.43	4.43	26	22476
+configuration	5.44			0	raised	5.96	3.97	3.97	27	9152
+prompt	5.4			0	raised	5.92	3.86	3.86	26	3557
+cli	5.39	CLI	0.95	0	raised	5.92	2.84	2.84	22	1601
+python	5.37	Python	0.721	0	raised	5.9	3.78	3.78	25	18432
+llm	5.37	LLM	0.99	0	new	5.89		2.29	22	5402
+tasks	5.32			0	raised	5.85	4.23	4.23	25	15610
+codex	5.31	Codex	0.968	0	raised	5.84	3.18	3.18	16	290
+container	5.3			0	raised	5.82	4.03	4.03	23	6005
+uv	5.26			0	raised	5.78	3.63	3.63	10	104
+repository	5.23			0	raised	5.75	3.43	3.43	25	10280
+install	5.21			0	raised	5.73	4.14	4.14	26	5030
+token	5.19			0	raised	5.72	3.82	3.82	26	5979
+tokens	5.18			0	raised	5.7	3.53	3.53	24	5087
+openai	5.18	OpenAI	0.945	0	new	5.7		1.63	20	1236
+llms	5.17	LLMs	0.998	0	new	5.7		0.0	21	5056
+gemini	5.16	Gemini	0.987	0	raised	5.69	3.38	3.38	14	470
+reasoning	5.16			0	raised	5.68	4.01	4.01	24	6584
+parameters	5.16			0	raised	5.68	4.0	4.0	25	16121
+directory	5.16			0	raised	5.68	3.93	3.93	23	3886
+dependencies	5.14			0	raised	5.67	3.19	3.19	23	8363
+dataset	5.13			0	raised	5.65	3.03	3.03	19	17743
+chatgpt	5.09	ChatGPT	0.91	0	new	5.62		0.0	14	893
+kubernetes	5.08	Kubernetes	0.89	0	raised	5.61	2.25	2.25	11	1889
+github	5.07	GitHub	0.651	0	raised	5.59	3.18	3.18	24	5532
+node	5.06			0	raised	5.59	3.88	3.88	21	5758
+logs	5.06			0	raised	5.58	3.81	3.81	25	3375
+workflow	5.05			0	raised	5.58	3.16	3.16	25	4705
+inference	5.04			0	raised	5.57	3.25	3.25	20	5146
+variables	5.04			0	raised	5.56	3.97	3.97	22	15694
+sdk	5.03	SDK	0.98	0	raised	5.55	2.85	2.85	19	1043
+query	5.02			0	raised	5.54	3.64	3.64	24	10667
+json	5.01	JSON	0.829	0	new	5.53		2.75	24	6086
+cache	5.0			0	raised	5.53	3.63	3.63	24	5067
+weights	5.0			0	raised	5.53	3.86	3.86	20	7637
+neural	5.0			0	raised	5.52	3.76	3.76	15	13332
+mcp	5.0	MCP	0.997	0	new	5.52		2.58	17	495
+configure	4.99			0	raised	5.52	3.03	3.03	22	3259
+cluster	4.99			0	raised	5.52	3.99	3.99	17	4659
+commands	4.99			0	raised	5.51	3.96	3.96	23	3899
+parameter	4.99			0	raised	5.51	3.57	3.57	24	11071
+ollama	4.98	Ollama	0.912	0	new	5.51		0.0	11	111
+deployment	4.98			0	raised	5.5	3.91	3.91	19	5925
+pod	4.97	Pod	0.571	1	raised	5.5	3.71	3.71	9	992
+runtime	4.95			0	raised	5.48	3.08	3.08	24	7719
+containers	4.93			0	raised	5.45	3.86	3.86	15	2958
+sandbox	4.93			0	raised	5.45	3.02	3.02	17	762
+dependency	4.92			0	raised	5.45	3.52	3.52	21	8745
+benchmark	4.92			0	raised	5.45	3.6	3.6	18	5502
+metadata	4.92			0	raised	5.44	3.36	3.36	24	2548
+outputs	4.91			0	raised	5.44	3.39	3.39	24	6509
+prompts	4.91			0	raised	5.44	3.34	3.34	23	2053
+structured	4.9			0	raised	5.42	3.82	3.82	24	5312
+nodes	4.89			0	raised	5.42	3.78	3.78	19	5304
+benchmarks	4.88			0	raised	5.41	3.27	3.27	17	5173
+gpu	4.88	GPU	0.957	0	raised	5.4	3.22	3.22	20	2233
+constraints	4.87			0	raised	5.39	3.8	3.8	24	5805
+embeddings	4.87			0	raised	5.39	1.82	1.82	18	2941
+metrics	4.87			0	raised	5.39	3.51	3.51	21	5571
+validation	4.87			0	raised	5.39	3.68	3.68	21	10724
+backend	4.86			0	raised	5.39	2.86	2.86	23	3880
+retrieval	4.86			0	raised	5.39	3.33	3.33	21	2832
+authentication	4.86			0	raised	5.38	3.35	3.35	20	3306
+specify	4.84			0	raised	5.36	3.78	3.78	25	5992
+lora	4.83	LoRA	0.969	0	raised	5.35	2.58	2.58	13	493
+pods	4.83			0	raised	5.35	3.45	3.45	7	814
+embedding	4.82			0	raised	5.35	3.0	3.0	21	3507
+azure	4.82	Azure	0.933	1	raised	5.35	3.35	3.35	18	1838
+optimization	4.82			0	raised	5.34	3.66	3.66	20	7793
+improves	4.82			0	raised	5.34	3.75	3.75	19	5295
+semantic	4.81			0	raised	5.33	3.4	3.4	22	5014
+config	4.81			0	raised	5.33	2.93	2.93	18	2902
+inputs	4.8			0	raised	5.32	3.63	3.63	24	7860
+aws	4.79	AWS	0.93	0	new	5.31		3.17	17	2338
+repositories	4.78			0	raised	5.3	2.84	2.84	20	4224
+datasets	4.77			0	raised	5.3	2.84	2.84	16	5731
+achieves	4.77			0	raised	5.3	3.33	3.33	11	4512
+workspace	4.77			0	raised	5.29	2.85	2.85	19	608
+cpu	4.76	CPU	0.926	0	raised	5.29	3.72	3.72	19	4981
+manually	4.76			0	raised	5.28	3.7	3.7	24	6869
+adapter	4.76			0	raised	5.28	3.6	3.6	21	1280
+configured	4.75			0	raised	5.27	3.22	3.22	25	2570
+workflows	4.75			0	raised	5.27	2.45	2.45	22	2369
+queries	4.73			0	raised	5.25	3.45	3.45	21	6708
+baseline	4.73			0	raised	5.25	3.7	3.7	18	4107
+deploy	4.72			0	raised	5.25	3.7	3.7	21	4189
+model's	4.72			0	raised	5.24	2.85	2.85	22	2796
+plugin	4.72			0	raised	5.24	3.28	3.28	19	2559
+agentic	4.72			0	new	5.24		1.21	15	1843
+executable	4.71			0	raised	5.24	2.8	2.8	18	2870
+devops	4.71	DevOps	0.821	0	raised	5.23	2.85	2.85	7	1623
+tracker	4.7			0	raised	5.22	3.63	3.63	12	809
+endpoint	4.68			0	raised	5.2	2.93	2.93	23	2565
+schema	4.68			0	raised	5.2	3.13	3.13	25	3731
+gradient	4.67			0	raised	5.2	3.48	3.48	11	5374
+defaults	4.67			0	raised	5.19	3.17	3.17	24	1198
+generative	4.67			0	raised	5.19	2.77	2.77	16	2045
+regression	4.67			0	raised	5.19	3.5	3.5	13	9671
+kernel	4.67			0	raised	5.19	3.58	3.58	19	3612
+vllm	4.65	vLLM	0.983	0	new	5.18		0.0	11	304
+peft	4.64	PEFT	0.99	0	new	5.17		0.0	6	118
+transformers	4.64	Transformers	0.557	0	raised	5.17	3.57	3.57	17	1713
+compute	4.63			0	raised	5.16	3.41	3.41	22	4990
+baselines	4.63			0	raised	5.15	2.28	2.28	12	3234
+diffusion	4.63			0	raised	5.15	3.4	3.4	12	1111
+compose	4.62	Compose	0.511	1	raised	5.14	3.46	3.46	18	1293
+rag	4.62	RAG	0.993	1	raised	5.14	3.55	3.55	16	737
+directories	4.62			0	raised	5.14	3.19	3.19	16	992
+multimodal	4.61			0	raised	5.14	2.54	2.54	16	1338
+configurations	4.61			0	raised	5.13	3.45	3.45	21	2688
+quantization	4.61			0	raised	5.13	2.54	2.54	16	639
+boolean	4.59			0	raised	5.12	2.95	2.95	20	2830
+distributions	4.59			0	raised	5.11	3.51	3.51	17	2446
+routing	4.59			0	raised	5.11	3.55	3.55	22	1775
+agent's	4.58			0	raised	5.1	2.85	2.85	17	1050
+reinforcement	4.58			0	raised	5.1	3.43	3.43	11	3916
+latency	4.58			0	raised	5.1	3.31	3.31	21	2460
+rl	4.58	RL	0.992	0	raised	5.1	3.37	3.37	9	2863
+ansible	4.56	Ansible	0.661	0	raised	5.08	2.12	2.12	3	986
+gpus	4.55	GPUs	0.978	0	raised	5.07	2.67	2.67	19	824
+namespace	4.55			0	raised	5.07	2.53	2.53	14	2039
+genai	4.55	GenAI	0.927	0	new	5.07		0.0	12	187
+syntax	4.54			0	raised	5.06	3.53	3.53	22	8211
+transformer	4.54			0	raised	5.06	3.37	3.37	17	2193
+gpt	4.54	GPT	0.967	0	new	5.06		2.39	11	536
+permissions	4.53			0	raised	5.05	3.11	3.11	18	2322
+disable	4.53			0	raised	5.05	3.52	3.52	20	1373
+tui	4.53	TUI	1.0	0	raised	5.05	2.77	2.77	4	36
+repo	4.52			0	raised	5.04	3.1	3.1	18	3363
+adapters	4.52			0	raised	5.04	2.86	2.86	18	699
+docs	4.52			0	raised	5.04	3.5	3.5	22	2838
+outperforms	4.52			0	raised	5.04	2.45	2.45	11	2496
+latent	4.51			0	raised	5.04	3.27	3.27	10	1942
+inline	4.51			0	raised	5.03	3.18	3.18	21	1475
+bounded	4.51			0	raised	5.03	3.5	3.5	16	2094
+prefix	4.5			0	raised	5.03	3.23	3.23	22	1905
+override	4.5			0	raised	5.02	3.42	3.42	23	2014
+sql	4.49	SQL	0.901	0	raised	5.02	3.38	3.38	17	9438
+trajectories	4.49			0	raised	5.02	2.92	2.92	9	1987
+decoding	4.49			0	raised	5.02	3.05	3.05	12	1330
+apis	4.49	APIs	0.95	0	raised	5.01	3.1	3.1	24	4431
+macos	4.48	macOS	0.663	0	raised	5.01	3.02	3.02	18	533
+deterministic	4.48			0	raised	5.0	2.93	2.93	19	2878
+pretrained	4.48			0	new	5.0		0.0	11	1778
+project's	4.48			0	raised	5.0	3.2	3.2	16	764
+vectors	4.48			0	raised	5.0	3.46	3.46	14	3936
+architectures	4.47			0	raised	5.0	3.02	3.02	21	3437
+pipelines	4.47			0	raised	5.0	3.43	3.43	17	1694
+initialization	4.47			0	raised	4.99	2.56	2.56	21	2263
+implementations	4.47			0	raised	4.99	3.19	3.19	23	8010
+computation	4.47			0	raised	4.99	3.35	3.35	17	3600
+reuse	4.46			0	raised	4.99	3.37	3.37	20	4203
+checkpoint	4.46			0	raised	4.98	3.39	3.39	20	753
+kv	4.46	KV	0.973	0	new	4.98		3.13	12	422
+encoder	4.45			0	raised	4.98	2.68	2.68	13	1991
+sparse	4.45			0	raised	4.98	3.36	3.36	16	2424
+validate	4.44			0	raised	4.96	3.4	3.4	20	3861
+plugins	4.44			0	raised	4.96	3.08	3.08	13	1556
+llama	4.43	Llama	0.759	1	raised	4.95	2.95	2.95	13	460
+kubelet	4.43			0	new	4.95		0.0	3	275
+classifier	4.42			0	raised	4.94	2.66	2.66	15	4530
+cuda	4.41	CUDA	0.891	0	raised	4.94	2.42	2.42	16	414
+frameworks	4.41			0	raised	4.93	3.29	3.29	17	6407
+user's	4.41			0	raised	4.93	3.33	3.33	20	3161
+llamaindex	4.41	LlamaIndex	0.958	0	new	4.93		0.0	4	480
+ssh	4.4	SSH	0.713	0	raised	4.92	3.12	3.12	13	991
+terraform	4.4	Terraform	0.628	1	raised	4.92	1.99	1.99	4	644
+correctness	4.4			0	raised	4.92	3.39	3.39	14	2963
+nvidia	4.4	NVIDIA	0.692	0	raised	4.92	3.25	3.25	19	565
+caching	4.4			0	raised	4.92	2.68	2.68	23	2635
+diagnostics	4.39			0	raised	4.91	3.21	3.21	12	519
+dockerfile	4.39	Dockerfile	0.893	0	new	4.91		1.15	8	589
+debugging	4.39			0	raised	4.91	2.89	2.89	22	3978
+vm	4.39	VM	0.948	0	new	4.91		3.22	14	2017
+approvals	4.38			0	raised	4.9	3.13	3.13	12	163
+sandboxing	4.38			0	new	4.9		1.57	9	128
+endpoints	4.38			0	raised	4.9	2.74	2.74	18	1617
+constraint	4.37			0	raised	4.89	3.28	3.28	17	2901
+debug	4.37			0	raised	4.89	2.86	2.86	21	3293
+lifecycle	4.36			0	raised	4.88	2.87	2.87	19	1262
+ide	4.36	IDE	0.985	0	new	4.88		3.14	10	3948
+tensor	4.36			0	raised	4.88	3.03	3.03	11	1117
+calibration	4.36			0	raised	4.88	3.34	3.34	11	1199
+causal	4.35			0	raised	4.87	3.33	3.33	11	1183
+completions	4.35			0	raised	4.87	2.79	2.79	18	316
+overrides	4.34			0	raised	4.86	2.67	2.67	18	549
+nested	4.34			0	raised	4.86	3.03	3.03	21	3069
+websocket	4.34			0	new	4.86		1.64	9	394
+pytorch	4.33	PyTorch	0.583	0	new	4.85		1.26	16	1612
+filesystem	4.33			0	raised	4.85	2.59	2.59	16	1097
+dynamically	4.33			0	raised	4.85	3.03	3.03	23	3436
+configs	4.33			0	new	4.85		1.71	12	305
+daemon	4.33			0	raised	4.85	2.81	2.81	7	450
+selects	4.33			0	raised	4.85	3.31	3.31	21	1472
+robustness	4.32			0	raised	4.84	2.83	2.83	12	1559
+langchain	4.31	LangChain	0.861	0	new	4.84		0.0	9	420
+trainable	4.31			0	raised	4.83	2.03	2.03	8	573
+gitlab	4.31	GitLab	0.55	0	new	4.83		1.86	8	670
+yaml	4.3	YAML	0.702	0	new	4.83		1.79	14	887
+dns	4.3	DNS	0.94	0	raised	4.83	3.24	3.24	8	757
+deployments	4.3			0	raised	4.82	3.15	3.15	16	1234
+lockfile	4.3			0	new	4.82		0.0	3	39
+vulnerabilities	4.29			0	raised	4.82	3.23	3.23	16	1039
+checkpoints	4.29			0	raised	4.81	3.13	3.13	17	797
+matrices	4.29			0	raised	4.81	3.18	3.18	10	1446
+roadmap	4.28			0	raised	4.81	3.16	3.16	11	274
+autogen	4.28	AutoGen	0.939	0	new	4.81		0.0	4	61
+webhook	4.28			0	new	4.81		0.0	10	294
+initialize	4.28			0	raised	4.8	2.45	2.45	20	1655
+reusable	4.28			0	raised	4.8	3.21	3.21	17	2443
+iterating	4.27			0	raised	4.8	2.16	2.16	15	859
+cached	4.27			0	raised	4.8	2.6	2.6	21	1489
+probabilities	4.27			0	raised	4.8	3.16	3.16	13	2568
+kernels	4.27			0	raised	4.79	2.98	2.98	14	1007
+prioritizing	4.26			0	raised	4.78	2.88	2.88	8	288
+realtime	4.26			0	raised	4.78	2.85	2.85	6	374
+upvote	4.26			0	raised	4.78	2.17	2.17	5	1085
+distillation	4.26			0	raised	4.78	3.01	3.01	10	803
+admins	4.26			0	raised	4.78	3.04	3.04	8	410
+clustering	4.25			0	raised	4.78	3.03	3.03	13	3615
+quantized	4.25			0	raised	4.77	2.27	2.27	13	302
+optionally	4.25			0	raised	4.77	2.78	2.78	22	1044
+heterogeneous	4.25			0	raised	4.77	3.08	3.08	12	1337
+deprecated	4.24			0	raised	4.77	2.67	2.67	14	983
+scheduler	4.24			0	raised	4.77	2.65	2.65	17	813
+plaintext	4.24			0	raised	4.77	2.31	2.31	11	223
+async	4.24			0	raised	4.76	2.25	2.25	13	1402
+generalization	4.24			0	raised	4.76	3.21	3.21	9	1812
+decoder	4.24			0	raised	4.76	2.84	2.84	10	1340
+pretraining	4.24			0	new	4.76		0.0	8	821
+nginx	4.24			0	raised	4.76	2.2	2.2	5	678
+lambda	4.24			0	raised	4.76	3.06	3.06	9	1953
+telemetry	4.23			0	raised	4.75	3.0	3.0	17	268
+authenticate	4.23			0	raised	4.75	2.72	2.72	15	1009
+credential	4.23			0	raised	4.75	2.75	2.75	16	398
+urls	4.22	URLs	0.801	0	raised	4.75	2.78	2.78	20	1308
+scalable	4.22			0	raised	4.75	2.93	2.93	19	2098
+gradients	4.22			0	raised	4.75	2.93	2.93	10	1764
+stochastic	4.22			0	raised	4.74	3.11	3.11	9	1688
+kubectl	4.21			0	new	4.74		0.0	3	314
+automate	4.21			0	raised	4.74	3.08	3.08	16	1983
+installs	4.21			0	raised	4.73	2.95	2.95	19	474
+markdown	4.2	Markdown	0.567	0	raised	4.73	2.4	2.4	18	531
+reproducible	4.2			0	raised	4.72	2.7	2.7	17	1174
+workloads	4.2			0	raised	4.72	2.75	2.75	18	706
+fallback	4.2			0	raised	4.72	2.66	2.66	20	588
+conversational	4.2			0	raised	4.72	3.11	3.11	15	565
+parsing	4.2			0	raised	4.72	2.86	2.86	21	2945
+adversarial	4.2			0	raised	4.72	2.84	2.84	9	1105
+annotation	4.19			0	raised	4.72	2.89	2.89	16	1278
+iterative	4.19			0	raised	4.71	2.86	2.86	14	2015
+activations	4.18			0	raised	4.71	2.31	2.31	11	933
+parse	4.18			0	raised	4.71	2.98	2.98	23	2910
+executes	4.18			0	raised	4.7	3.06	3.06	22	1467
+backends	4.18			0	new	4.7		1.7	18	517
+anthropic	4.18	Anthropic	0.927	0	raised	4.7	1.93	1.93	12	218
+gaussian	4.17	Gaussian	0.841	0	raised	4.7	2.94	2.94	8	1656
+binaries	4.17			0	raised	4.7	2.75	2.75	13	1184
+contextual	4.17			0	raised	4.7	3.14	3.14	15	1301
+annotations	4.17			0	raised	4.7	2.99	2.99	17	1658
+middleware	4.17			0	raised	4.69	2.58	2.58	10	601
+orchestration	4.17			0	raised	4.69	2.74	2.74	16	772
+codebase	4.17			0	raised	4.69	2.34	2.34	17	3873
+retry	4.17			0	raised	4.69	2.57	2.57	18	781
+convolutional	4.16			0	raised	4.69	2.1	2.1	7	2391
+lstm	4.16	LSTM	0.957	0	new	4.68		1.69	7	2787
+evaluates	4.16			0	raised	4.68	2.97	2.97	17	1248
+gguf	4.15	GGUF	0.853	0	new	4.68		0.0	6	55
+subagent	4.15			0	raised	4.67	1.07	1.07	8	93
+guardrails	4.15			0	raised	4.67	2.11	2.11	12	199
+subagents	4.14			0	new	4.67		0.0	9	100
+callback	4.14			0	raised	4.67	2.79	2.79	17	1313
+sandboxes	4.14			0	raised	4.66	1.82	1.82	13	243
+integrations	4.14			0	raised	4.66	2.44	2.44	17	509
+parser	4.14			0	raised	4.66	2.63	2.63	16	2284
+pypi	4.14	PyPI	0.712	0	new	4.66		1.35	12	200
+multilingual	4.14			0	raised	4.66	3.03	3.03	12	683
+rollout	4.13			0	raised	4.65	3.06	3.06	13	651
+encode	4.13			0	raised	4.65	2.95	2.95	16	2436
+tokenizer	4.13			0	new	4.65		0.0	14	533
+toolkit	4.13			0	raised	4.65	3.08	3.08	19	669
+headers	4.12			0	raised	4.64	3.12	3.12	19	1615
+integrates	4.12			0	raised	4.64	3.04	3.04	16	1111
+invocation	4.11			0	raised	4.64	2.91	2.91	18	782
+logits	4.11			0	new	4.64		0.0	10	366
+frontend	4.11			0	raised	4.63	2.48	2.48	17	1498
+retriever	4.11			0	raised	4.63	2.99	2.99	10	329
+normalization	4.1			0	raised	4.62	2.99	2.99	13	2020
+kubeadm	4.1			0	new	4.62		0.0	4	136
+overfitting	4.1			0	new	4.62		1.75	9	2928
+openai's	4.1	OpenAI's	0.965	0	new	4.62		0.0	13	265
+powershell	4.1	PowerShell	0.592	0	raised	4.62	2.72	2.72	10	457
+prefill	4.1			0	new	4.62		0.0	10	252
+redis	4.09	Redis	0.714	0	new	4.62		1.98	12	857
+decode	4.09			0	raised	4.62	3.02	3.02	13	621
+bottleneck	4.09			0	raised	4.61	2.97	2.97	10	1999
+solver	4.09			0	raised	4.61	2.82	2.82	9	701
+resolver	4.09			0	raised	4.61	2.0	2.0	10	111
+npm	4.09			0	new	4.61		2.41	10	481
+sft	4.09	SFT	0.996	0	new	4.61		1.88	9	422
+categorical	4.09			0	raised	4.61	2.88	2.88	8	3243
+tensors	4.07			0	raised	4.6	2.2	2.2	12	492
+handoff	4.07			0	raised	4.6	2.53	2.53	11	121
+copilot	4.07	Copilot	0.948	1	raised	4.6	2.47	2.47	13	224
+configuring	4.07			0	raised	4.59	2.62	2.62	13	867
+pydantic	4.07	Pydantic	0.704	0	new	4.59		0.0	8	136
+optimizer	4.06			0	raised	4.59	2.27	2.27	12	1344
+predefined	4.06			0	raised	4.58	2.65	2.65	19	1288
+leverages	4.06			0	raised	4.58	2.49	2.49	19	644
+installer	4.05			0	raised	4.57	2.94	2.94	8	505
+constructor	4.05			0	raised	4.57	2.92	2.92	11	6373
+executables	4.05			0	raised	4.57	2.04	2.04	9	385
+vram	4.05	VRAM	0.946	0	new	4.57		2.03	15	83
+colab	4.05			0	new	4.57		1.87	7	646
+initialized	4.04			0	raised	4.56	2.43	2.43	18	1538
+softmax	4.04			0	new	4.56		1.28	9	1701
+mysql	4.04	MySQL	0.745	0	raised	4.56	2.83	2.83	11	2406
+containerd	4.04			0	new	4.56		0.0	4	115
+csv	4.03	CSV	0.624	0	raised	4.56	2.57	2.57	15	1998
+nlp	4.03	NLP	0.962	0	raised	4.56	2.59	2.59	12	1821
+immutable	4.03			0	raised	4.55	2.85	2.85	13	3709
+provisioning	4.03			0	raised	4.55	2.71	2.71	12	388
+refactoring	4.02			0	raised	4.55	2.28	2.28	12	6258
+tensorflow	4.02			0	raised	4.55	2.08	2.08	7	2622
+keras	4.02	Keras	0.703	0	new	4.55		1.72	4	3171
+recursive	4.02			0	raised	4.54	2.9	2.9	13	2160
+lookup	4.02			0	raised	4.54	2.86	2.86	20	1991
+instantiate	4.02			0	raised	4.54	1.99	1.99	15	2048
+unsupported	4.02			0	raised	4.54	2.99	2.99	18	526
+ingress	4.01			0	raised	4.53	2.79	2.79	7	221
+namespaces	4.01			0	raised	4.53	2.04	2.04	9	1154
+empirically	4.01			0	raised	4.53	2.88	2.88	10	881
+probabilistic	4.01			0	raised	4.53	2.86	2.86	11	1007
+chatbot	4.0			0	raised	4.53	2.3	2.3	16	293
+interpretable	4.0			0	raised	4.53	1.94	1.94	7	860
+rollouts	4.0			0	new	4.53		1.95	12	610
+hallucination	4.0			0	raised	4.52	2.89	2.89	9	290
+autoregressive	4.0			0	new	4.52		1.72	7	700
+sqlite	4.0	SQLite	0.723	0	raised	4.52	2.05	2.05	13	987
+verifiable	4.0			0	raised	4.52	2.94	2.94	10	825
+workaround	4.0			0	raised	4.52	2.71	2.71	11	977
+bayesian	3.99	Bayesian	0.863	0	raised	4.52	2.95	2.95	7	1263
+asynchronous	3.99			0	raised	4.52	2.88	2.88	17	1967
+parallelism	3.99			0	raised	4.52	2.58	2.58	16	724
+huggingface	3.99			0	new	4.51		0.0	11	309
+preprocessing	3.99			0	raised	4.51	2.05	2.05	13	1405
+vulkan	3.99	Vulkan	0.961	0	raised	4.51	2.17	2.17	3	30
+verifier	3.99			0	raised	4.51	2.09	2.09	7	493
+scoped	3.99			0	raised	4.51	2.36	2.36	15	645
+classifiers	3.98			0	raised	4.51	2.39	2.39	9	1432
+outperforming	3.98			0	raised	4.5	2.47	2.47	7	765
+summarization	3.98			0	raised	4.5	2.04	2.04	14	389
+grpo	3.98	GRPO	1.0	0	new	4.5		0.0	5	467
+balancer	3.97			0	raised	4.49	2.29	2.29	7	536
+concurrency	3.97			0	raised	4.49	2.59	2.59	18	1841
+oauth	3.97	OAuth	0.857	0	new	4.49		1.88	10	647
+regularization	3.97			0	raised	4.49	2.26	2.26	6	1458
+env	3.97			0	new	4.49		2.61	14	512
+heuristic	3.97			0	raised	4.49	2.72	2.72	11	1114
+convolution	3.97			0	raised	4.49	2.47	2.47	9	1377
+generalize	3.96			0	raised	4.49	2.91	2.91	10	1664
+scalability	3.96			0	raised	4.48	2.69	2.69	14	1653
+backbones	3.95			0	raised	4.48	2.07	2.07	7	638
+finetuning	3.95			0	new	4.48		1.28	12	243
+wsl	3.95	WSL	0.988	0	raised	4.47	2.27	2.27	7	72
+allowlist	3.95			0	new	4.47		0.0	9	88
+compaction	3.95			0	raised	4.47	2.51	2.51	10	123
+scalar	3.95			0	raised	4.47	2.93	2.93	14	1088
+embed	3.95			0	raised	4.47	2.94	2.94	17	1016
+iteratively	3.95			0	raised	4.47	2.18	2.18	14	912
+mongodb	3.95	MongoDB	0.798	0	raised	4.47	2.33	2.33	12	1062
+hyperparameters	3.95			0	new	4.47		1.31	9	1521
+declarative	3.95			0	raised	4.47	2.63	2.63	13	1082
+observability	3.94			0	raised	4.47	1.66	1.66	18	323
+retraining	3.94			0	raised	4.47	2.75	2.75	9	758
+retries	3.94			0	raised	4.46	1.57	1.57	15	323
+iterate	3.94			0	raised	4.46	2.51	2.51	17	1784
+modalities	3.94			0	raised	4.46	2.9	2.9	11	439
+cosine	3.94			0	raised	4.46	2.51	2.51	13	1124
+orchestrator	3.94			0	raised	4.46	2.1	2.1	15	242
+eval	3.93			0	new	4.46		2.62	10	308
+prs	3.93	PRs	0.989	0	raised	4.46	2.86	2.86	13	350
+langgraph	3.93	LangGraph	0.992	0	new	4.46		0.0	4	141
+microservices	3.93			0	raised	4.46	2.26	2.26	9	2241
+querying	3.93			0	raised	4.45	2.46	2.46	15	1428
+versioning	3.93			0	raised	4.45	2.12	2.12	12	1721
+reproducibility	3.93			0	raised	4.45	2.46	2.46	14	465
+dropdown	3.93			0	raised	4.45	2.19	2.19	8	492
+rocm	3.93	ROCm	0.973	0	new	4.45		0.0	6	38
+perplexity	3.93			0	raised	4.45	2.14	2.14	10	336
+handoffs	3.93			0	raised	4.45	1.71	1.71	8	75
+corpora	3.93			0	raised	4.45	2.36	2.36	8	564
+ablation	3.93			0	raised	4.45	2.77	2.77	7	671
+caches	3.92			0	raised	4.45	2.89	2.89	16	892
+schemas	3.92			0	raised	4.45	2.41	2.41	16	751
+webhooks	3.92			0	new	4.44		1.01	8	224
+subspace	3.92			0	raised	4.44	2.89	2.89	8	329
+etcd	3.92			0	new	4.44		0.0	4	101
+pairwise	3.91			0	raised	4.44	2.44	2.44	10	684
+rubric	3.91			0	raised	4.43	2.75	2.75	10	313
+epochs	3.91			0	raised	4.43	2.4	2.4	9	1561
+prefixes	3.91			0	raised	4.43	2.7	2.7	18	589
+configurable	3.9			0	raised	4.42	2.49	2.49	19	882
+semantically	3.9			0	raised	4.42	2.44	2.44	14	1351
+opentelemetry	3.9	OpenTelemetry	0.988	0	new	4.42		0.0	12	63
+denoising	3.89			0	new	4.42		1.63	8	459
+repos	3.89			0	raised	4.41	2.43	2.43	10	886
+stateful	3.89			0	new	4.41		1.84	15	780
+contrastive	3.89			0	raised	4.41	2.04	2.04	7	481
+harnesses	3.89			0	raised	4.41	2.78	2.78	9	426
+langsmith	3.89	LangSmith	1.0	0	new	4.41		0.0	2	198
+llm's	3.89	LLM's	1.0	0	new	4.41		0.0	9	235
+modality	3.89			0	raised	4.41	2.81	2.81	11	332
+configures	3.88			0	raised	4.4	1.82	1.82	14	224
+auc	3.88	AUC	0.952	0	raised	4.4	2.57	2.57	6	938
+encoders	3.88			0	raised	4.4	2.15	2.15	9	541
+mistral	3.88	Mistral	0.87	0	raised	4.4	2.58	2.58	14	142
+codespace	3.88			0	new	4.4		0.0	2	86
+constrain	3.88			0	raised	4.4	2.82	2.82	13	534
+relu	3.87	ReLU	0.638	0	new	4.4		1.5	5	1262
+rnn	3.87	RNN	0.974	0	new	4.4		1.86	6	1424
+postgresql	3.87	PostgreSQL	0.802	0	raised	4.4	2.25	2.25	15	782
+counterfactual	3.87			0	raised	4.39	2.32	2.32	6	412
+ablations	3.87			0	raised	4.39	1.22	1.22	5	578
+vlms	3.87	VLMs	1.0	0	new	4.39		0.0	6	327
+sigmoid	3.87			0	raised	4.39	2.04	2.04	8	1544
+readme	3.87	README	0.678	0	raised	4.39	2.2	2.2	13	548
+vms	3.86	VMs	0.9	0	new	4.39		2.72	9	716
+init	3.86			0	raised	4.39	2.74	2.74	11	504
+tabular	3.86			0	raised	4.39	2.44	2.44	9	899
+unstructured	3.86			0	raised	4.38	2.76	2.76	14	623
+registries	3.86			0	raised	4.38	2.72	2.72	10	233
+ecs	3.86	ECS	0.982	0	raised	4.38	2.68	2.68	5	307
+computationally	3.86			0	raised	4.38	2.56	2.56	9	1062
+serialized	3.86			0	raised	4.38	2.59	2.59	18	647
+timestamp	3.85			0	raised	4.38	2.62	2.62	18	1379
+estimator	3.85			0	raised	4.37	2.76	2.76	7	828
+deprecate	3.85			0	raised	4.37	1.88	1.88	3	152
+bitbucket	3.85			0	new	4.37		1.71	4	602
+numpy	3.85			0	new	4.37		1.91	12	1125
+hostname	3.85			0	raised	4.37	2.05	2.05	6	303
+buildkit	3.84	BuildKit	0.889	0	new	4.36		0.0	2	77
+invocations	3.84			0	raised	4.36	2.38	2.38	12	350
+postgres	3.84	Postgres	0.696	0	new	4.36		1.96	9	591
+microservice	3.83			0	new	4.36		1.52	7	1677
+retrieves	3.83			0	raised	4.36	2.5	2.5	14	645
+speedup	3.83			0	raised	4.36	2.13	2.13	9	536
+qwen	3.83	Qwen	0.995	0	new	4.36		0.0	8	350
+configmap	3.83	ConfigMap	0.887	0	new	4.35		0.0	3	94
+computes	3.83			0	raised	4.35	2.51	2.51	15	701
+evaluator	3.83			0	raised	4.35	2.49	2.49	11	342
+validates	3.83			0	raised	4.35	2.71	2.71	18	606
+interpretability	3.83			0	new	4.35		1.49	7	578
+dimensionality	3.82			0	raised	4.35	2.41	2.41	9	1507
+enum	3.82			0	raised	4.35	2.14	2.14	10	1827
+mlp	3.82	MLP	0.979	0	new	4.34		2.74	9	746
+perturbations	3.82			0	raised	4.34	2.49	2.49	7	417
+guardrail	3.81			0	raised	4.34	2.45	2.45	10	73
+untrusted	3.81			0	raised	4.34	2.08	2.08	15	307
+jupyter	3.81	Jupyter	0.662	0	new	4.34		1.65	13	485
+versioned	3.81			0	raised	4.33	1.55	1.55	13	623
+quickstart	3.81			0	new	4.33		1.73	11	148
+hyperparameter	3.8			0	new	4.32		1.16	8	1077
+container's	3.8			0	new	4.32		1.49	5	185
+optimizations	3.8			0	raised	4.32	2.59	2.59	17	1666
+regex	3.8			0	raised	4.32	2.18	2.18	18	1085
+editable	3.8			0	raised	4.32	2.27	2.27	10	299
+dqn	3.8	DQN	0.983	0	new	4.32		0.0	5	878
+abstractions	3.8			0	raised	4.32	2.75	2.75	12	2329
+scim	3.8	SCIM	0.998	0	new	4.32		1.42	3	86
+dhi	3.79	DHI	1.0	0	new	4.32		1.86	4	63
+transitive	3.79			0	raised	4.31	2.76	2.76	8	255
+priors	3.79			0	raised	4.31	2.6	2.6	8	458
+dataframe	3.79			0	new	4.31		1.29	5	1721
+regressions	3.79			0	raised	4.31	2.34	2.34	14	673
+openvino	3.79	OpenVINO	0.915	0	new	4.31		0.0	5	23
+cli's	3.78	CLI's	1.0	0	new	4.3		0.0	2	46
+hashes	3.78			0	raised	4.3	2.39	2.39	12	736
+pod's	3.78	Pod's	0.699	0	new	4.3		1.6	2	115
+learnable	3.78			0	new	4.3		1.73	9	420
+refactor	3.78			0	raised	4.3	1.88	1.88	8	4777
+autoencoder	3.78			0	new	4.3		1.07	7	846
+maintainers	3.78			0	raised	4.3	2.29	2.29	13	629
+tool's	3.78			0	new	4.3		1.89	16	132
+verbose	3.78			0	raised	4.3	2.44	2.44	18	1337
+restarts	3.77			0	raised	4.3	2.69	2.69	16	320
+idp	3.77	IdP	0.936	0	new	4.29		2.48	3	118
+auroc	3.77	AUROC	0.984	0	new	4.29		0.0	6	365
+subnet	3.77			0	raised	4.29	2.4	2.4	7	170
+callable	3.77			0	raised	4.29	1.84	1.84	10	240
+workspaces	3.76			0	raised	4.29	2.21	2.21	11	145
+quantize	3.76			0	raised	4.29	1.56	1.56	11	130
+svm	3.76	SVM	0.935	0	new	4.29		2.2	7	1559
+containerized	3.76			0	raised	4.29	2.04	2.04	11	202
+bounding	3.76			0	raised	4.28	2.73	2.73	8	760
+statefulset	3.76	StatefulSet	0.884	0	new	4.28		0.0	2	70
+append	3.76			0	raised	4.28	2.64	2.64	16	750
+bidirectional	3.75			0	raised	4.27	2.55	2.55	11	636
+benchmarking	3.75			0	raised	4.27	2.74	2.74	12	526
+mappings	3.75			0	raised	4.27	2.57	2.57	16	635
+tokenization	3.75			0	new	4.27		1.69	11	354
+parsed	3.75			0	raised	4.27	2.38	2.38	18	907
+heuristics	3.74			0	raised	4.27	2.52	2.52	9	811
+artifactory	3.74	Artifactory	0.731	0	new	4.27		0.0	4	182
+granularity	3.74			0	raised	4.27	2.36	2.36	14	886
+ttl	3.74	TTL	0.912	0	raised	4.27	2.58	2.58	12	140
+perturbation	3.74			0	raised	4.27	2.66	2.66	6	353
+sqlalchemy	3.74	SQLAlchemy	0.776	0	new	4.26		0.0	5	105
+encodes	3.74			0	raised	4.26	2.69	2.69	10	582
+primitives	3.74			0	raised	4.26	2.65	2.65	13	939
+degrades	3.74			0	raised	4.26	2.7	2.7	8	503
+underexplored	3.74			0	new	4.26		1.39	4	440
+elasticsearch	3.74	Elasticsearch	0.519	0	new	4.26		1.79	8	360
+attestations	3.74			0	raised	4.26	1.79	1.79	4	74
+injects	3.74			0	raised	4.26	2.66	2.66	14	304
+overridden	3.73			0	raised	4.26	2.61	2.61	12	624
+logit	3.73			0	new	4.25		1.89	8	353
+serverless	3.73			0	raised	4.25	2.01	2.01	10	244
+backpropagation	3.73			0	new	4.25		1.55	7	964
+dict	3.73			0	raised	4.25	2.21	2.21	11	337
+grpc	3.73	gRPC	0.831	0	new	4.25		1.15	9	195
+batched	3.73			0	raised	4.25	1.59	1.59	14	224
+variational	3.73			0	raised	4.25	2.3	2.3	7	509
+truncation	3.72			0	raised	4.25	2.28	2.28	17	241
+instantiation	3.72			0	raised	4.25	2.0	2.0	10	736
+repository's	3.72			0	new	4.24		0.0	10	339
+decomposes	3.72			0	raised	4.24	2.4	2.4	8	358
+application's	3.71			0	new	4.24		1.96	11	815
+opd	3.71	OPD	1.0	0	new	4.24		2.15	3	143
+callbacks	3.71			0	raised	4.24	2.38	2.38	12	837
+autonomously	3.71			0	raised	4.24	2.64	2.64	11	315
+ides	3.71	IDEs	0.986	1	raised	4.23	2.64	2.64	8	1244
+offloading	3.71			0	raised	4.23	2.45	2.45	13	164
+covariance	3.71			0	raised	4.23	2.56	2.56	8	579
+resize	3.71			0	raised	4.23	2.48	2.48	8	350
+ggml	3.7	GGML	0.744	0	new	4.23		0.0	2	20
+natively	3.7			0	raised	4.23	2.64	2.64	18	690
+verifies	3.7			0	raised	4.22	2.57	2.57	15	553
+xgboost	3.7	XGBoost	0.554	0	new	4.22		0.0	6	1369
+npu	3.7	NPU	1.0	0	new	4.22		1.6	6	37
+unset	3.7			0	raised	4.22	1.82	1.82	13	154
+typescript	3.69	TypeScript	0.687	0	raised	4.22	2.59	2.59	11	644
+mlx	3.69	MLX	1.0	0	new	4.21		1.19	4	24
+overwrite	3.69			0	raised	4.21	2.43	2.43	16	597
+reranking	3.69			0	new	4.21		0.0	9	162
+imbalanced	3.69			0	raised	4.21	2.43	2.43	9	1211
+params	3.69			0	new	4.21		1.8	9	584
+vpc	3.69	VPC	0.945	0	new	4.21		1.93	2	131
+cnns	3.69	CNNs	0.994	0	new	4.21		1.68	6	870
+stackoverflow	3.69	StackOverflow	0.51	0	raised	4.21	2.04	2.04	4	2617
+mdp	3.68	MDP	0.995	0	new	4.21		2.32	5	557
+sdk's	3.68	SDK's	0.992	0	new	4.21		1.12	7	82
+provisioned	3.68			0	raised	4.21	2.34	2.34	8	166
+reuses	3.68			0	raised	4.2	2.02	2.02	14	295
+server's	3.68			0	raised	4.2	2.36	2.36	13	389
+toml	3.68	TOML	0.814	0	new	4.2		0.0	6	42
+evals	3.68			0	new	4.2		1.75	6	80
+oci	3.67	OCI	0.961	0	new	4.2		2.15	7	98
+docstring	3.67			0	new	4.2		0.0	8	120
+serialization	3.67			0	raised	4.2	2.42	2.42	13	953
+runtimes	3.67			0	new	4.19		1.74	14	394
+generalizes	3.67			0	raised	4.19	2.24	2.24	7	450
+grafana	3.67	Grafana	0.814	0	new	4.19		1.2	7	124
+automating	3.66			0	raised	4.19	2.6	2.6	11	629
+subdirectory	3.66			0	raised	4.19	1.8	1.8	10	160
+vlm	3.66	VLM	0.997	0	new	4.18		1.45	5	226
+tdd	3.66	TDD	0.989	0	new	4.18		2.5	5	3862
+sklearn	3.66			0	new	4.18		0.0	4	1643
+bayes	3.66	Bayes	0.858	0	raised	4.18	2.51	2.51	7	1010
+discriminator	3.66			0	raised	4.18	1.8	1.8	9	478
+optimizes	3.66			0	raised	4.18	2.22	2.22	10	502
+differentiable	3.66			0	raised	4.18	2.34	2.34	7	572
+initializing	3.65			0	raised	4.18	2.07	2.07	13	579
+autoscaling	3.65			0	new	4.18		1.12	7	118
+timeouts	3.65			0	raised	4.17	2.55	2.55	13	317
+deepseek	3.65	DeepSeek	0.986	0	new	4.17		0.0	8	183
+daemonset	3.64	DaemonSet	0.917	0	new	4.17		0.0	2	63
+dra	3.64	DRA	1.0	0	new	4.17		2.52	3	42
+opencode	3.64	OpenCode	0.965	0	new	4.17		0.0	5	45
+formalize	3.64			0	raised	4.17	2.47	2.47	8	489
+gcp	3.64	GCP	0.944	0	new	4.17		2.09	9	187
+maintainability	3.64			0	raised	4.16	2.13	2.13	8	1935
+jev	3.64	Jev	0.905	0	new	4.16		1.93	5	164
+cloudwatch	3.64	CloudWatch	0.806	0	new	4.16		1.11	4	121
+numa	3.64	NUMA	0.993	0	raised	4.16	2.37	2.37	5	39
+minimax	3.63			0	new	4.16		2.02	10	339
+timestamps	3.63			0	raised	4.16	2.22	2.22	15	746
+mutable	3.63			0	raised	4.15	2.41	2.41	14	2232
+buildx	3.63	Buildx	0.899	0	new	4.15		0.0	2	63
+cron	3.63			0	new	4.15		2.49	7	501
+codebases	3.63			0	new	4.15		1.24	9	637
+disables	3.63			0	raised	4.15	2.55	2.55	13	179
+gating	3.63			0	raised	4.15	2.56	2.56	11	245
+distributional	3.62			0	raised	4.15	2.29	2.29	6	339
+estimators	3.62			0	raised	4.14	2.29	2.29	7	436
+sparsity	3.62			0	raised	4.14	1.86	1.86	8	346
+unlearning	3.62			0	raised	4.14	2.09	2.09	6	119
+parsers	3.62			0	raised	4.14	2.01	2.01	11	673
+mllms	3.62	MLLMs	0.991	0	new	4.14		0.0	5	195
+unlabeled	3.62			0	raised	4.14	2.21	2.21	8	428
+rbac	3.61	RBAC	0.96	0	new	4.14		1.53	5	136
+inpainting	3.61			0	new	4.14		1.03	6	44
+openclaw	3.61	OpenClaw	1.0	0	new	4.13		0.0	4	27
+weaviate	3.61	Weaviate	0.941	0	new	4.13		0.0	4	34
+recursively	3.61			0	raised	4.13	2.34	2.34	13	727
+runnable	3.61			0	raised	4.13	1.64	1.64	13	323
+fetches	3.61			0	raised	4.13	2.48	2.48	16	415
+svd	3.61	SVD	0.955	0	new	4.13		2.21	7	222
+bitsandbytes	3.61			0	new	4.13		0.0	3	64
+perceptron	3.61			0	new	4.13		1.58	8	587
+rlvr	3.6	RLVR	1.0	0	new	4.13		0.0	4	186
+specifiers	3.6			0	raised	4.12	1.79	1.79	3	54
+mnist	3.6	MNIST	0.912	0	new	4.12		1.09	6	787
+bytecode	3.6			0	raised	4.12	2.07	2.07	4	925
+pinecone	3.59	Pinecone	0.893	0	raised	4.12	2.07	2.07	6	54
+ppo	3.59	PPO	0.982	0	new	4.12		2.32	6	396
+mutating	3.59			0	raised	4.12	2.41	2.41	8	436
+fastapi	3.59	FastAPI	0.851	0	new	4.12		0.0	10	70
+llava	3.59	LLaVA	0.649	0	new	4.11		0.0	5	26
+jira	3.59	Jira	0.549	0	raised	4.11	2.07	2.07	7	650
+chunking	3.59			0	raised	4.11	2.0	2.0	13	186
+cohere	3.59	Cohere	0.786	0	raised	4.11	1.99	1.99	4	55
+docker's	3.59	Docker's	0.891	0	new	4.11		1.35	3	140
+retrievers	3.58			0	raised	4.11	2.44	2.44	6	130
+opencl	3.58	OpenCL	0.913	0	raised	4.1	2.08	2.08	3	74
+toolchain	3.58			0	new	4.1		1.84	8	343
+kubeconfig	3.58			0	new	4.1		0.0	2	90
+subcommand	3.58			0	new	4.1		1.2	5	182
+testbed	3.57			0	raised	4.1	2.22	2.22	5	285
+nltk	3.57			0	new	4.09		0.0	4	275
+mcts	3.57	MCTS	0.982	0	new	4.09		1.67	7	359
+initializes	3.57			0	raised	4.09	1.7	1.7	14	234
+decoupled	3.57			0	raised	4.09	2.37	2.37	12	1116
+maintainer	3.57			0	raised	4.09	2.38	2.38	11	508
+oidc	3.57	OIDC	0.988	0	new	4.09		0.0	5	94
+whitespace	3.57			0	raised	4.09	2.17	2.17	13	753
+auditable	3.57			0	new	4.09		1.6	10	284
+dashboards	3.57			0	raised	4.09	2.37	2.37	14	203
+batching	3.57			0	raised	4.09	2.05	2.05	17	268
+package's	3.57			0	new	4.09		1.43	5	48
+serviceaccount	3.57	ServiceAccount	0.936	0	new	4.09		0.0	2	32
+sota	3.56	SOTA	0.893	0	raised	4.09	2.18	2.18	7	283
+templating	3.56			0	new	4.09		1.96	7	470
+programmatically	3.56			0	raised	4.08	2.04	2.04	14	578
+replicaset	3.56	ReplicaSet	0.937	0	new	4.08		0.0	3	44
+discriminative	3.56			0	raised	4.08	2.01	2.01	8	358
+sgd	3.56	SGD	0.96	0	raised	4.08	2.34	2.34	6	633
+keyring	3.56			0	raised	4.08	2.24	2.24	5	24
+prefixed	3.56			0	raised	4.08	2.55	2.55	10	219
+parses	3.55			0	raised	4.08	2.05	2.05	15	427
+fuzzing	3.55			0	raised	4.08	1.7	1.7	4	172
+adaptively	3.55			0	raised	4.07	1.93	1.93	7	273
+vae	3.55	VAE	0.993	0	new	4.07		1.84	6	346
+fsdp	3.55	FSDP	0.979	0	new	4.07		0.0	4	20
+overfit	3.55			0	new	4.07		1.12	8	1008
+statically	3.55			0	raised	4.07	2.51	2.51	10	1696
+glibc	3.55			0	new	4.07		1.62	4	73
+rmse	3.54	RMSE	0.914	0	new	4.07		1.48	6	594
+boilerplate	3.54			0	raised	4.07	2.51	2.51	13	1233
+autoencoders	3.54			0	new	4.06		1.04	7	536
+frontmatter	3.54			0	new	4.06		0.0	5	49
+playbooks	3.54			0	raised	4.06	1.86	1.86	2	109
+pseudocode	3.54			0	new	4.06		1.91	7	949
+cpython	3.54	CPython	0.928	0	new	4.06		1.47	4	300
+refines	3.54			0	raised	4.06	2.25	2.25	7	292
+mlflow	3.54	MLflow	0.677	0	new	4.06		0.0	8	44
+subtasks	3.54			0	new	4.06		1.55	12	200
+sandboxed	3.54			0	new	4.06		1.45	12	161
+traceability	3.54			0	raised	4.06	2.37	2.37	7	389
+localhost	3.54			0	raised	4.06	2.02	2.02	7	260
+synthesizes	3.54			0	raised	4.06	2.15	2.15	10	231
+tuple	3.53			0	raised	4.06	2.44	2.44	14	818
+rubrics	3.53			0	raised	4.06	2.33	2.33	6	163
+promptfoo	3.53	Promptfoo	0.824	0	new	4.06		0.0	2	21
+placeholders	3.53			0	raised	4.05	2.15	2.15	14	243
+concatenated	3.53			0	raised	4.05	2.02	2.02	11	430
+qlora	3.53	QLoRA	0.923	0	new	4.05		0.0	8	66
+invariance	3.53			0	raised	4.05	2.42	2.42	8	312
+chatgpt's	3.53	ChatGPT's	0.944	0	new	4.05		0.0	5	71
+vla	3.53	VLA	0.997	0	new	4.05		2.06	5	179
+vllm's	3.53	vLLM's	0.987	0	new	4.05		0.0	3	53
+api's	3.53	API's	0.884	0	new	4.05		1.98	9	734
+seccomp	3.53			0	new	4.05		0.0	3	41
+codeql	3.52	CodeQL	0.749	0	new	4.05		0.0	2	80
+misalignment	3.52			0	raised	4.05	2.42	2.42	7	223
+serialize	3.52			0	raised	4.05	1.78	1.78	10	575
+cloudformation	3.52	CloudFormation	0.607	0	new	4.04		1.29	3	105
+optimizers	3.52			0	raised	4.04	1.59	1.59	8	435
+reranker	3.52			0	new	4.04		0.0	10	92
+node's	3.52			0	new	4.04		1.61	13	229
+kotlin	3.52	Kotlin	0.932	0	raised	4.04	2.08	2.08	5	253
+stdout	3.52			0	new	4.04		1.67	10	234
+jailbreaking	3.52			0	raised	4.04	2.01	2.01	7	35
+afaik	3.52	AFAIK	0.804	0	raised	4.04	2.24	2.24	5	1252
+suboptimal	3.51			0	raised	4.04	2.51	2.51	10	486
+mitigates	3.51			0	raised	4.04	2.36	2.36	10	290
+redaction	3.51			0	raised	4.04	2.29	2.29	8	40
+instantiated	3.51			0	raised	4.03	2.13	2.13	11	1130
+disjoint	3.51			0	raised	4.03	2.48	2.48	11	314
+entrypoint	3.51			0	new	4.03		0.0	8	126
+openrouter	3.51	OpenRouter	1.0	0	new	4.03		0.0	4	20
+onboarding	3.5			0	raised	4.03	2.28	2.28	9	150
+qdrant	3.5	Qdrant	0.874	0	new	4.02		0.0	3	29
+hotfix	3.5			0	raised	4.02	2.07	2.07	4	232
+subgraph	3.5			0	new	4.02		1.95	10	130
+selinux	3.5	SELinux	0.856	0	new	4.02		1.67	4	52
+request's	3.5			0	new	4.02		0.0	12	121
+dtype	3.5			0	new	4.02		0.0	6	88
+hardcoded	3.49			0	new	4.02		1.77	12	592
+parameterized	3.49			0	raised	4.02	2.11	2.11	10	546
+openapi	3.49	OpenAPI	0.939	0	new	4.02		0.0	6	118
+verifiers	3.49			0	raised	4.01	1.48	1.48	5	185
+apparmor	3.49	AppArmor	0.841	0	new	4.01		1.18	4	40
+rpc	3.49	RPC	0.972	0	new	4.01		2.47	8	409
+milvus	3.49	Milvus	0.873	0	new	4.01		1.15	4	20
+kaggle	3.49	Kaggle	0.747	0	new	4.01		1.67	5	906
+imagenet	3.49	ImageNet	0.707	0	new	4.01		1.19	7	475
+performant	3.49			0	new	4.01		1.86	15	779
+sdks	3.48	SDKs	0.98	0	new	4.01		1.73	11	151
+elicitation	3.48			0	raised	4.01	1.92	1.92	8	161
+watermarking	3.48			0	raised	4.01	2.04	2.04	9	59
+jvm	3.48	JVM	0.976	0	new	4.01		2.38	7	1926
+verbosity	3.48			0	raised	4.01	1.98	1.98	11	459
+apiserver	3.48			0	new	4.0		0.0	2	43
+mtp	3.48	MTP	1.0	0	new	4.0		2.36	6	43
+cni	3.48	CNI	0.95	0	new	4.0		1.95	3	49
+minikube	3.48			0	new	4.0		0.0	3	82
+convolutions	3.48			0	raised	4.0	1.86	1.86	7	489
+writable	3.48			0	raised	4.0	1.82	1.82	11	209
+installable	3.47			0	new	4.0		1.65	5	68
+fargate	3.47	Fargate	0.83	0	new	4.0		1.21	2	86
+stackexchange	3.47	StackExchange	0.532	0	new	4.0		1.22	5	1197
+sharded	3.47			0	new	4.0		1.08	7	75
+dockerfiles	3.47	Dockerfiles	0.899	0	new	3.99		0.0	6	113
+stdin	3.47			0	new	3.99		1.51	7	142
+finetune	3.47			0	new	3.99		1.25	10	125
+conv	3.47			0	raised	3.99	2.39	2.39	6	397
+claude's	3.47	Claude's	1.0	0	raised	3.99	2.08	2.08	2	44
+hallucinate	3.47			0	raised	3.99	2.36	2.36	8	69
+github's	3.46	GitHub's	0.859	0	new	3.99		1.41	5	173
+databricks	3.46	Databricks	0.9	0	new	3.99		0.0	7	68
+jwt	3.46	JWT	0.927	0	new	3.99		2.01	8	515
+evaluators	3.46			0	raised	3.98	2.44	2.44	8	160
+rnns	3.46	RNNs	0.996	0	new	3.98		1.22	5	577
+explainable	3.46			0	raised	3.98	2.28	2.28	8	295
+blas	3.46	BLAS	0.915	0	raised	3.98	2.42	2.42	3	53
+provider's	3.46			0	raised	3.98	2.24	2.24	14	155
+traversal	3.46			0	raised	3.98	2.31	2.31	13	546
+invariants	3.46			0	raised	3.98	2.42	2.42	5	840
+icl	3.46	ICL	1.0	0	new	3.98		2.37	7	84
+concatenation	3.46			0	raised	3.98	2.27	2.27	11	606
+knn	3.46	KNN	0.612	0	new	3.98		1.66	7	719
+hypervisor	3.45			0	raised	3.97	2.15	2.15	5	95
+decouples	3.45			0	raised	3.97	1.46	1.46	6	365
+ai's	3.45	AI's	0.966	0	raised	3.97	2.29	2.29	10	152
+eks	3.45	EKS	0.957	0	new	3.97		1.79	2	105
+sbom	3.45	SBOM	1.0	0	new	3.97		0.0	3	62
+chatbots	3.45			0	raised	3.97	2.27	2.27	10	146
+vars	3.44			0	raised	3.97	2.15	2.15	4	272
+layer's	3.44			0	new	3.97		1.35	10	246
+logprobs	3.44			0	new	3.97		0.0	3	28
+encodings	3.44			0	new	3.96		1.96	10	532
+openshift	3.44	OpenShift	0.567	0	new	3.96		1.48	3	89
+pii	3.44	PII	0.99	0	new	3.96		2.27	10	101
+asynchronously	3.44			0	raised	3.96	1.93	1.93	15	662
+misaligned	3.43			0	raised	3.95	2.41	2.41	7	197
+retrying	3.43			0	raised	3.95	1.63	1.63	11	184
+bellman	3.43	Bellman	0.927	0	raised	3.95	2.37	2.37	5	296
+checkpointing	3.43			0	new	3.95		1.24	11	67
+subprocess	3.43			0	new	3.95		1.26	8	95
+coredns	3.43	CoreDNS	0.95	0	new	3.95		0.0	2	35
+subcommands	3.43			0	new	3.95		0.0	6	64
+session's	3.43			0	raised	3.95	2.19	2.19	7	56
+speedups	3.43			0	raised	3.95	1.44	1.44	8	200
+svn	3.42	SVN	0.761	0	new	3.95		2.2	5	1945
+jsonl	3.42	JSONL	0.788	0	new	3.94		0.0	10	36
+uuid	3.42	UUID	0.872	0	new	3.94		1.71	8	426
+centos	3.42	CentOS	0.667	0	new	3.94		2.22	4	145
+recommender	3.42			0	new	3.94		1.94	8	462
+formulates	3.42			0	raised	3.94	2.27	2.27	6	142
+annotators	3.41			0	raised	3.94	1.26	1.26	7	206
+nuget	3.41	NuGet	0.52	0	new	3.94		1.58	3	688
+nccl	3.41	NCCL	0.983	0	new	3.94		1.29	4	25
+interactively	3.41			0	raised	3.94	2.22	2.22	10	174
+normalizes	3.41			0	raised	3.93	2.24	2.24	12	148
+tractable	3.41			0	raised	3.93	2.21	2.21	7	308
+authenticating	3.41			0	raised	3.93	2.2	2.2	7	233
+continuations	3.41			0	raised	3.93	2.19	2.19	8	326
+sharding	3.41			0	new	3.93		1.49	9	242
+preemption	3.41			0	raised	3.93	2.33	2.33	5	59
+entra	3.41	Entra	0.994	0	new	3.93		1.61	4	59
+resnet	3.41	ResNet	0.68	0	new	3.93		1.35	5	388
+gans	3.41	GANs	0.952	0	new	3.93		2.38	3	424
+ldap	3.4	LDAP	0.959	0	raised	3.93	2.2	2.2	4	171
+quantizing	3.4			0	new	3.93		1.36	9	60
+hitl	3.4	HITL	0.986	0	new	3.92		0.0	5	33
+maintainable	3.4			0	raised	3.92	2.21	2.21	8	2098
+finetuned	3.4			0	new	3.92		1.01	9	88
+validations	3.4			0	raised	3.92	1.8	1.8	9	583
+rerank	3.4			0	new	3.92		0.0	6	48
+constrains	3.4			0	raised	3.92	2.35	2.35	10	278
+kanban	3.4	Kanban	0.801	0	raised	3.92	2.04	2.04	3	470
+namespaced	3.4			0	new	3.92		0.0	5	93
+lookups	3.4			0	raised	3.92	2.04	2.04	14	408
+graphql	3.39	GraphQL	0.917	0	new	3.92		1.66	4	305
+submodules	3.39			0	new	3.92		1.51	6	330
+llvm	3.39	LLVM	0.933	0	new	3.91		1.96	5	387
+filenames	3.39			0	raised	3.91	2.08	2.08	7	178
+run's	3.39			0	raised	3.91	2.05	2.05	11	56
+liveness	3.39			0	new	3.91		1.55	7	70
+stderr	3.39			0	new	3.91		1.42	7	150
+libc	3.39			0	new	3.91		1.61	4	99
+unconstrained	3.39			0	raised	3.91	2.38	2.38	7	231
+subdomain	3.39			0	raised	3.91	2.08	2.08	7	237
+rootless	3.39			0	raised	3.91	2.17	2.17	4	32
+timestep	3.39			0	new	3.91		1.32	6	428
+tokenize	3.38			0	new	3.91		1.19	6	221
+embeds	3.38			0	raised	3.91	2.22	2.22	11	210
+dataclass	3.38			0	new	3.91		0.0	5	34
+cves	3.38	CVEs	1.0	0	new	3.91		1.27	6	102
+openstack	3.38	OpenStack	0.676	0	raised	3.91	2.3	2.3	5	93
+multiclass	3.38			0	new	3.9		1.57	7	578
+submodule	3.38			0	new	3.9		1.65	7	198
+nns	3.38	NNs	0.993	0	raised	3.9	2.03	2.03	5	449
+appending	3.38			0	raised	3.9	2.12	2.12	15	340
+streamable	3.38	Streamable	0.694	0	new	3.9		1.42	4	22
+ttft	3.38	TTFT	1.0	0	new	3.9		0.0	8	51
+ruleset	3.38			0	raised	3.9	2.03	2.03	7	99
+skill's	3.38			0	new	3.9		1.27	9	33
+kwargs	3.38			0	new	3.9		0.0	6	59
+optimality	3.37			0	raised	3.9	2.12	2.12	7	259
+resampling	3.37			0	new	3.9		1.89	7	341
+subnets	3.37			0	new	3.89		1.94	4	83
+extension's	3.37			0	new	3.89		1.46	4	27
+golang	3.37	Golang	0.639	0	new	3.89		1.74	5	167
+latents	3.37			0	new	3.89		1.27	6	99
+arxiv	3.37	arXiv	0.639	0	raised	3.89	2.28	2.28	9	194
+appends	3.37			0	raised	3.89	1.74	1.74	9	121
+loopback	3.37			0	new	3.89		1.79	7	78
+diffs	3.36			0	raised	3.89	1.73	1.73	10	442
+iterates	3.36			0	raised	3.89	1.88	1.88	10	285
+conda	3.36			0	new	3.89		1.87	4	115
+subtask	3.36			0	new	3.88		1.25	12	134
+pypy	3.36	PyPy	0.911	0	new	3.88		1.29	4	163
+changelog	3.36			0	raised	3.88	2.28	2.28	7	186
+concatenate	3.36			0	raised	3.88	1.69	1.69	7	673
+lfs	3.36	LFS	0.839	0	new	3.88		2.27	6	59
+testcontainers	3.36	Testcontainers	0.934	0	new	3.88		0.0	3	24
+jinja	3.35	Jinja	0.663	0	raised	3.88	2.07	2.07	5	75
+symlink	3.35			0	new	3.88		1.45	6	111
+midjourney	3.35	Midjourney	0.857	0	new	3.88		0.0	2	24
+traefik	3.35	Traefik	0.648	0	new	3.87		0.0	3	49
+reconstructs	3.35			0	raised	3.87	2.19	2.19	7	190
+persistentvolume	3.35	PersistentVolume	1.0	0	new	3.87		0.0	2	27
+bootstrapping	3.35			0	raised	3.87	2.24	2.24	10	384
+matmul	3.35			0	new	3.87		0.0	6	38
+workarounds	3.35			0	raised	3.87	2.33	2.33	7	459
+codebook	3.35			0	new	3.87		1.87	10	103
+expressiveness	3.35			0	raised	3.87	2.31	2.31	8	318
+nodejs	3.34			0	raised	3.86	2.14	2.14	5	471
+indexer	3.34			0	raised	3.86	2.11	2.11	8	113
+distills	3.34			0	new	3.86		1.91	5	166
+cidr	3.34	CIDR	0.9	0	new	3.86		1.51	5	65
+anthropic's	3.34	Anthropic's	1.0	0	new	3.86		0.0	6	49
+rebase	3.34			0	new	3.86		1.81	4	549
+posix	3.34	POSIX	0.872	0	raised	3.86	2.21	2.21	7	393
+virtualbox	3.34	VirtualBox	0.668	0	raised	3.86	2.08	2.08	4	183
+gpts	3.34	GPTs	0.974	0	new	3.86		0.0	5	34
+disaggregated	3.34			0	raised	3.86	2.04	2.04	5	33
+iterator	3.34			0	raised	3.86	2.08	2.08	7	670
+jetbrains	3.34	JetBrains	0.903	0	new	3.86		1.61	7	187
+lstms	3.34	LSTMs	0.974	0	new	3.86		0.0	5	479
+outputting	3.34			0	raised	3.86	2.15	2.15	6	334
+generalizable	3.34			0	raised	3.86	1.94	1.94	7	233
+subdirectories	3.33			0	raised	3.86	1.72	1.72	8	127
+tuples	3.33			0	raised	3.86	2.24	2.24	8	609
+graphrag	3.33	GraphRAG	0.989	0	new	3.85		0.0	6	40
+automates	3.33			0	raised	3.85	2.15	2.15	9	206
+vectorstore	3.33			0	new	3.85		0.0	2	46
+webrtc	3.33	WebRTC	0.885	0	raised	3.85	2.05	2.05	3	38
+vec	3.32			0	new	3.85		2.2	3	33
+args	3.32			0	new	3.85		2.19	8	244
+subagent's	3.32			0	new	3.85		0.0	3	22
+resolvers	3.32			0	raised	3.85	1.53	1.53	3	29
+deterministically	3.32			0	raised	3.85	1.65	1.65	11	234
+contextually	3.32			0	raised	3.85	2.3	2.3	11	123
+infeasible	3.32			0	raised	3.85	2.26	2.26	8	351
+decouple	3.32			0	raised	3.84	2.13	2.13	9	998
+dnn	3.32	DNN	0.975	0	new	3.84		1.62	6	337
+infers	3.32			0	raised	3.84	2.24	2.24	11	178
+rdma	3.32	RDMA	0.978	0	new	3.84		1.52	4	21
+drafter	3.32			0	raised	3.84	2.15	2.15	6	78
+subspaces	3.32			0	raised	3.84	2.07	2.07	7	106
+tokenizers	3.31			0	new	3.84		0.0	8	132
+loadbalancer	3.31	LoadBalancer	0.613	0	new	3.84		0.0	3	62
+grok	3.31			0	raised	3.84	1.88	1.88	7	290
+alphago	3.31	AlphaGo	0.936	0	new	3.84		1.74	3	277
+quantifies	3.31			0	raised	3.84	2.17	2.17	7	197
+nanoseconds	3.31			0	raised	3.83	2.18	2.18	4	102
+policy's	3.31			0	raised	3.83	2.19	2.19	8	142
+validator	3.31			0	new	3.83		1.96	11	442
+image's	3.3			0	new	3.83		1.91	9	122
+filesystems	3.3			0	new	3.83		1.95	5	185
+explainability	3.3			0	new	3.83		0.0	6	201
+storageclass	3.3	StorageClass	0.946	0	new	3.82		0.0	2	23
+backoff	3.3			0	new	3.82		1.71	9	53
+composable	3.3			0	new	3.82		1.49	8	232
+jfrog	3.3	JFrog	0.865	0	new	3.82		0.0	4	61
+datadog	3.3	Datadog	0.821	0	new	3.82		0.0	7	36
+rlhf	3.3	RLHF	1.0	0	new	3.82		0.0	9	90
+annotate	3.3			0	raised	3.82	2.29	2.29	12	480
+preprocessor	3.29			0	raised	3.82	2.05	2.05	5	452
+feedforward	3.29			0	new	3.82		1.87	7	297
+interleaved	3.29			0	raised	3.81	2.26	2.26	10	209
+elb	3.29	ELB	0.979	0	new	3.81		1.71	2	52
+rulesets	3.29			0	new	3.81		1.47	4	77
+timesteps	3.29			0	new	3.81		0.0	6	369
+autoscaler	3.29			0	new	3.81		0.0	3	38
+circleci	3.29	CircleCI	0.821	0	new	3.81		0.0	3	64
+redact	3.29			0	raised	3.81	2.02	2.02	11	39
+prebuilt	3.29			0	raised	3.81	1.78	1.78	9	120
+podman	3.29	Podman	0.513	0	new	3.81		0.0	4	31
+containerize	3.29			0	new	3.81		0.0	3	51
+gnn	3.29	GNN	0.991	0	new	3.81		1.78	6	145
+contextualized	3.29			0	raised	3.81	2.15	2.15	8	66
+sycophancy	3.28			0	raised	3.81	1.84	1.84	4	87
+iptables	3.28			0	new	3.81		1.79	4	60
+persistentvolumeclaim	3.28	PersistentVolumeClaim	1.0	0	new	3.8		0.0	2	32
+decoders	3.28			0	raised	3.8	2.18	2.18	8	173
+monotonically	3.28			0	raised	3.8	1.88	1.88	7	196
+cluster's	3.28			0	new	3.8		1.58	6	91
+alfworld	3.28	ALFWorld	1.0	0	new	3.8		0.0	4	119
+meta's	3.27	Meta's	0.974	0	new	3.8		1.18	7	37
+sdlc	3.27	SDLC	0.989	0	new	3.79		1.78	5	257
+toggles	3.27			0	raised	3.79	2.16	2.16	3	202
+teamcity	3.27	TeamCity	0.802	0	new	3.79		0.0	2	203
+idempotent	3.27			0	raised	3.79	1.75	1.75	7	605
+opsd	3.27	OPSD	1.0	0	new	3.79		0.0	3	60
+grep	3.27			0	raised	3.79	2.11	2.11	7	241
+gqa	3.27	GQA	1.0	0	new	3.79		0.0	6	41
+clusterrole	3.27	ClusterRole	0.976	0	new	3.79		0.0	2	24
+authenticates	3.27			0	raised	3.79	1.78	1.78	6	142
+taxonomies	3.27			0	raised	3.79	2.0	2.0	7	122
+nodeport	3.26	NodePort	0.835	0	new	3.79		0.0	2	54
+resizing	3.26			0	raised	3.79	2.2	2.2	10	287
+webserver	3.26			0	new	3.79		1.97	4	423
+tanh	3.26			0	raised	3.78	1.33	1.33	3	404
+hallucinated	3.26			0	raised	3.78	2.14	2.14	6	110
+bigquery	3.26	BigQuery	0.931	0	new	3.78		1.39	6	66
+zsh	3.26			0	new	3.78		1.48	4	44
+sarsa	3.26	SARSA	0.892	0	new	3.78		0.0	2	219
+shap	3.25	SHAP	0.781	0	new	3.78		2.06	6	256
+parameterization	3.25			0	new	3.78		1.87	10	156
+precomputed	3.25			0	raised	3.78	1.43	1.43	9	124
+linting	3.25			0	new	3.78		1.23	8	130
+qemu	3.25	QEMU	0.581	0	new	3.78		1.74	4	59
+preprocess	3.25			0	new	3.77		1.18	5	301
+monorepo	3.25			0	new	3.77		0.0	4	157
+decodes	3.25			0	raised	3.77	1.99	1.99	9	123
+pointwise	3.25			0	new	3.77		1.84	6	148
+subresource	3.25			0	new	3.77		0.0	2	56
+hashicorp	3.25			0	new	3.77		0.0	3	83
+sandbox's	3.24			0	new	3.77		0.0	4	60
+webui	3.24	WebUI	0.862	0	new	3.76		0.0	7	33
+slms	3.24	SLMs	1.0	0	new	3.76		0.0	4	66
+symlinks	3.24			0	new	3.76		1.3	6	93
+piecewise	3.24			0	raised	3.76	2.12	2.12	6	113
+humaneval	3.24	HumanEval	0.983	0	new	3.76		0.0	6	95
+taints	3.24			0	raised	3.76	2.09	2.09	3	45
+subgraphs	3.24			0	new	3.76		1.66	8	103
+multiplications	3.24			0	raised	3.76	1.94	1.94	7	213
+expressivity	3.24			0	raised	3.76	1.74	1.74	8	121
+structs	3.24			0	new	3.76		1.66	5	741
+provisioner	3.24			0	raised	3.76	1.29	1.29	3	46
+chunked	3.23			0	raised	3.76	1.71	1.71	11	83
+dependabot	3.23	Dependabot	0.674	0	new	3.76		0.0	5	31
+reachability	3.23			0	new	3.75		1.9	9	138
+fallbacks	3.23			0	raised	3.75	1.17	1.17	7	56
+mixin	3.23			0	new	3.75		1.86	5	189
+downvote	3.23			0	new	3.75		1.55	5	1333
+extractors	3.23			0	raised	3.75	2.19	2.19	10	107
+preregistered	3.23			0	raised	3.75	1.14	1.14	4	104
+sqs	3.22	SQS	0.965	0	new	3.75		1.68	3	148
+gpg	3.22	GPG	0.915	0	new	3.74		1.99	4	61
+accuracies	3.22			0	raised	3.74	1.92	1.92	7	270
+gptq	3.22	GPTQ	1.0	0	new	3.74		0.0	7	35
+sagemaker	3.22	SageMaker	0.559	0	new	3.74		0.0	5	81
+unauthenticated	3.21			0	raised	3.74	1.53	1.53	8	93
+checkpoint's	3.21			0	new	3.74		0.0	5	32
+istio	3.21	Istio	0.723	0	new	3.73		0.0	3	50
+orthogonality	3.21			0	raised	3.73	1.84	1.84	7	106
+toolset	3.21			0	raised	3.73	2.14	2.14	10	225
+configmaps	3.21	ConfigMaps	0.671	0	new	3.73		0.0	3	57
+gemm	3.21	GEMM	0.982	0	new	3.73		1.11	5	37
+enablement	3.2			0	raised	3.73	2.06	2.06	4	71
+hostnames	3.2			0	new	3.73		1.44	5	75
+spatiotemporal	3.2			0	raised	3.73	2.01	2.01	6	103
+incremented	3.2			0	raised	3.72	2.04	2.04	6	277
+gradle	3.2	Gradle	0.719	0	new	3.72		1.72	4	152
+syntactically	3.2			0	raised	3.72	2.15	2.15	8	486
+yml	3.2			0	new	3.72		0.0	4	70
+balancers	3.2			0	raised	3.72	1.79	1.79	3	135
+dflash	3.2	DFlash	1.0	0	new	3.72		0.0	5	35
+torchao	3.19			0	new	3.72		0.0	3	28
+hadamard	3.19	Hadamard	0.861	0	new	3.72		1.77	7	52
+onnx	3.19	ONNX	0.869	0	new	3.72		0.0	8	59
+transferability	3.19			0	raised	3.71	1.89	1.89	6	118
+gnns	3.19	GNNs	1.0	0	new	3.71		0.0	5	116
+truncates	3.19			0	raised	3.71	1.52	1.52	8	51
+covariate	3.19			0	new	3.71		1.7	4	148
+dspark	3.18	DSpark	0.936	0	new	3.71		0.0	5	34
+idempotency	3.18			0	new	3.71		0.0	8	137
+linter	3.18			0	new	3.71		1.5	6	142
+barto	3.18	Barto	1.0	0	raised	3.71	2.09	2.09	2	308
+controllability	3.18			0	raised	3.7	1.98	1.98	4	85
+tolerations	3.18			0	new	3.7		0.0	2	22
+prefilling	3.18			0	new	3.7		0.0	5	30
+mdps	3.18	MDPs	0.996	0	new	3.7		1.28	4	181
+sonarqube	3.18	SonarQube	0.81	0	new	3.7		0.0	4	104
+reweighting	3.17			0	new	3.7		1.02	6	113
+inspectable	3.17			0	new	3.7		0.0	5	123
+lightgbm	3.17	LightGBM	0.758	0	new	3.69		0.0	5	292
+operationalize	3.17			0	new	3.69		1.82	5	119
+alphazero	3.17	AlphaZero	0.933	0	new	3.69		1.17	2	189
+regularisation	3.17			0	raised	3.69	1.56	1.56	5	243
+aufs	3.17	AUFS	0.706	0	new	3.69		1.32	2	21
+formatter	3.16			0	raised	3.69	1.62	1.62	4	173
+ndk	3.16	NDK	0.974	0	new	3.69		1.69	2	52
+quantile	3.16			0	new	3.68		1.87	5	188
+jacobian	3.16	Jacobian	0.929	0	raised	3.68	2.06	2.06	5	119
+committers	3.16			0	raised	3.68	1.17	1.17	5	59
+specifier	3.16			0	raised	3.68	1.92	1.92	2	86
+enterprise's	3.16			0	raised	3.68	2.02	2.02	2	113
+localizes	3.16			0	raised	3.68	1.88	1.88	5	118
+recency	3.16			0	raised	3.68	2.14	2.14	7	79
+immutability	3.15			0	raised	3.68	2.0	2.0	6	1008
+tokenized	3.15			0	new	3.68		1.63	7	159
+subword	3.15			0	new	3.68		0.0	5	116
+dockerhub	3.15			0	new	3.67		0.0	3	57
+backslash	3.15			0	raised	3.67	2.08	2.08	5	65
+tarball	3.15			0	raised	3.67	1.34	1.34	4	76
+allocator	3.15			0	raised	3.67	1.87	1.87	8	291
+wasserstein	3.15	Wasserstein	0.942	0	new	3.67		1.74	5	137
+generalizability	3.15			0	new	3.67		1.73	7	125
+truncating	3.15			0	raised	3.67	1.86	1.86	9	92
+proposer	3.14			0	raised	3.67	2.03	2.03	5	65
+mlps	3.14	MLPs	0.995	0	new	3.66		1.71	6	142
+twilio	3.14	Twilio	0.922	0	new	3.66		1.75	3	47
+overwriting	3.14			0	raised	3.66	2.11	2.11	11	312
+jdk	3.14	JDK	0.932	0	new	3.66		1.96	4	319
+frontends	3.14			0	new	3.66		1.23	6	130
+newline	3.14			0	raised	3.66	1.95	1.95	7	212
+prepended	3.13			0	new	3.66		1.25	9	57
+quantizes	3.13			0	new	3.66		0.0	5	27
+oversampling	3.13			0	raised	3.66	1.74	1.74	5	408
+gensim	3.13			0	new	3.66		0.0	3	213
+inferencing	3.13			0	new	3.66		1.29	7	48
+backprop	3.13			0	new	3.65		0.0	2	314
+lambdas	3.13			0	raised	3.65	1.68	1.68	3	834
+covariates	3.13			0	raised	3.65	2.09	2.09	5	140
+composability	3.13			0	new	3.65		1.09	4	85
+btrfs	3.13	Btrfs	0.55	0	new	3.65		1.77	2	32
+multiscale	3.12			0	raised	3.65	2.03	2.03	5	90
+cncf	3.12	CNCF	1.0	0	new	3.65		0.0	4	32
+mmlu	3.12	MMLU	1.0	0	new	3.65		0.0	4	84
+parallelization	3.12			0	new	3.65		1.86	10	281
+readouts	3.12			0	raised	3.65	2.12	2.12	5	91
+setuptools	3.12			0	new	3.65		0.0	2	26
+deduplication	3.12			0	new	3.64		1.69	10	124
+regressor	3.12			0	raised	3.64	1.12	1.12	4	363
+notebook's	3.12			0	new	3.64		1.24	4	26
+regularizer	3.12			0	new	3.64		0.0	5	118
+mixins	3.12			0	new	3.64		1.38	3	257
+rdbms	3.12	RDBMS	0.949	0	new	3.64		1.94	3	1070
+uncommenting	3.11			0	new	3.64		0.0	3	79
+rescale	3.11			0	raised	3.64	1.45	1.45	7	133
+subtree	3.11			0	new	3.64		1.95	8	180
+layerwise	3.11			0	new	3.64		0.0	5	60
+concatenating	3.11			0	raised	3.64	1.62	1.62	5	351
+retrievals	3.11			0	raised	3.63	1.68	1.68	5	32
+reusability	3.11			0	raised	3.63	2.06	2.06	9	437
+mariadb	3.11	MariaDB	0.765	0	new	3.63		1.71	6	107
+interpolate	3.11			0	raised	3.63	2.0	2.0	7	181
+vsts	3.11	VSTS	0.939	0	new	3.63		1.59	2	68
+vaes	3.11	VAEs	0.99	0	new	3.63		1.4	4	150
+face's	3.11	Face's	0.792	0	raised	3.63	2.05	2.05	4	22
+environment's	3.1			0	new	3.63		1.78	8	86
+opencv	3.1	OpenCV	0.662	0	new	3.63		1.62	4	393
+orchestrates	3.1			0	raised	3.63	2.0	2.0	7	130
+cloudfront	3.1	CloudFront	0.517	0	new	3.63		1.34	2	62
+vsphere	3.1	vSphere	0.656	0	new	3.63		1.95	3	33
+jaccard	3.1	Jaccard	0.857	0	new	3.63		1.51	7	204
+rabbitmq	3.1	RabbitMQ	0.814	0	new	3.63		1.25	3	480
+bitwise	3.1			0	new	3.63		1.88	7	392
+factorized	3.1			0	raised	3.63	1.18	1.18	7	85
+regularized	3.1			0	raised	3.63	2.04	2.04	6	182
+tmpfs	3.1			0	new	3.62		1.04	4	32
+unprivileged	3.1			0	raised	3.62	1.88	1.88	5	50
+pvcs	3.1	PVCs	0.722	0	new	3.62		1.97	3	42
+flashattention	3.1	FlashAttention	1.0	0	new	3.62		0.0	5	34
+executability	3.1			0	new	3.62		0.0	5	72
+minibatch	3.1			0	new	3.62		0.0	4	184
+datapoints	3.1			0	new	3.62		1.36	7	300
+logstash	3.1			0	new	3.62		1.12	2	68
+instance's	3.1			0	new	3.62		0.0	5	106
+scikit	3.1			0	new	3.62		1.52	3	486
+benchmark's	3.1			0	new	3.62		1.17	4	86
+kibana	3.1	Kibana	0.736	0	new	3.62		1.15	4	76
+openmp	3.1	OpenMP	0.863	0	new	3.62		1.68	4	55
+autocompletion	3.09			0	new	3.62		1.22	3	94
+uncached	3.09			0	new	3.62		0.0	4	25
+lifecycles	3.09			0	new	3.62		1.64	4	70
+matcher	3.09			0	raised	3.61	1.72	1.72	8	75
+splunk	3.09	Splunk	0.794	0	new	3.61		1.96	5	84
+equivariant	3.09			0	new	3.61		1.56	4	87
+hyperplane	3.09			0	raised	3.61	1.92	1.92	5	235
+vcpu	3.09	vCPU	0.853	0	new	3.61		0.0	2	23
+rewording	3.09			0	raised	3.61	1.81	1.81	6	80
+recomputation	3.09			0	raised	3.61	1.7	0.0	6	68
+calibrates	3.09			0	raised	3.61	1.52	1.52	5	97
+tokeniser	3.09			0	new	3.61		0.0	5	24
+timeseries	3.08			0	new	3.61		1.17	5	306
+cicd	3.08	CICD	0.855	0	new	3.61		0.0	2	43
+upvoted	3.08			0	new	3.6		1.78	5	731
+refactored	3.08			0	raised	3.6	1.51	1.51	3	1045
+detr	3.08	DETR	0.964	0	new	3.6		1.16	4	22
+uuids	3.08	UUIDs	0.904	0	new	3.6		1.21	6	217
+firestore	3.08	Firestore	0.789	0	new	3.6		0.0	5	31
+transcribes	3.08			0	raised	3.6	1.9	1.9	4	25
+slsa	3.08	SLSA	1.0	0	new	3.6		1.28	2	24
+xpu	3.07	XPU	1.0	0	new	3.6		0.0	3	23
+failover	3.07			0	raised	3.6	2.04	2.04	6	163
+resumable	3.07			0	new	3.59		0.0	6	46
+lookahead	3.07			0	new	3.59		1.8	7	117
+heroku	3.07	Heroku	0.86	0	new	3.59		1.84	3	162
+overwrites	3.07			0	raised	3.59	1.81	1.81	8	119
+underspecified	3.07			0	new	3.59		0.0	6	122
+rescaling	3.06			0	raised	3.59	1.67	1.67	5	146
+committer	3.06			0	raised	3.58	1.28	1.28	5	86
+codebooks	3.06			0	new	3.58		1.39	5	54
+subwords	3.06			0	new	3.58		0.0	4	57
+verifications	3.06			0	raised	3.58	2.05	2.05	3	77
+mitigations	3.06			0	new	3.58		1.84	8	88
+pretrain	3.06			0	new	3.58		0.0	6	86
+discretization	3.06			0	new	3.58		1.93	7	128
+decompositions	3.06			0	raised	3.58	1.87	1.87	8	76
+docstrings	3.06			0	new	3.58		0.0	4	99
+autoregressively	3.05			0	new	3.57		0.0	6	97
+recompute	3.05			0	raised	3.57	1.35	1.35	8	118
+standardizes	3.05			0	raised	3.57	1.59	1.59	8	58
+allocatable	3.05			0	raised	3.57	1.95	0.0	3	36
+serializable	3.05			0	new	3.57		1.46	5	160
+function's	3.05			0	new	3.57		1.73	8	388
+prover	3.05			0	raised	3.57	1.8	1.8	6	95
+spectrogram	3.05			0	raised	3.57	1.73	1.73	6	118
+schedulers	3.05			0	raised	3.57	1.94	1.94	8	89
+sboms	3.05	SBOMs	1.0	0	new	3.57		0.0	2	37
+ide's	3.05	IDE's	0.99	0	new	3.57		1.28	3	277
+tsfms	3.04	TSFMs	1.0	0	new	3.57		0.0	3	39
+interpolating	3.04			0	raised	3.57	1.92	1.92	7	92
+makefile	3.04			0	new	3.57		1.67	3	223
+dbscan	3.04	DBSCAN	0.848	0	new	3.56		0.0	4	339
+rhel	3.04	RHEL	0.957	0	new	3.56		1.98	4	50
+healthcheck	3.04			0	new	3.56		1.13	4	57
+prespecified	3.04			0	new	3.56		1.3	4	84
+hotpotqa	3.04	HotpotQA	1.0	0	new	3.56		0.0	4	64
+digitalocean	3.04	DigitalOcean	0.827	0	new	3.56		1.65	4	39
+subdomains	3.04			0	new	3.56		1.99	6	152
+instantiates	3.04			0	raised	3.56	1.28	1.28	7	268
+npus	3.03	NPUs	1.0	0	new	3.56		0.0	6	24
+sbert	3.03	SBERT	0.927	0	new	3.55		0.0	6	33
+identifiability	3.03			0	new	3.55		1.18	5	62
+datastore	3.03			0	new	3.55		1.64	7	241
+ptq	3.03	PTQ	1.0	0	new	3.55		1.07	5	36
+shapley	3.03	Shapley	0.773	0	new	3.55		1.98	6	98
+bugfix	3.03			0	new	3.55		1.73	3	229
+cors	3.03	CORS	0.9	0	new	3.55		1.96	5	124
+syscalls	3.02			0	new	3.55		0.0	4	74
+instantiating	3.02			0	raised	3.55	1.57	1.57	10	569
+finalizer	3.02			0	new	3.55		1.11	3	96
+misconfiguration	3.02			0	new	3.54		1.26	7	62
+openid	3.02	OpenID	0.789	0	new	3.54		1.72	5	246
+prepend	3.02			0	raised	3.54	1.27	1.27	7	122
+webapp	3.02			0	new	3.54		1.97	4	416
+kronecker	3.02	Kronecker	1.0	0	raised	3.54	1.79	1.79	6	25
+recoverability	3.02			0	new	3.54		1.58	5	63
+decodable	3.02			0	new	3.54		1.36	4	75
+multinomial	3.02			0	new	3.54		1.88	6	212
+nagios	3.02	Nagios	0.744	0	new	3.54		1.7	3	55
+refactorings	3.01			0	new	3.54		1.07	2	367
+downvoted	3.01			0	new	3.54		1.4	5	674
+reformulates	3.01			0	new	3.54		1.15	4	85
+webshop	3.01	WebShop	0.615	0	new	3.54		1.89	5	108
+denoiser	3.01			0	new	3.54		0.0	5	58
+containerization	3.01			0	raised	3.54	1.76	1.76	4	79
+keybindings	3.01			0	raised	3.53	1.1	1.1	2	23
+unimodal	3.01			0	new	3.53		1.69	4	68
+gitflow	3.01			0	new	3.53		0.0	2	252
+relabeling	3.01			0	new	3.53		1.53	6	36
+collator	3.01			0	raised	3.53	1.35	1.35	2	29
+framework's	3.01			0	new	3.53		1.22	6	219
+matplotlib	3.01			0	new	3.53		1.46	6	236
+perceptrons	3.01			0	new	3.53		1.16	5	166
+datatype	3.01			0	raised	3.53	1.88	1.88	4	349
+mixtral	3.01	Mixtral	0.971	0	new	3.53		0.0	5	26
+downsampling	3.01			0	new	3.53		1.27	7	180
+recomputing	3.01			0	raised	3.53	1.53	0.0	8	67
+gitops	3.01	GitOps	0.872	0	new	3.53		0.0	2	31
+separability	3.0			0	raised	3.53	1.72	1.72	7	102
+svms	3.0	SVMs	0.966	0	new	3.53		1.41	4	261
+livecodebench	3.0	LiveCodeBench	1.0	0	new	3.52		0.0	4	70
+pytest	3.0			0	new	3.52		0.0	6	49
+instrumenting	3.0			0	raised	3.52	1.16	1.16	2	33
+argmax	3.0			0	new	3.52		0.0	5	177
+centroids	3.0			0	raised	3.52	1.51	1.51	6	199
+haproxy	3.0	HAProxy	0.538	0	new	3.52		1.21	4	60
+initialisation	3.0			0	raised	3.52	1.52	1.52	6	304
+nlu	3.0	NLU	0.967	0	new	3.52		1.64	5	45
+nemotron	3.0	Nemotron	1.0	0	new	3.52		0.0	6	39
+msvc	3.0	MSVC	0.971	0	new	3.52		1.27	2	117
+cryptographically	3.0			0	raised	3.52	1.8	1.8	9	147
+lru	3.0	LRU	1.0	0	new	3.52		1.57	6	57
+matchers	2.99			0	new	3.52		1.41	4	32
+disallows	2.99			0	raised	3.52	1.99	1.99	3	82
+subclassing	2.99			0	new	3.52		1.18	5	380
+adamw	2.99	AdamW	0.988	0	new	3.51		0.0	6	63
+multiline	2.99			0	new	3.51		1.66	2	89
+gunicorn	2.99	Gunicorn	0.66	0	new	3.51		0.0	2	34
+templated	2.99			0	new	3.51		1.85	5	169
+dataframes	2.99			0	new	3.51		0.0	4	326
+unlabelled	2.99			0	raised	3.51	1.8	1.8	7	169
+regularize	2.98			0	raised	3.51	1.81	1.81	4	101
+tfms	2.98	TFMs	1.0	0	new	3.51		0.0	2	35
+ensembling	2.98			0	new	3.51		0.0	6	154
+serializes	2.98			0	raised	3.51	1.8	0.0	5	71
+missingness	2.98			0	new	3.51		0.0	4	74
+usecase	2.98			0	new	3.51		1.03	4	300
+gitignore	2.98			0	new	3.51		0.0	4	78
+thread's	2.98			0	new	3.5		1.59	3	76
+upscaling	2.98			0	new	3.5		1.9	4	26
+checkable	2.98			0	raised	3.5	1.57	1.57	5	87
+vectorized	2.98			0	raised	3.5	1.58	1.58	6	193
+thresholding	2.98			0	new	3.5		1.62	6	148
+gepa	2.98	GEPA	1.0	0	new	3.5		1.01	5	41
+ddpg	2.98	DDPG	0.99	0	new	3.5		0.0	2	141
+underfitting	2.98			0	new	3.5		0.0	2	255
+retrievable	2.97			0	raised	3.5	1.95	1.95	4	55
+fluentd	2.97			0	new	3.49		0.0	4	28
+okta	2.97	Okta	0.962	0	new	3.49		1.56	4	42
+quantizer	2.97			0	new	3.49		1.44	4	45
+pdes	2.97	PDEs	0.989	0	new	3.49		1.91	5	61
+stochasticity	2.97			0	new	3.49		1.22	6	112
+pomdp	2.97	POMDP	0.987	0	new	3.49		0.0	5	105
+deprecations	2.97			0	new	3.49		0.0	4	20
+prompt's	2.96			0	new	3.48		0.0	6	41
+azure's	2.96	Azure's	0.929	0	new	3.48		1.03	3	43
+indirection	2.96			0	raised	3.48	1.87	1.87	2	733
+tfidf	2.96	TFIDF	0.567	0	new	3.48		0.0	2	274
+transformer's	2.96			0	new	3.48		1.33	7	47
+distractors	2.96			0	new	3.48		1.69	5	60
+syslog	2.96			0	new	3.48		1.78	4	71
+authorizer	2.96			0	new	3.48		0.0	2	24
+olmo	2.96	OLMo	0.854	0	new	3.48		1.95	4	37
+finalizers	2.96			0	new	3.48		0.0	2	86
+entailment	2.96			0	raised	3.48	1.68	1.68	6	64
+populates	2.95			0	raised	3.48	1.81	1.81	5	151
+rerankers	2.95			0	new	3.48		0.0	4	32
+enums	2.95			0	new	3.48		1.38	2	873
+tarballs	2.95			0	raised	3.48	1.12	1.12	5	32
+uninformative	2.95			0	raised	3.48	1.89	1.89	6	127
+preprocessed	2.95			0	raised	3.47	1.41	1.41	6	163
+lxc	2.95	LXC	0.774	0	new	3.47		1.61	3	26
+saliency	2.95			0	raised	3.47	1.66	1.66	6	74
+nulls	2.95			0	raised	3.47	1.87	1.87	5	490
+outputted	2.94			0	raised	3.47	1.44	1.44	6	111
+falsifiable	2.94			0	raised	3.47	1.85	1.85	5	61
+deserialization	2.94			0	new	3.47		1.11	3	240
+provisioners	2.94			0	new	3.46		1.01	2	26
+tokenisation	2.94			0	new	3.46		0.0	5	26
+surprisal	2.94			0	new	3.46		1.02	3	37
+auditability	2.94			0	new	3.46		0.0	6	68
+backslashes	2.94			0	raised	3.46	1.45	1.45	2	39
+uncomment	2.94			0	new	3.46		0.0	8	71
+elbo	2.94	ELBO	1.0	0	new	3.46		1.24	3	82
+bfcl	2.94	BFCL	1.0	0	new	3.46		0.0	4	50
+kustomize	2.94			0	new	3.46		0.0	2	31
+websockets	2.94			0	new	3.46		1.52	3	441
+pipeline's	2.94			0	new	3.46		1.72	7	50
+dsls	2.93	DSLs	0.993	0	new	3.46		1.43	5	261
+baseline's	2.93			0	new	3.45		0.0	6	51
+timestamped	2.93			0	raised	3.45	1.37	1.37	7	96
+dataset's	2.93			0	new	3.45		0.0	6	75
+upsampling	2.93			0	new	3.45		1.05	4	165
+anns	2.93	ANNs	0.994	0	new	3.45		1.81	5	129
+rmsnorm	2.93	RMSNorm	1.0	0	new	3.45		0.0	3	27
+locomo	2.93	LoCoMo	1.0	0	new	3.45		0.0	2	56
+sglang	2.93	SGLang	0.984	0	new	3.45		0.0	4	57
+pluggable	2.93			0	new	3.45		1.71	8	149
+approvers	2.93			0	new	3.45		1.28	3	27
+resample	2.93			0	new	3.45		1.48	6	131
+jailbreaks	2.92			0	new	3.45		1.67	4	39
+deserialize	2.92			0	new	3.45		1.02	3	227
+gridsearchcv	2.92	GridSearchCV	0.818	0	new	3.44		0.0	2	275
+operationalizes	2.92			0	new	3.44		0.0	4	69
+catboost	2.92			0	new	3.44		0.0	3	216
+dotnet	2.92			0	new	3.44		1.8	3	105
+cvss	2.92	CVSS	0.983	0	new	3.44		0.0	5	23
+fqdn	2.92	FQDN	0.94	0	new	3.44		1.22	3	30
+mssql	2.92	MSSQL	0.86	0	new	3.44		1.5	4	217
+vscode	2.91	VSCode	0.658	0	new	3.44		1.19	5	64
+userspace	2.91			0	new	3.44		1.64	5	70
+dockerized	2.91			0	new	3.44		0.0	2	52
+autoresearch	2.91			0	new	3.44		0.0	4	24
+appworld	2.91	AppWorld	1.0	0	new	3.44		0.0	4	51
+parametrized	2.91			0	raised	3.44	1.75	1.75	6	221
+reshapes	2.91			0	raised	3.44	1.81	1.81	6	69
+runtime's	2.91			0	new	3.43		0.0	4	36
+webassembly	2.91	WebAssembly	0.953	0	new	3.43		1.64	4	57
+gpu's	2.91	GPU's	0.973	0	new	3.43		1.51	3	67
+pycharm	2.91	PyCharm	0.775	0	new	3.43		1.33	5	103
+intellij	2.91	IntelliJ	0.84	0	new	3.43		1.8	5	327
+formalizes	2.91			0	raised	3.43	1.75	1.75	5	81
+materialization	2.91			0	raised	3.43	1.89	1.89	3	25
+factuality	2.91			0	raised	3.43	1.54	1.54	3	44
+jepa	2.91	JEPA	1.0	0	new	3.43		0.0	3	45
+precisions	2.91			0	raised	3.43	1.54	1.54	6	67
+orchestrators	2.91			0	new	3.43		1.43	5	39
+recompile	2.91			0	raised	3.43	1.81	1.81	5	514
+cronjob	2.91			0	new	3.43		0.0	4	74
+approximator	2.9			0	new	3.43		0.0	2	155
+clusterip	2.9	ClusterIP	0.794	0	new	3.43		0.0	2	27
+wordings	2.9			0	raised	3.43	1.9	1.9	5	33
+exploitability	2.9			0	new	3.43		1.1	6	39
+graphviz	2.9			0	new	3.43		1.07	5	79
+scipy	2.9			0	new	3.42		1.52	3	262
+vm's	2.9	VM's	0.944	0	new	3.42		1.64	3	96
+unmerged	2.9			0	new	3.42		0.0	4	43
+protobuf	2.9			0	new	3.42		0.0	3	130
+mbpp	2.9	MBPP	1.0	0	new	3.42		0.0	4	53
+downvotes	2.89			0	new	3.42		1.68	4	541
+granularities	2.89			0	new	3.42		0.0	6	67
+mopd	2.89	MOPD	1.0	0	new	3.42		0.0	3	31
+recomputed	2.89			0	raised	3.41	1.2	1.2	8	63
+multicollinearity	2.89			0	new	3.41		1.27	2	197
+url's	2.89	URL's	0.783	0	new	3.41		1.55	3	106
+tldr	2.89	TLDR	0.737	0	new	3.41		1.82	4	343
+listwise	2.89			0	new	3.41		0.0	6	37
+vgg	2.89	VGG	0.886	0	new	3.41		0.0	2	176
+rescales	2.88			0	new	3.41		0.0	6	35
+monotonicity	2.88			0	raised	3.41	1.78	1.78	7	79
+equivariance	2.88			0	new	3.4		0.0	5	64
+deltanet	2.88	DeltaNet	0.981	0	new	3.4		0.0	4	45
+psnr	2.88	PSNR	0.986	0	new	3.4		1.2	3	55
+bottlenecked	2.88			0	new	3.4		1.51	6	82
+interleave	2.87			0	raised	3.4	1.51	1.51	8	97
+faiss	2.87	FAISS	0.571	0	new	3.4		0.0	5	50
+awq	2.87	AWQ	1.0	0	new	3.39		0.0	5	25
+gzip	2.87			0	new	3.39		1.75	4	120
+multilabel	2.87			0	new	3.39		0.0	4	192
+lsh	2.87	LSH	1.0	0	new	3.39		1.82	5	51
+peer's	2.87			0	new	3.39		1.68	3	22
+testability	2.87			0	raised	3.39	1.62	1.62	2	697
+pytorch's	2.87	PyTorch's	0.651	0	new	3.39		0.0	3	60
+statefulsets	2.87	StatefulSets	0.719	0	new	3.39		0.0	2	28
+annotator	2.87			0	raised	3.39	1.56	1.56	7	77
+reframes	2.87			0	new	3.39		1.52	4	60
+adversarially	2.87			0	new	3.39		0.0	6	59
+stationarity	2.87			0	new	3.39		1.43	4	101
+traceback	2.86			0	new	3.39		1.37	4	85
+lemmas	2.86			0	raised	3.39	1.74	1.74	7	52
+zmq	2.86	ZMQ	0.605	0	new	3.39		0.0	2	24
+likelihoods	2.86			0	raised	3.38	1.65	1.65	6	68
+datetime	2.86			0	new	3.38		1.83	3	433
+fuzzers	2.86			0	new	3.38		0.0	2	46
+longbench	2.86	LongBench	1.0	0	new	3.38		0.0	3	51
+plugin's	2.86			0	new	3.38		0.0	5	43
+keepalive	2.86			0	new	3.38		1.04	2	24
+datapoint	2.86			0	new	3.38		1.76	5	172
+convnet	2.86	ConvNet	0.519	0	new	3.38		0.0	3	115
+graph's	2.86			0	new	3.38		1.19	9	56
+pomdps	2.86	POMDPs	0.989	0	new	3.38		0.0	4	53
+daemonsets	2.86	DaemonSets	0.667	0	new	3.38		0.0	2	23
+triaging	2.85			0	new	3.38		1.47	4	46
+regexes	2.85			0	new	3.38		1.12	6	202
+sparql	2.85	SPARQL	0.986	0	new	3.38		1.42	6	44
+dnns	2.85	DNNs	0.98	0	new	3.38		0.0	4	80
+vectorization	2.85			0	raised	3.37	1.59	1.59	4	170
+lexer	2.85			0	raised	3.37	1.32	1.32	2	301
+qps	2.85	QPS	0.667	0	new	3.37		1.76	4	24
+snns	2.85	SNNs	1.0	0	new	3.37		0.0	5	36
+cartpole	2.85			0	new	3.37		0.0	4	107
+offloads	2.85			0	raised	3.37	1.82	1.82	4	33
+disambiguated	2.85			0	raised	3.37	1.19	1.19	3	28
+flakiness	2.85			0	raised	3.37	1.6	1.6	2	26
+recomputes	2.84			0	new	3.37		0.0	6	52
+disambiguate	2.84			0	raised	3.37	1.62	1.62	6	171
+tfvc	2.84	TFVC	1.0	0	new	3.36		0.0	3	35
+parallelize	2.84			0	raised	3.36	1.44	1.44	4	245
+heatmap	2.84			0	new	3.36		1.81	5	170
+mobilenet	2.84	MobileNet	0.75	0	new	3.36		0.0	4	96
+msbuild	2.84	MSBuild	0.647	0	new	3.36		1.06	2	177
+toolchains	2.84			0	new	3.36		1.07	4	101
+ngram	2.84			0	new	3.36		1.32	2	62
+saltstack	2.84	SaltStack	0.694	0	new	3.36		0.0	2	34
+ablating	2.84			0	new	3.36		1.22	3	46
+vlas	2.84	VLAs	1.0	0	new	3.36		1.16	4	76
+harmfulness	2.84			0	raised	3.36	1.54	1.54	3	31
+replayable	2.84			0	new	3.36		1.41	5	50
+inotify	2.83			0	new	3.36		0.0	3	31
+quadratically	2.83			0	raised	3.36	1.48	1.48	7	77
+sres	2.83	SREs	1.0	0	new	3.36		1.49	2	25
+incrementing	2.83			0	raised	3.36	1.8	1.8	4	341
+staleness	2.83			0	raised	3.35	1.7	1.7	6	59
+orderings	2.83			0	raised	3.35	1.78	1.78	6	79
+hdfs	2.83	HDFS	0.909	0	new	3.35		1.5	5	120
+parallelizable	2.83			0	new	3.35		1.19	4	101
+distilbert	2.83	DistilBERT	0.765	0	new	3.35		0.0	6	38
+openssh	2.83	OpenSSH	0.676	0	new	3.35		1.66	4	30
+dynamodb	2.83	DynamoDB	0.823	0	new	3.35		1.38	6	125
+daemon's	2.82			0	new	3.35		1.1	3	25
+owasp	2.82	OWASP	0.967	0	new	3.34		1.54	6	107
+proxying	2.82			0	new	3.34		1.39	5	65
+synchronizes	2.82			0	raised	3.34	1.8	1.8	3	59
+codepipeline	2.82	CodePipeline	0.818	0	new	3.34		0.0	2	26
+provers	2.82			0	raised	3.34	1.33	1.33	6	62
+sidecars	2.82			0	raised	3.34	1.51	1.51	3	23
+typeerror	2.82	TypeError	1.0	0	new	3.34		1.1	2	63
+cuas	2.81	CUAs	1.0	0	new	3.33		0.0	4	32
+ceph	2.81	Ceph	0.724	0	new	3.33		1.78	4	20
+newlines	2.81			0	raised	3.33	1.44	1.44	8	164
+modularize	2.81			0	raised	3.33	1.56	0.0	2	134
+proxied	2.81			0	new	3.33		1.53	4	42
+denoise	2.81			0	new	3.33		0.0	5	55
+tokenizing	2.8			0	new	3.33		1.16	5	100
+torchvision	2.8			0	new	3.33		0.0	3	31
+autoscale	2.8			0	new	3.33		0.0	4	31
+uninitialized	2.8			0	raised	3.32	1.54	1.54	4	248
+pythonic	2.8	Pythonic	0.516	0	new	3.32		1.13	5	282
+hotfixes	2.8			0	new	3.32		1.56	3	112
+linters	2.8			0	new	3.32		1.1	4	104
+initialised	2.8			0	raised	3.32	1.43	1.43	5	201
+prefetch	2.8			0	new	3.32		1.61	4	50
+jev's	2.8	Jev's	0.949	0	new	3.32		0.0	3	36
+dotfiles	2.8			0	new	3.32		1.34	2	22
+keypoint	2.8			0	new	3.32		1.44	6	37
+sklearn's	2.8			0	new	3.32		0.0	2	251
+cyclomatic	2.79			0	new	3.32		0.0	2	401
+vectorize	2.79			0	new	3.32		1.17	5	141
+serializing	2.79			0	raised	3.32	1.64	1.64	4	277
+queryable	2.79			0	new	3.31		0.0	8	91
+nondeterministic	2.79			0	new	3.31		1.74	6	97
+dtw	2.79	DTW	0.922	0	new	3.31		1.79	5	136
+booleans	2.79			0	new	3.31		1.48	5	434
+hopfield	2.79	Hopfield	0.894	0	new	3.31		1.42	4	53
+levenshtein	2.79	Levenshtein	0.909	0	new	3.31		1.07	5	214
+underperforms	2.79			0	new	3.31		1.57	5	56
+misconfigured	2.79			0	new	3.31		1.42	5	58
+summarizer	2.79			0	raised	3.31	1.13	1.13	6	25
+regressors	2.79			0	new	3.31		1.39	5	148
+nullable	2.79			0	new	3.31		1.39	4	499
+theano	2.78	Theano	0.801	0	new	3.31		1.39	2	175
+weka	2.78	Weka	0.607	0	raised	3.31	1.73	1.73	3	199
+openhands	2.78	OpenHands	0.98	0	new	3.31		0.0	3	40
+query's	2.78			0	new	3.31		0.0	5	46
+schedulable	2.78			0	new	3.31		0.0	2	32
+dicts	2.78			0	new	3.3		0.0	6	76
+parameterizations	2.78			0	new	3.3		1.27	3	46
+deepfake	2.78			0	new	3.3		1.51	5	44
+encoder's	2.78			0	new	3.3		0.0	6	59
+vectorizer	2.78			0	new	3.3		0.0	3	162
+qiskit	2.78	Qiskit	1.0	0	new	3.3		0.0	2	32
+podspec	2.78	PodSpec	0.839	0	new	3.3		0.0	3	20
+keypoints	2.78			0	new	3.3		1.09	6	53
+findable	2.78			0	raised	3.3	1.62	1.62	2	20
+cudnn	2.78			0	new	3.3		0.0	2	50
+hnsw	2.78	HNSW	0.939	0	new	3.3		0.0	4	22
+approximators	2.78			0	new	3.3		0.0	3	124
+cloudbees	2.77	CloudBees	0.5	0	new	3.3		0.0	2	21
+virtualenv	2.77			0	new	3.3		1.13	3	68
+mcnemar	2.77	McNemar	1.0	0	new	3.3		0.0	4	49
+abac	2.77	ABAC	0.987	0	new	3.3		1.64	3	36
+decompilation	2.77			0	new	3.3		1.04	3	78
+codepoint	2.77			0	new	3.29		1.04	3	41
+nonconvex	2.77			0	new	3.29		1.54	3	44
+unigram	2.77			0	new	3.29		0.0	4	39
+oov	2.77	OOV	0.955	0	new	3.29		1.05	4	56
+keycloak	2.77	Keycloak	0.542	0	new	3.29		0.0	2	42
+containerizing	2.77			0	new	3.29		0.0	3	21
+rerunning	2.77			0	raised	3.29	1.58	1.58	7	60
+verifiability	2.77			0	raised	3.29	1.59	1.59	5	47
+syntaxes	2.77			0	new	3.29		1.42	4	141
+auprc	2.77	AUPRC	1.0	0	new	3.29		0.0	5	42
+generator's	2.76			0	new	3.29		1.58	6	72
+multiprocessing	2.76			0	raised	3.29	1.69	1.69	5	109
+diarization	2.76			0	new	3.28		0.0	5	26
+dvcs	2.76	DVCS	0.959	0	new	3.28		1.09	2	559
+connectionist	2.76			0	new	3.28		1.56	6	46
+undersampling	2.76			0	new	3.28		0.0	2	193
+valueerror	2.76	ValueError	0.993	0	new	3.28		0.0	4	158
+rebasing	2.76			0	new	3.28		1.55	4	268
+parseable	2.76			0	new	3.28		0.0	5	48
+scienceworld	2.76	ScienceWorld	1.0	0	new	3.28		0.0	3	39
+userdata	2.76			0	new	3.28		1.24	2	30
+neurosymbolic	2.76			0	new	3.28		0.0	4	35
+sublinear	2.76			0	new	3.28		1.32	5	47
+gitlab's	2.75	GitLab's	0.607	0	new	3.28		0.0	3	26
+streamlit	2.75	Streamlit	0.548	0	new	3.27		0.0	4	26
+remoting	2.75			0	new	3.27		1.62	2	54
+agentdojo	2.75	AgentDojo	1.0	0	new	3.27		0.0	4	35
+automl	2.75	AutoML	0.827	0	new	3.27		0.0	5	75
+deps	2.75			0	new	3.27		1.63	3	33
+subsampling	2.75			0	new	3.27		1.59	5	88
+approver	2.75			0	raised	3.27	1.67	1.67	4	38
+processor's	2.75			0	new	3.27		1.7	2	57
+downvoting	2.75			0	new	3.27		0.0	5	245
+chroot	2.75			0	new	3.27		1.61	3	36
+bilevel	2.75			0	new	3.27		1.44	4	28
+hardcode	2.75			0	new	3.27		1.21	5	234
+librispeech	2.75	LibriSpeech	0.932	0	new	3.27		0.0	5	35
+multimodality	2.74			0	new	3.27		1.65	4	21
+hypergraph	2.74			0	new	3.27		1.41	5	33
+pinn	2.74	PINN	1.0	0	new	3.26		1.73	3	28
+readonly	2.74			0	new	3.26		1.53	3	257
+kube	2.74			0	new	3.26		1.72	2	22
+anonymization	2.74			0	new	3.26		1.5	6	41
+crossentropy	2.74			0	new	3.26		0.0	2	138
+bpmn	2.74	BPMN	0.989	0	new	3.26		1.58	4	95
+ng's	2.73	Ng's	0.907	0	new	3.26		1.68	2	181
+miscalibration	2.73			0	new	3.26		0.0	3	37
+adaboost	2.73	AdaBoost	0.539	0	new	3.25		1.02	2	162
+codepoints	2.73			0	new	3.25		1.23	3	68
+beir	2.73	BEIR	1.0	0	new	3.25		1.39	3	24
+layernorm	2.73	LayerNorm	0.778	0	new	3.25		0.0	5	32
+alexnet	2.73	AlexNet	0.851	0	new	3.25		0.0	2	112
+parameterize	2.73			0	new	3.25		1.3	6	126
+parallelized	2.73			0	raised	3.25	1.62	1.62	5	164
+multiagent	2.73			0	new	3.25		1.62	5	39
+barto's	2.73	Barto's	1.0	0	new	3.25		0.0	2	111
+variadic	2.73			0	new	3.25		1.19	2	94
+subresources	2.73			0	new	3.25		0.0	2	22
+fuzzer	2.73			0	new	3.25		1.06	2	41
+aleatoric	2.73			0	new	3.25		1.18	5	32
+orthogonalization	2.73			0	new	3.25		0.0	5	32
+misspecification	2.73			0	new	3.25		0.0	5	40
+bertscore	2.72	BERTScore	0.898	0	new	3.25		0.0	4	42
+minimizer	2.72			0	raised	3.25	1.69	1.69	5	58
+unnormalized	2.72			0	new	3.25		0.0	6	75
+xlnet	2.72	XLNet	0.852	0	new	3.25		0.0	3	30
+influxdb	2.72	InfluxDB	0.622	0	new	3.24		0.0	3	38
+suboptimality	2.72			0	new	3.24		0.0	2	39
+optimiser	2.72			0	raised	3.24	1.1	1.1	6	135
+automations	2.72			0	new	3.24		1.57	3	48
+distribution's	2.72			0	new	3.24		1.35	3	25
+learnability	2.72			0	new	3.24		1.28	6	50
+imputing	2.72			0	raised	3.24	1.66	1.66	2	170
+metamodel	2.71			0	new	3.24		1.59	4	46
+informativeness	2.71			0	raised	3.24	1.02	1.02	5	42
+initializer	2.71			0	new	3.24		1.49	4	233
+initialise	2.71			0	raised	3.23	1.49	1.49	4	188
+iclr	2.71	ICLR	1.0	0	new	3.23		0.0	5	43
+monitorability	2.71			0	new	3.23		0.0	4	20
+backport	2.71			0	new	3.23		1.22	3	36
+gaussians	2.71	Gaussians	0.68	0	new	3.23		1.35	4	104
+antipattern	2.71			0	new	3.23		0.0	2	393
+mlops	2.71	MLOps	0.911	0	new	3.23		0.0	3	38
+inlined	2.7			0	new	3.23		1.34	2	270
+karpathy's	2.7	Karpathy's	0.857	0	new	3.23		0.0	2	27
+hardcoding	2.7			0	new	3.23		0.0	6	195
+norvig	2.7	Norvig	1.0	0	new	3.23		1.26	3	132
+replanning	2.7			0	new	3.22		1.35	5	46
+quantiles	2.7			0	new	3.22		1.38	5	85
+debiasing	2.7			0	new	3.22		0.0	3	29
+backpropagate	2.7			0	new	3.22		0.0	3	119
+posteriors	2.7			0	raised	3.22	1.55	1.55	4	45
+overfitted	2.7			0	new	3.22		0.0	2	147
+normalizer	2.7			0	raised	3.22	1.42	1.42	7	40
+sentencepiece	2.7	SentencePiece	0.588	0	new	3.22		0.0	4	29
+typesafe	2.7			0	new	3.22		0.0	4	95
+dataloader	2.7			0	new	3.22		0.0	3	58
+exchangeability	2.7			0	new	3.22		1.14	3	39
+pfx	2.7			0	new	3.22		0.0	3	70
+cleartext	2.69			0	new	3.22		1.38	4	36
+letsencrypt	2.69			0	new	3.21		1.14	2	20
+deduplicate	2.69			0	new	3.21		0.0	3	53
+wikidata	2.69	Wikidata	0.871	0	new	3.21		1.65	6	41
+miou	2.69	mIoU	1.0	0	new	3.21		0.0	4	26
+lecun	2.69	LeCun	0.774	0	new	3.21		1.16	2	66
+recognizer	2.69			0	raised	3.21	1.58	1.58	5	60
+modernbert	2.69	ModernBERT	0.962	0	new	3.21		0.0	2	20
+neurips	2.69	NeurIPS	1.0	0	new	3.21		0.0	6	60
+busybox	2.69			0	new	3.21		1.45	3	45
+subproblems	2.69			0	new	3.21		1.39	7	72
+perturbs	2.69			0	raised	3.21	1.44	1.44	4	39
+subgoals	2.68			0	new	3.21		0.0	6	36
+answerability	2.68			0	new	3.21		1.03	3	24
+crontab	2.68			0	new	3.21		1.42	5	43
+preconfigured	2.68			0	new	3.2		1.52	4	54
+neuromorphic	2.68			0	new	3.2		1.65	4	39
+architecting	2.68			0	new	3.2		1.58	5	146
+sysadmins	2.68			0	raised	3.2	1.58	1.58	2	92
+importances	2.68			0	new	3.2		0.0	2	154
+rmsprop	2.68	RMSProp	0.5	0	new	3.2		0.0	2	118
+rust's	2.68	Rust's	0.974	0	new	3.2		1.57	2	73
+regularizers	2.68			0	new	3.2		0.0	5	49
+permuted	2.68			0	raised	3.2	1.66	1.66	5	45
+subgoal	2.67			0	new	3.2		0.0	4	24
+ssms	2.67	SSMS	0.543	0	new	3.2		1.42	4	58
+batchsize	2.67			0	new	3.2		0.0	2	33
+paginated	2.67			0	raised	3.19	1.46	1.46	2	79
+mathjax	2.67	MathJax	0.537	0	new	3.19		0.0	4	50
+filebeat	2.67	Filebeat	0.542	0	new	3.19		0.0	2	20
+ssim	2.67	SSIM	1.0	0	new	3.19		0.0	4	50
+reweights	2.67			0	new	3.19		0.0	3	37
+kernel's	2.67			0	new	3.19		1.39	6	48
+embedder	2.67			0	new	3.19		0.0	7	33
+solver's	2.67			0	new	3.19		0.0	3	27
+recommenders	2.67			0	new	3.19		1.3	5	56
+declaratively	2.66			0	new	3.19		1.19	5	93
+localstorage	2.66	localStorage	0.629	0	new	3.19		1.13	2	98
+bimanual	2.66			0	new	3.19		1.36	2	29
+spectrograms	2.66			0	raised	3.19	1.27	1.27	5	74
+downvoter	2.66			0	new	3.18		0.0	3	193
+resampled	2.66			0	new	3.18		1.38	4	78
+webservice	2.66			0	new	3.18		1.25	3	388
+serializer	2.66			0	new	3.18		1.16	3	135
+disentanglement	2.66			0	raised	3.18	1.4	1.4	4	40
+framings	2.66			0	new	3.18		1.38	3	31
+hypernetwork	2.66			0	new	3.18		0.0	3	26
+fasttext	2.66			0	new	3.18		0.0	2	140
+dafny	2.66	Dafny	1.0	0	new	3.18		0.0	3	24
+unsatisfiable	2.66			0	raised	3.18	1.35	1.35	3	21
+javadoc	2.65			0	new	3.18		1.36	2	448
+overfits	2.65			0	new	3.18		0.0	2	146
+dockerize	2.65			0	new	3.18		0.0	2	26
+mahalanobis	2.65	Mahalanobis	0.933	0	new	3.18		1.57	3	76
+instructgpt	2.65	InstructGPT	1.0	0	new	3.17		0.0	2	25
+untuned	2.65			0	raised	3.17	1.42	1.42	5	40
+loop's	2.65			0	new	3.17		1.52	6	42
+bazel	2.65	Bazel	0.758	0	new	3.17		1.24	3	22
+canonicalization	2.65			0	new	3.17		0.0	5	30
+decoder's	2.65			0	new	3.17		0.0	5	39
+commandline	2.64			0	new	3.17		1.43	3	91
+ndcg	2.64	NDCG	0.551	0	new	3.17		0.0	6	41
+refactors	2.64			0	new	3.17		0.0	3	120
+csvs	2.64	CSVs	0.892	0	new	3.17		0.0	4	73
+changeset	2.64			0	new	3.17		1.07	2	152
+ablate	2.64			0	raised	3.16	1.45	1.45	4	37
+batchnorm	2.64			0	new	3.16		0.0	2	85
+iterable	2.64			0	new	3.16		1.42	3	162
+resizes	2.64			0	raised	3.16	1.33	1.33	5	57
+reimplement	2.64			0	new	3.16		1.08	3	243
+updatable	2.64			0	new	3.16		1.26	4	38
+hypersphere	2.64			0	new	3.16		1.2	3	21
+pathwise	2.64			0	new	3.16		0.0	2	28
+generalises	2.64			0	raised	3.16	1.31	1.31	7	66
+jsonpath	2.63	JSONPath	0.531	0	new	3.16		0.0	2	21
+factorizes	2.63			0	new	3.16		0.0	4	36
+checkpointed	2.63			0	new	3.16		0.0	4	21
+sysml	2.63	SysML	1.0	0	new	3.16		1.12	3	39
+triviaqa	2.63	TriviaQA	1.0	0	new	3.16		0.0	3	25
+vpcs	2.63	VPCs	0.962	0	new	3.15		0.0	2	20
+mteb	2.63	MTEB	1.0	0	new	3.15		0.0	4	20
+convnets	2.63	ConvNets	0.547	0	new	3.15		0.0	3	61
+rgba	2.63	RGBA	0.886	0	new	3.15		1.46	3	37
+subtrees	2.63			0	new	3.15		1.56	6	80
+userland	2.63			0	new	3.15		1.57	2	64
+monorepos	2.63			0	new	3.15		0.0	4	37
+ogbench	2.63	OGBench	1.0	0	new	3.15		0.0	2	32
+stopwords	2.63			0	new	3.15		0.0	3	127
+miscalibrated	2.62			0	new	3.15		0.0	4	31
+cbow	2.62	CBOW	0.877	0	new	3.15		0.0	2	89
+datasource	2.62			0	new	3.15		1.49	4	143
+backticks	2.62			0	new	3.15		0.0	2	34
+decodability	2.62			0	new	3.14		0.0	3	31
+lpips	2.62	LPIPS	0.973	0	new	3.14		0.0	3	30
+longmemeval	2.62	LongMemEval	1.0	0	new	3.14		0.0	2	25
+codebert	2.62	CodeBERT	0.971	0	new	3.14		0.0	2	29
+aws's	2.62	AWS's	1.0	0	new	3.14		1.08	5	31
+recompilation	2.62			0	raised	3.14	1.33	1.33	3	131
+deepswe	2.62	DeepSWE	1.0	0	new	3.14		0.0	3	21
+stepsize	2.62			0	new	3.14		0.0	5	30
+intellisense	2.62			0	new	3.14		1.56	2	459
+unitree	2.62	Unitree	1.0	0	new	3.14		0.0	2	34
+rpcs	2.61	RPCs	0.947	0	new	3.14		1.35	2	25
+indexeddb	2.61	IndexedDB	0.5	0	new	3.13		0.0	2	44
+routable	2.61			0	new	3.13		1.36	4	20
+database's	2.61			0	new	3.13		1.19	4	116
+minibatches	2.61			0	new	3.13		0.0	3	70
+solvability	2.61			0	new	3.13		1.43	6	31
+tensorboard	2.61			0	new	3.13		0.0	2	114
+prefetching	2.61			0	new	3.13		1.41	7	54
+resending	2.61			0	raised	3.13	1.31	1.31	2	24
+tractability	2.61			0	raised	3.13	1.32	1.32	6	39
+fedavg	2.61	FedAvg	1.0	0	new	3.13		0.0	2	21
+amortizes	2.61			0	raised	3.13	1.38	0.0	4	32
+pinns	2.6	PINNs	1.0	0	new	3.13		0.0	3	25
+bengio	2.6	Bengio	1.0	0	new	3.13		1.2	2	103
+accessors	2.6			0	new	3.12		1.23	2	298
+precompiled	2.6			0	new	3.12		1.51	3	123
+toolsets	2.6			0	new	3.12		1.25	5	51
+classifier's	2.6			0	new	3.12		0.0	4	59
+repo's	2.6			0	new	3.12		0.0	4	72
+llada	2.6	LLaDA	1.0	0	new	3.12		0.0	3	23
+plotly	2.59			0	new	3.12		0.0	3	85
+ngrams	2.59			0	new	3.12		0.0	3	77
+compilable	2.59			0	new	3.11		0.0	2	133
+actionability	2.59			0	new	3.11		0.0	3	26
+syscall	2.59			0	new	3.11		1.27	3	65
+sonatype	2.59	Sonatype	0.938	0	new	3.11		0.0	3	29
+jmeter	2.59	JMeter	0.842	0	new	3.11		1.02	2	40
+discretize	2.59			0	new	3.11		0.0	3	92
+subsequences	2.58			0	raised	3.11	1.5	1.5	6	61
+annotates	2.58			0	raised	3.11	1.3	1.3	6	36
+testbench	2.58			0	new	3.1		1.05	5	23
+inlining	2.58			0	new	3.1		1.49	2	336
+concatenates	2.58			0	raised	3.1	1.09	1.09	5	61
+xgb	2.58	XGB	0.584	0	new	3.1		0.0	2	128
+compositionality	2.58			0	new	3.1		1.31	4	30
+skillsbench	2.58	SkillsBench	1.0	0	new	3.1		0.0	3	28
+misclassifications	2.58			0	new	3.1		0.0	6	68
+fullstack	2.58			0	new	3.1		1.39	2	21
+mujoco	2.58	MuJoCo	0.95	0	new	3.1		0.0	4	34
+ifeval	2.58	IFEval	0.967	0	new	3.1		0.0	3	23
+adaptivity	2.58			0	raised	3.1	1.28	1.28	4	32
+phpmyadmin	2.58			0	new	3.1		1.19	4	46
+subproblem	2.58			0	raised	3.1	1.33	1.33	6	44
+anonymize	2.58			0	new	3.1		1.56	2	42
+pandoc	2.57	Pandoc	0.703	0	new	3.1		1.11	3	22
+csproj	2.57			0	new	3.1		0.0	3	64
+initializers	2.57			0	new	3.09		1.2	3	113
+hmac	2.57	HMAC	0.913	0	new	3.09		1.55	3	74
+affordance	2.57			0	new	3.09		1.56	5	25
+transductive	2.57			0	new	3.09		0.0	6	30
+hypervisors	2.57			0	new	3.09		1.45	2	23
+sutskever	2.56	Sutskever	1.0	0	new	3.09		0.0	2	23
+disentangles	2.56			0	new	3.09		0.0	4	32
+eslint	2.56	ESLint	0.641	0	new	3.09		1.1	2	24
+concat	2.56			0	new	3.08		1.51	4	119
+splatting	2.56	Splatting	0.694	0	raised	3.08	1.42	1.42	4	28
+abstractive	2.56			0	new	3.08		0.0	4	39
+deduplicated	2.56			0	new	3.08		0.0	6	38
+nn's	2.56	NN's	0.979	0	new	3.08		0.0	2	86
+instantiations	2.56			0	raised	3.08	1.49	1.49	6	113
+adapter's	2.56			0	new	3.08		0.0	4	20
+optimisations	2.56			0	raised	3.08	1.51	1.51	4	259
+postconditions	2.56			0	new	3.08		0.0	3	151
+pyspark	2.56			0	new	3.08		0.0	2	129
+virtualisation	2.56			0	raised	3.08	1.55	1.55	2	34
+scifact	2.55	SciFact	0.885	0	new	3.08		0.0	5	22
+idempotence	2.55			0	new	3.08		0.0	2	89
+retriever's	2.55			0	new	3.08		0.0	2	21
+nuscenes	2.55	nuScenes	0.933	0	new	3.07		0.0	2	26
+cacheable	2.55			0	new	3.07		0.0	3	75
+kaiming	2.55	Kaiming	0.812	0	new	3.07		0.0	3	31
+strided	2.55			0	new	3.07		0.0	4	29
+reparameterization	2.55			0	new	3.07		0.0	4	42
+healthchecks	2.55			0	new	3.07		0.0	4	21
+unoptimized	2.55			0	new	3.07		1.12	5	70
+distributionally	2.55			0	new	3.07		0.0	3	28
+neuroevolution	2.55			0	new	3.07		0.0	3	47
+myapp	2.54	MyApp	0.574	0	new	3.07		0.0	3	28
+discriminability	2.54			0	new	3.07		1.23	3	26
+keypair	2.54			0	new	3.07		0.0	3	26
+standardscaler	2.54	StandardScaler	0.921	0	new	3.07		0.0	2	128
+bnns	2.54	BNNs	1.0	0	new	3.06		0.0	2	36
+heatmaps	2.54			0	new	3.06		1.35	5	55
+revisable	2.54			0	new	3.06		0.0	3	26
+interleaves	2.54			0	raised	3.06	1.44	0.0	3	27
+writeable	2.54			0	raised	3.06	1.2	1.2	2	38
+rcnn	2.54	RCNN	0.891	0	new	3.06		0.0	2	82
+parameterised	2.54			0	new	3.06		1.04	6	92
+precompute	2.54			0	new	3.06		0.0	3	51
+pddl	2.54	PDDL	1.0	0	new	3.06		0.0	3	27
+blockwise	2.54			0	new	3.06		0.0	3	23
+apriori	2.54			0	new	3.06		1.4	3	121
+hdbscan	2.54	HDBSCAN	0.802	0	new	3.06		0.0	3	71
+downsample	2.54			0	new	3.06		0.0	3	92
+autoformalization	2.53			0	new	3.06		0.0	4	22
+wordpiece	2.53	WordPiece	0.838	0	new	3.06		0.0	4	28
+gridworld	2.53			0	new	3.06		0.0	4	52
+downsampled	2.53			0	new	3.06		1.16	6	48
+robotwin	2.53	RoboTwin	1.0	0	new	3.05		0.0	2	27
+resharper	2.53			0	new	3.05		1.19	2	406
+namespacing	2.52			0	new	3.05		0.0	2	104
+entrypoints	2.52			0	new	3.05		0.0	2	25
+webservers	2.52			0	new	3.05		1.21	2	91
+hashmap	2.52			0	new	3.04		1.41	3	351
+detectably	2.52			0	new	3.04		1.04	3	23
+bigcodebench	2.52	BigCodeBench	0.963	0	new	3.04		0.0	3	21
+backend's	2.52			0	new	3.04		0.0	2	25
+backtest	2.51			0	new	3.04		1.37	4	34
+zenodo	2.51	Zenodo	0.889	0	new	3.04		0.0	4	23
+trpo	2.51	TRPO	1.0	0	new	3.03		0.0	2	45
+datascience	2.51			0	new	3.03		0.0	2	103
+openwebtext	2.51	OpenWebText	1.0	0	new	3.03		0.0	3	26
+oversample	2.5			0	new	3.03		1.29	2	112
+numerics	2.5			0	new	3.03		1.49	5	64
+rkhs	2.5	RKHS	1.0	0	new	3.03		0.0	2	20
+camelcase	2.5	camelCase	0.774	0	new	3.03		1.14	3	154
+depthwise	2.5			0	new	3.03		0.0	4	32
+tensorrt	2.5	TensorRT	0.938	0	new	3.02		0.0	5	23
+hypervolume	2.5			0	new	3.02		0.0	3	20

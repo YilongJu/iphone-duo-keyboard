@@ -129,6 +129,26 @@ enum KeyboardTextLogic {
         return word
     }
 
+    /// The word of letters right before the cursor that holds a capital after its first letter
+    /// and starts a word of its own, as "pyTorch" and "GPu", or nil. Autocorrection does not read
+    /// such a word (`correctableWord`), and the preferred capitals of a work area still give it
+    /// one of its forms.
+    static func wordWithInnerCapital(before: String) -> String? {
+        var start = before.endIndex
+        while start > before.startIndex {
+            let previous = before.index(before: start)
+            guard before[previous].isASCII, before[previous].isLetter else { break }
+            start = previous
+        }
+        let word = before[start...]
+        guard word.count >= 2, word.dropFirst().contains(where: { $0.isUppercase }) else { return nil }
+        if start > before.startIndex {
+            let preceding = before[before.index(before: start)]
+            guard preceding.isWhitespace || "([{\"".contains(preceding) else { return nil }
+        }
+        return String(word)
+    }
+
     /// The lower-case word that ends `text`, when one space follows it, or an empty string.
     /// The typing engine reads this word as the context of the text typed after it.
     static func wordBeforeSpace(at text: String) -> String {

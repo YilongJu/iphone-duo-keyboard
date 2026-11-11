@@ -1,0 +1,21 @@
+english-domain.*.jsonl and english-domain-stream.*.jsonl
+
+  Built by scripts/typing-evaluation/build_english_domain_cases.py. Each case names its source in
+  the field `source`.
+
+  - A source that starts with "arxiv:" is a sentence of an arXiv abstract, with the category and
+    the arXiv identifier. arXiv metadata, the abstract included, is under CC0 1.0.
+  - A source that starts with "stackexchange:" is a sentence of a post or a comment of that Stack
+    Exchange site, with the file of the data dump of 2024-04 and the row's Id. The content is
+    under CC BY-SA 4.0, and older posts under CC BY-SA 3.0 and 2.5. The post is at
+    https://SITE.stackexchange.com/a/ID for a row of Posts.xml.
+  - A source that starts with "github:" is a sentence of the documentation of that repository,
+    with the path of the file. scripts/domain-pack/pack/ai-software.sources.json gives the commit
+    and the licence of each repository: the Apache License 2.0, the MIT license or CC BY 4.0.
+  - A source that starts with "tatoeba:" is a Tatoeba English sentence with its id, under
+    CC BY 2.0 FR, https://tatoeba.org.
+  - The sources "requested by the user", "written for this file" and "the pack" mark a case
+    whose context was written for this file or is empty.
+
+  The sentences were changed: a case keeps the words before the typed word, and a stream case
+  keeps the words in lower case without punctuation. The two files are under CC BY-SA 4.0.

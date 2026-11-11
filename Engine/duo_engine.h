@@ -34,7 +34,7 @@ extern "C" {
 
 /* A lexicon file in memory. The engine reads the caller's bytes in place and does not copy them,
    so the bytes must stay valid while the lexicon is in use. */
-typedef struct {
+typedef struct duo_lexicon {
     const uint8_t *nodes;
     const uint8_t *words;
     const uint8_t *pair_index;
@@ -60,6 +60,9 @@ typedef struct {
     /* The version of the file format, 2 or 3, and the size of one word record in that version. */
     uint32_t version;
     uint32_t word_bytes;
+    /* A supplement: a second, small lexicon whose words the engine reads beside the words of
+       this one, or NULL. duo_lexicon_set_supplement sets it. */
+    const struct duo_lexicon *supplement;
 } duo_lexicon;
 
 /* Costs are in natural-log units, the same scale as the word probabilities: a cost of 4.6 makes
@@ -149,6 +152,20 @@ int duo_lexicon_open(duo_lexicon *lexicon, const void *data, size_t size);
    an earlier full check accepted, such as a file inside a signed app. It does not read the
    file's body, so a keyboard opens fast. Returns 1 on success and 0 on a wrong header or size. */
 int duo_lexicon_open_checked_before(duo_lexicon *lexicon, const void *data, size_t size);
+
+/* Lays a supplement over an English lexicon: a small lexicon file of words that the main file
+   lacks or holds at too low a probability, such as the words of a work area or the words a
+   person taught the keyboard. The engine then reads a word of the supplement as a known word:
+   it stays as typed, and a slip can be corrected into it. A word that only the supplement holds
+   has no word pairs, so it gets its own probability after any word, as a word of the main file
+   without a listed pair does. A word that both files hold gets the higher of its two values.
+   NULL takes the supplement off again.
+
+   Both files must use model 0 (the mixed model of English), and the supplement must be a file
+   of version 2 without word pairs, with one word per spelling and no supplement of its own.
+   The supplement's bytes must stay valid while the lexicon uses it. Returns 1, or 0 when a file
+   does not meet these rules, and the lexicon then keeps the supplement it had. */
+int duo_lexicon_set_supplement(duo_lexicon *lexicon, const duo_lexicon *supplement);
 
 duo_params duo_english_params(void);
 duo_params duo_pinyin_params(void);
