@@ -2,21 +2,19 @@
 
 ## Summary
 
-Round 1 is measured: no training-free weight edit improves the re-ranker on dev. Round 2, the
-WiSE-FT interpolation, has a fixed design and running jobs, and it does not have a dev score yet.
+Both rounds are measured. A training-free weight edit does not improve the re-ranker on dev, and
+an interpolation coefficient does not meet the clean-word rule on dev at its tuned setting.
 
 To take over:
 
-1. Read `docs/lm-weight-edit-design.md`, from "Interpolation between stock and fine-tuned weights
-   for the clean dev cases" to "Shared held-out cases of the second fine-tuning round".
-2. Print the state of every arm with the two commands of step 1 in "Commands to resume round 2".
-3. Run the remaining steps of that section. Every step skips the arms that are done.
-4. Read the answer from `python scripts/lm-weight-edit/interp_report.py s d d2`.
-5. Leave the items of "Backlog of round 1" alone, unless an interpolation result needs one as a
-   control.
+1. Read `docs/lm-weight-edit-interpolation-results.md` for the interpolation result on dev and on
+   the held-out set of the second fine-tuning round.
+2. Read `docs/lm-weight-edit-design.md` for the rules that were fixed before each run.
+3. Rebuild the result tables with the commands of "Commands that rebuild the round 2 tables".
+4. Leave the items of "Backlog of round 1" alone, unless the user asks for them.
 
-This handoff does not settle the interpolation question, the test half, phone time or phone
-memory. The test half was never read.
+This handoff does not settle the test half of round 1, phone time or phone memory. The test half
+was never read.
 
 ## Arm labels of round 2
 
@@ -164,36 +162,31 @@ Quantization loss on the 500 parity lists (lists right at f16, then Q3_K_M), fro
 `d-ta` 477 / 477, `d-ties` 482 / 478, `d-dare` 476 / 477, `d-random` 397 / 406, `d-steer`
 441 / 441, `d-tftv` 442 / 442.
 
-## State of round 2 at 23:55 on 10 November 2026
+## State of round 2
 
-Round 2 holds 35 arms. The user paused all jobs at 22:55 and allowed them again at 23:50, for
-the interpolation arms only.
+Every interpolation arm is converted, evaluated and reported: 27 arms (`s-wise`, `d-wise`,
+`d2-wise` at a from 0.1 to 0.9) and 6 reference rows. A job of this work is not running, and this
+work does not hold `build/gpu.lock`.
 
-Table 5. Each group of round 2 arms at 23:55. "Converted" means the Q3_K_M file is in WSL and
-`check_parity.py` has written `parity/parity.json`.
+Table 5. Commits of round 2, in order. Each rule was committed before the run it governs.
 
-| Group | Arms | Stopping-list scores | Converted | Stopped part-way at the pause | Dev evaluation |
-| --- | --- | --- | --- | --- | --- |
-| `s-wise` | 9 | all 9 | 0.1, 0.2 | 0.3 (parity scores at 70 of 500 lists), 0.4 (quantized), 0.5, 0.6 (empty folder), 0.7 (export part-way) | none finished |
-| `d-wise` | 9 | all 9 | 0.1, 0.2 | 0.3 (quantized), 0.4 (empty folder) | none finished |
-| `d2-wise` | 9 | all 9 | 0.1, 0.2 | 0.3 (empty folder), 0.4 (exported) | none finished |
-| reference rows | 6 | from round 1 | from round 1 | `eval_extra.py` wrote the control predictions only | none finished |
-| `s-random` seeds 2 to 5 | 4 | all 4 | none | none | backlog |
-| `d-random` seeds 2 to 5 | 4 | all 4 | none | none | backlog |
+| Commit | Content |
+| --- | --- |
+| `7783c50` | The interpolation grid, the selection rule, the dev criteria and the controls, before any interpolated arm met dev |
+| `23df5a3` | The queue, the conversion stream and the report scripts |
+| `85fd374` | `holdout-plan.json` and the held-out criteria, before the held-out read |
+| `70940ef` | The results document |
 
-Jobs running since 23:50, with a budget of 14 threads for the night:
+Result in three lines:
 
-- Two conversion streams of `export_convert.sh`: `s-wise-0.3` to `0.9` then `d2-wise-0.6` to
-  `0.9`, and `d-wise-0.3` to `0.9` then `d2-wise-0.3` to `0.5`. They convert the part-way arms
-  again from the export.
-- `round2_queue.sh 3 references s-wise`, and `round2_queue.sh 4 d-wise d2-wise` after the first
-  conversion stream ends.
-
-A GPU job is not running, and `build/gpu.lock` does not exist.
+- The selection rule chose a = 0.9 for all three fine-tunes. Not one of the 27 grid arms meets the
+  clean rule on dev at its tuned setting.
+- On the held-out set the SmolLM2 fine-tune meets the clean rule at its tuned setting (952 and
+  427 against 945 and 421), and a = 0.9 does not add clean words (948 and 427).
+- The distilgpt2 arms do not meet the clean rule on dev or on the held-out set.
 
 Table 6. Lists right of 7,556 on the stopping split at weight 1, for the round 2 arms. The engine
-alone gets 6,766. The larger the coefficient, the more lists right, and a = 0.9 lies within 6
-lists of the fine-tune in all three columns.
+alone gets 6,766. The larger the coefficient, the more lists right.
 
 | a | `s-wise` | `d-wise` | `d2-wise` |
 | --- | --- | --- | --- |
@@ -211,51 +204,44 @@ lists of the fine-tune in all three columns.
 
 The random-edit seeds at lam 1 on the same lists: `s-random` seeds 1 to 5 get 6,489, 6,501,
 6,510, 6,481 and 6,506, against 6,492 for the stock model. `d-random` seeds 1 to 5 get 5,852,
-5,897, 5,864, 5,948 and 5,908, against 5,839. These numbers are in `stop/*-round2.jsonl`.
+5,897, 5,864, 5,948 and 5,908, against 5,839. Seeds 2 to 5 are not converted.
 
-Three scripts have not finished a run yet: `eval_extra.py`, `interp_report.py` and the committed
-`export_convert.sh`. `eval_extra.py` ran for about 13 minutes on the six reference rows
-before the pause and wrote the control predictions. `interp_report.py` passed a syntax check only.
-The `--status` mode of `export_convert.sh` ran, and it reports the states of Table 5.
+Three arms exceed the 0.05-nat limit of `check_parity.py` on their largest gap: `s-wise-0.5`
+(0.051), `s-wise-0.8` (0.072) and `d2-wise-0.5` (0.081). Their tokens match on all 2,000 lists.
 
-## Commands to resume round 2
+Codex reviewed the results document once (`codex exec -c model_reasoning_effort=high`). Its
+review is in `build/lm-weight-edit/review/interp-results-review.txt`. Seven points were accepted
+and are in the document: the wording about noise, the cost of weight 0.5 on `github_real_word`,
+the clean categories behind the held-out count, the margins that change with the weight, the
+scope of the summary, the chosen calibration-only candidates beside Table 2, and one wrong count
+(2 clean dev words for the fine-tune, 3 for a = 0.9). Codex did not find a bug that changes a
+count. Not done from that review: a held-out row for a = 0.9 at the setting of the fine-tune,
+because the held-out set is read once per plan.
 
-Run them from Git Bash. Each step skips the arms that are done. While the user works on the
-desktop, run at most 4 jobs of 2 threads. On 10 November, up to 17 evaluation jobs and 4
-conversion streams ran at once. The load reached 28 on 32 logical cores, and the user stopped them.
+## Commands that rebuild the round 2 tables
+
+Run them from Git Bash. They read stored results and do not score a model.
 
 ```bash
 cd /d/Github/iphone-duo-keyboard/build/worktrees/lm-edit
-sed -i 's/\r$//' scripts/lm-weight-edit/*.sh
+sed -i 's/$//' scripts/lm-weight-edit/*.sh
 Q=/mnt/d/Github/iphone-duo-keyboard/build/worktrees/lm-edit/scripts/lm-weight-edit
-
-# 1. State of every arm. Both commands only read.
-bash scripts/lm-weight-edit/export_convert.sh --status s-wise-0.{1..9} d-wise-0.{1..9} d2-wise-0.{1..9}
-MSYS_NO_PATHCONV=1 wsl -d Ubuntu -- bash $Q/eval_status.sh
-
-# 2. Conversions, one stream after the other. A stream uses up to 4 threads and no GPU.
-bash scripts/lm-weight-edit/export_convert.sh smollm2-135m build/lm-weight-edit/arms/smollm2-round2.json s-wise-0.{1..9}
-bash scripts/lm-weight-edit/export_convert.sh distilgpt2 build/lm-weight-edit/arms/distilgpt2-round2.json d-wise-0.{1..9} d2-wise-0.{1..9}
-
-# 3. Evaluations: one queue, 4 jobs of 2 threads. Start it once only.
-MSYS_NO_PATHCONV=1 wsl -d Ubuntu -- bash $Q/round2_queue.sh 4 references s-wise d-wise d2-wise
-
-# 4. Copy the results to Windows, then print the tables, the chosen coefficient and the criteria.
 MSYS_NO_PATHCONV=1 wsl -d Ubuntu -- bash $Q/copy_results.sh
-python scripts/lm-weight-edit/interp_report.py s d d2 --json build/lm-weight-edit/results/interp.json \
-    > build/lm-weight-edit/results/interp.md
+python scripts/lm-weight-edit/interp_report.py s d d2 --json build/lm-weight-edit/results/interp.json     > build/lm-weight-edit/results/interp.md
+python scripts/lm-weight-edit/holdout_report.py > build/lm-weight-edit/holdout/report.md
+python scripts/lm-weight-edit/build_interp_doc.py
 ```
 
-These steps do not need the GPU. Every stopping-list score of round 2 exists. Run each long step
-as a foreground command inside a background tool call. A job started with
-`nohup` inside `wsl ... bash -c` ends when the `wsl` call returns. To stop every job of this work,
-stop four kinds of process in WSL: `round2_queue.sh`, `evaluate.py` with `--out /root/lmedit/`,
-`eval_extra.py`, and their `lm_score` children. Then stop `export_convert.sh`, `convert_edit.sh`
-and their Python children on Windows.
+`interp_report.py` takes about 4 minutes for its bootstrap intervals. The held-out predictions are
+in `/root/lmedit/holdout` and in `build/lm-weight-edit/holdout`. `read_holdout.py` refuses a
+folder that holds a result, and the held-out set is read once per plan.
 
-One SmolLM2 evaluation took 47 to 67 minutes at 2 threads in round 1, and one distilgpt2
-evaluation took 28 to 48 minutes. `eval_extra.py` adds the stopping cases to each, and its time
-is not measured yet.
+To score a new arm, convert it with `export_convert.sh`, then run `round2_queue.sh` with one
+queue. While the user works on the desktop, run at most 4 jobs of 2 threads. On 10 November, up
+to 17 evaluation jobs and 4 conversion streams ran at once. The load reached 28 on 32 logical
+cores, and the user stopped them. Seven jobs of 2 threads kept the load near 12. Run each long
+step as a foreground command inside a background tool call. Do not edit a shell script while a
+queue runs from it.
 
 ## Backlog of round 1
 
