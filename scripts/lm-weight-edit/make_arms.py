@@ -1,6 +1,9 @@
 """Writes the arm files of docs/lm-weight-edit-design.md (Tables 2 and 3).
 
 Usage: python scripts/lm-weight-edit/make_arms.py --out build/lm-weight-edit/arms [--with-seed2]
+
+It also writes the interpolation arms and the random-edit seeds of the design's later sections:
+smollm2-round2.json and distilgpt2-round2.json.
 """
 import argparse
 import json
@@ -51,6 +54,20 @@ def distilgpt2(with_seed2: bool) -> list[dict]:
     return arms
 
 
+# The WiSE-FT coefficient grid of the design, fixed before any of these arms met dev.
+WISE_COEFFICIENTS = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+RANDOM_SEEDS = [2, 3, 4, 5]  # seed 1 is s-random-1.0 and d-random-1.0
+
+
+def round2(prefix: str, tuned: str) -> list[dict]:
+    """WiSE-FT interpolation (1 - a) theta_0 + a theta_1, which equals theta_0 + a tau_1, so the
+    kind is tv with lam = a. Then the further seeds of the random-edit control at lam 1."""
+    arms = [{"name": f"{prefix}-wise-{a}", "kind": "tv", "tuned": [tuned], "lam": a} for a in WISE_COEFFICIENTS]
+    arms += [{"name": f"{prefix}-random-1.0-seed{seed}", "kind": "random", "tuned": [tuned], "lam": 1.0, "seed": seed}
+             for seed in RANDOM_SEEDS]
+    return arms
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--out", type=Path, required=True)
@@ -59,6 +76,11 @@ def main():
     arguments.out.mkdir(parents=True, exist_ok=True)
     (arguments.out / "smollm2.json").write_text(json.dumps(smollm2(), indent=1), encoding="utf-8")
     (arguments.out / "distilgpt2.json").write_text(json.dumps(distilgpt2(arguments.with_seed2), indent=1), encoding="utf-8")
+    (arguments.out / "smollm2-round2.json").write_text(json.dumps(round2("s", "smollm2-lora-seed1"), indent=1), encoding="utf-8")
+    # d2-wise repeats d-wise on the second seed of the LoRA fine-tune.
+    second = [arm for arm in round2("d2", "distilgpt2-lora-seed2") if arm["kind"] == "tv"]
+    (arguments.out / "distilgpt2-round2.json").write_text(
+        json.dumps(round2("d", "distilgpt2-lora-seed1") + second, indent=1), encoding="utf-8")
 
 
 if __name__ == "__main__":

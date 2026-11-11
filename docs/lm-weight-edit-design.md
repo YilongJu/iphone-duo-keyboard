@@ -17,6 +17,10 @@ steps on this task, pick the intended reading as well as the existing fine-tunes
 5. Leave the test half alone. The report names any arm that should join the fine-tune's single
    test read.
 
+6. Test whether an interpolation between the stock and the fine-tuned weights keeps the clean dev
+   cases at the control's count, by the rule in "Interpolation between stock and fine-tuned
+   weights for the clean dev cases".
+
 This design does not settle phone time or memory on the device. It does not test the edits on
 slips from a source other than our generator, apart from the published misspellings.
 
@@ -145,6 +149,129 @@ The controls answer four questions.
    edit gets a second search on the same split, by lists right. So a gain over the fine-tune on
    the stopping split can come from the extra search alone. Dev, at the setting from the tuning
    split, is the fair comparison.
+
+## Interpolation between stock and fine-tuned weights for the clean dev cases
+
+This part tests a keyboard hypothesis that follows Wortsman et al. 2022. They report that a
+model between the stock and the fine-tuned weights keeps the fine-tune's accuracy on its own
+task, and gains accuracy under distribution shift. They do not promise the stock model's
+choice on each input. Each fine-tune here keeps fewer clean dev cases than the control at its
+tuning-split setting. The hypothesis: an interpolated model keeps the clean dev cases at the
+control's count, and keeps most of the dev gain.
+
+The stock models in the typed format also sit below the control on clean dev cases, at 948 and 954
+of 973 against 957. So a pass cannot mean a return to the stock model's behaviour. A pass needs
+the model and its tuned setting together to keep the clean cases.
+
+WiSE-FT builds (1 - a) theta_0 + a theta_1. Task vector scaling below 1 builds
+theta_0 + a tau_1. With one fine-tune per arm, the two formulas give the same weights. So this
+design runs one arm per coefficient a, and every table names it "WiSE-FT interpolation, equal to
+task vector scaling at lam = a".
+
+Table 4. The interpolation arms. The grid was fixed before any interpolated arm met dev. The dev
+results of the fine-tunes were known, and they are the reason for this part.
+
+| Label | Edit | Coefficient grid | Steps |
+| --- | --- | --- | --- |
+| `s-wise-a` | (1 - a) theta_0 + a theta_1, theta_1 = merged `smollm2-lora-seed1` | a in 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9 | 4,500, inherited |
+| `d-wise-a` | (1 - a) theta_0 + a theta_L1, theta_L1 = merged `distilgpt2-lora-seed1` | the same nine values | 7,000, inherited |
+| `d2-wise-a` | The same edit from theta_L2 = merged `distilgpt2-lora-seed2` | the same nine values | 6,000, inherited |
+
+The reference rows are a = 0 (`s-stock`, `d-stock` in the typed format) and a = 1 (`s-lora`,
+`d-lora`, `d-lora` seed 2). Every arm is a Q3_K_M file in the typed format. `d2-wise` repeats
+`d-wise` on the second seed of the same fine-tune. It shows how far a pass depends on the seed.
+
+Each coefficient follows these steps.
+
+1. Export the weights, convert to Q3_K_M, and check tokens and scores, as every other arm.
+2. `evaluate.py` picks the setting on the tuning split, with the clean rule of `rerank.py`, and
+   scores dev and the published misspellings of the dev half at that setting. It runs with
+   `--skip-dev-grid`, so dev does not tune a setting.
+3. `eval_extra.py` types the 6,740 stopping cases (`cases.stop.jsonl`) through the keyboard rules
+   at that setting. It also scores the control on them.
+4. `eval_extra.py` scores dev and the published misspellings at the common setting of the base
+   (see "Controls for the re-ranker setting").
+
+The tuning split is a weak judge of the coefficients on clean cases. Every tuned setting has to
+keep the control's clean counts there, so the tuning rule has already used those cases. The
+stopping cases are the nearest set outside dev. Each fine-tune read the stopping lists only for
+its checkpoint, by the listwise loss. That reuse makes a count on the stopping cases optimistic.
+So the stopping cases choose a coefficient, and they are not evidence for it.
+
+Selection rule for the coefficient, fixed before any interpolated arm met dev:
+
+1. A coefficient is eligible when its clean group and its clean-symbol group on the stopping
+   cases both hold at least as many right cases as the control there.
+2. The chosen coefficient of a base is the eligible grid value with the most right stopping
+   cases. A tie goes to the smaller coefficient.
+3. If the grid does not hold an eligible value, the base does not get a chosen coefficient.
+4. Dev does not take part in the choice. The report gives every grid value on dev.
+
+Dev criteria for the chosen coefficient, fixed before any interpolated arm met dev:
+
+- Clean rule: at least 957 of 973 clean dev cases right and at least 427 of 429 clean-symbol dev
+  cases right. These are the control's counts, and this is the pick rule of the fine-tune design.
+- Gain kept: (dev right at a, less dev right at a = 0) divided by (dev right at a = 1, less dev
+  right at a = 0). "Most of the gain" means a share above 0.5. With the endpoints at 6,084 and
+  6,537, SmolLM2 needs 6,311 right dev cases. With 6,087 and 6,491, distilgpt2 seed 1 needs 6,290.
+- Published misspellings: right cases of 751, against the control (381) and against a = 1, with
+  the exact McNemar test for both.
+
+The chosen coefficient passes when it meets the clean rule and keeps more than half the gain. A
+pass is a pass of the observed counts. The clean groups differ by 1 to 12 cases between arms, and
+two seeds of one LoRA fine-tune differ by 5 clean dev cases. So the report adds four numbers.
+
+- Per clean group, the clean cases the control gets right and the arm gets wrong, and the reverse,
+  with the exact McNemar test on those cases. Equal counts can hide a broken case beside a
+  repaired one.
+- The grouped bootstrap interval of dev right at a, less the mean of dev right at a = 0 and a = 1.
+  A lower bound above 0 supports "more than half the gain".
+- The count of grid values that pass on dev. That count reads dev nine times per base. It
+  describes the curve, and it does not confirm a choice.
+- The same criteria on the shared held-out cases of the second fine-tuning round, with the
+  control's counts on those cases as the thresholds. That read confirms or rejects the pass.
+
+The report gives, per coefficient: the clean group, the clean-symbol group, each of the 24
+generated categories, the published misspellings per source, and the total.
+
+## Controls for the re-ranker setting
+
+The re-ranker adds weight times the model score to the engine score, then applies its margins.
+An interpolated model can differ from the fine-tune mostly in the scale of its scores, and the
+tuning grid already searches that scale. The interpolation also gets a second search, on the
+stopping cases, that the fine-tune did not get. Two controls separate these explanations.
+
+- Common setting: every coefficient of a base is also scored on dev at one shared setting, the
+  tuned setting of its a = 1 fine-tune. For SmolLM2 that is weight 1.5 and margins 2, 4, 2. For
+  distilgpt2 seed 1 it is weight 1.5 and margins 1, 4, 2. For seed 2 it is weight 1.0 and margins
+  1, 0, 0. All three have the space-after term on. This row shows the change from the weights
+  alone.
+- Calibration-only candidates: the fine-tune at a = 1 with nine candidate settings, one per
+  re-ranker weight of the grid (0.1 to 3.0). Each candidate is the best tuning-split setting of
+  that weight under the clean rule. The selection rule above then picks among the nine on the
+  stopping cases, with a tie going to the lower weight. So the fine-tune gets the same extra
+  search as the interpolation. Interpolation adds something only if its chosen coefficient does
+  better on the dev criteria than this chosen candidate.
+
+## Controls added after the first dev table
+
+- Random-edit control with several seeds: `s-random` and `d-random` at lam 1 with seeds 1 to 5.
+  Each seed draws a new Gaussian direction with the norm of the task vector in each tensor. Each
+  seed gets its own conversion, tuning-split setting and dev score. The report gives the five dev
+  counts per base, and their range. These seeds measure the spread of a random direction. They do
+  not measure the spread between fine-tuning seeds.
+- Bootstrap over repeated contexts: dev holds 574 cases that repeat a context and an intended
+  text of another case. `paired.py` adds a 95 percent interval of the difference in right cases.
+  It resamples the 6,225 groups of one context and one intended text, 10,000 times, as
+  `summarize.py` of the fine-tune does.
+
+## Shared held-out cases of the second fine-tuning round
+
+The second fine-tuning round (branch `engine/lm-finetune2`) builds new held-out cases. When they
+exist, its scripts score these arms on them: the control, the chosen coefficient of each base, the
+chosen calibration-only candidate, both fine-tunes, both stock models, and the dev rows of the
+first table. Every coefficient and setting is fixed before that read. This design does not build
+held-out cases of its own, and it does not read the test half.
 
 ## Quantization and the phone path
 
