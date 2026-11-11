@@ -10,6 +10,7 @@ final class PreferredCapitalsTests: XCTestCase {
     private let capitals = PreferredCapitals(table: """
         word\tzipf\tpreferred\teveryday
         gpu\t4.9\tGPU\t0
+        gpu's\t3.5\tGPU's\t0
         pytorch\t4.3\tPyTorch\t0
         vllm\t4.6\tvLLM\t0
         rag\t4.6\tRAG\t1
@@ -76,6 +77,20 @@ final class PreferredCapitalsTests: XCTestCase {
         XCTAssertEqual(form("Monday"), "Monday")
         XCTAssertEqual(form("It", automatic: true), "It")
         XCTAssertEqual(form("us"), "us")
+    }
+
+    func testAnApostropheIsNotALetterOfTheRule() {
+        XCTAssertEqual(form("Gpu's"), "GPU's")
+        XCTAssertEqual(form("gpu's"), "gpu's")
+        XCTAssertEqual(form("GPU'S"), "GPU'S")
+        XCTAssertEqual(form("Gpus", automatic: true, corrected: "Gpu's"), "GPU's")
+    }
+
+    func testAFirstLetterTypedAsASymbolKeyCountsAsTheKeyboardsOwnCapital() {
+        // The keyboard read "[" as "p" and typed the capital of the sentence start by itself.
+        XCTAssertEqual(form("[ytorch", corrected: "Pytorch"), "PyTorch")
+        // Inside a sentence the keyboard types no capital, so the word stays in lower case.
+        XCTAssertEqual(form("[ytorch", corrected: "pytorch"), "pytorch")
     }
 
     func testEachWordOfASpanGetsItsForm() {
@@ -230,6 +245,15 @@ final class WorkAreaKeyboardTests: XCTestCase {
         makeController(before: "")
         type("Pytorch is fast. Gpus are not cheap ")
         XCTAssertEqual(document.text, "PyTorch is fast. GPUs are not cheap ")
+    }
+
+    func testASymbolKeyInPlaceOfTheFirstLetterGivesThePreferredFormAtTheStartOfTheField() {
+        makeController(before: "")
+        type("[ytorch ")
+        XCTAssertEqual(document.text, "PyTorch ")
+        makeController(before: "we use ")
+        type("[ytorch ")
+        XCTAssertEqual(document.text, "we use pytorch ")
     }
 
     func testACapitalInsideAWordGivesThePreferredForm() {

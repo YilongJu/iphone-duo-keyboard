@@ -11,7 +11,8 @@ Cases:
 - cases/english-domain.HALF.jsonl: the new groups, one count per category and group. A case with
   `scoring` "case" is right only with the intended capitals.
 - cases/english-domain-stream.HALF.jsonl: whole sentences typed word by word. The count is the
-  changed words: the word edit distance between the field and the sentence.
+  changed words: the word edit distance between the field and the sentence. The stream
+  "written" is typed with its capitals and punctuation, and a change of capitals counts.
 - On the dev half only: the existing dev cases of english.dev.jsonl and english-symbols.dev.jsonl,
   and the apostrophe words typed alone and with the next word. No category may lose a case when
   the pack comes on.
@@ -60,8 +61,10 @@ def tally_stream(rows: list[dict], outputs: dict[str, str], pack_words: set[str]
     for row in rows:
         entry = result.setdefault(row["stream"], {"sentences": 0, "words": 0, "changed_words": 0, "changed_sentences": 0,
                                                   "changed_sentences_with_a_pack_word": 0, "changes": []})
-        typed = row["typed"].lower().split(" ")
-        shown = outputs[row["id"]].lower().split(" ")
+        # The stream as written counts a change of capitals too.
+        exact = row["stream"] == "written"
+        typed = (row["typed"] if exact else row["typed"].lower()).split(" ")
+        shown = (outputs[row["id"]] if exact else outputs[row["id"]].lower()).split(" ")
         distance = word_distance(typed, shown)
         entry["sentences"] += 1
         entry["words"] += len(typed)
@@ -69,7 +72,8 @@ def tally_stream(rows: list[dict], outputs: dict[str, str], pack_words: set[str]
         if distance:
             entry["changed_sentences"] += 1
             missing = [word for word in typed if word not in shown]
-            entry["changed_sentences_with_a_pack_word"] += int(any(word in pack_words for word in missing))
+            entry["changed_sentences_with_a_pack_word"] += int(any(
+                word.lower().strip(".,!?;:\"()[]") in pack_words for word in missing))
             entry["changes"].append({"id": row["id"], "typed_words_changed": missing,
                                      "shown_words_new": [word for word in shown if word not in typed]})
     for entry in result.values():
@@ -112,7 +116,7 @@ def main():
     if any(case["split"] != half for case in domain + stream):
         raise SystemExit(f"a case outside the {half} half")
     if arguments.stream_limit is not None:
-        stream = [row for kind in ("technical", "everyday")
+        stream = [row for kind in ("technical", "written", "everyday")
                   for row in [r for r in stream if r["stream"] == kind][:arguments.stream_limit]]
     existing, apostrophe = [], []
     with_existing = half == "dev" and not arguments.only_new

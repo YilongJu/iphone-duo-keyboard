@@ -1,0 +1,43 @@
+name: Domain pack attribution
+
+# Writes the attribution of every source sentence in the cases of the vocabulary pack:
+# scripts/domain-pack/attribute_cases.py. The table comes back as an artifact, and it is
+# committed beside the case files. The job also says whether the committed table is current.
+on:
+  push:
+    branches: [engine/domain-pack]
+    paths:
+      - 'scripts/domain-pack/attribute_cases.py'
+      - 'scripts/typing-evaluation/cases/english-domain*.jsonl'
+      - '.github/workflows/domain-pack-attribution.yml'
+
+concurrency:
+  group: domain-pack-attribution-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  attribution:
+    name: Address, author, date and licence of each source
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install 7z
+        run: command -v 7z || (sudo apt-get update && sudo apt-get install -y p7zip-full)
+      - name: Write the attribution table
+        run: |
+          set -euo pipefail
+          table=scripts/typing-evaluation/cases/english-domain-ATTRIBUTION.tsv
+          mkdir -p build/domain-pack
+          if [ -f "$table" ]; then cp "$table" build/domain-pack/committed.tsv; fi
+          python3 scripts/domain-pack/attribute_cases.py --work build/domain-pack/attribution
+          if [ -f build/domain-pack/committed.tsv ] && cmp -s build/domain-pack/committed.tsv "$table"; then
+            echo "the committed table is current" | tee -a "$GITHUB_STEP_SUMMARY"
+          else
+            echo "the committed table is missing or differs from the table of this run" | tee -a "$GITHUB_STEP_SUMMARY"
+          fi
+      - uses: actions/upload-artifact@v7
+        with:
+          name: domain-pack-attribution
+          path: scripts/typing-evaluation/cases/english-domain-ATTRIBUTION.tsv
+          if-no-files-found: error

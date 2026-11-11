@@ -7,7 +7,8 @@ import json
 import sys
 from pathlib import Path
 
-GROUPS = ["domain_clean", "domain_slips", "domain_phrases", "required", "neighbour_controls", "capitals"]
+GROUPS = ["domain_clean", "domain_slips", "domain_phrases", "required", "neighbour_controls", "term_for_everyday_word",
+          "capitals"]
 EXISTING_GROUPS = ["clean", "letter_slips", "space_slips", "symbol_slips", "clean_symbols"]
 EXISTING_ALONE = ["apostrophe_missing", "real_word_slip"]
 
@@ -39,16 +40,19 @@ def main():
     for category in next(iter(runs.values()))["domain"]["categories"]:
         print(f"| `{category}` | " + " | ".join(cell(runs[name]["domain"]["categories"][category]) for name in names) + " |")
     print()
-    print(f"Table 3. Changed words of clean running text on the {half} half, per 1,000 typed words.")
+    print(f"Table 3. Changed words of clean running text on the {half} half: per 1,000 typed words, the count, "
+          "and the changed sentences with those that hold a changed word of the pack.")
     print()
-    print("| Configuration | technical text | changed words | changed sentences, with a word of the pack "
-          "| everyday text | changed words |")
-    print("| --- | --- | --- | --- | --- | --- |")
+    kinds = list(next(iter(runs.values()))["stream"])
+    print("| Configuration | " + " | ".join(f"{kind}, per 1,000 | {kind}, words | {kind}, sentences" for kind in kinds) + " |")
+    print("| --- |" + " --- |" * (3 * len(kinds)))
     for name, entry in runs.items():
-        technical, everyday = entry["stream"]["technical"], entry["stream"]["everyday"]
-        print(f"| {name} | {technical['changed_words_per_1000']} | {technical['changed_words']} of {technical['words']} "
-              f"| {technical['changed_sentences']}, {technical['changed_sentences_with_a_pack_word']} "
-              f"| {everyday['changed_words_per_1000']} | {everyday['changed_words']} of {everyday['words']} |")
+        cells = []
+        for kind in kinds:
+            stream = entry["stream"][kind]
+            cells += [str(stream["changed_words_per_1000"]), f"{stream['changed_words']} of {stream['words']}",
+                      f"{stream['changed_sentences']} of {stream['sentences']}, {stream['changed_sentences_with_a_pack_word']}"]
+        print(f"| {name} | " + " | ".join(cells) + " |")
     print()
     if "existing" in next(iter(runs.values())):
         print("Table 4. Right existing dev cases. The last two categories belong to no group.")

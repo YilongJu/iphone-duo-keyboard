@@ -100,7 +100,8 @@ def check_capitals() -> None:
     with tempfile.TemporaryDirectory() as folder:
         table = Path(folder) / "table.tsv"
         table.write_text("word\tzipf\tpreferred\teveryday\n"
-                         "gpu\t4.9\tGPU\t0\npytorch\t4.3\tPyTorch\t0\nvllm\t4.6\tvLLM\t0\nrag\t4.6\tRAG\t1\ntokenizer\t4.1\t\t0\n",
+                         "gpu\t4.9\tGPU\t0\ngpu's\t3.5\tGPU's\t0\npytorch\t4.3\tPyTorch\t0\nvllm\t4.6\tvLLM\t0\n"
+                         "rag\t4.6\tRAG\t1\ntokenizer\t4.1\t\t0\n",
                          encoding="utf-8")
         capitals = rerank.PreferredCapitals(table)
     cases = [
@@ -119,6 +120,10 @@ def check_capitals() -> None:
         ("RAG", "RAG", False, "RAG"), ("rAg", "rAg", False, "RAG"), ("RAg", "RAg", False, "RAG"),
         ("Tokenizer", "Tokenizer", False, "Tokenizer"), ("tokenizer", "tokenizer", False, "tokenizer"),  # no preferred form
         ("Monday", "Monday", False, "Monday"), ("It", "It", True, "It"), ("us", "us", False, "us"),      # outside the table
+        ("Gpu's", "Gpu's", False, "GPU's"), ("gpu's", "gpu's", False, "gpu's"), ("Gpu's", "Gpus", True, "GPU's"),  # a possessive
+        ("GPU'S", "GPU'S", False, "GPU'S"),
+        # A symbol key in place of the first letter: the keyboard typed the capital by itself, or typed none.
+        ("Pytorch", "[ytorch", False, "PyTorch"), ("pytorch", "[ytorch", False, "pytorch"),
     ]
     for word, typed, automatic, expected in cases:
         got = capitals.form(word, typed, automatic)
@@ -128,6 +133,11 @@ def check_capitals() -> None:
     check(capitals.latch("the gpu", "the gpu", "I use ") == "the gpu", "lower case inside a sentence stays")
     check(capitals.latch("pytorch", "Py torch", "I use ") == "PyTorch", "a joined word takes the capital of the first typed word")
     check(rerank.restoring_capitals("pytorch is", "Pytorhc is") == "Pytorch is", "restoring_capitals keeps the typed capital")
+    check(rerank.capitalizing_repaired_first_letters("pytorch", "[ytorch", "") == "Pytorch"
+          and rerank.capitalizing_repaired_first_letters("pytorch", "[ytorch", "we use ") == "pytorch",
+          "a first letter typed as a symbol key gets its capital at the start of the field only")
+    check(capitals.latch(rerank.capitalizing_repaired_first_letters("pytorch", "[ytorch", ""), "[ytorch", "") == "PyTorch",
+          "a symbol key in place of the first letter at the start of the field gives the preferred form")
     check(rerank.should_auto_capitalize("") and rerank.should_auto_capitalize("Done. ") and not rerank.should_auto_capitalize("I use "),
           "the keyboard types a capital by itself at the start of the field and after a period")
     check(rerank.word_with_inner_capital("I use pyTorch") == "pyTorch" and rerank.word_with_inner_capital("I use Pytorch") is None

@@ -143,6 +143,21 @@ or more. Run it with
 A comma, a period or a semicolon typed inside or after a word ends that word, and the keyboard
 corrects the letters before it at once. The cases do not hold that slip.
 
+## Cases of the vocabulary pack "AI and software"
+
+`build_english_domain_cases.py` writes `cases/english-domain.{dev,test}.jsonl`, 5,988 dev and
+5,953 test cases, and `cases/english-domain-stream.{dev,test}.jsonl`. The other case files do
+not change. `docs/domain-pack-design.md` describes the pack, the groups and the results.
+
+- The technical sentences come from documents that the pack builder did not read: 10 of 100
+  documents of each source feed the dev half and 10 of 100 the test half.
+- A case names its `group`, and a case with `scoring` "case" is right only with the intended
+  capitals. `rerank.case_is_right` and `rerank.tally_by_group` of `scripts/lm-rerank` score them.
+- The stream files hold per half 1,000 technical and 1,000 everyday sentences in lower case, and
+  300 technical sentences as their source wrote them.
+  Their measure is the count of words that the keyboard changes.
+- `scripts/lm-rerank/domain_pack.py` types both files with the pack off and on.
+
 ## Paired Pinyin cases
 
 Each Pinyin base clause gives one clean case and one case per slip type, and a slip case names
@@ -186,6 +201,7 @@ the engine's `output`. A case without an output counts as wrong.
 | `symbol_keys.py` | The symbol and digit keys beside each letter, from the layout file, and the check that the engine and the keyboard hold the same table |
 | `build_english_cases.py`, `build_pinyin_cases.py` | The case generators |
 | `build_english_symbol_cases.py` | The generator of the cases with a symbol or digit key in place of a letter |
+| `build_english_domain_cases.py` | The generator of the cases of the vocabulary pack "AI and software" |
 | `build_external_english_cases.py` | Cases from published misspelling lists, written to `build/` and kept out of git |
 | `inputs/names_and_terms.txt` | The hand-written list behind `clean_names_and_terms` |
 | `inputs/symbol_tokens.txt` | The list behind `clean_symbol_token` |
@@ -197,6 +213,8 @@ the engine's `output`. A case without an output counts as wrong.
 ## Data sources
 
 - Sentences: Tatoeba exports, CC BY 2.0 FR, https://tatoeba.org.
+- Technical sentences of the pack's cases: arXiv abstracts, five Stack Exchange sites and the
+  documentation of open-source projects. `cases/english-domain-NOTICE.txt` gives the licences.
 - English word frequencies for the generator: the wordfreq package.
 - Pinyin readings and the standard syllable set: the pypinyin package.
 - Simplified Chinese filter: OpenCC.
