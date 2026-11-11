@@ -18,10 +18,10 @@ So the test sentences come from documents that the pack never saw. A held-out se
 letters equal those of a sentence in a build document is left out as well.
 
 Outputs in --out:
-    counts.tsv      one row per word form and source group of the build bucket:
-                    form, group, count inside a sentence, count as the first word of a sentence,
+    counts.tsv      one row per word form and source of the build bucket:
+                    form, source, count inside a sentence, count as the first word of a sentence,
                     count of documents
-    pairs.tsv       one row per pair of neighbouring lower-case words of the build bucket and group
+    pairs.tsv       one row per pair of neighbouring lower-case words of the build bucket
     totals.json     words, documents and sentences per source, group and bucket, with the licences
     sentences.dev.jsonl, sentences.test.jsonl
                     held-out sentences with their source and document
@@ -108,6 +108,8 @@ def clean_markdown(text: str) -> str:
     text = re.sub(r"(?s)```.*?```|~~~.*?~~~", f"\n{GAP}.\n", text)
     text = re.sub(r"(?s)<!--.*?-->", " ", text)
     text = re.sub(r"(?s)\{\{.*?\}\}|\{%.*?%\}", f" {GAP} ", text)
+    # A documentation directive in double brackets, as "[[autodoc]] ClassName", is markup.
+    text = re.sub(r"(?m)^.*\[\[[^\]]*\]\].*$", "", text)
     lines = []
     for line in text.split("\n"):
         stripped = line.strip()
@@ -188,9 +190,9 @@ class Counts:
                     self.keep_held_out(bucket, source, document_id, sentence)
                 continue
             self.build_sentences.add(self.letters_hash(sentence))
-            inside = self.inside.setdefault(group, Counter())
-            first = self.first.setdefault(group, Counter())
-            pairs = self.pairs.setdefault(group, Counter())
+            inside = self.inside.setdefault(source, Counter())
+            first = self.first.setdefault(source, Counter())
+            pairs = self.pairs.setdefault("all", Counter())
             previous = None
             for index, form in enumerate(forms):
                 if form is not None:
@@ -199,7 +201,7 @@ class Counts:
                     if previous is not None:
                         pairs[previous.lower() + " " + form.lower()] += 1
                 previous = form
-        documents = self.documents.setdefault(group, Counter())
+        documents = self.documents.setdefault(source, Counter())
         for form in seen_in_document:
             documents[form] += 1
 
@@ -218,23 +220,24 @@ class Counts:
 
     def write(self, out: Path, licences: dict) -> None:
         with (out / "counts.tsv").open("w", encoding="utf-8", newline="\n") as file:
-            file.write("form\tgroup\tinside\tfirst\tdocuments\n")
-            for group in sorted(self.inside):
-                forms = set(self.inside[group]) | set(self.first[group])
-                lower_total = Counter()
-                for form in forms:
-                    lower_total[form.lower()] += self.inside[group][form] + self.first[group][form]
-                for form in sorted(forms):
+            file.write("form\tsource\tinside\tfirst\tdocuments\n")
+            # A word stays out when all sources together hold it fewer than MINIMUM_ROW_COUNT times.
+            lower_total = Counter()
+            for source in self.inside:
+                for counter in (self.inside[source], self.first[source]):
+                    for form, count in counter.items():
+                        lower_total[form.lower()] += count
+            for source in sorted(self.inside):
+                for form in sorted(set(self.inside[source]) | set(self.first[source])):
                     if lower_total[form.lower()] < MINIMUM_ROW_COUNT:
                         continue
-                    file.write(f"{form}\t{group}\t{self.inside[group][form]}\t{self.first[group][form]}\t"
-                               f"{self.documents[group][form.lower()]}\n")
+                    file.write(f"{form}\t{source}\t{self.inside[source][form]}\t{self.first[source][form]}\t"
+                               f"{self.documents[source][form.lower()]}\n")
         with (out / "pairs.tsv").open("w", encoding="utf-8", newline="\n") as file:
-            file.write("pair\tgroup\tcount\n")
-            for group in sorted(self.pairs):
-                for pair, count in sorted(self.pairs[group].items()):
-                    if count >= 5:
-                        file.write(f"{pair}\t{group}\t{count}\n")
+            file.write("pair\tcount\n")
+            for pair, count in sorted(self.pairs.get("all", Counter()).items()):
+                if count >= 10:
+                    file.write(f"{pair}\t{count}\n")
         left_out = 0
         for bucket in ("dev", "test"):
             with (out / f"sentences.{bucket}.jsonl").open("w", encoding="utf-8", newline="\n") as file:
