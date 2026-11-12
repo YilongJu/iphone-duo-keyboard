@@ -8,7 +8,7 @@
   "--stop-sample",
   "2000",
   "--micro-tokens",
-  "2500",
+  "1500",
   "--stop-lists",
   "round1=build/lm-domain/data/everyday/lists.stop.jsonl.gz",
   "round2=build/lm-domain/data/everyday/lists2.stop.jsonl.gz",
@@ -17,7 +17,7 @@
  "arms": [
   {
    "name": "ce-c1-seed1",
-   "memory_gb": 3.7,
+   "memory_gb": 3.2,
    "needs": [
     "build/lm-domain/data/domain/lists.stop.jsonl.gz"
    ],
@@ -35,7 +35,7 @@
   },
   {
    "name": "dom-s0-seed1",
-   "memory_gb": 3.7,
+   "memory_gb": 3.2,
    "needs": [
     "build/lm-domain/data/domain/lists.stop.jsonl.gz",
     "build/lm-domain/data/domain/lists.train.jsonl.gz",
@@ -54,7 +54,7 @@
   },
   {
    "name": "dom-s40-seed1",
-   "memory_gb": 3.7,
+   "memory_gb": 3.2,
    "needs": [
     "build/lm-domain/data/domain/lists.stop.jsonl.gz",
     "build/lm-domain/data/domain/lists.train.jsonl.gz",
@@ -77,7 +77,7 @@
   },
   {
    "name": "dom-s100-seed1",
-   "memory_gb": 3.7,
+   "memory_gb": 3.2,
    "needs": [
     "build/lm-domain/data/domain/lists.stop.jsonl.gz",
     "build/lm-domain/data/domain/lists.train.jsonl.gz",
@@ -100,7 +100,7 @@
   },
   {
    "name": "dom-s15-seed1",
-   "memory_gb": 3.7,
+   "memory_gb": 3.2,
    "needs": [
     "build/lm-domain/data/domain/lists.stop.jsonl.gz",
     "build/lm-domain/data/domain/lists.train.jsonl.gz",
@@ -123,7 +123,7 @@
   },
   {
    "name": "ce-c4-seed1",
-   "memory_gb": 3.7,
+   "memory_gb": 3.2,
    "needs": [
     "build/lm-domain/data/domain/lists.stop.jsonl.gz",
     "build/lm-domain/data/domain/lists.train.jsonl.gz",
@@ -142,7 +142,7 @@
   },
   {
    "name": "ec-c4-seed1",
-   "memory_gb": 3.7,
+   "memory_gb": 3.2,
    "needs": [
     "build/lm-domain/data/domain/lists.stop.jsonl.gz",
     "build/lm-domain/data/domain/lists.train.jsonl.gz",
@@ -163,7 +163,7 @@
   },
   {
    "name": "dom-s0-seed2",
-   "memory_gb": 3.7,
+   "memory_gb": 3.2,
    "needs": [
     "build/lm-domain/data/domain/lists.stop.jsonl.gz",
     "build/lm-domain/data/domain/lists.train.jsonl.gz",
@@ -182,7 +182,7 @@
   },
   {
    "name": "ce-c4-seed2",
-   "memory_gb": 3.7,
+   "memory_gb": 3.2,
    "needs": [
     "build/lm-domain/data/domain/lists.stop.jsonl.gz",
     "build/lm-domain/data/domain/lists.train.jsonl.gz",
@@ -201,7 +201,7 @@
   },
   {
    "name": "ec-c4-seed2",
-   "memory_gb": 3.7,
+   "memory_gb": 3.2,
    "needs": [
     "build/lm-domain/data/domain/lists.stop.jsonl.gz",
     "build/lm-domain/data/domain/lists.train.jsonl.gz",

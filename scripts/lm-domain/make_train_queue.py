@@ -18,7 +18,7 @@ EVERYDAY = "build/lm-domain/data/everyday/"
 PACK_ON = "build/lm-domain/data/everyday-pack-on/"
 DOMAIN = "build/lm-domain/data/domain/"
 STEPS = 11000
-MEMORY_GB = 3.7
+MEMORY_GB = 3.2
 SHARES = {"0.15": "s15", "0.4": "s40", "1.0": "s100"}
 
 
@@ -39,7 +39,7 @@ def main():
     arguments = parser.parse_args()
     stops = ["--stop-lists", "round1=" + EVERYDAY + "lists.stop.jsonl.gz", "round2=" + EVERYDAY + "lists2.stop.jsonl.gz",
              "domain=" + DOMAIN + "lists.stop.jsonl.gz"]
-    common = ["--steps", str(STEPS), "--evaluate-every", "1000", "--stop-sample", "2000", "--micro-tokens", "2500", *stops]
+    common = ["--steps", str(STEPS), "--evaluate-every", "1000", "--stop-sample", "2000", "--micro-tokens", "1500", *stops]
     mix = ["--train-lists", EVERYDAY + "lists.train.jsonl.gz", EVERYDAY + "lists2.train.jsonl.gz"]
     needs_stop = [DOMAIN + "lists.stop.jsonl.gz"]
     needs_domain = [DOMAIN + "lists.stop.jsonl.gz", DOMAIN + "lists.train.jsonl.gz", PACK_ON + "lists.train.jsonl.gz"]
