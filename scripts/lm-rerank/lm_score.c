@@ -40,6 +40,11 @@
 #define MAX_CONTEXT_TOKENS 96
 #define CONTEXT_SIZE 4096
 #define BATCH_SIZE 2048
+/* Tokens of one step of llama.cpp. A build may set another value, as scripts/lm-keyboard/scorer-probe
+   does to compare step sizes. */
+#ifndef UBATCH_SIZE
+#define UBATCH_SIZE 512
+#endif
 
 static double now_ms(void) {
     struct timespec moment;
@@ -187,7 +192,7 @@ int main(int argc, char **argv) {
         struct llama_context_params context_settings = llama_context_default_params();
         context_settings.n_ctx = CONTEXT_SIZE;
         context_settings.n_batch = BATCH_SIZE;
-        context_settings.n_ubatch = 512;
+        context_settings.n_ubatch = UBATCH_SIZE;
         context_settings.n_seq_max = MAX_CANDIDATES + 1;
         context_settings.n_threads = threads;
         context_settings.n_threads_batch = threads;

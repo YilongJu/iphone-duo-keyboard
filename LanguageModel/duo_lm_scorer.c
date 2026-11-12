@@ -44,8 +44,11 @@
 /* Room for the start token, the context and 8 candidates of 32 tokens is 353 tokens. llama.cpp
    rounds the size of its state up to a multiple of 256 for flash attention. */
 #define CONTEXT_SIZE 512
-/* The most tokens of one call of the model. See point 1 at the top of this file. */
+/* The most tokens of one call of the model. See point 1 at the top of this file. A build may set
+   another value, as scripts/lm-keyboard/scorer-probe does to compare call sizes. */
+#ifndef CALL_TOKENS
 #define CALL_TOKENS 31
+#endif
 /* Size of the piece buffer of the vocabulary scan, as in lm_score.c. A token whose text is
    longer does not count as a token that starts with a space, in both programs. */
 #define SCAN_PIECE_SIZE 64
