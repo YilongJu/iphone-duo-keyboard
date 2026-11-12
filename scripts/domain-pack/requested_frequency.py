@@ -16,8 +16,8 @@ the model:
 1. A frequency must keep each of those existing cases right.
 2. A word whose clean dev cases are all right at REQUESTED_ZIPF keeps REQUESTED_ZIPF.
 3. Any other word takes the lowest frequency of the grid from REQUESTED_ZIPF up at which its clean
-   dev cases are all right. When rule 1 forbids that frequency, the word takes the highest
-   frequency that rule 1 allows.
+   dev cases are all right. When the grid lacks such a frequency, or rule 1 forbids it, the word
+   takes the highest frequency that rule 1 allows.
 
 Usage, from the repository root, on Linux:
     python3 scripts/domain-pack/requested_frequency.py --shim build/lm-rerank/libduo_shim.so \\
