@@ -14,6 +14,7 @@ on:
       - 'Shared/KeyboardTextController.swift'
       - 'Shared/KeyboardTextLogic.swift'
       - 'Engine/duo_engine.c'
+      - 'Shared/TypingEngine.swift'
       - 'Tests/SlideKey*.swift'
       - 'Tests/KeyboardTextControllerTests.swift'
       - 'Tests/TypingEngineTests.swift'
