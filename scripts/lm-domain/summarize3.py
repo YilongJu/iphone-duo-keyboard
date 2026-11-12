@@ -211,6 +211,9 @@ def main():
     parser.add_argument("--data", type=Path, required=True)
     parser.add_argument("--parity", type=Path, required=True)
     parser.add_argument("--out", type=Path, required=True)
+    parser.add_argument("--lead", choices=["own", "ship"], default="own",
+                        help="own: each file at the lead of the apostrophe step that tune_apostrophe.py picked for it; "
+                             "ship: every file at lead 4, the lead of the shipped file")
     parser.add_argument("--parity-name", default="parity.json",
                         help="parity.json for the f16 file of check_parity.py, or parity-f32.json of parity_report.py")
     arguments = parser.parse_args()
@@ -223,9 +226,10 @@ def main():
     names = [arm for arm in ORDER if arm in found] + [arm for arm in found if arm not in ORDER]
     if "ship" not in names:
         raise SystemExit("the results hold no arm `ship`")
-    summary: dict = {"parity_file": arguments.parity_name, "arms": {}, "marked_cases": {name: len(ids) for name, ids in marked.items()}}
+    summary: dict = {"parity_file": arguments.parity_name, "lead": arguments.lead, "arms": {}, "marked_cases": {name: len(ids) for name, ids in marked.items()}}
     engine = perfect = None
     engine_test = perfect_test = None
+    ship_dev_outputs = None
     for arm in names:
         folder = arguments.results / arm
         result = json.loads((folder / "result.json").read_text(encoding="utf-8"))
@@ -235,6 +239,11 @@ def main():
             engine = select_metrics(select_sets, result["engine"]["evaluation"], read_outputs(folder / "outputs.select.engine.jsonl"), requested, marked)
             perfect = select_metrics(select_sets, result["perfect"]["evaluation"], read_outputs(folder / "outputs.select.perfect.jsonl"), requested, marked)
         entry = {"model_sha256": result["model_sha256"], "parity": parity_of(arguments.parity, arm, arguments.parity_name), "rules": {}, "test": None}
+        own = {}
+        if arguments.lead == "own" and (folder / "apostrophe.json").exists():
+            own = json.loads((folder / "apostrophe.json").read_text(encoding="utf-8"))["rules"]
+        if ship_dev_outputs is None and arm == "ship":
+            ship_dev_outputs = read_outputs(folder / "outputs.select.shipped.jsonl")["dev"]
         for rule in RULES:
             evaluation = result["evaluation"][rule]
             tuning = result["tuning"]["rules"][rule]
@@ -242,10 +251,26 @@ def main():
                 entry["rules"][rule] = None
                 continue
             source = evaluation.get("same_setting_as", rule)
-            metrics = select_metrics(select_sets, result["evaluation"][source]["sets"], read_outputs(folder / f"outputs.select.{source}.jsonl"),
-                                     requested, marked)
-            entry["rules"][rule] = {"setting": tuning["setting"], "same_setting_as": source if source != rule else None,
-                                    "tune_right": tuning["tune_right"], "tune_changed_words": tuning["tune_changed_words"], **metrics}
+            tuned = own.get(source)
+            lead = 4.0
+            if tuned and "sets" in tuned and not (arm == "ship" and rule == "shipped"):
+                lead = tuned["lead"]
+                outputs = read_outputs(folder / f"outputs.select.{source}.own-lead.jsonl")
+                metrics = select_metrics(select_sets, tuned["sets"], outputs, requested, marked)
+            else:
+                outputs = read_outputs(folder / f"outputs.select.{source}.jsonl")
+                metrics = select_metrics(select_sets, result["evaluation"][source]["sets"], outputs, requested, marked)
+            # The dev cases that only the shipped file at the shipped setting has right, and that only this entry has right.
+            paired = None
+            if ship_dev_outputs is not None:
+                dev_cases = select_sets["dev"]["cases"]
+                mine = {case["id"]: harness.is_right(case, outputs["dev"][case["id"]]) for case in dev_cases}
+                theirs = {case["id"]: harness.is_right(case, ship_dev_outputs[case["id"]]) for case in dev_cases}
+                paired = {"only_ship_right": sum(1 for key in mine if theirs[key] and not mine[key]),
+                          "only_this_right": sum(1 for key in mine if mine[key] and not theirs[key])}
+            entry["rules"][rule] = {"setting": tuning["setting"], "lead": lead, "same_setting_as": source if source != rule else None,
+                                    "tune_right": tuning["tune_right"], "tune_changed_words": tuning["tune_changed_words"],
+                                    "dev_paired_with_ship": paired, **metrics}
         free = read_outputs(folder / "outputs.select.shipped-unprotected.jsonl")
         entry["unprotected_at_the_shipped_setting"] = {
             "domain_dev": domain_counts(select_sets["domain_dev"]["cases"], free["domain_dev"], requested, set(marked["domain_dev"])),
@@ -330,7 +355,7 @@ def tables(summary: dict) -> str:
                 lines.append(f"| `{arm}` | no setting passes the rule |" + " |" * 17)
                 continue
             s = metrics["setting"]
-            setting = f"{s['weight']:g}/{s['margin_from_typed']:g}/{s['margin_to_typed']:g}/{s['margin_other']:g}/{s['space_after']}"
+            setting = f"{s['weight']:g}/{s['margin_from_typed']:g}/{s['margin_to_typed']:g}/{s['margin_other']:g}/{s['space_after']}, lead {metrics['lead']:g}"
             lines.append(row(f"`{arm}`", metrics, setting))
         lines += ["", f"Table. Share of the gap between the engine alone and the perfect chooser that each arm closes, at the rule `{rule}`.",
                   "",
@@ -377,6 +402,18 @@ def tables(summary: dict) -> str:
                     lines.append(test_row(f"`{arm}`", f"`{rule}`", entry["test"][rule]))
         lines.append("")
 
+    lines += ["Table. Dev groups against the pinned floors (953, 2,057, 1,387, 1,165, 428, total 6,542), and the dev cases that only one of the two has right, per entry.", "",
+              "| Arm | rule | clean | letter slips | space slips | symbol slips | clean symbols | dev total | only `ship` right | only this entry right |",
+              "| --- |" + " --- |" * 9]
+    for arm, entry in summary["arms"].items():
+        for rule in PICK_RULES:
+            metrics = entry["rules"][rule]
+            if metrics is None or metrics["same_setting_as"] in PICK_RULES[:PICK_RULES.index(rule)]:
+                continue
+            groups, paired = metrics["dev_groups"], metrics["dev_paired_with_ship"] or {"only_ship_right": "", "only_this_right": ""}
+            lines.append(f"| `{arm}` | `{rule}` | " + " | ".join(str(groups[name]) for name in ("clean", "letter_slips", "space_slips", "symbol_slips", "clean_symbols"))
+                         + f" | {metrics['dev_right']} | {paired['only_ship_right']} | {paired['only_this_right']} |")
+    lines.append("")
     lines += ["Table. Conditions of the pick per entry. Condition 9 holds only for a file with a parity result under the limit.", "",
               "| Arm | rule | " + " | ".join(["1 select stream", "2 dev clean", "3 real misspellings", "4 non-word slips", "5 real-word slips",
                                            "6 pinned dev counts", "7 domain dev", "8 apostrophe words", "9 parity"])
