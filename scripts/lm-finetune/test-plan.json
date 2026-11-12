@@ -1,0 +1,26 @@
+{
+  "note": "Every setting below was fixed on the tuning split or on dev before the test half was read. The pre-set pick rule chose no fine-tuned arm: at its tuning-split setting, each one keeps fewer clean dev cases than the control (lora-seed1 945, full-seed1 956 and smollm2-lora-seed1 954, against 957). So the plan reads each fine-tuned arm at both setting sources: the tuning split, and dev with the clean rule of rerank.py, which is also where the published stock setting comes from.",
+  "arms": [
+    {"name": "control", "model": null, "prompt_format": null, "no_context": false, "setting": null},
+    {"name": "stock-dev", "model": "distilgpt2.Q3_K_M.gguf", "prompt_format": "stock", "no_context": false,
+     "setting": {"weight": 1.0, "margin_from_typed": 24, "margin_to_typed": 0, "margin_other": 2, "space_after": 1}},
+    {"name": "stock-tuned", "model": "distilgpt2.Q3_K_M.gguf", "prompt_format": "stock", "no_context": false,
+     "setting": {"weight": 1.5, "margin_from_typed": 32, "margin_to_typed": 0, "margin_other": 2, "space_after": 1}},
+    {"name": "linear-features", "model": null, "features": "linear-features.json", "prompt_format": null, "no_context": false,
+     "setting": {"weight": 1.5, "margin_from_typed": 2, "margin_to_typed": 4, "margin_other": 0, "space_after": 0}},
+    {"name": "lora-seed1", "model": "lora-seed1.Q3_K_M.gguf", "prompt_format": "typed", "no_context": false,
+     "setting": {"weight": 1.5, "margin_from_typed": 1, "margin_to_typed": 4, "margin_other": 2, "space_after": 1}},
+    {"name": "lora-seed1-dev", "model": "lora-seed1.Q3_K_M.gguf", "prompt_format": "typed", "no_context": false,
+     "setting": {"weight": 1.0, "margin_from_typed": 1, "margin_to_typed": 2, "margin_other": 0, "space_after": 1}},
+    {"name": "full-seed1", "model": "full-seed1.Q3_K_M.gguf", "prompt_format": "typed", "no_context": false,
+     "setting": {"weight": 1.5, "margin_from_typed": 4, "margin_to_typed": 4, "margin_other": 2, "space_after": 1}},
+    {"name": "full-seed1-dev", "model": "full-seed1.Q3_K_M.gguf", "prompt_format": "typed", "no_context": false,
+     "setting": {"weight": 1.0, "margin_from_typed": 2, "margin_to_typed": 2, "margin_other": 0, "space_after": 1}},
+    {"name": "smollm2-stock", "model": "SmolLM2-135M.Q4_K_M.gguf", "prompt_format": "stock", "no_context": false,
+     "setting": {"weight": 0.75, "margin_from_typed": 16, "margin_to_typed": 0, "margin_other": 2, "space_after": 1}},
+    {"name": "smollm2-lora-seed1", "model": "smollm2-lora-seed1.Q4_K_M.gguf", "prompt_format": "typed", "no_context": false,
+     "setting": {"weight": 1.0, "margin_from_typed": 0, "margin_to_typed": 4, "margin_other": 2, "space_after": 1}},
+    {"name": "smollm2-lora-seed1-dev", "model": "smollm2-lora-seed1.Q4_K_M.gguf", "prompt_format": "typed", "no_context": false,
+     "setting": {"weight": 1.0, "margin_from_typed": 0, "margin_to_typed": 0, "margin_other": 0, "space_after": 1}}
+  ]
+}

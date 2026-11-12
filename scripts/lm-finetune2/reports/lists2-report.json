@@ -1,0 +1,66 @@
+{
+  "train": {
+    "cases": 11599,
+    "lists": 57662,
+    "lists_with_the_typed_reading_as_target": 54559,
+    "seconds": 512.7,
+    "categories": {
+      "clean_stream_closed": {
+        "cases": 7000,
+        "lists": 44157,
+        "events": 44755,
+        "one_reading": 0,
+        "without_target": 598,
+        "right_after_oracle": 6829
+      },
+      "clean_stream_open": {
+        "cases": 1500,
+        "lists": 10602,
+        "events": 10706,
+        "one_reading": 0,
+        "without_target": 104,
+        "right_after_oracle": 1475
+      },
+      "real_misspelling_wikipedia": {
+        "cases": 3099,
+        "lists": 2903,
+        "events": 3099,
+        "one_reading": 0,
+        "without_target": 196,
+        "right_after_oracle": 2903
+      }
+    }
+  },
+  "stop": {
+    "cases": 712,
+    "lists": 3520,
+    "lists_with_the_typed_reading_as_target": 3309,
+    "seconds": 39.5,
+    "categories": {
+      "clean_stream_closed": {
+        "cases": 400,
+        "lists": 2587,
+        "events": 2658,
+        "one_reading": 0,
+        "without_target": 71,
+        "right_after_oracle": 383
+      },
+      "clean_stream_open": {
+        "cases": 100,
+        "lists": 740,
+        "events": 743,
+        "one_reading": 0,
+        "without_target": 3,
+        "right_after_oracle": 99
+      },
+      "real_misspelling_wikipedia": {
+        "cases": 212,
+        "lists": 193,
+        "events": 212,
+        "one_reading": 0,
+        "without_target": 19,
+        "right_after_oracle": 193
+      }
+    }
+  }
+}
