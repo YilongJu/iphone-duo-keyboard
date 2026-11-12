@@ -557,8 +557,8 @@ final class TypingLogTests: XCTestCase {
         XCTAssertEqual(store.writeAttempts, 1)
         XCTAssertEqual(store.records, [])
         XCTAssertEqual(typingLog.pendingCount, 1)
-        // The notice of the problem comes after the notice of a command, as a model error does.
-        RunLoop.current.run(until: Date().addingTimeInterval(0.1))
+        // The keyboard shows the notice of the problem in the same call. The notice leaves the
+        // space bar after 2.5 seconds, so the test reads it without a wait.
         XCTAssertTrue(
             keyboardView.spaceCaption?.hasPrefix("Typing log: the records were not saved") ?? false,
             String(describing: keyboardView.spaceCaption))
