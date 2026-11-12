@@ -15,7 +15,9 @@ cd "$(dirname "$0")/../.."
 
 # The commit of tag b4846 in https://github.com/azooKey/llama.cpp.
 llama_commit="10131b23ee0dbd9d03dfc618cec9fe3402919277"
-model="Shared/distilgpt2.Q3_K_M.gguf"
+# The model file that ships: the file of fetch_model in scripts/ci/fetch_language_model.sh, and
+# BundledLanguageModelTest.modelResource in Shared/LanguageModelTest.swift.
+model="Shared/smollm2-lora-typed-seed1.Q4_K_M.gguf"
 work="build/language-model-test"
 mkdir -p "$work"
 
