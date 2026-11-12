@@ -7,7 +7,9 @@ that request and nearby requests, and then compares the answers of several build
     probe.py requests OUT.tsv      writes the requests, one per line, and OUT.tsv.names with a
                                    name per request
     probe.py compare DIR           reads DIR/*.answers (one file per build) and DIR/tokens.txt,
-                                   and prints a table of the differences
+                                   and prints a table of the differences. It stops with exit
+                                   code 1 when the keyboard's scorer as it ships (scorer-c31)
+                                   differs from lm_score (lm_score-u512) in any number.
 
 The requests:
 - original: the request of the run, 8 candidates.
@@ -76,6 +78,13 @@ def main():
     print("Answers of the original request, candidate \"egg nns\":")
     for build, values in answers.items():
         print(f"  {build}: {values[0][2]}")
+    shipped = answers["scorer-c31"]
+    if shipped != reference:
+        print()
+        print("The keyboard's scorer as it ships (calls of 31 tokens) differs from lm_score.")
+        sys.exit(1)
+    print()
+    print("The keyboard's scorer as it ships (calls of 31 tokens) gives the numbers of lm_score.")
 
 
 if __name__ == "__main__":

@@ -8,7 +8,14 @@
  1. Each call of the model reads at most 31 tokens, so the context and the candidates may take
     more than one call. This keeps the memory small: llama.cpp keeps the scores of every token
     of one call, 49,152 numbers or 197 KB per token for SmolLM2-135M, and it sets aside room for
-    the largest call at the start. The framework of the app also holds the BLAS backend of
+    the largest call at the start. The calls of one part, the context or the candidates, get
+    sizes that differ by one token at most (call_size below). So a call holds one token only
+    when the whole part is one token, as in lm_score.c. A call of one token takes other code
+    for the Q8_0 weights of the model: llamafile_sgemm of llama.cpp b4846 refuses a product of
+    fewer than 2 tokens, and ggml_vec_dot_q8_0_q8_0 then sums in another order. On a processor
+    with the dot-product instructions, as the macOS and simulator parts of the app's framework
+    have, the two orders give other numbers. A context of 32 tokens read as 31 and 1 moved one
+    score by 0.285 against lm_score.c (scripts/lm-keyboard/scorer-probe). The framework of the app also holds the BLAS backend of
     Apple's Accelerate library. In llama.cpp b4846 the processor device comes first in the list
     of backends, so the processor already runs every product. BLAS also refuses a product of
     fewer than 32 tokens (min_batch in ggml-blas.cpp), so a change of that order cannot move
@@ -328,6 +335,13 @@ duo_lm_scorer *duo_lm_scorer_open(const char *model_path, int threads, char *err
     return scorer;
 }
 
+/* The size of call `call` of a part of `tokens` tokens: the calls of a part get sizes that
+   differ by one token at most, and none is larger than CALL_TOKENS. See point 1 at the top. */
+static int call_size(int tokens, int call) {
+    int calls = (tokens + CALL_TOKENS - 1) / CALL_TOKENS;
+    return tokens / calls + (call < tokens % calls ? 1 : 0);
+}
+
 /* Reads the queued tokens of the batch. Returns 0 when the model did not run. */
 static int run_batch(duo_lm_scorer *scorer, char *error, size_t error_size) {
     int result = llama_decode(scorer->context, scorer->batch);
@@ -390,8 +404,8 @@ int duo_lm_scorer_score(duo_lm_scorer *scorer, const char *context, const char *
     /* The context, in calls of at most CALL_TOKENS tokens. Only its last token needs scores. */
     llama_kv_cache_clear(scorer->context);
     last_llama_error[0] = 0;
-    for (int first = 0; first < context_count; first += CALL_TOKENS) {
-        int end = first + CALL_TOKENS < context_count ? first + CALL_TOKENS : context_count;
+    for (int first = 0, call = 0; first < context_count; first += call_size(context_count, call), call++) {
+        int end = first + call_size(context_count, call);
         scorer->batch.n_tokens = 0;
         for (int index = first; index < end; index++) {
             add_token(&scorer->batch, context_tokens[index], index, 0, index == context_count - 1);
@@ -411,15 +425,18 @@ int duo_lm_scorer_score(duo_lm_scorer *scorer, const char *context, const char *
     }
 
     /* The candidates, each in its own sequence after the context. Their tokens go in order, in
-       calls of at most CALL_TOKENS tokens, and the scores of each call are read before the
+       calls of the sizes of call_size, and the scores of each call are read before the
        next call writes over them. Every token of a candidate needs scores: each token but the
        last gives the probability of the next token, and the last token gives the probability
        of a space after the candidate. */
+    int candidate_tokens_total = 0;
+    for (int index = 0; index < count; index++) candidate_tokens_total += lengths[index];
     int candidate = 0, place = 0;
-    while (candidate < count) {
+    for (int call = 0; candidate < count; call++) {
         int owners[CALL_TOKENS], places[CALL_TOKENS];
+        int size = call_size(candidate_tokens_total, call);
         scorer->batch.n_tokens = 0;
-        while (candidate < count && scorer->batch.n_tokens < CALL_TOKENS) {
+        while (candidate < count && scorer->batch.n_tokens < size) {
             owners[scorer->batch.n_tokens] = candidate;
             places[scorer->batch.n_tokens] = place;
             add_token(&scorer->batch, candidate_tokens[candidate][place], context_count + place, candidate + 1, 1);
