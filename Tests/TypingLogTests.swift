@@ -570,6 +570,23 @@ final class TypingLogTests: XCTestCase {
         XCTAssertEqual(typingLog.pendingCount, 0)
     }
 
+    func testAProblemOfTheLogIsNamedOnTheSpaceBar() {
+        makeController(before: "")
+        typingLog.onProblem("the store is full")
+        XCTAssertEqual(keyboardView.spaceCaption, "Typing log: the store is full")
+    }
+
+    func testTheKeyboardThatLeavesTheScreenAsksTheStoreToWriteOnce() {
+        makeController(before: "")
+        store.failsWrites = true
+        type("cat ")
+        XCTAssertEqual(store.writeAttempts, 0)
+        XCTAssertNil(keyboardView.spaceCaption)
+        hideKeyboard()
+        XCTAssertEqual(store.writeAttempts, 1)
+        XCTAssertEqual(keyboardView.spaceCaption, "Typing log: the records were not saved: \(FakeTypingLogStore.Failure().localizedDescription)")
+    }
+
     func testTheFileStoreKeepsTheSwitchAndTheRecords() throws {
         let suite = "TypingLogFileStoreTests"
         UserDefaults().removePersistentDomain(forName: suite)

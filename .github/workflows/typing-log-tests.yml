@@ -1,0 +1,49 @@
+name: Typing log tests
+
+# Runs the unit tests of the typing log alone in a simulator, in a few minutes. The workflow
+# "Language model in the keyboard" runs every unit test, and takes two hours.
+on:
+  push:
+    branches: [engine/lm-domain]
+    paths:
+      - 'Shared/TypingLog.swift'
+      - 'Shared/KeyboardTextController.swift'
+      - 'Tests/TypingLogTests.swift'
+      - '.github/workflows/typing-log-tests.yml'
+
+concurrency:
+  group: typing-log-tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    name: Unit tests of the typing log
+    runs-on: xcode-27
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install XcodeGen
+        run: brew install xcodegen
+      - name: Fetch the llama.cpp framework and the language model
+        run: bash scripts/ci/fetch_language_model.sh
+      - name: Generate the Xcode project
+        run: xcodegen generate
+      - name: Run the tests of the typing log in a simulator
+        run: |
+          set -o pipefail
+          udid=$(xcrun simctl list devices available -j | python3 -c '
+          import json, sys
+          devices = json.load(sys.stdin)["devices"]
+          for runtime in sorted(devices, reverse=True):
+              for device in devices[runtime]:
+                  if device["name"].startswith("iPhone 17"):
+                      print(device["udid"])
+                      sys.exit(0)
+          sys.exit("simulator not found: iPhone 17")
+          ')
+          xcodebuild test \
+            -project DuoKeyboard.xcodeproj \
+            -scheme DuoKeyboard \
+            -destination "platform=iOS Simulator,id=$udid" \
+            -only-testing:DuoKeyboardTests/TypingLogTests \
+            -derivedDataPath build-test | xcbeautify
