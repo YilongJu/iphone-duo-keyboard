@@ -44,6 +44,13 @@ def token_counts(path):
     return rows
 
 
+def last_call(tokens: int, size: int) -> int:
+    """The token count of the last call of a part of `tokens` tokens with calls of `size` tokens at
+    most, as call_size of LanguageModel/duo_lm_scorer.c splits the part."""
+    calls = -(-tokens // size)
+    return tokens // calls
+
+
 def largest(a, b):
     return max(max(abs(x[0] - y[0]), abs(x[1] - y[1])) for x, y in zip(a, b))
 
@@ -70,7 +77,7 @@ def main():
             cells = []
             for size in sizes:
                 answers = read(target / f"sweep-c{size}.answers")
-                last = context % size or size
+                last = last_call(context, size)
                 cells.append(f"{largest(reference[index], answers[index]):.2g}/{last}")
             print(f"| {name} | {context} | {candidates} | " + " | ".join(cells) + " |")
         return
@@ -81,12 +88,11 @@ def main():
             raise SystemExit("the files hold other counts of requests")
         groups = {}
         for index, (context, candidates) in enumerate(counts):
-            context_calls = -(-context // 31)
-            context_last = context % 31 or 31
-            candidate_last = candidates % 31 or 31
-            key = ("context split" if context_calls > 1 else "context in one call",
-                   "last context call of 1 token" if context_calls > 1 and context_last == 1 else "last context call of 2 or more",
-                   "candidates end in a call of 1 token" if candidates > 31 and candidate_last == 1 else "other candidates")
+            # A part of one token more than a multiple of 31 is the part that a split into full
+            # calls ends with a call of one token.
+            key = ("context in several calls" if context > 31 else "context in one call",
+                   "one token more than full calls" if context > 31 and context % 31 == 1 else "other context",
+                   "one token more than full calls" if candidates > 31 and candidates % 31 == 1 else "other candidates")
             entry = groups.setdefault(key, [0, 0, 0, 0.0])
             difference = largest(a[index], b[index])
             entry[0] += 1
@@ -95,7 +101,7 @@ def main():
             entry[3] = max(entry[3], difference)
         print("All requests of run 43142371994 on the macOS runner: calls of 31 tokens against calls of 256, full precision.")
         print()
-        print("| Context | Last context call | Candidates | requests | any difference | difference of 0.000005 or more | largest |")
+        print("| Context | Context tokens | Candidate tokens | requests | any difference | difference of 0.000005 or more | largest |")
         print("| --- | --- | --- | --- | --- | --- | --- |")
         for key in sorted(groups):
             entry = groups[key]

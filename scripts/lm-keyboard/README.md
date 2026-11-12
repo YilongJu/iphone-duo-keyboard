@@ -5,10 +5,10 @@
 The keyboard re-ranks with the SmolLM2-135M LoRA fine-tune in the typed format, with the
 apostrophe step in the stock prompt at lead 4 and the work area "AI and software" on. On the
 macOS runner its own code and the harness of `scripts/lm-rerank` agree in every case: the same
-output in all 12,787 dev cases and the same choice in all 13,404 corrections. The keyboard's
-scorer and `lm_score` differ in 1 of 12,886 requests on that runner, by 0.285 in one candidate,
-and that step of the keyboard job is red in run 43142371994. llama.cpp gives other model numbers
-on other machines, so the totals differ by a few cases between machines.
+output in all 13,936 dev cases and the same choice in all 14,628 corrections. The keyboard's
+scorer and `lm_score` give the same answers in all 13,930 requests on that runner. llama.cpp
+gives other model numbers on other machines, so the totals differ by a few cases between
+machines.
 
 1. Install a TestFlight build of `engine/lm-keyboard` on the iPhone Duo and type a few sentences
    in Notes. Then type `duo:lm` and a space. The `reranker` lines give the time per space press
@@ -32,25 +32,25 @@ It does not read the test half.
 | keyboard | `Tests/TypingEvaluationTests.swift`: the keyboard's controller, engine, scorer and rule in the iOS simulator. |
 | typed format | The model reads the text before the span, the typed span between bars, then each reading: "How much \| sutar \|", then " sugar". `LanguageModelPrompt.make` builds it. |
 | shipped setting | Weight 1.0, margins 0, 4 and 2, the space-after term, and the apostrophe step (first word of a two-word span, model score less slip cost, stock prompt) at lead 4. The work area "AI and software" is on: its supplement, its preferred capitals and the protection of a typed new word (`docs/domain-pack-design.md`). |
-| dev cases | The 6,799 cases of `english.dev.jsonl` and `english-symbols.dev.jsonl`, and the 5,988 cases of `english-domain.dev.jsonl`, the cases of the work area. |
+| dev cases | The 6,799 cases of `english.dev.jsonl` and `english-symbols.dev.jsonl`, and the 7,137 cases of `english-domain.dev.jsonl`, the cases of the work area. |
 | correction | One space press whose typed span has more than one engine reading, so the model scores the readings. |
 
 ## Dev scores of the keyboard and the three harnesses
 
-Table 1. Right dev cases per group, from run 43142371994 at commit 6eef96e. The first six
+Table 1. Right dev cases per group, from run 43187473727 at commit 835dc5f. The first six
 columns count the 6,799 cases of `english.dev.jsonl` and `english-symbols.dev.jsonl`.
 
-| Run | clean | letter slips | space slips | symbol slips | clean symbols | all 6,799 | work area, of 5,988 |
+| Run | clean | letter slips | space slips | symbol slips | clean symbols | all 6,799 | work area, of 7,137 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| each harness and the keyboard, engine only | 960/973 | 1943/2100 | 1299/1500 | 1131/1197 | 427/429 | 6077 | 5313 |
-| x86 harness, with the model | 953/973 | 2057/2100 | 1387/1500 | 1165/1197 | 429/429 | 6543 | 5325 |
-| ARM harness, with the model | 953/973 | 2055/2100 | 1388/1500 | 1166/1197 | 428/429 | 6541 | 5329 |
-| macOS harness, with the model | 953/973 | 2055/2100 | 1386/1500 | 1165/1197 | 427/429 | 6537 | 5326 |
-| keyboard, with the model | 953/973 | 2055/2100 | 1386/1500 | 1165/1197 | 427/429 | 6537 | 5326 |
+| each harness and the keyboard, engine only | 961/973 | 1943/2100 | 1299/1500 | 1131/1197 | 427/429 | 6078 | 6357 |
+| x86 harness, with the model | 953/973 | 2057/2100 | 1387/1500 | 1165/1197 | 429/429 | 6543 | 6349 |
+| ARM harness, with the model | 953/973 | 2055/2100 | 1388/1500 | 1166/1197 | 428/429 | 6541 | 6352 |
+| macOS harness, with the model | 953/973 | 2055/2100 | 1386/1500 | 1165/1197 | 427/429 | 6537 | 6350 |
+| keyboard, with the model | 953/973 | 2055/2100 | 1386/1500 | 1165/1197 | 427/429 | 6537 | 6350 |
 
-The work area adds 3 engine cases in the group clean. Without it the x86 harness gave 6,074
-with the engine alone and 6,542 with the model, in run 43010544544. `compare.py` pins the x86
-numbers of this table.
+The work area adds 4 engine cases in the group clean. The x86 harness gave 6,074 with the
+engine alone and 6,542 with the model before the work area, in run 43010544544. `compare.py`
+pins the x86 numbers of this table.
 
 ## Exact agreement on one machine
 
@@ -59,36 +59,44 @@ virtual machine.
 
 | Check | Result |
 | --- | --- |
-| Outputs, with the model and engine only | the same in 12,787 of 12,787. A case of the work area that is about capitals is compared with its capitals, and every other case after the scorer's normalization. |
-| Corrections on each side | 13,404 and 13,404, matched by case and place |
-| Context the model reads, in the typed format | the same in 13,404 |
-| Readings and their marks, in order | the same in 13,404 |
-| Choice | the same in 13,404 |
-| Choice of `rerank.choose` on each side's own numbers, apostrophe step included | equal to the recorded choice in 13,404 on both sides |
-| Model numbers | median 0.000003 apart, 99th percentile 0.000005, and 0.285 in one reading (Table 3) |
+| Outputs, with the model and engine only | the same in 13,936 of 13,936. A case of the work area that is about capitals is compared with its capitals, and every other case after the scorer's normalization. |
+| Corrections on each side | 14,628 and 14,628, matched by case and place |
+| Context the model reads, in the typed format | the same in 14,628 |
+| Readings and their marks, in order | the same in 14,628 |
+| Choice | the same in 14,628 |
+| Choice of `rerank.choose` on each side's own numbers, apostrophe step included | equal to the recorded choice in 14,628 on both sides |
+| Model numbers | median 0.000003 apart, 99th percentile 0.000005, widest 0.000005 |
 
 In 46 cases, with the model and engine only, the keyboard's output differs in letter case only.
 All 46 are symbol cases whose first letter was typed as a symbol key at the start of the field,
 as "Please" against "please". The harness gives that letter the capital of a sentence start.
 The field of the keyboard test does not capitalize sentences for these cases.
 
-Table 3. The keyboard's C scorer against `lm_score` on the 12,886 requests of each harness, in
-run 43142371994. `scorer_cli` runs `LanguageModel/duo_lm_scorer.c` with 2 threads and calls of
-at most 31 tokens. `lm_score` runs one call per batch. Both read start token 2.
+Table 3. The keyboard's C scorer against `lm_score` on the requests of each harness, in run
+43187473727. `scorer_cli` runs `LanguageModel/duo_lm_scorer.c` with 2 threads and calls of at
+most 31 tokens. `lm_score` runs one call per batch. Both read start token 2.
 
-| Machine | `lm_score` threads | Answers |
-| --- | --- | --- |
-| x86 runner | 4 | the same bytes, 5 decimals each |
-| macOS runner, with the app's framework | 2 | 1 of 12,886 differs: one candidate of one request by 0.285 |
-| ARM runner | 4 | 168 of 12,886 differ, the widest by 0.932 |
+| Machine | `lm_score` threads | Requests | Answers |
+| --- | --- | --- | --- |
+| x86 runner | 4 | 13,930 | the same bytes, 5 decimals each |
+| macOS runner, with the app's framework | 2 | 13,930 | the same bytes, 5 decimals each |
+| ARM runner | 4 | 13,930 | 179 of 13,930 differ, the widest by 0.932 |
 
-The split of a batch into calls of 31 tokens moves some answers on the two ARM machines. On
-the macOS runner the one request is a case of the work area: 23 words before the typed "ggnns",
-and the candidate "egg nns". The choice of that correction is the same on both sides. The 7,719
-requests of the cases without the work area gave the same bytes on the macOS runner in run
-43010544544. The step that compares the two scorers on the macOS runner stops on any
-difference, so the keyboard job of run 43142371994 is red at that step. The cause in the scorer
-was not found.
+The scorer gives the calls of a context sizes that differ by one token at most (`call_size`).
+The same rule holds for the calls of the candidates. llama.cpp b4846 computes a call of one
+token with another routine than a call of two or more tokens. On the macOS runner the two
+routines differ in the last bits of their sums. A context of 32 tokens read as calls of 31 and 1
+tokens gave one candidate -32.794, and `lm_score` gives -33.079. Read as two calls of 16 tokens,
+the context gives the number of `lm_score`.
+
+`scripts/lm-keyboard/scorer-probe` holds that request as a check, and the workflow
+`scorer-probe.yml` stops when the two scorers differ. Its sweep compares calls of 31 tokens with
+calls of 256 tokens on the 12,886 requests of run 43142371994, in full precision. The two give
+the same numbers in every request. The step that compares the two scorers on the macOS runner
+stops on any difference.
+
+On the ARM runner the two scorers differ in 179 requests. The cause on that machine was not
+studied. The ARM harness is a report, and the phone was not measured.
 
 ## Model numbers on three kinds of machine
 
@@ -164,20 +172,22 @@ other kernels than the simulator.
 
 ## Time and memory of the model in the simulator
 
-Table 8. The `reranker` lines of the simulator after the English dev cases, run 43142371994, with
+Table 8. The `reranker` lines of the simulator after the English dev cases, run 43187473727, with
 the work area on. The simulator shares 3 cores of the macOS runner, so these numbers do not
 stand for the phone.
 
 | Measure | Value |
 | --- | --- |
-| Load of the model | 80 ms |
-| Footprint before the load, after it, after the first correction | 143.1 MB, 157.6 MB, 162.7 MB |
-| Time added per space press, mean, median, 95th percentile | 107.2 ms, 84.1 ms, 147.5 ms |
+| Load of the model | 102 ms |
+| Footprint before the load, after it, after the first correction | 140.4 MB, 155.3 MB, 160.5 MB |
+| Time added per space press, mean, median, 95th percentile | 138.9 ms, 122.8 ms, 213.0 ms |
 
-Without the work area the three footprints were 142.8 MB, 157.3 MB and 162.5 MB in run
-43010544544, so the work area adds about 0.3 MB in the simulator. After the cases of the work
-area, whose text before the word is longer, the time added per space press is 140.2 ms in the
-mean, 103.7 ms in the median and 204.5 ms at the 95th percentile.
+Run 43142371994 gave 143.1 MB, 157.6 MB and 162.7 MB with the work area. Run 43010544544 gave
+142.8 MB, 157.3 MB and 162.5 MB before the work area. The spread between runs is larger than the
+two files of the work area, 178 KB.
+
+The cases of the work area have a longer text before the word. After those cases, the mean time
+added per space press is 163.7 ms. The median is 104.1 ms, and the 95th percentile is 191.9 ms.
 
 In the language model test of the simulator, 8 candidates after a 20-token context take 73.6 ms
 with SmolLM2 and 37.5 ms with distilgpt2. The phone measured 23.4 ms for distilgpt2. The `duo:lm`

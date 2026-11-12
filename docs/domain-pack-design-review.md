@@ -7,10 +7,13 @@ the pack, the engine code, the capitals rule and the dev cases. The review came 
 with the model was read. Codex did not open a test-half file. It gave 11 findings. Seven were taken, three were taken in part, and one was not
 taken. Table 1 gives the reason for each.
 
-1. Read Table 1 for each finding and its outcome.
-2. Read `docs/domain-pack-design.md` for the design after the review.
+A second review read the 16 later requested words and the results of the final runs. It gave 6
+findings, and all 6 were taken. Table 2 lists them.
 
-This page does not hold a second review of the results with the model.
+1. Read Table 1 and Table 2 for each finding and its outcome.
+2. Read `docs/domain-pack-design.md` for the design after the two reviews.
+
+This page does not hold a review of the results with the model.
 
 ## Findings and their outcome
 
@@ -34,3 +37,26 @@ Codex recounted the numbers of the design from the files and found them right. T
 covered 71,566,550 build words, 859,014 documents, 27 sources, 1,807 corpus words and 138,343
 bytes. It also covered every fraction of the engine tables. Codex did not find a read outside a
 buffer in the English path.
+
+## Review of the 16 later requested words
+
+Codex read commits 8661a70 and 835dc5f and the section "Requested words" of the design. The
+review covered the pack table, the case builder, the capitals rule in Python and in Swift, and
+the frequency results of the dev half. Codex then recounted the numbers of the design from the
+result files of run 43187473874.
+
+Table 2. The 6 findings of the second review.
+
+| # | Finding | Outcome | Change |
+| --- | --- | --- | --- |
+| 1 | Four capital cases had the same context and typed text in both halves. An example is an empty field and "Nextjs". | Taken | The test half types these cases after "It is ready." The dev half does not change (commit 835dc5f). |
+| 2 | The rule for a word's own frequency left one case open. The grid lacks a frequency at which every clean case of "todo" is right. | Taken | The rule names that case. The word takes the highest frequency that keeps its existing dev cases right. |
+| 3 | The design said that the slips of "pnpm" become "pnpm". The engine changes the slip "nppm" to "npm". | Taken | The design names the one slip that the unit test holds, "pnmp". |
+| 4 | The design said that the model lowers three measures. The dev results show five. | Taken | The section on the effect of the model names all five. The clean pack words and the written stream are the two added ones. |
+| 5 | The limits said that the case set leaves out each slip that spells a known word. The group `term_for_everyday_word` holds such slips. | Taken | The limit names that group as the exception. |
+| 6 | The design named the processor as the cause of a one-case difference between jobs. The design did not show the comparison. | Taken | The design gives the counts of the pack-off runs. Those runs type the same cases with the same model on each processor. |
+
+Codex read the Swift rule and the Python rule of the preferred capitals and found them the
+same, also for a form with a sign. Codex found that the choice of a frequency reads dev cases
+only. Codex compared the cells of Tables 4 to 6 and 10 to 20 of the design with the result
+files. Finding 4 was the one number in the prose that did not match.
