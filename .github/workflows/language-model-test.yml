@@ -11,6 +11,7 @@ on:
       - 'scripts/language-model-test/**'
       - 'scripts/ci/fetch_language_model.sh'
       - '.github/workflows/language-model-test.yml'
+      - '.github/run-every-workflow.txt'
   workflow_dispatch:
 
 concurrency:

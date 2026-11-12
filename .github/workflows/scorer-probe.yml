@@ -12,6 +12,7 @@ on:
       - 'LanguageModel/duo_lm_scorer.c'
       - 'scripts/lm-rerank/lm_score.c'
       - '.github/workflows/scorer-probe.yml'
+      - '.github/run-every-workflow.txt'
 
 concurrency:
   group: scorer-probe-${{ github.ref }}

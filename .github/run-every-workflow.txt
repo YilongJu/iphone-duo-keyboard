@@ -1,0 +1,7 @@
+A change of this file starts the workflows that read only some paths, on the new commit:
+Domain pack, Domain pack attribution, Scorer probe, and Language model test on Linux.
+The workflow Language model in the keyboard starts on every push of its branches.
+The workflow Domain pack corpus does not read this file. A new collection of the domain text
+changes the counts that the pack is built from.
+
+Stamp: 1
