@@ -151,6 +151,20 @@ def main():
                 "largest_log_probability_difference": max(pair[0] for pair in pairs),
                 "largest_space_after_difference": max(pair[1] for pair in pairs), "score_limit": LIMIT,
                 "scores_of": "PyTorch float32 on the processor against lm_score on an F32 GGUF"}, indent=1), encoding="utf-8")
+        # The third reading: an F32 file scored with a 32-bit cache and without flash attention (jobs/parity-kv32.sh).
+        for lists in ("everyday", "domain"):
+            here = folder / lists
+            if (here / "llama-scores-f32-kv32.txt").exists() and (here / "parity.json").exists():
+                cpu = read_torch(here / "hf-scores.jsonl")
+                kv32 = read_lm(here / "llama-scores-f32-kv32.txt", len(cpu))
+                pairs = [(abs(a[0] - b[0]), abs(a[1] - b[1])) for x, y in zip(cpu, kv32) for a, b in zip(x, y)]
+                earlier = json.loads((here / "parity.json").read_text(encoding="utf-8"))
+                (here / "parity-kv32.json").write_text(json.dumps({
+                    "token_mismatches": earlier["token_mismatches"], "score_readings": len(pairs),
+                    "largest_log_probability_difference": max(pair[0] for pair in pairs),
+                    "largest_space_after_difference": max(pair[1] for pair in pairs), "score_limit": LIMIT,
+                    "scores_of": "PyTorch float32 on the processor against lm_score on an F32 GGUF with a 32-bit cache"}, indent=1), encoding="utf-8")
+                arm.setdefault(lists, {})["torch_f32_cpu_against_lm_score_f32_with_a_32_bit_cache"] = stats([max(pair) for pair in pairs])
         found = decisions(arguments.study / folder.name)
         if found is not None:
             arm["decisions_on_the_selection_sets"] = found
