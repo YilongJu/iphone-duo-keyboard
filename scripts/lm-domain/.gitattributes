@@ -1,0 +1,2 @@
+# The job scripts run in WSL and in Git Bash, so they keep LF line ends on every machine.
+*.sh text eol=lf

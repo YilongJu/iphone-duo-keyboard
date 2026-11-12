@@ -1,0 +1,6 @@
+{
+ "arms": [
+  {"name": "ship", "model": "~/lmft/models/smollm2-lora-seed1.Q4_K_M.gguf"},
+  {"name": "mix-seed1", "model": "~/lmft2/models/smollm2-lora-mix-seed1.Q4_K_M.gguf"}
+ ]
+}
