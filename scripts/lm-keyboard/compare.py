@@ -66,11 +66,12 @@ def recorded_choice(entry: dict) -> str:
                  "chosen": r["chosen"]} for r in entry["readings"]]
     return rerank.choose(readings, "", SETTING, RecordedScores(entry), None)
 GROUPS = ["clean", "letter_slips", "space_slips", "symbol_slips", "clean_symbols"]
-# The x86 harness numbers of the shipped configuration: SmolLM2 in the typed format with the lexicon
-# and the apostrophe step of docs/apostrophe-words-design.md, from the dev run of apostrophe_words.py
-# in run 42985401738 (lead 8). Right cases per group, then all dev cases. The lexicon adds 5 engine
-# cases ("youre" to "you're"); with the model the total stays 6,542.
-PUBLISHED = {"engine only": [957, 1943, 1299, 1131, 427, 6074], "with the model": [953, 2057, 1387, 1165, 428, 6542]}
+# The x86 harness numbers of the shipped configuration: SmolLM2 in the typed format with the
+# apostrophe step of docs/apostrophe-words-design.md and the work area "AI and software" of
+# docs/domain-pack-design.md on, from the harness job of run 43142371994. Right cases per group,
+# then all dev cases of english.dev.jsonl and english-symbols.dev.jsonl. The work area adds 3
+# engine cases in the group clean, and with the model 1 case in the group clean_symbols.
+PUBLISHED = {"engine only": [960, 1943, 1299, 1131, 427, 6077], "with the model": [953, 2057, 1387, 1165, 429, 6543]}
 TASKS = ["english", "english-symbols", "english-domain"]
 
 
