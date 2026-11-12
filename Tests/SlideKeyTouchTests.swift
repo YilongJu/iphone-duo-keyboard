@@ -4,13 +4,18 @@ import XCTest
 @testable import DuoKeyboard
 
 /// A finger for the touch tests. UIKit makes a real touch only from the screen, so this one
-/// reports the place that a test sets.
+/// reports the place that a test sets. Each new touch starts 0.01 seconds after the one before
+/// it, so two taps on shift are a double tap however long the test machine takes.
 final class FakeTouch: UITouch {
+    private static var clock = ProcessInfo.processInfo.systemUptime
+
     var point: CGPoint
-    private let time = ProcessInfo.processInfo.systemUptime
+    private let time: TimeInterval
 
     init(at point: CGPoint) {
         self.point = point
+        Self.clock += 0.01
+        time = Self.clock
         super.init()
     }
 
@@ -59,6 +64,12 @@ final class CompactLayoutTests: XCTestCase {
     }
 }
 
+/// The keyboard width of the folded phone in portrait, of the open phone in portrait, and of the
+/// open phone in landscape, in points.
+private let compactWidth: CGFloat = 466
+private let wideWidth: CGFloat = 669
+private let splitWidth: CGFloat = 951
+
 /// Fingers on the keys of the compact letters layer: a slide up or down on a letter key with a
 /// slide character, and the comma and period keys. The tests send touches to the keyboard view
 /// and read the text that the typing controller wrote.
@@ -68,12 +79,6 @@ final class SlideKeyTouchTests: XCTestCase {
     private var document: FakeDocument!
     private var spellChecker: FakeSpellChecker!
     private var controller: KeyboardTextController!
-
-    /// The keyboard width of the folded phone in portrait, of the open phone in portrait, and of
-    /// the open phone in landscape, in points.
-    private static let compactWidth: CGFloat = 466
-    private static let wideWidth: CGFloat = 669
-    private static let splitWidth: CGFloat = 951
 
     private func makeView(width: CGFloat) -> KeyboardView {
         let height = KeyboardView.preferredHeight(
@@ -85,7 +90,7 @@ final class SlideKeyTouchTests: XCTestCase {
     }
 
     private func makeKeyboard(
-        width: CGFloat = SlideKeyTouchTests.compactWidth, before: String = "",
+        width: CGFloat = compactWidth, before: String = "",
         autocapitalization: UITextAutocapitalizationType = .none
     ) {
         keyboardView = makeView(width: width)
@@ -130,6 +135,17 @@ final class SlideKeyTouchTests: XCTestCase {
 
     private struct MissingKey: Error {
         let text: String
+    }
+
+    /// The texts that the key of a cell shows now, from the top of the key to its bottom.
+    private func shownTexts(at cell: CGRect) throws -> [String] {
+        let keyViews = keyboardView.subviews.compactMap { $0 as? KeyView }
+        guard let keyView = keyViews.first(where: { $0.hitFrame == cell }) else {
+            throw MissingKey(text: "The keyboard has no key with the cell \(cell)")
+        }
+        keyView.layoutIfNeeded()
+        let labels = keyView.subviews.compactMap { $0 as? UILabel }.filter { $0.text != nil && !$0.frame.isEmpty }
+        return labels.sorted { $0.frame.midY < $1.frame.midY }.compactMap(\.text)
     }
 
     private var shiftKey: CGRect { get throws { try cell(row: 4, column: 0) } }
@@ -208,9 +224,13 @@ final class SlideKeyTouchTests: XCTestCase {
     func testASlideBackToTheStartTypesTheLetter() throws {
         makeKeyboard()
         let key = try cell("d")
+        XCTAssertEqual(try shownTexts(at: key), ["$", "d"])
         let touch = press(key)
         drag(touch, rows: -0.6, from: key)
+        // The key shows the selected slide character alone.
+        XCTAssertEqual(try shownTexts(at: key), ["$"])
         drag(touch, rows: 0.5, from: key)
+        XCTAssertEqual(try shownTexts(at: key), ["$", "d"])
         lift(touch)
         XCTAssertEqual(document.text, "d")
     }
@@ -325,7 +345,7 @@ final class SlideKeyTouchTests: XCTestCase {
     /// sets the automatic shift again from the text, so the next letter still gets its capital
     /// when the text asks for one.
     func testASlideLeavesAnAutomaticShiftOn() throws {
-        let view = makeView(width: Self.compactWidth)
+        let view = makeView(width: compactWidth)
         let delegate = RecordingKeyboardDelegate()
         view.delegate = delegate
         view.setAutomaticShift(true)
@@ -507,7 +527,8 @@ final class SlideKeyTouchTests: XCTestCase {
     /// The letter keys of the wide layout and of the split layout have no slide character. A
     /// move up from "a" goes to "q", and a slide on the comma key types its upper character.
     func testTheWideLayoutAndTheSplitLayoutKeepTheirKeys() throws {
-        for (width, style) in [(Self.wideWidth, LayoutStyle.wide), (Self.splitWidth, .split)] {
+        try XCTSkipUnless(KeyboardDevice.current == .phone, "An iPad chooses its layout by the orientation of the screen")
+        for (width, style) in [(wideWidth, LayoutStyle.wide), (splitWidth, .split)] {
             makeKeyboard(width: width)
             XCTAssertEqual(keyboardView.style, style)
             try tap("a")
@@ -515,7 +536,7 @@ final class SlideKeyTouchTests: XCTestCase {
             slide(try cell("m"), rows: -0.3)
             XCTAssertEqual(document.text, "aqm")
         }
-        makeKeyboard(width: Self.wideWidth)
+        makeKeyboard(width: wideWidth)
         // In the wide layout the comma key follows "m" in the row of "z".
         slide(try cell(row: 4, column: 8), rows: -0.5)
         XCTAssertEqual(document.text, "<")

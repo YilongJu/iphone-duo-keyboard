@@ -94,6 +94,7 @@ from wordfreq import top_n_list, zipf_frequency
 
 import build_english_cases as base
 import keyboard_noise as noise
+import symbol_keys
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
@@ -163,7 +164,10 @@ CONTROL_CONTEXTS = {
 # Everyday words whose capital form is also a technical name. In lower case they stay in lower case.
 # A symbol or digit key beside the key of a first letter (symbol_keys.py), one per letter.
 SYMBOL_FOR_FIRST_LETTER = {"p": "[", "q": "1", "w": "2", "e": "3", "r": "4", "t": "5", "y": "6", "u": "7", "i": "8",
-                           "o": "9", "l": ";", "k": ",", "m": ",", "n": "."}
+                           "o": "9", "l": ";", "k": ",", "m": ",", "n": ","}
+for _letter, _symbol in SYMBOL_FOR_FIRST_LETTER.items():
+    if _letter not in symbol_keys.symbol_neighbors().get(_symbol, []):
+        raise SystemExit(f"SYMBOL_FOR_FIRST_LETTER: the layout file does not put {_symbol!r} beside {_letter!r}")
 COLLISION_WORDS = ["it", "us", "ai", "go", "rust", "swift", "python", "apple", "java", "spark", "meta", "git", "rag"]
 
 

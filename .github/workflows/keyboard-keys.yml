@@ -1,7 +1,7 @@
 name: Keyboard keys
 
-# Checks the layout file and runs the unit tests of the keys, the layouts and the typing rules
-# in a simulator, in a few minutes. It also saves simulator screenshots of the keyboard. The
+# Checks the layout file and runs the unit tests of the keys, the layouts, the typing rules and
+# the typing engine in a simulator, in a few minutes. It also saves simulator screenshots of the keyboard. The
 # workflow "Language model in the keyboard" runs every unit test, and takes more than three hours.
 on:
   push:
@@ -16,6 +16,7 @@ on:
       - 'Engine/duo_engine.c'
       - 'Tests/SlideKey*.swift'
       - 'Tests/KeyboardTextControllerTests.swift'
+      - 'Tests/TypingEngineTests.swift'
       - 'scripts/keyboard-preview/**'
       - 'scripts/typing-evaluation/symbol_keys.py'
       - '.github/workflows/keyboard-keys.yml'
@@ -47,7 +48,7 @@ jobs:
         run: bash scripts/ci/fetch_language_model.sh
       - name: Generate the Xcode project
         run: xcodegen generate
-      - name: Run the tests of the keys, the layouts and the typing rules in a simulator
+      - name: Run the tests of the keys, the layouts, the typing rules and the typing engine in a simulator
         run: |
           set -o pipefail
           udid=$(xcrun simctl list devices available -j | python3 -c '
@@ -62,7 +63,7 @@ jobs:
           ')
           only=()
           for class in $(grep -h -o -E '^final class [A-Za-z]+: XCTestCase' \
-              Tests/SlideKey*.swift Tests/KeyboardTextControllerTests.swift | awk '{ print $3 }' | tr -d ':'); do
+              Tests/SlideKey*.swift Tests/KeyboardTextControllerTests.swift Tests/TypingEngineTests.swift | awk '{ print $3 }' | tr -d ':'); do
             only+=("-only-testing:DuoKeyboardTests/$class")
           done
           test "${#only[@]}" -ge 5

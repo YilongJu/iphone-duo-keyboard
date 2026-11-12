@@ -109,8 +109,8 @@ layout together.
 | `3` | w, e | `-` | p |
 | `4` | e, r | `[` | p |
 | `5` | r, t | `;` | l, p |
-| `6` | t, y | `,` | k, l, m |
-| `7` | y, u | `.` | l, and n in the compact layout |
+| `6` | t, y | `,` | k, l, m, and n in the compact layout |
+| `7` | y, u | `.` | l, and m in the compact layout |
 | `8` | u, i | | |
 
 The more letters a key sits beside, the more words one typed text can stand for: `,ost` can be
