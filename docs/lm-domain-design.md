@@ -197,7 +197,7 @@ Table 6. Settings that the new arms share with `mix-seed1`, and the settings tha
 | Learning rate at step 11,000 | about 1.0e-4 | 0 |
 | Steps taken | 13,500, stopped early on the stopping loss | 11,000, the same for every arm |
 | Weights kept | step 11,000, the lowest stopping loss | step 11,000, the last step |
-| Micro-batch | 800 padded tokens | 2,500 padded tokens |
+| Micro-batch | 800 padded tokens | 1,500 padded tokens |
 
 The step count 11,000 is the best step of `mix-seed1`. A run does not stop early, so every arm takes the same steps.
 The micro-batch does not change the loss of a step. It changes the dropout masks, as a seed does.
@@ -359,7 +359,7 @@ Table 10. Labels of the hand pass, in the order of their test. The first label w
 ## Compute plan
 
 - Cases: Python on this machine. Lists and scoring: the engine and `lm_score` in WSL.
-- Training: the local RTX 4090, under the lock file `build/gpu.lock`. Four arms train at the same time, each with a cap of 3.7 GB. Four arms use the whole card: one step takes 0.75 s for each of four arms, and 0.63 s for one arm alone.
+- Training: the local RTX 4090, under the lock file `build/gpu.lock`. Four arms train at the same time, each with a cap of 3.2 GB. Four arms use the whole card: one step takes 0.75 s for each of four arms, and 0.63 s for one arm alone.
 - An arm takes about 2.3 hours beside three others. The queue holds the lock while an arm runs, and starts the next arm when a place is free.
 - One call of the engine takes about 0.09 s with the supplement on. `warm_readings.py` reads every span of the harness sets once, in 10 processes, and `score_model.py` reads its file.
 - Every long job runs through `scripts/lm-domain/detach.ps1`. The job outlives the shell that starts it, writes a log and a state file, and goes on from its files when it starts again.
