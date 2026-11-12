@@ -1,0 +1,54 @@
+name: Scorer probe
+
+# Scores one request, and requests near it, with lm_score and the keyboard's scorer, each built
+# with several step and call sizes: scripts/lm-keyboard/scorer-probe. The request is the one on
+# which the two scorers differ on the macOS runner in run 43142371994.
+on:
+  push:
+    branches: [engine/domain-pack]
+    paths:
+      - 'scripts/lm-keyboard/scorer-probe/**'
+      - 'LanguageModel/duo_lm_scorer.c'
+      - 'scripts/lm-rerank/lm_score.c'
+      - '.github/workflows/scorer-probe.yml'
+
+concurrency:
+  group: scorer-probe-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  mac:
+    name: macOS runner, the app's framework
+    runs-on: xcode-27
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - name: Fetch the llama.cpp framework and the language model
+        run: bash scripts/ci/fetch_language_model.sh
+      - name: Run the probe
+        run: bash scripts/lm-keyboard/scorer-probe/run.sh mac build/scorer-probe | tee -a "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: scorer-probe-mac
+          path: build/scorer-probe
+          if-no-files-found: error
+
+  linux:
+    name: x86 Linux runner, llama.cpp b4846 from source
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v7
+      - name: Build llama.cpp b4846
+        run: bash scripts/lm-rerank/build_on_linux.sh llama
+      - name: Fetch the language model
+        run: bash scripts/ci/fetch_language_model.sh model
+      - name: Run the probe
+        run: bash scripts/lm-keyboard/scorer-probe/run.sh linux build/scorer-probe | tee -a "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: scorer-probe-linux
+          path: build/scorer-probe
+          if-no-files-found: error
