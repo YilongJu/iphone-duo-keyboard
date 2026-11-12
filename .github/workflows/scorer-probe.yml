@@ -34,6 +34,26 @@ jobs:
           path: build/scorer-probe
           if-no-files-found: error
 
+  mac-sweep:
+    name: macOS runner, call sizes 2 to 33, and all requests of the run in full precision
+    runs-on: xcode-27
+    timeout-minutes: 150
+    steps:
+      - uses: actions/checkout@v7
+      - name: Fetch the llama.cpp framework and the language model
+        run: bash scripts/ci/fetch_language_model.sh
+      - name: Run the sweep
+        run: bash scripts/lm-keyboard/scorer-probe/sweep.sh build/scorer-sweep | tee -a "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: scorer-sweep-mac
+          path: |
+            build/scorer-sweep
+            !build/scorer-sweep/bin
+            !build/scorer-sweep/all.tsv
+          if-no-files-found: error
+
   linux:
     name: x86 Linux runner, llama.cpp b4846 from source
     runs-on: ubuntu-24.04
