@@ -22,6 +22,8 @@
   "words requested by the user": 18,
   "requested words with a preferred form": 4,
   "requested words with a frequency of their own": {
+   "xcode": 5.5,
+   "vite": 5.5,
    "todo": 4.0
   },
   "supplement": {

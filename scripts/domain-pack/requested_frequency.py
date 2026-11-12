@@ -10,9 +10,14 @@ dev cases of those words: the group `required`, and the categories
 `requested_term_for_everyday_word` and `capital_requested`.
 
 With --word WORD, the script moves that one word. It types the dev cases of the word, and every
-case of english.dev.jsonl and english-symbols.dev.jsonl whose typed text holds the word. The
-frequency to take for such a word is the highest one of the grid at which each of those
-existing cases is still right, with the engine alone and with the model.
+case of english.dev.jsonl and english-symbols.dev.jsonl whose typed text holds the word. A word
+gets a frequency of its own in required-terms.tsv by this rule, with the engine alone and with
+the model:
+1. A frequency must keep each of those existing cases right.
+2. A word whose clean dev cases are all right at REQUESTED_ZIPF keeps REQUESTED_ZIPF.
+3. Any other word takes the lowest frequency of the grid from REQUESTED_ZIPF up at which its clean
+   dev cases are all right. When rule 1 forbids that frequency, the word takes the highest
+   frequency that rule 1 allows.
 
 Usage, from the repository root, on Linux:
     python3 scripts/domain-pack/requested_frequency.py --shim build/lm-rerank/libduo_shim.so \\
@@ -35,7 +40,7 @@ import rerank  # noqa: E402
 from lexicon_format import MODEL_MIXED, write_lexicon  # noqa: E402
 
 ZIPFS = [2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5]
-WORD_ZIPFS = [1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5]
+WORD_ZIPFS = [1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5]
 # REQUESTED_ZIPF of build_pack.py, which this script does not import: that file needs wordfreq.
 DEFAULT_ZIPF = 4.5
 REQUESTED_CATEGORIES = ("requested_term_for_everyday_word", "capital_requested")

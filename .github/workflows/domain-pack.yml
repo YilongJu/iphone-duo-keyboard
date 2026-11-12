@@ -23,6 +23,7 @@ on:
       - 'scripts/domain-pack/build_merged_lexicon.py'
       - 'scripts/domain-pack/variants/**'
       - '.github/workflows/domain-pack.yml'
+      - '.github/run-every-workflow.txt'
 
 env:
   # The commit of engine/lm-keyboard that this branch starts from: the engine before the supplement.
@@ -141,7 +142,7 @@ jobs:
 
   requested-frequency:
     # The frequency of the requested words (REQUESTED_ZIPF of build_pack.py), and the frequency
-    # of "todo", which has its own in pack/required-terms.tsv. Both on dev cases.
+    # of each word that has its own in pack/required-terms.tsv. All on dev cases.
     name: Frequencies for the requested words, dev cases
     runs-on: ubuntu-24.04
     timeout-minutes: 300
@@ -151,16 +152,21 @@ jobs:
         run: bash scripts/lm-rerank/build_on_linux.sh llama
       - name: Fetch the SmolLM2 fine-tune and check its SHA-256 value
         run: bash scripts/ci/fetch_language_model.sh model
-      - name: Type the dev cases of the word todo at each frequency
+      - name: Type the dev cases of each word with a frequency of its own, at each frequency
         run: |
           set -euo pipefail
           export LD_LIBRARY_PATH="$PWD/build/lm-rerank/llama/lib"
           out=build/lm-rerank/domain-pack/requested
           mkdir -p "$out"
-          python3 scripts/domain-pack/requested_frequency.py --shim build/lm-rerank/libduo_shim.so --lm build/lm-rerank/lm_score \
-            --model Shared/smollm2-lora-typed-seed1.Q4_K_M.gguf --threads 4 --word todo --out "$out/todo" \
-            | tee "$out/requested-frequency-todo.md"
-          cat "$out/requested-frequency-todo.md" >> "$GITHUB_STEP_SUMMARY"
+          # The words of pack/required-terms.tsv whose third column holds a frequency.
+          words=$(grep -v '^#' scripts/domain-pack/pack/required-terms.tsv | awk -F'\t' 'NR > 1 && $3 != "" { print $1 }')
+          test -n "$words"
+          for word in $words; do
+            python3 scripts/domain-pack/requested_frequency.py --shim build/lm-rerank/libduo_shim.so --lm build/lm-rerank/lm_score \
+              --model Shared/smollm2-lora-typed-seed1.Q4_K_M.gguf --threads 4 --word "$word" --out "$out/$word" \
+              | tee "$out/requested-frequency-$word.md"
+            cat "$out/requested-frequency-$word.md" >> "$GITHUB_STEP_SUMMARY"
+          done
       - name: Type the dev cases of the other requested words at each frequency
         run: |
           set -euo pipefail

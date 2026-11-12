@@ -138,6 +138,9 @@ NAME_CONTEXTS = {
     "test": ["a", "this", "open", "try", "fix the", "it works with"],
 }
 NAME_NEXT_WORDS = {"dev": ["and", "is", "for"], "test": ["in", "to", "with"]}
+# The text before a requested word at the start of a sentence, where the keyboard types the
+# capital by itself: the start of the field, and the end of a sentence.
+START_CONTEXTS = {"dev": "", "test": "It is ready."}
 # The requested words of the first cases of this file. A later word also names itself in the
 # field `requested` of its cases, and gets the controls that build_requested_neighbours derives.
 FIRST_REQUESTED = ["ultrathink", "ultracode"]
@@ -595,6 +598,7 @@ def build_requested_capitals(builder: Builder, requested: list[dict]) -> None:
     half = builder.half
     rng = random.Random(f"{SEED}-{half}-required-capitals")
     inside = NAME_CONTEXTS[half][3]
+    start = START_CONTEXTS[half]
     for row in requested:
         term, preferred = row["word"], row["preferred"]
         if not preferred:
@@ -605,7 +609,7 @@ def build_requested_capitals(builder: Builder, requested: list[dict]) -> None:
 
         add(inside, term, term)
         add(inside, term.capitalize(), preferred)
-        add("", term.capitalize(), preferred)
+        add(start, term.capitalize(), preferred)
         add(inside, term.upper(), term.upper())
         # A preferred form with a sign, as "Next.js", is not one typed word. A preferred form that
         # is the plain capital, as "Xcode", is the case above.
@@ -622,7 +626,7 @@ def build_requested_capitals(builder: Builder, requested: list[dict]) -> None:
         for typed in slips[:3]:
             add(inside, typed, term)
             add(inside, typed.capitalize(), preferred)
-            add("", typed.capitalize(), preferred)
+            add(start, typed.capitalize(), preferred)
 
 
 def build_everyday(builder: Builder, sentences, table, kinds, base_words: dict[str, float]) -> None:

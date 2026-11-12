@@ -10,6 +10,7 @@ on:
       - 'scripts/domain-pack/attribute_cases.py'
       - 'scripts/typing-evaluation/cases/english-domain*.jsonl'
       - '.github/workflows/domain-pack-attribution.yml'
+      - '.github/run-every-workflow.txt'
 
 concurrency:
   group: domain-pack-attribution-${{ github.ref }}

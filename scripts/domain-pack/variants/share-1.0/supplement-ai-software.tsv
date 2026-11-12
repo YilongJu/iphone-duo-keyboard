@@ -1763,7 +1763,7 @@ vgg	3.41	VGG	0	1
 virtualbox	3.86	VirtualBox	0	0
 virtualenv	3.29		0	1
 virtualisation	3.08		0	0
-vite	4.50		0	1
+vite	5.50		0	1
 vla	4.05	VLA	0	1
 vlas	3.36	VLAs	0	1
 vllm	5.17	vLLM	0	1
@@ -1814,7 +1814,7 @@ worktrees	4.50		0	1
 writable	4.00		0	0
 writeable	3.06		0	0
 wsl	4.47	WSL	0	0
-xcode	4.50	Xcode	0	1
+xcode	5.50	Xcode	0	1
 xgb	3.10	XGB	0	1
 xgboost	4.22	XGBoost	0	1
 xlnet	3.24	XLNet	0	1
