@@ -348,6 +348,9 @@ final class EnglishReranker {
     private(set) var statistics = RerankStatistics()
     /// Receives each correction that had more than one reading. A test sets it.
     var onTrace: ((RerankTrace) -> Void)?
+    /// The trace of the last call of `choose`, or nil when that call did not ask the model. The
+    /// typing log reads it (`ReadingDetail`).
+    private(set) var lastTrace: RerankTrace?
     /// Receives the reason when the model or its tokenizer did not do its part. The owner shows
     /// it on the space bar.
     var onModelError: (String) -> Void = { _ in }
@@ -360,6 +363,7 @@ final class EnglishReranker {
     /// The text to show for the typed span. `textBefore` is the field's text before the span.
     /// With one reading, or while the model cannot score, the engine's choice stays.
     func choose(readings: [EnglishReading], textBefore: String, typed: String) -> String {
+        lastTrace = nil
         guard let chosen = readings.firstIndex(where: { $0.chosen }) else {
             preconditionFailure("the readings hold no chosen reading")
         }
@@ -405,9 +409,11 @@ final class EnglishReranker {
         if case .scores = result {
             statistics.recordRead(milliseconds: milliseconds, changed: choice != chosen)
         }
-        onTrace?(RerankTrace(
+        let trace = RerankTrace(
             textBefore: textBefore, prompt: prompt, readings: readings, result: result, stepScores: stepScores,
-            choice: choice, milliseconds: milliseconds))
+            choice: choice, milliseconds: milliseconds)
+        lastTrace = trace
+        onTrace?(trace)
         return readings[choice].text
     }
 }

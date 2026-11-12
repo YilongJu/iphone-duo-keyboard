@@ -46,6 +46,14 @@ final class KeyboardViewController: UIInputViewController {
         reranker.onModelError = { [weak self] reason in
             self?.textController.show(.modelError(reason))
         }
+        // The typing log is off until the person types "duo:log" and a space. Its records stay in
+        // the keyboard extension's own container. The log does not record in a field such as a
+        // password field (docs/typing-log-design.md).
+        let typingLog = TypingLog(store: FileTypingLogStore.inOwnContainer())
+        typingLog.fieldIsLoggable = { [weak self] in
+            self?.document.allowsTypingLog ?? false
+        }
+        textController.typingLog = typingLog
         textController.rememberLanguage()
         // iPadOS draws undo, redo and paste buttons over the keyboard's top left corner. This
         // request to drop them is honored for a text field's own input view. For a keyboard
@@ -171,6 +179,15 @@ final class ProxyDocument: KeyboardDocument {
         default:
             return true
         }
+    }
+
+    /// False for a field whose text the typing log must not record (`TypingLogPolicy`). A field
+    /// for a password, a code, a name or an address is such a field. The system gives a field
+    /// without a content type as nil, in one or two levels of Optional.
+    var allowsTypingLog: Bool {
+        TypingLogPolicy.allowsLog(
+            isSecureTextEntry: proxy.isSecureTextEntry, textContentType: proxy.textContentType ?? nil,
+            keyboardType: proxy.keyboardType)
     }
 
     func insertText(_ text: String) {
