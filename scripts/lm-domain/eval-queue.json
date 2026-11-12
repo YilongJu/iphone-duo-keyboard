@@ -71,6 +71,14 @@
   {
    "name": "dom-s0-seed2",
    "model": "~/lmdom/models/dom-s0-seed2.Q4_K_M.gguf"
+  },
+  {
+   "name": "dom-s100-seed2",
+   "model": "~/lmdom/models/dom-s100-seed2.Q4_K_M.gguf"
+  },
+  {
+   "name": "dom-s100-seed3",
+   "model": "~/lmdom/models/dom-s100-seed3.Q4_K_M.gguf"
   }
  ]
 }
