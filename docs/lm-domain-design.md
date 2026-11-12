@@ -158,6 +158,10 @@ The builder differs from the list builder of rounds 1 and 2 in three ways.
 2. The field keeps the typed capitals and the preferred capitals, as the keyboard does with the work area on.
 3. The target of a clean case is the reading as typed. The builder of rounds 1 and 2 takes the longest reading that keeps the field a start of the intended text. In clean running text that rule takes a reading that adds the next word, as "pay attention in" for the typed "pay attention". 200 of the 54,759 clean running-text lists of round 2 have such a target, and the lists after it in the sentence are lost.
 
+The lists were built with the pack of commit 8661a70. The final pack of commit f48cd80 changes the frequency of "xcode", "vite" and "todo".
+The rule for a rebuild: build the stopping lists again with the final pack, and rebuild every list when more than 0.5 percent of them differ or one target differs.
+`compare_lists.py` counts 32 of 7,456 domain lists and 9 of 11,183 everyday lists with other readings, and the same target in every list. So the training lists stay. Every score of this round uses the final pack.
+
 The bridge arm `ce-c1-seed1` trains on the lists of round 2 as they are. So `dom-s0` against `ce-c1` compares two whole list builds, and it does not isolate the supplement.
 
 ## Decoder table of the arms
