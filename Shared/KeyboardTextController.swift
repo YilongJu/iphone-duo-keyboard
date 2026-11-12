@@ -41,11 +41,16 @@ protocol SpellChecking: AnyObject {
     /// Turns the work area on or off, and returns a short text that names the new state. The
     /// result is nil for a checker without a work area.
     func toggleWorkArea() -> String?
+    /// The readings behind the last result of `reading`, for the typing log. The value is nil
+    /// when the checker could not read the text. A checker that does not keep the readings also
+    /// gives nil.
+    var lastReadingDetail: ReadingDetail? { get }
 }
 
 extension SpellChecking {
     var preferredCapitals: PreferredCapitals? { nil }
     func toggleWorkArea() -> String? { nil }
+    var lastReadingDetail: ReadingDetail? { nil }
 }
 
 /// A work area: the words of one field of work that the keyboard reads beside its lexicon, with
@@ -88,6 +93,8 @@ final class EngineSpellChecker: SpellChecking {
     /// The store of the kept words. A test passes a store of its own, so the words it brings
     /// back do not reach the keyboard or another test.
     private let store: UserDefaults
+    /// The typing log reads the readings of the last result here. The corrections do not use it.
+    private(set) var lastReadingDetail: ReadingDetail?
 
     /// With a work area, the checker lays the area's supplement over the engine's lexicon, unless
     /// the store says that the person turned the area off. The checker then owns the engine's
@@ -126,16 +133,20 @@ final class EngineSpellChecker: SpellChecking {
     }
 
     func reading(previousWord: String, typed: String, textBefore: String) -> String? {
+        lastReadingDetail = nil
         guard let readings = engine.readings(
             previousWord: previousWord, typed: typed, limit: EnglishReranker.readingCount)
         else { return nil }
         guard let reranker else {
+            lastReadingDetail = ReadingDetail(readings: readings, trace: nil)
             // EnglishTypingEngine.readings holds exactly one chosen reading.
             return readings.first { $0.chosen }!.text
         }
         // The model may not change a typed word that is new in the work area.
         let candidates = preferredCapitals?.keepingNewWords(readings, typed: typed) ?? readings
-        return reranker.choose(readings: candidates, textBefore: textBefore, typed: typed)
+        let text = reranker.choose(readings: candidates, textBefore: textBefore, typed: typed)
+        lastReadingDetail = ReadingDetail(readings: candidates, trace: reranker.lastTrace)
+        return text
     }
 
     func learn(_ word: String) {
@@ -235,6 +246,28 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
     /// The text that turns the work area on or off when a space follows it.
     static let workAreaTrigger = "duo:work"
 
+    /// The text that turns the typing log on or off when a space follows it.
+    static let typingLogTrigger = "duo:log"
+    /// The text that types the export of the typing log into the field when a space follows it.
+    static let typingLogExportTrigger = "duo:logexport"
+    /// The text that erases the typing log when a space follows it.
+    static let typingLogClearTrigger = "duo:logclear"
+
+    /// Records a random sample of the committed words while the person has the log turned on
+    /// (docs/typing-log-design.md). Without a log the keyboard types the three trigger texts as
+    /// any other text. The keyboard then does not record a word.
+    var typingLog: TypingLog? {
+        didSet {
+            typingLog?.onProblem = { [weak self] reason in
+                // A problem can come in the middle of a command, which shows its own notice
+                // right after. The problem's notice waits for that one, as a model error does.
+                Task { @MainActor [weak self] in
+                    self?.showNotice("Typing log: \(reason)")
+                }
+            }
+        }
+    }
+
     /// Runs the language model test. Without a measurer the trigger text is typed as any
     /// other text, and the test does not load a model.
     var languageModelMeasurer: LanguageModelMeasuring?
@@ -319,6 +352,9 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
             setAllText(nil)
         }
         updateAutoShift()
+        // Typing log: the sampled words of another field go to the store. A field that may not
+        // be logged loses its sampled words.
+        typingLog?.fieldChanged(to: document.documentIdentifier)
     }
 
     // MARK: State shown on the keyboard
@@ -455,6 +491,8 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
         pending = nil
         setAllText(nil)
         commitPinyinLetters()
+        // Typing log: the keyboard leaves the screen, so the sampled words go to the store.
+        typingLog?.keyboardWillHide(field: document.documentIdentifier)
     }
 
     // MARK: Proofreading of a sentence
@@ -593,6 +631,71 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
         return true
     }
 
+    // MARK: Typing log
+
+    /// True when `trigger` ends the text `before` as a word of its own. A capital first letter
+    /// also counts, as for the language model test.
+    private func ends(_ before: String, withCommand trigger: String) -> Bool {
+        guard before.lowercased().hasSuffix(trigger) else { return false }
+        if let preceding = before.dropLast(trigger.count).last, !preceding.isWhitespace {
+            return false
+        }
+        return true
+    }
+
+    /// Runs a command of the typing log when its trigger text stands right before the cursor.
+    /// The commands are the switch, the export and the erasure. The keyboard takes the trigger
+    /// text out of the field and names the result on the space bar. The export goes into the
+    /// field at the cursor, so the person can select and copy the text. Returns false when the
+    /// space should be typed by the normal rules.
+    private func runTypingLogCommand() -> Bool {
+        guard let typingLog else { return false }
+        // A trigger does not end in another trigger, so one text matches one command at most.
+        let triggers = [Self.typingLogTrigger, Self.typingLogExportTrigger, Self.typingLogClearTrigger]
+        let before = document.textBeforeCursor
+        guard let trigger = triggers.first(where: { ends(before, withCommand: $0) }) else { return false }
+        lastCorrection = nil
+        recentWord = nil
+        previousInsertWasSpace = false
+        deleteBackward(count: trigger.count)
+        switch trigger {
+        case Self.typingLogExportTrigger:
+            let export = typingLog.export(field: document.documentIdentifier)
+            document.insertText(export.text)
+            let count = export.records == 1 ? "1 record" : "\(export.records) records"
+            showNotice("Typing log: \(count) typed")
+        case Self.typingLogClearTrigger:
+            typingLog.clear()
+            showNotice("Typing log erased")
+        default:
+            showNotice(typingLog.toggle())
+        }
+        return true
+    }
+
+    /// Hands a committed word to the typing log. `typed` is the typed span, and `inField` is
+    /// the text that the field held for the span. `shown` is the text that the field holds now.
+    /// `before` is the text before the cursor when the key `terminator` came, which ends in
+    /// `inField`. `askedChecker` says that the spell checker just read the span. The log
+    /// does not change the field.
+    private func logCommittedWord(
+        typed: String, inField: String, shown: String, terminator: String, before: String, askedChecker: Bool,
+        kept: Bool
+    ) {
+        guard let typingLog, typingLog.isOn else { return }
+        typingLog.wordCommitted(
+            typed: typed, inField: inField, shown: shown, terminator: terminator,
+            textBefore: String(before.dropLast(inField.count)),
+            detail: askedChecker ? spellChecker.lastReadingDetail : nil, kept: kept,
+            field: document.documentIdentifier)
+    }
+
+    /// Tells the typing log that the backspace key deletes the character before the cursor next.
+    private func logBackspace() {
+        guard let typingLog, typingLog.followsAWord else { return }
+        typingLog.backspace(textBefore: document.textBeforeCursor, field: document.documentIdentifier)
+    }
+
     // MARK: Chinese
 
     private func refreshCandidates() {
@@ -728,6 +831,10 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
             updateAutoShift()
             return
         }
+        if text == " ", !chineseMode, runTypingLogCommand() {
+            updateAutoShift()
+            return
+        }
         let now = ProcessInfo.processInfo.systemUptime
         if text == " ", !chineseMode, previousInsertWasSpace, now - lastSpaceTime < 1.5,
             KeyboardTextLogic.shouldReplaceDoubleSpace(before: document.textBeforeCursor) {
@@ -784,6 +891,10 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
         // A word the person brought back after a correction stays as typed.
         guard !keepsAsTyped(word) else {
             if followedBySpace { recentWord = RecentWord(typed: word, shown: word, context: contextAfterSpace()) }
+            // Typing log: a kept word is a committed word that the keyboard did not change.
+            logCommittedWord(
+                typed: word, inField: word, shown: word, terminator: terminator, before: before, askedChecker: false,
+                kept: true)
             return
         }
         var typedSpan = word
@@ -825,6 +936,10 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
             lastCorrection = Correction(original: shownSpan, corrected: final, terminator: terminator)
             showNotice("\(shownSpan) \u{2192} \(final)")
         }
+        // Typing log: the committed word, with or without a change.
+        logCommittedWord(
+            typed: typedSpan, inField: shownSpan, shown: final, terminator: terminator, before: before,
+            askedChecker: typedSpan.count >= 2, kept: false)
         if followedBySpace, let last = finalWords.last {
             // After a correction that joined or split words, the last shown word counts as typed
             // that way, so the next correction does not take the same keys apart again.
@@ -861,6 +976,9 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
             spellChecker.learn(String(word))
         }
         showNotice("Kept \(correction.original)")
+        // Typing log: the person brought the typed text back.
+        typingLog?.correctionReverted(
+            original: correction.original, corrected: correction.corrected, field: document.documentIdentifier)
         return true
     }
 
@@ -922,6 +1040,8 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
         }
         previousInsertWasSpace = false
         if !undoLastCorrection() {
+            // Typing log: a backspace into a sampled word marks its record.
+            logBackspace()
             document.deleteBackward()
         }
         recentWord = nil
