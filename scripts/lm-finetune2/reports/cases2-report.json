@@ -1,0 +1,134 @@
+{
+  "export_sha256": "1a2d75ac07aa5d035bff4e2bf053139dfd3b1f1645f6fd3d76fc852cc9ef6020",
+  "wordfreq": "3.1.1",
+  "round1_cases": 120633,
+  "round1_source_sentences": 110153,
+  "export_lines": 2040567,
+  "pass_filter": 1611121,
+  "drops": {
+    "id": 13541,
+    "same_as_source": 67,
+    "same_as_context": 266,
+    "holds_context_and_intended": 914154
+  },
+  "pool": 683093,
+  "fresh_pool": 572446,
+  "sentences": {
+    "holdout": 85621,
+    "select": 28569,
+    "tune": 28394,
+    "stop": 28653,
+    "train": 399457
+  },
+  "same_text_as_an_earlier_split": {
+    "holdout": 41,
+    "select": 35,
+    "tune": 34,
+    "stop": 50,
+    "train": 1592
+  },
+  "holdout_word_lists": {
+    "rare": 27593,
+    "names": 73,
+    "symbol_tokens": 129,
+    "unused_digit_tokens": 377
+  },
+  "holdout_generated": {
+    "cases": 6745,
+    "dropped": {
+      "intended_holds_a_dev_or_test_list_word": 4,
+      "typed_is_a_published_misspelling": 50
+    },
+    "categories": {
+      "clean_common": 300,
+      "clean_rare": 299,
+      "clean_names_and_terms": 73,
+      "clean_two_words": 300,
+      "substitution_adjacent": 295,
+      "deletion": 289,
+      "double_letter": 297,
+      "extra_adjacent": 300,
+      "transposition": 297,
+      "two_errors": 300,
+      "short_word_slip": 296,
+      "space_missing": 299,
+      "space_to_letter": 299,
+      "space_transposed": 296,
+      "space_extra": 294,
+      "letter_to_space": 288,
+      "apostrophe_missing": 298,
+      "real_word_slip": 300,
+      "symbol_first_letter": 300,
+      "symbol_inner_letter": 297,
+      "symbol_first_letter_two_words": 299,
+      "symbol_plus_letter_slip": 300,
+      "clean_symbol_token": 129,
+      "clean_bracket_or_dot_word": 300
+    }
+  },
+  "open_sentences": {
+    "holdout": 5126,
+    "select": 1726,
+    "tune": 1714,
+    "stop": 1670,
+    "train": 24087
+  },
+  "streams": {
+    "holdout_closed": {
+      "sentences": 3000,
+      "words": 19482,
+      "skipped_for_a_guarded_word": 0
+    },
+    "holdout_open": {
+      "sentences": 1000,
+      "words": 6578,
+      "skipped_for_a_guarded_word": 0
+    },
+    "select_closed": {
+      "sentences": 1000,
+      "words": 6449,
+      "skipped_for_a_guarded_word": 0
+    },
+    "select_open": {
+      "sentences": 300,
+      "words": 1990,
+      "skipped_for_a_guarded_word": 0
+    },
+    "tune_closed": {
+      "sentences": 1000,
+      "words": 6452,
+      "skipped_for_a_guarded_word": 0
+    },
+    "tune_open": {
+      "sentences": 300,
+      "words": 2035,
+      "skipped_for_a_guarded_word": 0
+    },
+    "stop_closed": {
+      "sentences": 400,
+      "words": 2683,
+      "skipped_for_a_guarded_word": 2
+    },
+    "stop_open": {
+      "sentences": 100,
+      "words": 748,
+      "skipped_for_a_guarded_word": 221
+    },
+    "train_closed": {
+      "sentences": 7000,
+      "words": 45194,
+      "skipped_for_a_guarded_word": 55
+    },
+    "train_open": {
+      "sentences": 1500,
+      "words": 10793,
+      "skipped_for_a_guarded_word": 2953
+    }
+  },
+  "wikipedia_cases": {
+    "typed_is_an_evaluation_misspelling": 232,
+    "right_word_in_no_sentence": 152,
+    "stop": 212,
+    "train": 3099
+  }
+}

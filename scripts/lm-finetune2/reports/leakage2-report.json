@@ -1,0 +1,135 @@
+{
+  "holdout": {
+    "cases": 10745,
+    "sentences": 10474,
+    "dev_or_test_id": 0,
+    "same_as_dev_or_test_source": 0,
+    "same_as_dev_or_test_context": 0,
+    "holds_dev_or_test_context_and_intended": 0,
+    "context_not_from_sentence": 0,
+    "round1_id": 0,
+    "same_as_round1_sentence": 0
+  },
+  "select": {
+    "cases": 1300,
+    "sentences": 1300,
+    "dev_or_test_id": 0,
+    "same_as_dev_or_test_source": 0,
+    "same_as_dev_or_test_context": 0,
+    "holds_dev_or_test_context_and_intended": 0,
+    "context_not_from_sentence": 0,
+    "round1_id": 0,
+    "same_as_round1_sentence": 0
+  },
+  "tune": {
+    "cases": 1300,
+    "sentences": 1300,
+    "dev_or_test_id": 0,
+    "same_as_dev_or_test_source": 0,
+    "same_as_dev_or_test_context": 0,
+    "holds_dev_or_test_context_and_intended": 0,
+    "context_not_from_sentence": 0,
+    "round1_id": 0,
+    "same_as_round1_sentence": 0
+  },
+  "stop": {
+    "cases": 712,
+    "sentences": 679,
+    "dev_or_test_id": 0,
+    "same_as_dev_or_test_source": 0,
+    "same_as_dev_or_test_context": 0,
+    "holds_dev_or_test_context_and_intended": 0,
+    "context_not_from_sentence": 0,
+    "round1_id": 0,
+    "same_as_round1_sentence": 0
+  },
+  "train": {
+    "cases": 11599,
+    "sentences": 11365,
+    "dev_or_test_id": 0,
+    "same_as_dev_or_test_source": 0,
+    "same_as_dev_or_test_context": 0,
+    "holds_dev_or_test_context_and_intended": 0,
+    "context_not_from_sentence": 0,
+    "round1_id": 0,
+    "same_as_round1_sentence": 0
+  },
+  "shared_between_new_splits": {
+    "holdout-select": {
+      "ids": 0,
+      "texts": 0
+    },
+    "holdout-tune": {
+      "ids": 0,
+      "texts": 0
+    },
+    "holdout-stop": {
+      "ids": 0,
+      "texts": 0
+    },
+    "holdout-train": {
+      "ids": 0,
+      "texts": 0
+    },
+    "select-tune": {
+      "ids": 0,
+      "texts": 0
+    },
+    "select-stop": {
+      "ids": 0,
+      "texts": 0
+    },
+    "select-train": {
+      "ids": 0,
+      "texts": 0
+    },
+    "tune-stop": {
+      "ids": 0,
+      "texts": 0
+    },
+    "tune-train": {
+      "ids": 0,
+      "texts": 0
+    },
+    "stop-train": {
+      "ids": 0,
+      "texts": 0
+    }
+  },
+  "training_typed_is_an_evaluation_misspelling": 0,
+  "training_sentence_holds_a_guarded_word": 0,
+  "holdout_list_word_in_a_round1_case": 0,
+  "mitton_pair_in_round1_dev_or_test": 0,
+  "mitton_pair_twice": 0,
+  "github_right_words_in_both_halves": 0,
+  "holdout_generated_seen_in_training": {
+    "cases": 6745,
+    "with_context": 5746,
+    "phrase_in_a_training_sentence": 1284,
+    "slip_cases": 5344,
+    "slip_pair_is_a_training_case": 2296,
+    "slip_pair_is_a_training_list": 2340
+  },
+  "holdout_list_words": {
+    "words": 501,
+    "in_a_training_list_context": 30,
+    "among_the_readings_of_a_training_list": 161
+  },
+  "real_typo_pairs_seen_in_training": {
+    "cases.github.select.jsonl": {
+      "cases": 2500,
+      "pair_is_a_training_case": 247,
+      "pair_is_a_training_list": 289
+    },
+    "cases.github.holdout.jsonl": {
+      "cases": 2500,
+      "pair_is_a_training_case": 211,
+      "pair_is_a_training_list": 244
+    },
+    "cases.mitton-remainder.holdout.jsonl": {
+      "cases": 721,
+      "pair_is_a_training_case": 34,
+      "pair_is_a_training_list": 38
+    }
+  }
+}
