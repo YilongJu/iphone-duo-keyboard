@@ -173,6 +173,22 @@ def replacement_conditions(sets: Sets, arm: Arm, reference: Arm, control: Arm) -
     return {"conditions": conditions, "passes": all(conditions.values()), "numbers": numbers}
 
 
+def paired_counts(sets: Sets, arm: Arm, reference: Arm) -> dict:
+    """Cases that only one of two arms gets right, per group of cases, with the two-sided exact
+    McNemar p value. The repeats of one context and one intended text are counted as cases, so
+    the p value of the generated groups reads a little too small."""
+    groups = {"clean and clean symbols": sets.groups["clean"] + sets.groups["clean_symbols"], "non-word slips": sets.non_word,
+              "real-word slips": sets.groups["real_word_slip"], "real misspellings": sets.github_misspelling + sets.lists,
+              "github misspelling": sets.github_misspelling, "lists": sets.lists, "github real word": sets.github_real_word}
+    result = {}
+    for label, cases in groups.items():
+        only_arm = sum(1 for case in cases if arm.right[case["id"]] and not reference.right[case["id"]])
+        only_reference = sum(1 for case in cases if reference.right[case["id"]] and not arm.right[case["id"]])
+        p_value = min(1.0, 2 * binomial_tail(min(only_arm, only_reference), only_arm + only_reference))
+        result[label] = {"cases": len(cases), "only_arm": only_arm, "only_reference": only_reference, "two_sided_p": p_value}
+    return result
+
+
 def seen_flags(round1: Path, data: Path, generated: list[dict]) -> tuple[set, set]:
     """The phrases (context and intended text) of the generated cases that a training sentence
     holds, and the typed and target pairs of every training and stopping list."""
@@ -366,6 +382,13 @@ def holdout(arguments) -> None:
           f"{d['numbers']['mcnemar_one_sided_p']:.3g}",
           f"{d['numbers']['non_word_difference']:+d} ({d['numbers']['non_word_interval'][0]:+d} to {d['numbers']['non_word_interval'][1]:+d})"]
          for name, d in result["every_arm_against_ship"].items()]) + "\n"
+    result["paired_against_ship"] = {name: paired_counts(sets, arm, arms["ship"]) for name, arm in arms.items() if name != "ship"}
+    labels = list(next(iter(result["paired_against_ship"].values())))
+    text += ("Table H. Cases that only the arm gets right, and cases that only `ship` gets right, per group. The p value is the "
+             "two-sided exact McNemar test.\n\n") + table(
+        ["Arm", *[f"{label}: only arm / only ship (p)" for label in labels]],
+        [[f"`{name}`", *[f"{entry[label]['only_arm']} / {entry[label]['only_reference']} ({entry[label]['two_sided_p']:.3g})" for label in labels]]
+         for name, entry in result["paired_against_ship"].items()]) + "\n"
     arguments.out.mkdir(parents=True, exist_ok=True)
     (arguments.out / "holdout-summary.json").write_text(json.dumps(result, indent=2), encoding="utf-8")
     (arguments.out / "holdout-summary.md").write_text(text, encoding="utf-8")

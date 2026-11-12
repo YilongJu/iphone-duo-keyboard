@@ -1,0 +1,3 @@
+# The shell scripts run in WSL, and the plan is checked by its SHA-256, so both keep LF line ends.
+*.sh text eol=lf
+holdout-plan.json text eol=lf
