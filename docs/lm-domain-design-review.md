@@ -30,6 +30,17 @@ Table 1. Each point of the review, the decision, and the change.
 | 12 | "The 18 requested words do not stand in the domain text" was false. The exposure of 1.0 at share 1.0 was an estimate. | Accepted | The design states the mechanism: the builder takes its words from the corpus words. The results page gives the realized list counts and exposure. |
 | 13 | Condition 8 named three kinds of file while soups are eligible. The audit did not fix its sample or the order of its labels. | Accepted | The parity condition covers every entry, and `summarize3.py` reads the measured differences. `label-rule.md` fixes the sample, the order of the labels and the label `unclear`. |
 
+## Amendments to the design after the first scores
+
+Table 2. Each amendment, its date, and the scores that existed when it was written. No amendment uses held-out data.
+
+| Date | Amendment | Scores seen before it | Reason |
+| --- | --- | --- | --- |
+| 2026-11-12 | The lead of the apostrophe step is tuned per file and setting, by the rule that `engine/lm-keyboard` used for the shipped file. The pick reads an entry at its own lead. The tables show the lead of `ship` beside it. | Selection scores of the first ten arms at lead 4, the lead of `ship` | Lead 4 was picked for the shipped file alone, and the harness gave it to every file. A drop of the apostrophe words can be an effect of that setting. |
+| 2026-11-12 | The results give, for each entry that misses a pinned dev floor, the dev cases that only `ship` has right and the cases that only the entry has right. The floors stay as written. | The same scores | A reader sees the size of a miss of 1 to 3 cases beside the gains. |
+| 2026-11-12 | One more arm can join the third wave: the picked share with apostrophe lists in the stock prompt. It trains only when the picked share, at its own lead, stays more than 8 next-word cases under `ship`. | The same scores | The step reads the stock prompt, and the fine-tune trains on the typed prompt only. |
+| 2026-11-12 | The parity condition is read three ways and the pick is reported for each: the f16 file as written, an F32 file, and an F32 file with a 32-bit cache. The limit stays 0.05. No file ships on the second or third reading before the user chooses. | Parity results of 18 files | The parity study shows that the differences come from 16-bit arithmetic of llama.cpp. |
+
 ## Checks of the review that I repeated
 
 - The 200 clean lists of round 2 with a target that adds a word: counted in `lists2.train.jsonl.gz`, 200 of 54,759.

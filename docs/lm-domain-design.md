@@ -224,6 +224,10 @@ The expected cost is exact, because a list holds at most 8 readings. A wrong rea
 3. The model types every evaluation set at each named setting.
 4. The model types the domain sets once more at the shipped setting without the protection.
 
+The apostrophe step of a setting has its own lead. `tune_apostrophe.py` picks it per file and setting on the dev half of the apostrophe words, by the rule of `scripts/lm-rerank/apostrophe_words.py`.
+A lead of the grid 0.5 to 8 is allowed when it keeps every category of the generated dev half, and the two clean controls of the apostrophe words, at the count of the same setting without the step. The allowed lead with the most right next-word cases wins, and the first lead of the grid wins a tie.
+The pick reads an entry at its own lead. The tables also show every file at lead 4, the lead of `ship`.
+
 The perfect chooser keeps a clean case as typed, so its count is exact there. For a case with a slip it searches the readings that keep the field a start of the intended text, for 40 typings at most. Its count is then a lower bound of the true ceiling. The perfect chooser sees the lists that the model sees, so the protection of a typed new word binds it too.
 
 Table 7. Rules that name a setting from the grid. Among the allowed settings, the one with the most right generated tuning cases wins. A tie goes to fewer changed words, then to the earlier grid row.
