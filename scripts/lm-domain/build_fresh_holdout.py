@@ -14,13 +14,15 @@ cases.domain.fresh.jsonl        the technical and everyday groups of english-dom
 cases.domain-stream.fresh.jsonl 1,000 technical and 300 written sentences of the same documents
 
 Rules that make a case fresh:
-- A Tatoeba sentence is the source of no case of round 1 or round 2. For the held-out files of
-  round 2 this script reads only the field `source` of each case, and the field `intended` of the
-  three list-based clean categories, to leave those sentences and words out.
+- A Tatoeba sentence is the source of no case of round 1 or round 2, and of no dev or test case
+  of the pack. For the held-out files of round 2 this script reads only the field `source` of
+  each case, and the field `intended` of the three list-based clean categories, to leave those
+  sentences and words out.
 - A GitHub or Birkbeck pair is not a pick of round 2. The script repeats the seeded picks of
   build_real_typo_cases.py with that script's own code, and leaves them out with their pairs.
 - A technical sentence comes from a document that is the source of no dev or test case of the
-  pack, and its letters differ from every dev sentence.
+  pack. Its letters differ from every dev sentence, from every sentence of a document that
+  feeds a dev or test case, and from every sentence of a dev or test stream.
 - A domain slip case never has the typed and intended pair of a training case or of a dev or test
   case of the pack. A domain case never equals a dev or test case of the pack.
 - A word of a list-based clean category and an open word of a stream stand in no training sentence.
@@ -137,8 +139,17 @@ def main():
                 used_ids.add(source_id(case))
                 if case["category"] in r1.LIST_CATEGORIES:
                     used_list_words.add(case["intended"])
-    sentences = [(i, words) for i, words in by_split["holdout"] if i not in used_ids]
+    # The everyday cases of the pack take Tatoeba sentences from every bucket, so a sentence of a
+    # held-out bucket can be the source of a dev or test case of the pack. It stays out too,
+    # and so does a sentence with the words of an everyday stream sentence of the pack.
+    pack_cases = [case for half in ("dev", "test") for name in ("english-domain", "english-domain-stream")
+                  for case in read_jsonl(dom.OUTPUT_DIR / f"{name}.{half}.jsonl")]
+    pack_ids = {source_id(case) for case in pack_cases if case["source"].startswith("tatoeba:")}
+    pack_stream_texts = {case["typed"] for case in pack_cases if case.get("stream") == "everyday"}
+    sentences = [(i, words) for i, words in by_split["holdout"]
+                 if i not in used_ids and i not in pack_ids and " ".join(words) not in pack_stream_texts]
     report["tatoeba"] = {"held_out_buckets": len(by_split["holdout"]), "sources_of_round2_held_out_cases": len(used_ids),
+                         "sources_of_dev_or_test_cases_of_the_pack": len(pack_ids & {i for i, _ in by_split["holdout"]}),
                          "sentences_left": len(sentences)}
 
     # ---- Generated cases, with the generators and counts of the generated dev half ----
@@ -239,14 +250,24 @@ def main():
     known = set(base_words) | set(table)
     phrases = [line.split("\t")[0] for line in (dom.PACK / "ai-software.phrases.tsv").read_text(encoding="utf-8").splitlines()[1:]
                if "'" not in line.split("\t")[0]]
-    pack_cases = [case for half in ("dev", "test") for name in ("english-domain", "english-domain-stream")
-                  for case in read_jsonl(dom.OUTPUT_DIR / f"{name}.{half}.jsonl")]
     pack_sources = {case["source"] for case in pack_cases}
     pack_pairs = {(case["typed"].lower(), case["intended"].lower()) for case in pack_cases}
     pack_texts = {(case["context"], case["typed"], case["intended"]) for case in pack_cases}
     dom.CORPUS = arguments.data / "pack-corpus"
     dev_letters = {dom.letters_of(" ".join(row["tokens"])) for row in dom.technical_sentences("dev")}
-    technical = [row for row in dom.technical_sentences("test", dev_letters) if dom.source_of(row) not in pack_sources]
+    # The letters of every sentence of a document that feeds a dev or test case, and of every
+    # sentence of a dev or test stream. A sentence of another document with the same letters is
+    # text that a model was scored on, so it stays out too.
+    used_letters = {dom.letters_of(case["typed"]) for case in pack_cases if "stream" in case}
+    for half in ("dev", "test"):
+        with (dom.CORPUS / f"sentences.{half}.jsonl").open(encoding="utf-8") as file:
+            for line in file:
+                row = json.loads(line)
+                if dom.source_of(row) in pack_sources:
+                    used_letters.add(dom.letters_of(row["text"]))
+    left = [row for row in dom.technical_sentences("test", dev_letters) if dom.source_of(row) not in pack_sources]
+    technical = [row for row in left if dom.letters_of(" ".join(row["tokens"])) not in used_letters]
+    same_letters = len(left) - len(technical)
     random.Random(f"{SEED}-technical").shuffle(technical)
     builder = dom.Builder("fresh", known)
     dom.build_technical(builder, technical, table, kinds, phrases)
@@ -298,7 +319,9 @@ def main():
     counts = {}
     for case in domain:
         counts[case["category"]] = counts.get(case["category"], 0) + 1
-    report["domain"] = {"technical_sentences_left": len(technical), "cases": len(domain), "dropped": domain_dropped,
+    report["domain"] = {"technical_sentences_left": len(technical),
+                        "technical_sentences_with_the_letters_of_an_evaluated_sentence": same_letters,
+                        "cases": len(domain), "dropped": domain_dropped,
                         "categories": counts, "neighbour_sentences": len(neighbour_sentences),
                         "stream": {kind: {"sentences": sum(1 for row in domain_stream if row["stream"] == kind),
                                           "words": sum(len(row["typed"].split()) for row in domain_stream if row["stream"] == kind)}

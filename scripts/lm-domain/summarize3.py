@@ -3,10 +3,13 @@
 For every arm in build/lm-domain/results and every setting rule, the script gives the counts of
 each evaluation set, beside the engine alone and the perfect chooser, with the share of the gap
 closed. It then applies three rules of docs/lm-domain-design.md to the selection sets:
-- the pick of one candidate (eight conditions against `ship`),
+- the pick of one candidate (nine conditions against `ship`),
 - the share rule of the third wave,
 - the loss rule of the third wave.
-The domain test half is shown and decides nothing. A held-out set is never read here.
+The domain counts leave out the cases that audit_overlap.py marks, because a training case
+holds their text. A second table shows the marked cases alone. The test half of the domain
+cases is shown when an arm has its result-test.json, and it decides nothing. A held-out set is
+never read here.
 
 Outputs in --out: tables.md, and summary.json with every number of the tables.
 
@@ -28,11 +31,14 @@ RULES = ("shipped", "ceiling-0.3", "ceiling-0.2", "control-rule")
 PICK_RULES = ("shipped", "ceiling-0.3", "ceiling-0.2")
 # The pinned dev numbers of engine/lm-keyboard (scripts/lm-keyboard/compare.py, PUBLISHED).
 PINNED = {"clean": 953, "letter_slips": 2057, "space_slips": 1387, "symbol_slips": 1165, "clean_symbols": 428, "all": 6542}
-PRICE_GROUPS = ("term_for_everyday_word",)
 PRICE_CATEGORIES = ("neighbour_slip_onto_term", "requested_term_for_everyday_word")
-REFERENCE_ARMS = ("ship", "mix-seed1", "mix-seed2", "mix-seed3", "engine")
+TERM_SLIP_CATEGORIES = ("domain_slip_new", "domain_slip_raised", "capital_slip_lower", "capital_slip_deliberate",
+                        "capital_slip_sentence_start", "term_space_extra", "term_letter_to_space")
+# The order of the arms in every table: the order of Table 5 of the design.
+ORDER = ["ship", "mix-seed1", "mix-seed2", "mix-seed3", "soup-mix", "soup-r1", "ce-c1-seed1", "dom-s0-seed1", "dom-s0-seed2",
+         "ce-c4-seed1", "ce-c4-seed2", "ec-c4-seed1", "ec-c4-seed2", "dom-s15-seed1", "dom-s40-seed1", "dom-s100-seed1"]
 SHARES = {"dom-s15-seed1": "0.15", "dom-s40-seed1": "0.4", "dom-s100-seed1": "1.0"}
-LOSS_ARMS = {"ce-c4": ("ce-c4-seed1", "ce-c4-seed2"), "ec-c4": ("ec-c4-seed1", "ec-c4-seed2")}
+LOSS_MINIMUM_GAIN = 10
 
 
 def read_outputs(path: Path) -> dict[str, dict[str, str]]:
@@ -44,33 +50,60 @@ def read_outputs(path: Path) -> dict[str, dict[str, str]]:
     return outputs
 
 
-def domain_pools(cases: list[dict], outputs: dict[str, str], requested: set[str]) -> dict:
-    """Pooled counts of a domain case set: the clean cases (the typed text is the intended
-    text), the slip cases outside the price categories, and the slips of words by the way the
-    training treated the word: with slip cases, withheld, or a requested word."""
-    pools = {name: [0, 0] for name in ("clean", "slips", "slips_trained_words", "slips_withheld_words", "slips_requested_words", "price")}
+def domain_counts(cases: list[dict], outputs: dict[str, str], requested: set[str], marked: set[str]) -> dict:
+    """Counts of one domain case set as [right, cases]. `all`, the groups and the pools leave the
+    marked cases out, and `marked` holds the marked cases alone. The pools: `clean` for a case
+    whose typed letters are its intended letters, `slips` for a slip case outside the price
+    categories, `price` for those, `required` for the group of the requested words, and the
+    slips of pack words by the way the training treated the word."""
+    counts = {name: [0, 0] for name in ("all", "marked", "clean", "slips", "price", "required", "slips_trained_words",
+                                         "slips_withheld_words", "slips_requested_words")}
+    groups: dict[str, list[int]] = {}
     for case in cases:
         right = int(harness.is_right(case, outputs[case["id"]]))
-        if case["typed"] == case["intended"]:
-            names = ["clean"]
-        elif case["group"] in PRICE_GROUPS or case["category"] in PRICE_CATEGORIES:
-            names = ["price"]
+        if case["id"] in marked:
+            names = ["marked"]
         else:
-            names = ["slips"]
-            term = case.get("term")
-            if case["category"] in ("domain_slip_new", "domain_slip_raised", "capital_slip_lower", "capital_slip_deliberate",
-                                    "capital_slip_sentence_start", "term_space_extra", "term_letter_to_space"):
-                names.append("slips_withheld_words" if is_withheld(term) else "slips_trained_words")
-            elif term in requested and case["category"].startswith("required_slip"):
-                names.append("slips_requested_words")
+            names = ["all"]
+            group = groups.setdefault(case["group"], [0, 0])
+            group[0] += right
+            group[1] += 1
+            if case["group"] == "required":
+                names.append("required")
+            if case["typed"].lower() == case["intended"].lower():
+                names.append("clean")
+            elif case["category"] in PRICE_CATEGORIES:
+                names.append("price")
+            else:
+                names.append("slips")
+                term = case.get("term")
+                if term in requested:
+                    names.append("slips_requested_words")
+                elif case["category"] in TERM_SLIP_CATEGORIES:
+                    names.append("slips_withheld_words" if is_withheld(term) else "slips_trained_words")
         for name in names:
-            pools[name][0] += right
-            pools[name][1] += 1
-    return pools
+            counts[name][0] += right
+            counts[name][1] += 1
+    counts["groups"] = groups
+    return counts
 
 
-def metrics_of(sets: dict, summaries: dict, outputs: dict, requested: set[str]) -> dict:
-    """The numbers of one arm at one setting that the tables and the rules use."""
+def stream_counts(cases: list[dict], outputs: dict[str, str], marked: set[str]) -> dict:
+    """Changed words per stream of a domain stream set, without the marked sentences, and the
+    changed words of the marked sentences alone."""
+    counts: dict[str, list[int]] = {}
+    for case in cases:
+        name = "marked" if case["id"] in marked else case["stream"]
+        entry = counts.setdefault(name, [0, 0])
+        entry[0] += harness.changed_words(case, outputs[case["id"]])
+        entry[1] += len(case["intended"].split())
+    counts.setdefault("marked", [0, 0])
+    counts["technical_written"] = [counts["technical"][0] + counts["written"][0], counts["technical"][1] + counts["written"][1]]
+    return counts
+
+
+def select_metrics(sets: dict, summaries: dict, outputs: dict, requested: set[str], marked: dict) -> dict:
+    """The numbers of one arm at one setting on the selection sets."""
     dev = summaries["dev"]
     github = summaries["github_select"]["categories"]
     metrics = {
@@ -80,23 +113,24 @@ def metrics_of(sets: dict, summaries: dict, outputs: dict, requested: set[str]) 
         "published_dev": summaries["published_dev"]["right"],
         "github_misspelling": github["github_misspelling"][0], "github_real_word": github["github_real_word"][0],
         "stream_select_changed": summaries["stream_select"]["changed_words"],
+        "domain_dev": domain_counts(sets["domain_dev"]["cases"], outputs["domain_dev"], requested, set(marked["domain_dev"])),
+        "domain_stream_dev": stream_counts(sets["domain_stream_dev"]["cases"], outputs["domain_stream_dev"], set(marked["domain_stream_dev"])),
     }
     metrics["real_misspellings"] = metrics["published_dev"] + metrics["github_misspelling"]
-    for half in ("dev", "test"):
-        name = f"domain_{half}"
-        metrics[f"{name}_right"] = summaries[name]["right"]
-        metrics[f"{name}_groups"] = {group: value[0] for group, value in summaries[name]["groups"].items()}
-        metrics[f"{name}_pools"] = domain_pools(sets[name]["cases"], outputs[name], requested)
-        streams = summaries[f"domain_stream_{half}"]["streams"]
-        metrics[f"{name}_stream"] = {kind: entry["changed_words"] for kind, entry in streams.items()}
-        metrics[f"{name}_technical_written_changed"] = streams["technical"]["changed_words"] + streams["written"]["changed_words"]
     return metrics
 
 
+def test_metrics(sets: dict, outputs: dict, requested: set[str], marked: dict) -> dict:
+    return {"domain_test": domain_counts(sets["domain_test"]["cases"], outputs["domain_test"], requested, set(marked["domain_test"])),
+            "domain_stream_test": stream_counts(sets["domain_stream_test"]["cases"], outputs["domain_stream_test"],
+                                                set(marked["domain_stream_test"]))}
+
+
 def pick_conditions(entry: dict, ship: dict, engine: dict, parity_passes: bool | None) -> dict:
-    """The eight conditions of the pick, each True or False."""
+    """The nine conditions of the pick, each True or False. `parity_passes` is None for a file
+    without a parity result, and the condition then does not hold."""
     dev, ship_dev = entry["dev_groups"], ship["dev_groups"]
-    pools, ship_pools = entry["domain_dev_pools"], ship["domain_dev_pools"]
+    domain, ship_domain = entry["domain_dev"], ship["domain_dev"]
     gain = ship_dev["real_word_slip"] - engine["dev_groups"]["real_word_slip"]
     pinned = all(dev[name] >= count for name, count in PINNED.items() if name != "all") and entry["dev_right"] >= PINNED["all"]
     return {
@@ -106,14 +140,17 @@ def pick_conditions(entry: dict, ship: dict, engine: dict, parity_passes: bool |
         "4 non-word slips": entry["dev_non_word_slips"] >= ship["dev_non_word_slips"] - 25,
         "5 real-word slips": dev["real_word_slip"] - engine["dev_groups"]["real_word_slip"] >= gain / 2,
         "6 pinned dev counts": pinned,
-        "7 domain dev": pools["clean"][0] >= ship_pools["clean"][0]
-        and pools["slips"][0] >= ship_pools["slips"][0] - 0.005 * ship_pools["slips"][1],
-        "8 parity": parity_passes is not False,
+        "7 domain dev": domain["clean"][0] >= ship_domain["clean"][0]
+        and domain["slips"][0] >= ship_domain["slips"][0] - 0.005 * ship_domain["slips"][1]
+        and domain["required"][0] >= ship_domain["required"][0] - 0.01 * ship_domain["required"][1],
+        "8 apostrophe words": entry["apostrophe_word"] >= ship["apostrophe_word"] - 8
+        and entry["apostrophe_next_word"] >= ship["apostrophe_next_word"] - 8,
+        "9 parity": parity_passes is True,
     }
 
 
 def parity_of(folder: Path, arm: str) -> dict | None:
-    """The parity results of an arm of this round, or None for an arm without them."""
+    """The parity results of an arm, or None for an arm without both of them."""
     found = {}
     for lists in ("everyday", "domain"):
         path = folder / arm / lists / "parity.json"
@@ -129,6 +166,45 @@ def parity_of(folder: Path, arm: str) -> dict | None:
     return found
 
 
+def third_wave(arms: dict, ship: dict, engine: dict) -> dict:
+    """The share rule and the loss rule of the design. A rule that still waits for an arm says so."""
+    wave: dict = {}
+    missing = [arm for arm in SHARES if arm not in arms]
+    if missing:
+        wave["share"] = {"waits_for": missing}
+    else:
+        rows = []
+        for arm, share in SHARES.items():
+            metrics = arms[arm]["rules"]["shipped"]
+            conditions = pick_conditions(metrics, ship, engine, None)
+            rows.append({"arm": arm, "share": share, "passes_conditions_1_to_5": all(list(conditions.values())[:5]),
+                         "technical_written_changed": metrics["domain_stream_dev"]["technical_written"][0]})
+        passing = [row for row in rows if row["passes_conditions_1_to_5"]] or rows
+        wave["share"] = {"rows": rows, "picked": min(passing, key=lambda row: (row["technical_written_changed"], float(row["share"])))["share"]}
+
+    def score(arm: str) -> tuple[int, int] | None:
+        metrics = arms.get(arm, {}).get("rules", {}).get("ceiling-0.3")
+        return None if metrics is None else (metrics["dev_right"] + metrics["real_misspellings"], metrics["stream_select_changed"])
+
+    bases = {seed: score(f"dom-s0-seed{seed}") for seed in (1, 2)}
+    if any(arm not in arms for arm in ("dom-s0-seed1", "dom-s0-seed2", "ce-c4-seed1", "ce-c4-seed2", "ec-c4-seed1", "ec-c4-seed2")):
+        wave["loss"] = {"waits_for": [arm for arm in ("dom-s0-seed1", "dom-s0-seed2", "ce-c4-seed1", "ce-c4-seed2", "ec-c4-seed1",
+                                                      "ec-c4-seed2") if arm not in arms]}
+    else:
+        rows = []
+        for loss in ("ce-c4", "ec-c4"):
+            pairs = [(score(f"{loss}-seed{seed}"), bases[seed]) for seed in (1, 2)]
+            helps = all(mine is not None and base is not None and mine[0] >= base[0] + LOSS_MINIMUM_GAIN and mine[1] <= base[1]
+                        for mine, base in pairs)
+            scores = [mine[0] for mine, _ in pairs if mine is not None]
+            rows.append({"loss": loss, "pairs_of_loss_and_base": pairs, "helps": helps,
+                         "mean_score": sum(scores) / len(scores) if scores else None})
+        helping = [row for row in rows if row["helps"]]
+        wave["loss"] = {"rows": rows,
+                        "picked": max(helping, key=lambda row: (row["mean_score"], row["loss"] == "ce-c4"))["loss"] if helping else None}
+    return wave
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--results", type=Path, required=True)
@@ -136,23 +212,27 @@ def main():
     parser.add_argument("--parity", type=Path, required=True)
     parser.add_argument("--out", type=Path, required=True)
     arguments = parser.parse_args()
-    sets = harness.load_sets(arguments.data, "evaluation")
+    select_sets = harness.load_sets(arguments.data, "select")
+    test_sets = harness.load_sets(arguments.data, "test")
+    marked = json.loads((arguments.data / "overlap.json").read_text(encoding="utf-8"))["marked"]
     requested = {line.split("\t")[0] for line in (ROOT / "scripts" / "domain-pack" / "pack" / "required-terms.tsv")
                  .read_text(encoding="utf-8").splitlines() if line.strip() and not line.startswith("#")} - {"word"}
-    arms = sorted(path.parent.name for path in arguments.results.glob("*/result.json"))
-    if "ship" not in arms:
+    found = sorted(path.parent.name for path in arguments.results.glob("*/result.json"))
+    names = [arm for arm in ORDER if arm in found] + [arm for arm in found if arm not in ORDER]
+    if "ship" not in names:
         raise SystemExit("the results hold no arm `ship`")
-    summary = {"arms": {}, "sets": {name: len(entry["cases"]) for name, entry in sets.items()}}
+    summary: dict = {"arms": {}, "marked_cases": {name: len(ids) for name, ids in marked.items()}}
     engine = perfect = None
-    for arm in arms:
+    engine_test = perfect_test = None
+    for arm in names:
         folder = arguments.results / arm
         result = json.loads((folder / "result.json").read_text(encoding="utf-8"))
         if "evaluation" not in result:
             continue
         if engine is None:
-            engine = metrics_of(sets, result["engine"]["evaluation"], read_outputs(folder / "outputs.engine.jsonl"), requested)
-            perfect = metrics_of(sets, result["perfect"]["evaluation"], read_outputs(folder / "outputs.perfect.jsonl"), requested)
-        entry = {"model_sha256": result["model_sha256"], "parity": parity_of(arguments.parity, arm), "rules": {}}
+            engine = select_metrics(select_sets, result["engine"]["evaluation"], read_outputs(folder / "outputs.select.engine.jsonl"), requested, marked)
+            perfect = select_metrics(select_sets, result["perfect"]["evaluation"], read_outputs(folder / "outputs.select.perfect.jsonl"), requested, marked)
+        entry = {"model_sha256": result["model_sha256"], "parity": parity_of(arguments.parity, arm), "rules": {}, "test": None}
         for rule in RULES:
             evaluation = result["evaluation"][rule]
             tuning = result["tuning"]["rules"][rule]
@@ -160,154 +240,159 @@ def main():
                 entry["rules"][rule] = None
                 continue
             source = evaluation.get("same_setting_as", rule)
-            evaluation = result["evaluation"][source]
-            metrics = metrics_of(sets, evaluation["sets"], read_outputs(folder / f"outputs.{source}.jsonl"), requested)
+            metrics = select_metrics(select_sets, result["evaluation"][source]["sets"], read_outputs(folder / f"outputs.select.{source}.jsonl"),
+                                     requested, marked)
             entry["rules"][rule] = {"setting": tuning["setting"], "same_setting_as": source if source != rule else None,
                                     "tune_right": tuning["tune_right"], "tune_changed_words": tuning["tune_changed_words"], **metrics}
-        unprotected = result["unprotected"]["shipped"]
+        free = read_outputs(folder / "outputs.select.shipped-unprotected.jsonl")
         entry["unprotected_at_the_shipped_setting"] = {
-            name: (unprotected[name]["changed_words"] if "changed_words" in unprotected[name] else
-                   {"right": unprotected[name]["right"], "groups": {g: v[0] for g, v in unprotected[name]["groups"].items()}})
-            for name in unprotected}
+            "domain_dev": domain_counts(select_sets["domain_dev"]["cases"], free["domain_dev"], requested, set(marked["domain_dev"])),
+            "domain_stream_dev": stream_counts(select_sets["domain_stream_dev"]["cases"], free["domain_stream_dev"], set(marked["domain_stream_dev"]))}
+        if (folder / "result-test.json").exists():
+            test_result = json.loads((folder / "result-test.json").read_text(encoding="utf-8"))
+            if engine_test is None:
+                engine_test = test_metrics(test_sets, read_outputs(folder / "outputs.test.engine.jsonl"), requested, marked)
+                perfect_test = test_metrics(test_sets, read_outputs(folder / "outputs.test.perfect.jsonl"), requested, marked)
+            entry["test"] = {}
+            for rule in RULES:
+                evaluation = test_result["evaluation"][rule]
+                if evaluation is None:
+                    entry["test"][rule] = None
+                    continue
+                source = evaluation.get("same_setting_as", rule)
+                entry["test"][rule] = test_metrics(test_sets, read_outputs(folder / f"outputs.test.{source}.jsonl"), requested, marked)
         summary["arms"][arm] = entry
-    summary["engine"], summary["perfect"] = engine, perfect
+    summary.update({"engine": engine, "perfect": perfect, "engine_test": engine_test, "perfect_test": perfect_test})
     ship = summary["arms"]["ship"]["rules"]["shipped"]
 
-    # ---- The pick ----
+    # ---- The pick: every file at every pick rule, except the reference itself ----
     entries = []
     for arm, entry in summary["arms"].items():
-        if arm in REFERENCE_ARMS:
-            continue
         for rule in PICK_RULES:
             metrics = entry["rules"][rule]
-            if metrics is None or metrics["same_setting_as"] in PICK_RULES[:PICK_RULES.index(rule)]:
+            if metrics is None or metrics["same_setting_as"] in PICK_RULES[:PICK_RULES.index(rule)] or (arm == "ship" and rule == "shipped"):
                 continue
             parity = entry["parity"]["passes"] if entry["parity"] is not None else None
             conditions = pick_conditions(metrics, ship, engine, parity)
             entries.append({"arm": arm, "rule": rule, "conditions": conditions, "qualifies": all(conditions.values()),
-                            "technical_written_changed": metrics["domain_dev_technical_written_changed"],
-                            "domain_dev_right": metrics["domain_dev_right"], "stream_select_changed": metrics["stream_select_changed"]})
-    qualified = [entry for entry in entries if entry["qualifies"]]
-    qualified.sort(key=lambda e: (e["technical_written_changed"], -e["domain_dev_right"], e["stream_select_changed"], e["arm"]))
+                            "technical_written_changed": metrics["domain_stream_dev"]["technical_written"][0],
+                            "domain_dev_right": metrics["domain_dev"]["all"][0], "stream_select_changed": metrics["stream_select_changed"]})
+    order = {arm: place for place, arm in enumerate(names)}
+    qualified = sorted((entry for entry in entries if entry["qualifies"]),
+                       key=lambda e: (e["technical_written_changed"], -e["domain_dev_right"], e["stream_select_changed"], order[e["arm"]]))
     summary["pick"] = {"entries": entries, "candidate": qualified[0] if qualified else None}
-
-    # ---- The rules of the third wave ----
-    wave = {}
-    shares = []
-    for arm, share in SHARES.items():
-        if arm in summary["arms"]:
-            metrics = summary["arms"][arm]["rules"]["shipped"]
-            conditions = pick_conditions(metrics, ship, engine, None)
-            passes = all(conditions[name] for name in list(conditions)[:5])
-            shares.append({"arm": arm, "share": share, "passes_conditions_1_to_5": passes,
-                           "technical_written_changed": metrics["domain_dev_technical_written_changed"]})
-    if len(shares) == len(SHARES):
-        passing = [row for row in shares if row["passes_conditions_1_to_5"]] or shares
-        wave["share"] = {"rows": shares, "picked": min(passing, key=lambda row: (row["technical_written_changed"], float(row["share"])))["share"]}
-    if "ce-c1-seed1" in summary["arms"] and all(arm in summary["arms"] for members in LOSS_ARMS.values() for arm in members):
-        def score(arm: str) -> tuple[float, float]:
-            metrics = summary["arms"][arm]["rules"]["ceiling-0.3"]
-            return metrics["dev_right"] + metrics["real_misspellings"], metrics["stream_select_changed"]
-        base_score, base_changed = score("ce-c1-seed1")
-        rows = []
-        for loss, members in LOSS_ARMS.items():
-            scores = [score(arm) for arm in members]
-            mean_score = sum(value[0] for value in scores) / len(scores)
-            mean_changed = sum(value[1] for value in scores) / len(scores)
-            rows.append({"loss": loss, "score": mean_score, "changed": mean_changed,
-                         "helps": mean_score > base_score and mean_changed <= base_changed})
-        helping = [row for row in rows if row["helps"]]
-        wave["loss"] = {"base": {"score": base_score, "changed": base_changed}, "rows": rows,
-                        "picked": max(helping, key=lambda row: (row["score"], row["loss"] == "ce-c4"))["loss"] if helping else None}
-    summary["third_wave"] = wave
+    summary["third_wave"] = third_wave(summary["arms"], ship, engine)
 
     arguments.out.mkdir(parents=True, exist_ok=True)
     (arguments.out / "summary.json").write_text(json.dumps(summary, indent=1), encoding="utf-8")
-    (arguments.out / "tables.md").write_text(tables(summary), encoding="utf-8", newline="\n")
-    print(tables(summary))
+    text = tables(summary)
+    (arguments.out / "tables.md").write_text(text, encoding="utf-8", newline="\n")
+    print(text)
 
 
 def share(got: float, low: float, high: float) -> str:
     return "n/a" if high == low else f"{100 * (got - low) / (high - low):.0f}%"
 
 
+def cell(pair: list[int]) -> str:
+    return f"{pair[0]}/{pair[1]}"
+
+
 def tables(summary: dict) -> str:
     engine, perfect = summary["engine"], summary["perfect"]
-    lines = []
+    lines = [f"Cases that a training or tuning case shares text with, left out of the domain counts: {json.dumps(summary['marked_cases'])}", ""]
 
-    def pool(metrics: dict, half: str, name: str) -> str:
-        right, cases = metrics[f"domain_{half}_pools"][name]
-        return f"{right}/{cases}"
+    def row(name: str, metrics: dict, setting: str) -> str:
+        domain, stream = metrics["domain_dev"], metrics["domain_stream_dev"]
+        return ("| " + " | ".join([
+            name, setting, str(metrics["dev_right"]), str(metrics["dev_groups"]["clean"]), str(metrics["dev_groups"]["clean_symbols"]),
+            str(metrics["dev_non_word_slips"]), str(metrics["dev_groups"]["real_word_slip"]),
+            f"{metrics['apostrophe_word']}, {metrics['apostrophe_next_word']}", str(metrics["published_dev"]),
+            str(metrics["github_misspelling"]), str(metrics["github_real_word"]), str(metrics["stream_select_changed"]),
+            cell(domain["all"]), cell(domain["clean"]), cell(domain["slips"]), cell(domain["required"]),
+            str(stream["technical"][0]), str(stream["written"][0]), str(stream["everyday"][0])]) + " |")
 
     for rule in RULES:
-        lines += [f"Table. Every arm at the setting of the rule `{rule}`. Changed words are counts of changed correct words, and lower is better.",
+        lines += [f"Table. Every arm on the selection sets at the setting of the rule `{rule}`. A changed count is changed correct words, and lower is better.",
                   "",
-                  "| Arm | setting w/from/to/other/space | dev /6,799 | dev clean | dev clean symbols | dev non-word slips | dev real-word slips "
-                  "| apostrophe word, next word | published /751 | github misspelling /1,500 | github real word /1,000 | select stream changed /8,439 "
-                  "| domain dev right | domain dev clean | domain dev slips | domain dev technical+written changed | domain dev everyday changed "
-                  "| domain test right | domain test clean | domain test slips | domain test technical+written changed |",
-                  "| --- |" + " --- |" * 20]
-
-        def row(name: str, metrics: dict, setting: str) -> str:
-            return ("| " + " | ".join([
-                name, setting, str(metrics["dev_right"]), str(metrics["dev_groups"]["clean"]), str(metrics["dev_groups"]["clean_symbols"]),
-                str(metrics["dev_non_word_slips"]), str(metrics["dev_groups"]["real_word_slip"]),
-                f"{metrics['apostrophe_word']}, {metrics['apostrophe_next_word']}", str(metrics["published_dev"]),
-                str(metrics["github_misspelling"]), str(metrics["github_real_word"]), str(metrics["stream_select_changed"]),
-                str(metrics["domain_dev_right"]), pool(metrics, "dev", "clean"), pool(metrics, "dev", "slips"),
-                str(metrics["domain_dev_technical_written_changed"]), str(metrics["domain_dev_stream"]["everyday"]),
-                str(metrics["domain_test_right"]), pool(metrics, "test", "clean"), pool(metrics, "test", "slips"),
-                str(metrics["domain_test_technical_written_changed"])]) + " |")
-
+                  "| Arm | setting weight/from/to/other/space | dev /6,799 | dev clean /973 | dev clean symbols /429 | dev non-word slips /5,097 "
+                  "| dev real-word slips /300 | apostrophe word, next word /1,623 | published /751 | github misspelling /1,500 "
+                  "| github real word /1,000 | select stream changed /8,439 | domain dev right | domain dev clean | domain dev slips "
+                  "| domain dev requested words | technical changed | written changed | everyday changed |",
+                  "| --- |" + " --- |" * 18]
         lines.append(row("`engine`", engine, ""))
         lines.append(row("`perfect`", perfect, ""))
         for arm, entry in summary["arms"].items():
             metrics = entry["rules"][rule]
             if metrics is None:
-                lines.append(f"| `{arm}` | no setting passes the rule |" + " |" * 19)
+                lines.append(f"| `{arm}` | no setting passes the rule |" + " |" * 17)
                 continue
             s = metrics["setting"]
             setting = f"{s['weight']:g}/{s['margin_from_typed']:g}/{s['margin_to_typed']:g}/{s['margin_other']:g}/{s['space_after']}"
             lines.append(row(f"`{arm}`", metrics, setting))
         lines += ["", f"Table. Share of the gap between the engine alone and the perfect chooser that each arm closes, at the rule `{rule}`.",
                   "",
-                  "| Arm | dev | published | github misspelling | github real word | select stream | domain dev | domain dev technical+written | domain test | domain test technical+written |",
-                  "| --- |" + " --- |" * 9]
+                  "| Arm | dev | published | github misspelling | github real word | select stream | domain dev | technical and written streams |",
+                  "| --- |" + " --- |" * 7]
         for arm, entry in summary["arms"].items():
             metrics = entry["rules"][rule]
             if metrics is None:
                 continue
             cells = [share(metrics[key], engine[key], perfect[key]) for key in ("dev_right", "published_dev", "github_misspelling", "github_real_word")]
-            cells.append(share(-metrics["stream_select_changed"], -engine["stream_select_changed"], 0))
-            for half in ("dev", "test"):
-                cells.append(share(metrics[f"domain_{half}_right"], engine[f"domain_{half}_right"], perfect[f"domain_{half}_right"]))
-                cells.append(share(-metrics[f"domain_{half}_technical_written_changed"], -engine[f"domain_{half}_technical_written_changed"], 0))
+            cells.append(share(-metrics["stream_select_changed"], -engine["stream_select_changed"], -perfect["stream_select_changed"]))
+            cells.append(share(metrics["domain_dev"]["all"][0], engine["domain_dev"]["all"][0], perfect["domain_dev"]["all"][0]))
+            cells.append(share(-metrics["domain_stream_dev"]["technical_written"][0], -engine["domain_stream_dev"]["technical_written"][0],
+                               -perfect["domain_stream_dev"]["technical_written"][0]))
             lines.append(f"| `{arm}` | " + " | ".join(cells) + " |")
         lines.append("")
 
-    lines += ["Table. Slips of pack words on the domain dev half at the shipped setting, by the way the training treated the word.", "",
-              "| Arm | words with slip cases in training | withheld words | requested words | price cases |", "| --- | --- | --- | --- | --- |"]
-    for name, metrics in [("`engine`", engine), ("`perfect`", perfect)] + [
-            (f"`{arm}`", entry["rules"]["shipped"]) for arm, entry in summary["arms"].items()]:
-        lines.append(f"| {name} | " + " | ".join(pool(metrics, "dev", key) for key in
-                                                 ("slips_trained_words", "slips_withheld_words", "slips_requested_words", "price")) + " |")
+    lines += ["Table. Domain dev half at the shipped setting: slips of pack words by the way the training of this round treated the word, "
+              "the price cases, the cases that share text with training, and the right cases without the protection of a typed new word.", "",
+              "| Arm | words with slip cases in training | withheld words | requested words | price cases | marked cases | right without the protection "
+              "| technical and written changed without the protection |", "| --- |" + " --- |" * 7]
+    for name, metrics, free in [("`engine`", engine, None), ("`perfect`", perfect, None)] + [
+            (f"`{arm}`", entry["rules"]["shipped"], entry["unprotected_at_the_shipped_setting"]) for arm, entry in summary["arms"].items()]:
+        domain = metrics["domain_dev"]
+        lines.append(f"| {name} | " + " | ".join(cell(domain[key]) for key in ("slips_trained_words", "slips_withheld_words",
+                                                                              "slips_requested_words", "price", "marked"))
+                     + f" | {cell(free['domain_dev']['all']) if free else ''} | {free['domain_stream_dev']['technical_written'][0] if free else ''} |")
     lines.append("")
 
-    lines += ["Table. Conditions of the pick per entry.", "", "| Arm | rule | " + " | ".join(
-        ["1 select stream", "2 dev clean", "3 real misspellings", "4 non-word slips", "5 real-word slips", "6 pinned dev counts",
-         "7 domain dev", "8 parity"]) + " | qualifies | technical+written changed |", "| --- |" + " --- |" * 11]
+    if summary["engine_test"] is not None:
+        lines += ["Table. Test half of the domain cases, per setting rule. It decides nothing.", "",
+                  "| Arm | rule | right | clean | slips | requested words | technical changed | written changed | everyday changed |",
+                  "| --- |" + " --- |" * 8]
+
+        def test_row(name: str, rule: str, metrics: dict) -> str:
+            domain, stream = metrics["domain_test"], metrics["domain_stream_test"]
+            return (f"| {name} | {rule} | " + " | ".join([cell(domain["all"]), cell(domain["clean"]), cell(domain["slips"]), cell(domain["required"]),
+                                                          str(stream["technical"][0]), str(stream["written"][0]), str(stream["everyday"][0])]) + " |")
+        lines.append(test_row("`engine`", "", summary["engine_test"]))
+        lines.append(test_row("`perfect`", "", summary["perfect_test"]))
+        for arm, entry in summary["arms"].items():
+            for rule in PICK_RULES:
+                if entry["test"] and entry["test"].get(rule):
+                    lines.append(test_row(f"`{arm}`", f"`{rule}`", entry["test"][rule]))
+        lines.append("")
+
+    lines += ["Table. Conditions of the pick per entry. Condition 9 holds only for a file with a parity result under the limit.", "",
+              "| Arm | rule | " + " | ".join(["1 select stream", "2 dev clean", "3 real misspellings", "4 non-word slips", "5 real-word slips",
+                                           "6 pinned dev counts", "7 domain dev", "8 apostrophe words", "9 parity"])
+              + " | qualifies | technical and written changed |", "| --- |" + " --- |" * 12]
     for entry in summary["pick"]["entries"]:
         lines.append(f"| `{entry['arm']}` | `{entry['rule']}` | " + " | ".join("yes" if value else "no" for value in entry["conditions"].values())
                      + f" | {'yes' if entry['qualifies'] else 'no'} | {entry['technical_written_changed']} |")
     candidate = summary["pick"]["candidate"]
     lines += ["", "Candidate: " + (f"`{candidate['arm']}` at `{candidate['rule']}`" if candidate else "none"), ""]
     lines += ["Third wave: " + json.dumps(summary["third_wave"]), ""]
-    lines += ["Table. Parity of the arms of this round: largest difference between PyTorch and lm_score in nats, limit 0.05.", "",
+    lines += ["Table. Parity: largest difference between PyTorch and lm_score on the f16 file in nats, limit 0.05.", "",
               "| Arm | everyday lists, log probability | everyday lists, space | domain lists, log probability | domain lists, space | token mismatches | passes |",
               "| --- | --- | --- | --- | --- | --- | --- |"]
     for arm, entry in summary["arms"].items():
         parity = entry["parity"]
-        if parity is not None:
+        if parity is None:
+            lines.append(f"| `{arm}` | not measured | | | | | no |")
+        else:
             lines.append(f"| `{arm}` | {parity['everyday']['largest_log_probability_difference']} | {parity['everyday']['largest_space_after_difference']} "
                          f"| {parity['domain']['largest_log_probability_difference']} | {parity['domain']['largest_space_after_difference']} "
                          f"| {parity['everyday']['token_mismatches'] + parity['domain']['token_mismatches']} | {'yes' if parity['passes'] else 'no'} |")
