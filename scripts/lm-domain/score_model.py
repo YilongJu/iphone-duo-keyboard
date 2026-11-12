@@ -98,7 +98,8 @@ def main():
 
     tune_sets = harness.load_sets(arguments.data, "tune")
     evaluation_sets = harness.load_sets(arguments.data, "evaluation")
-    typist = harness.Typist(arguments.shim)
+    readings_file = arguments.data / "engine-readings.pickle"
+    typist = harness.Typist(arguments.shim, readings_file=readings_file)
     result = {"name": arguments.name, "model": arguments.model and arguments.model.name,
               "sets": {name: {"kind": entry["kind"], "cases": len(entry["cases"])}
                        for name, entry in {**tune_sets, **evaluation_sets}.items()}}
@@ -111,6 +112,7 @@ def main():
     write_outputs(arguments.out / "outputs.perfect.jsonl", perfect_outputs)
     result["engine"] = {"tune": tune_engine, "evaluation": engine}
     result["perfect"] = {"evaluation": perfect}
+    typist.save_readings()
     note("engine alone and perfect chooser: " + json.dumps({name: [engine[name].get("changed_words", engine[name]["right"]),
                                                                   perfect[name].get("changed_words", perfect[name]["right"])]
                                                              for name in evaluation_sets}))
@@ -181,7 +183,8 @@ def main():
         note(f"{rule}: " + json.dumps({name: summaries[name].get("changed_words", summaries[name]["right"]) for name in evaluation_sets}))
 
     # ---- The domain sets without the protection of a typed new word, at the shipped setting ----
-    free = harness.Typist(arguments.shim, protect_new_words=False)
+    typist.save_readings()
+    free = harness.Typist(arguments.shim, protect_new_words=False, readings_file=readings_file)
     domain_sets = {name: evaluation_sets[name] for name in DOMAIN_SETS}
     shipped = harness.setting_of(result["tuning"]["rules"]["shipped"]["setting"])
     outputs, summaries = run_sets(domain_sets, free, rerank.setting_chooser(shipped, scorer))

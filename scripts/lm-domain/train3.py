@@ -9,11 +9,12 @@ scripts/lm-finetune2/train2.py, and docs/lm-domain-design.md gives the reason fo
 --sample-share S         "u" is a fixed number from 0 to 1 per source sentence, so a larger share
                          holds every list of a smaller share.
 --stop-lists NAME=FILE   lists that never train. The script writes their loss per name every
-                         500 steps. A sampled file (NAME=FILE with the suffix @sampled) follows
-                         --sample-share too.
---epochs E               the run takes ceil(E * lists / 32) steps, with the cosine decay over
-                         exactly these steps, and saves the weights of the last step. A run does
-                         not stop early, so two arms with the same lists take the same steps.
+                         --evaluate-every steps, on a seeded sample of --stop-sample lists per
+                         name. The losses choose no weights. A sampled file (NAME=FILE with the
+                         suffix @sampled) follows --sample-share too.
+--steps N                the run takes N steps of 32 lists, with the cosine decay over exactly
+                         these steps, and saves the weights of the last step. A run does not
+                         stop early, so every arm takes the same steps.
 --loss cross-entropy     the listwise cross-entropy, times --clean-weight on a list whose target
                          is the reading as typed (a clean list).
 --loss expected-cost     the expected cost of the choice under the softmax over the readings,
@@ -21,10 +22,11 @@ scripts/lm-finetune2/train2.py, and docs/lm-domain-design.md gives the reason fo
                          costs 1 on a slip list and --clean-cost on a clean list.
 
 Usage, from the repository root, on Windows:
-    build/lm-domain/venv/Scripts/python.exe scripts/lm-domain/train3.py --seed 1 --epochs 2 \
-        --train-lists ROUND1/lists.train.jsonl.gz ROUND2/lists2.train.jsonl.gz \
-        --stop-lists everyday=ROUND1/lists.stop.jsonl.gz --gpu-lock D:/Github/iphone-duo-keyboard/build/gpu.lock \
-        --out build/lm-domain/models/NAME
+    build/lm-domain/venv/Scripts/python.exe scripts/lm-domain/train3.py --seed 1 --steps 11000 \
+        --loss cross-entropy --train-lists ROUND1/lists.train.jsonl.gz ROUND2/lists2.train.jsonl.gz \
+        --stop-lists everyday=ROUND1/lists.stop.jsonl.gz --evaluate-every 1000 --stop-sample 2000 \
+        --micro-tokens 2500 --memory-gb 3.7 \
+        --gpu-lock D:/Github/iphone-duo-keyboard/build/gpu.lock --out build/lm-domain/models/NAME
 """
 import os
 
@@ -34,7 +36,6 @@ os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
 
 import argparse  # noqa: E402
 import json  # noqa: E402
-import math  # noqa: E402
 import random  # noqa: E402
 import sys  # noqa: E402
 import time  # noqa: E402
@@ -90,7 +91,9 @@ def main():
     parser.add_argument("--sampled-train-lists", type=Path, nargs="*", default=[])
     parser.add_argument("--sample-share", type=float)
     parser.add_argument("--stop-lists", nargs="+", required=True, help="NAME=FILE, or NAME=FILE@sampled")
-    parser.add_argument("--epochs", type=float, required=True)
+    parser.add_argument("--steps", type=int, required=True)
+    parser.add_argument("--evaluate-every", type=int, required=True)
+    parser.add_argument("--stop-sample", type=int, required=True, help="lists of each stopping set that the script scores")
     parser.add_argument("--loss", choices=["cross-entropy", "expected-cost"], required=True)
     parser.add_argument("--clean-weight", type=float, default=1.0)
     parser.add_argument("--clean-cost", type=float)
@@ -176,7 +179,9 @@ def run(arguments) -> None:
             if arguments.sample_share is None:
                 continue
             found = take_share(found, arguments.sample_share, path)
-        stop_sets[name] = found
+        # The same sample for every arm and seed: the order is seeded by the name of the set.
+        random.Random(f"lm-domain-stop:{name}").shuffle(found)
+        stop_sets[name] = found[:arguments.stop_sample]
     if arguments.limit_lists:
         random.Random(arguments.seed).shuffle(train_lists)
         train_lists = train_lists[:arguments.limit_lists]
@@ -223,7 +228,7 @@ def run(arguments) -> None:
     def evaluate_all() -> dict:
         return {name: evaluate(items) for name, items in stop_items.items()}
 
-    total_steps = math.ceil(arguments.epochs * len(train_items) / t.BATCH_LISTS)
+    total_steps = arguments.steps
     schedule_steps = total_steps
     if arguments.max_steps:
         total_steps = min(total_steps, arguments.max_steps)
@@ -286,7 +291,7 @@ def run(arguments) -> None:
         if step % 100 == 0:
             peak_used = max(peak_used, t.gpu_memory_used_mib())
             print(f"step {step} of {total_steps}, loss {loss_sum:.4f}, {time.monotonic() - train_started:.0f} s", flush=True)
-        if step % t.EVALUATE_EVERY == 0 or step == total_steps:
+        if step % arguments.evaluate_every == 0 or step == total_steps:
             last = {"step": step, "seconds": round(time.monotonic() - train_started, 1), "stop": evaluate_all()}
             log.write(json.dumps(last) + "\n")
             log.flush()
@@ -314,10 +319,11 @@ def run(arguments) -> None:
     result = {
         "base": base, "method": METHOD, "settings": settings, "seed": arguments.seed,
         "loss": arguments.loss, "clean_weight": arguments.clean_weight, "clean_cost": arguments.clean_cost,
-        "cross_entropy_share": arguments.cross_entropy_share, "epochs": arguments.epochs,
+        "cross_entropy_share": arguments.cross_entropy_share,
+        "times_each_training_list_is_seen": round(arguments.steps * t.BATCH_LISTS / len(train_items), 3),
         "sample_share": arguments.sample_share, "train_files": counts,
         "batch_lists": t.BATCH_LISTS, "micro_tokens": arguments.micro_tokens, "warmup_steps": t.WARMUP_STEPS,
-        "evaluate_every": t.EVALUATE_EVERY, "gradient_clip": t.GRADIENT_CLIP,
+        "evaluate_every": arguments.evaluate_every, "stop_sample": arguments.stop_sample, "gradient_clip": t.GRADIENT_CLIP,
         "prompt_format": "typed", "start_token": start_token, "space_tokens": len(space_ids),
         "trained_weights": trained, "all_weights": every,
         "train_lists": len(train_items), "train_lists_with_the_typed_reading_as_target": int(sum(item["clean"] for item in train_items)),

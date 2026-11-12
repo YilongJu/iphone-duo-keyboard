@@ -15,6 +15,8 @@ The module holds:
 """
 import hashlib
 import json
+import os
+import pickle
 import sys
 from pathlib import Path
 
@@ -101,10 +103,39 @@ class Typist:
     """Types cases as the keyboard ships: the pack on, the typed capitals kept, the preferred
     capitals, and the protection of a typed new word."""
 
-    def __init__(self, shim: Path, protect_new_words: bool = True):
+    def __init__(self, shim: Path, protect_new_words: bool = True, readings_file: Path | None = None):
+        """`readings_file` keeps the engine's readings of every typed span between runs. The
+        readings depend only on the span, the word before it, the engine and its two lexicon
+        files, so the file holds the SHA-256 values of the shim, the lexicon and the supplement,
+        and a file with other values is not read."""
         self.engine = rerank.Engine(shim, rerank.LEXICON, rerank.SUPPLEMENT, use_supplement=True)
         self.capitals = rerank.PreferredCapitals(rerank.CAPITALS_TABLE)
         self.protect = protect_new_words
+        self.readings_file = readings_file
+        self.readings_key = [sha256_of(path) for path in (shim, rerank.LEXICON, rerank.SUPPLEMENT)]
+        self.readings_loaded = 0
+        if readings_file is not None and readings_file.exists():
+            with readings_file.open("rb") as file:
+                key, cache = pickle.load(file)
+            if key == self.readings_key:
+                self.engine.cache.update(cache)
+                self.readings_loaded = len(cache)
+
+    def save_readings(self) -> None:
+        """Writes the readings back when this run added some. Another run may have written the
+        file in between, so the file is read again first and the two are joined."""
+        if self.readings_file is None or len(self.engine.cache) == self.readings_loaded:
+            return
+        cache = dict(self.engine.cache)
+        if self.readings_file.exists():
+            with self.readings_file.open("rb") as file:
+                key, other = pickle.load(file)
+            if key == self.readings_key:
+                cache = {**other, **cache}
+        temporary = self.readings_file.with_name(f"{self.readings_file.name}.{os.getpid()}.tmp")
+        with temporary.open("wb") as file:
+            pickle.dump((self.readings_key, cache), file, protocol=pickle.HIGHEST_PROTOCOL)
+        os.replace(temporary, self.readings_file)
 
     def type(self, case: dict, chooser) -> str:
         return rerank.type_case(case, self.engine, chooser, self.capitals, keep_capitals=True, protect_new_words=self.protect)
