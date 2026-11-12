@@ -255,7 +255,7 @@ An entry qualifies when all nine conditions hold against `ship`.
 6. Each of its five dev group counts and its dev total is at least the pinned number of `engine/lm-keyboard`: 953, 2,057, 1,387, 1,165, 428 and 6,542.
 7. Its right clean cases of the domain dev half, pooled, are at least those of `ship`. Its right slip cases of the domain dev half, pooled without the price categories, are at least those of `ship` less 0.5 percent of their count. Its right cases of the group `required` are at least those of `ship` less 1 percent of their count.
 8. Its right apostrophe words, alone and with the next word, are each at least those of `ship` less 8 (0.5 percent of 1,623).
-9. Its file passes the parity check of `check_parity.py` at 0.05 nats. `summarize3.py` reads the measured differences, on everyday lists and on domain lists.
+9. Its file passes the parity check at 0.05 nats, on everyday lists and on domain lists. The check compares PyTorch float32 with `lm_score` on an F32 GGUF, with a 32-bit key and value cache and without flash attention (`jobs/parity-kv32.sh`, read by `summarize3.py --parity-name parity-kv32.json`). The user chose this reading on 2026-11-12, as the coordinator relayed. The tables also give the f16 file of `check_parity.py` and the F32 file with the standard `lm_score`, for the report only.
 
 The candidate is the qualified entry with the fewest changed words on the technical and written dev streams together (19,413 words). A tie goes to more right domain dev cases, then to fewer changed words on the select stream, then to the first label in Table 5.
 When no entry qualifies, there is no candidate, and the shipped file stays at the shipped setting. The fresh held-out set is then read for the report only.
