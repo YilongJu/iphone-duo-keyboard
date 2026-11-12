@@ -5,7 +5,7 @@ name: Domain pack
 # cases and the apostrophe words, each with the pack off and on, with the engine alone and with
 # the keyboard's SmolLM2 fine-tune. docs/domain-pack-design.md describes the measurement.
 # GitHub starts a dispatched workflow only from the default branch, so a push starts this one,
-# and HALF below names the half. The test half is read once, for the pack that the dev half chose.
+# and HALF below names the half of the model job.
 on:
   push:
     branches: [engine/domain-pack]
@@ -23,8 +23,9 @@ on:
       - '.github/workflows/domain-pack.yml'
 
 env:
-  # The half that the model job types. The engine job always types the dev half.
-  HALF: test
+  # The half that the model job types. The engine job always types the dev half. The test half
+  # was read once, in run 43142372002. Later runs read the dev half only.
+  HALF: dev
   # The commit of engine/lm-keyboard that this branch starts from: the engine before the supplement.
   BASE: 4cfa7ef
 
