@@ -1,0 +1,106 @@
+name: Keyboard keys
+
+# Checks the layout file and runs the unit tests of the keys, the layouts and the typing rules
+# in a simulator, in a few minutes. It also saves simulator screenshots of the keyboard. The
+# workflow "Language model in the keyboard" runs every unit test, and takes more than three hours.
+on:
+  push:
+    branches: [ui/swipe-punctuation]
+    paths:
+      - 'Shared/keyboard-layout.json'
+      - 'Shared/KeyboardLayout.swift'
+      - 'Shared/KeyboardView.swift'
+      - 'Shared/KeyView.swift'
+      - 'Shared/KeyboardTextController.swift'
+      - 'Shared/KeyboardTextLogic.swift'
+      - 'Engine/duo_engine.c'
+      - 'Tests/SlideKey*.swift'
+      - 'Tests/KeyboardTextControllerTests.swift'
+      - 'scripts/keyboard-preview/**'
+      - 'scripts/typing-evaluation/symbol_keys.py'
+      - '.github/workflows/keyboard-keys.yml'
+
+concurrency:
+  group: keyboard-keys-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    name: Layout check and unit tests of the keys
+    runs-on: xcode-27
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+      - name: Check the layout file against the layout rules
+        run: python3 scripts/keyboard-preview/check_layout.py
+      - name: Check the symbol keys beside each letter against the layout file
+        run: python3 scripts/typing-evaluation/symbol_keys.py --check
+      - name: Check that docs/keyboard-preview.html holds the layout file
+        run: |
+          set -euo pipefail
+          cp docs/keyboard-preview.html "$RUNNER_TEMP/committed-preview.html"
+          python3 scripts/keyboard-preview/build_preview.py
+          cmp "$RUNNER_TEMP/committed-preview.html" docs/keyboard-preview.html
+      - name: Install XcodeGen
+        run: brew install xcodegen
+      - name: Fetch the llama.cpp framework and the language model
+        run: bash scripts/ci/fetch_language_model.sh
+      - name: Generate the Xcode project
+        run: xcodegen generate
+      - name: Run the tests of the keys, the layouts and the typing rules in a simulator
+        run: |
+          set -o pipefail
+          udid=$(xcrun simctl list devices available -j | python3 -c '
+          import json, sys
+          devices = json.load(sys.stdin)["devices"]
+          for runtime in sorted(devices, reverse=True):
+              for device in devices[runtime]:
+                  if device["name"].startswith("iPhone 17"):
+                      print(device["udid"])
+                      sys.exit(0)
+          sys.exit("simulator not found: iPhone 17")
+          ')
+          only=()
+          for class in $(grep -h -o -E '^final class [A-Za-z]+: XCTestCase' \
+              Tests/SlideKey*.swift Tests/KeyboardTextControllerTests.swift | awk '{ print $3 }' | tr -d ':'); do
+            only+=("-only-testing:DuoKeyboardTests/$class")
+          done
+          test "${#only[@]}" -ge 5
+          xcodebuild test \
+            -project DuoKeyboard.xcodeproj \
+            -scheme DuoKeyboard \
+            -destination "platform=iOS Simulator,id=$udid" \
+            "${only[@]}" \
+            -derivedDataPath build-test | xcbeautify
+
+  screenshots:
+    name: Simulator screenshots of the keyboard
+    runs-on: xcode-27
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install XcodeGen
+        run: brew install xcodegen
+      - name: Fetch the llama.cpp framework and the language model
+        run: bash scripts/ci/fetch_language_model.sh
+      - name: Generate the Xcode project
+        run: xcodegen generate
+      - name: Build for the simulator
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project DuoKeyboard.xcodeproj \
+            -scheme DuoKeyboard \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -derivedDataPath build-sim \
+            CODE_SIGNING_ALLOWED=NO \
+            build | xcbeautify
+      - name: Capture screenshots
+        run: bash scripts/ci/capture_screenshots.sh build-sim/Build/Products/Debug-iphonesimulator/DuoKeyboard.app screenshots
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: screenshots
+          path: screenshots
+          if-no-files-found: error
