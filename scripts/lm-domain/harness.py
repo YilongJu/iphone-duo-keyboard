@@ -59,19 +59,23 @@ def load(path: Path) -> list[dict]:
 
 
 def load_sets(data: Path, which: str) -> dict[str, dict]:
-    """The sets of one role. Each set is {"kind": ..., "cases": [...]}. The kinds:
+    """The sets of one part. Each set is {"kind": ..., "cases": [...]}. The kinds:
     generated   cases with the categories of english.dev.jsonl, counted per group of score.py
     listed      cases counted per category
     domain      cases that name their group, some scored with their capitals
     stream      whole sentences typed without a slip, counted in changed words
     apostrophe  the apostrophe words, counted per category
+    The parts: "tune" for the setting of a model, "select" for the pick among models, "test" for
+    the test half of the domain cases, and "evaluation" for "select" and "test" together.
     `data` holds the sets that the repository does not hold (build/lm-domain/data)."""
     everyday = data / "everyday"
+    if which == "evaluation":
+        return {**load_sets(data, "select"), **load_sets(data, "test")}
     if which == "tune":
         sets = {"tune_generated": ("generated", load(everyday / "cases.tune.jsonl")),
                 "tune_stream": ("stream", load(everyday / "cases.stream.tune.jsonl"))}
         splits = {"tune"}
-    elif which == "evaluation":
+    elif which == "select":
         apostrophe = load(CASES / "english-apostrophe-words.dev.jsonl")
         sets = {"dev": ("generated", rerank.load_cases(rerank.CASE_FILES)),
                 "apostrophe_word": ("apostrophe", apostrophe),
@@ -80,15 +84,14 @@ def load_sets(data: Path, which: str) -> dict[str, dict]:
                 "stream_select": ("stream", load(everyday / "cases.stream.select.jsonl")),
                 "github_select": ("listed", load(everyday / "cases.github.select.jsonl")),
                 "domain_dev": ("domain", load(CASES / "english-domain.dev.jsonl")),
-                "domain_stream_dev": ("stream", load(CASES / "english-domain-stream.dev.jsonl")),
-                "domain_test": ("domain", load(CASES / "english-domain.test.jsonl")),
+                "domain_stream_dev": ("stream", load(CASES / "english-domain-stream.dev.jsonl"))}
+        splits = {"dev", "select"}
+    elif which == "test":
+        sets = {"domain_test": ("domain", load(CASES / "english-domain.test.jsonl")),
                 "domain_stream_test": ("stream", load(CASES / "english-domain-stream.test.jsonl"))}
-        splits = {"dev", "select", "test"}
-        for name in ("domain_test", "domain_stream_test"):
-            if any(case["split"] != "test" for case in sets[name][1]):
-                raise SystemExit(f"{name} holds a case outside the test half")
+        splits = {"test"}
     else:
-        raise SystemExit(f"unknown role {which!r}")
+        raise SystemExit(f"unknown part {which!r}")
     for name, (_, cases) in sets.items():
         if any(case["split"] not in splits for case in cases):
             raise SystemExit(f"{name} holds a case outside {splits}")
