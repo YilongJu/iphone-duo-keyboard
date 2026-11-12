@@ -10,7 +10,8 @@ One command does four things for a GGUF file:
 3. It types every evaluation set with the model at each chosen setting.
 4. It writes, per set, the right cases, the ceiling and the share of the gap that the model
    closes: (model - engine alone) / (perfect chooser - engine alone). For clean running text
-   the perfect chooser changes 0 words, so the share is 1 - model changed / engine changed.
+   the same share is taken over the changed words. The perfect chooser keeps the text as typed
+   there, and the capitals rules of the keyboard can still change a word, as "i.e." to "I.e.".
 
 The evaluation sets (harness.load_sets): the generated dev half, the apostrophe words, the
 published dev misspellings, the clean running text of the select bucket, the GitHub typos of the
@@ -64,10 +65,11 @@ def gap_closed(model: dict, engine: dict, perfect: dict) -> dict:
         return None if high == low else round((got - low) / (high - low), 4)
 
     if "changed_words" in model:
-        result = {"all": None if engine["changed_words"] == 0 else round(1 - model["changed_words"] / engine["changed_words"], 4)}
+        # Fewer changed words are better, so the counts enter with a minus sign.
+        result = {"all": share(-model["changed_words"], -engine["changed_words"], -perfect["changed_words"])}
         for name, entry in model["streams"].items():
-            low = engine["streams"][name]["changed_words"]
-            result[name] = None if low == 0 else round(1 - entry["changed_words"] / low, 4)
+            result[name] = share(-entry["changed_words"], -engine["streams"][name]["changed_words"],
+                                 -perfect["streams"][name]["changed_words"])
         return result
     result = {"all": share(model["right"], engine["right"], perfect["right"])}
     for name, (right, _) in model.get("groups", model["categories"]).items():

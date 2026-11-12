@@ -9,7 +9,7 @@ scripts/lm-keyboard/harness_trace.py.
 
 The module holds:
 - the evaluation sets and the tuning sets, by name (load_sets);
-- the typing of a set with the engine alone, with a perfect chooser and with a model;
+- the typing of a set with the engine alone, with the perfect chooser and with a model;
 - the counts of a set: right cases per category and group, and changed words of running text;
 - a scorer that keeps every answer of lm_score in a file, so a run that stops goes on from there.
 """
@@ -144,24 +144,80 @@ class Typist:
         return {case["id"]: self.type(case, chooser) for case in cases}
 
     def run_perfect(self, cases: list[dict]) -> dict[str, str]:
-        return {case["id"]: self.type(case, perfect_chooser(case)) for case in cases}
+        return {case["id"]: perfect_typing(self, case)[0] for case in cases}
 
 
-def perfect_chooser(case: dict):
-    """The chooser that knows the intended text. At each correction it takes a reading that keeps
-    the field a start of the intended text, the longest one, and the engine's choice when the
-    list does not hold one. The compare leaves the letter case out. Its count is the ceiling for
-    any chooser over the same lists, one correction at a time."""
+PERFECT_TRIES = 40
+
+
+def perfect_typing(typist: Typist, case: dict) -> tuple[str, list[dict]]:
+    """Types a case with a chooser that knows the intended text, and returns the field text and
+    the corrections on the way.
+
+    A reading matches at a correction when it keeps the field a start of the intended text and
+    ends at the end of a word of it. The compare leaves the letter case out.
+    - A case typed without a slip: the chooser keeps the text as typed at every correction, so
+      its field text is the best that any chooser reaches. The engine also lists readings that
+      add the next word of the sentence, as "far from my" for the typed "far from". Such a
+      reading matches too, and it is not the intended reading, because the person types the
+      next word after it.
+    - A case with a slip: the chooser takes the longest match first, as the list builder of
+      round 1 does. When the field text is then wrong, it tries the other matches, and the text
+      as typed at a correction without a match, the last correction first, for PERFECT_TRIES
+      typings at most. So its count of right cases is a lower bound of the true ceiling, and it
+      is the true ceiling whenever the search ends before its limit.
+    At a correction without a match the chooser first takes the engine's choice.
+
+    Each correction is {"text_before", "typed", "readings", "matches", "options", "choice"}.
+    `matches` holds the matching reading texts, and `options` the texts that the search tries
+    at this correction, in its order."""
     target = ((case["context"] + " " if case["context"] else "") + case["intended"].strip() + " ").lower()
+    clean = case["typed"].strip().lower() == case["intended"].strip().lower()
 
-    def chooser(readings: list[dict], text_before: str, typed: str | None = None) -> str:
-        before = text_before.lower()
-        matches = [r for r in readings if target.startswith(before + r["text"])
-                   and target[len(before) + len(r["text"])] in rerank.TERMINATORS]
-        if matches:
-            return max(matches, key=lambda r: len(r["text"]))["text"]
-        return rerank.engine_choice(readings, text_before)
-    return chooser
+    def run(script: list[str]) -> tuple[str, list[dict]]:
+        log: list[dict] = []
+
+        def chooser(readings: list[dict], text_before: str, typed: str | None = None) -> str:
+            before = text_before.lower()
+            matches = [r["text"] for r in readings if target.startswith(before + r["text"])
+                       and target[len(before) + len(r["text"])] in rerank.TERMINATORS]
+            as_typed = next(r["text"] for r in readings if r["as_typed"])
+            options = sorted(matches, key=len, reverse=True)
+            if clean:
+                options = [text for text in options if text == as_typed] + [text for text in options if text != as_typed]
+            elif not options:
+                # The field can still come out right through the capitals rules, as "Next.js".
+                engine = rerank.engine_choice(readings, text_before)
+                options = [engine] + ([as_typed] if as_typed != engine else [])
+            if len(log) < len(script):
+                choice = script[len(log)]
+            elif options:
+                choice = options[0]
+            else:
+                choice = rerank.engine_choice(readings, text_before)
+            log.append({"text_before": text_before, "typed": typed, "readings": readings, "matches": matches,
+                        "options": options, "choice": choice})
+            return choice
+
+        return typist.type(case, chooser), log
+
+    first = run([])
+    if clean or is_right(case, first[0]):
+        return first
+    tries = 1
+    pending = [(first[1], 0)]
+    while pending and tries < PERFECT_TRIES:
+        log, start = pending.pop()
+        for index in range(len(log) - 1, start - 1, -1):
+            for other in log[index]["options"][1:]:
+                if tries >= PERFECT_TRIES:
+                    break
+                output, new_log = run([entry["choice"] for entry in log[:index]] + [other])
+                tries += 1
+                if is_right(case, output):
+                    return output, new_log
+                pending.append((new_log, index + 1))
+    return first
 
 
 # ---- Counts ----
@@ -196,7 +252,10 @@ def summarize(kind: str, cases: list[dict], outputs: dict[str, str]) -> dict:
     categories: dict[str, list[int]] = {}
     for case in cases:
         entry = categories.setdefault(case["category"] if "category" in case else stream_name(case), [0, 0])
-        entry[0] += int(is_right(case, outputs[case["id"]]))
+        # A sentence of running text is right when no word of it changed. The stream "written"
+        # counts a change of capitals, so its sentences do too.
+        right = changed_words(case, outputs[case["id"]]) == 0 if kind == "stream" else is_right(case, outputs[case["id"]])
+        entry[0] += int(right)
         entry[1] += 1
     summary = {"cases": len(cases), "right": sum(v[0] for v in categories.values()), "categories": categories}
     if kind == "generated":

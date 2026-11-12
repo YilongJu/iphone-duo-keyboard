@@ -8,12 +8,14 @@ mkdir -p "$data/everyday-pack-on"
 build() {  # build OUT CASES...
   out="$1"; shift
   if [ -f "$out" ]; then echo "$out is already there"; return; fi
-  nice -n 10 python3 scripts/lm-domain/build_lists3.py --shim "$shim" --workers 8 --cases "$@" --out "$out.part.jsonl.gz"
-  mv "$out.part-report.json" "${out%.jsonl.gz}-report.json"
-  mv "$out.part.jsonl.gz" "$out"
+  stem="${out%.jsonl.gz}"
+  nice -n 10 python3 scripts/lm-domain/build_lists3.py --shim "$shim" --workers 8 --cases "$@" --out "$stem.part.jsonl.gz"
+  mv "$stem.part-report.json" "$stem-report.json"
+  mv "$stem.part.jsonl.gz" "$out"
 }
-build "$data/domain/lists.train.jsonl.gz" "$data/domain/cases.train.jsonl"
+# The stopping lists come first: every arm of the queue reads them.
 build "$data/domain/lists.stop.jsonl.gz" "$data/domain/cases.stop.jsonl"
+build "$data/domain/lists.train.jsonl.gz" "$data/domain/cases.train.jsonl"
 build "$data/everyday-pack-on/lists.stop.jsonl.gz" "$data/everyday/cases.stop.jsonl" "$data/everyday/cases2.stop.jsonl"
 build "$data/everyday-pack-on/lists.train.jsonl.gz" "$data/everyday/cases.train.jsonl" "$data/everyday/cases2.train.jsonl"
 sha256sum "$data"/domain/*.gz "$data"/everyday-pack-on/*.gz | tee "$data/lists-sha256.txt"

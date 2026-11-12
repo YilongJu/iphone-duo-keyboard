@@ -26,9 +26,12 @@ Three rules keep the evaluation sets apart from these cases:
 2. A case never has the typed text of a published dev misspelling or of a GitHub typo of the
    select half (the rule of round 2).
 3. One word of the pack in five is a withheld word: SHA-256 of "lm-domain-term:" and the word,
-   modulo 5, is 0. A withheld word gets no slip case, no twin and no space case. It still
-   stands in clean running text. The evaluation counts its slips apart, so they show what the
-   model does for a word of the pack whose slips it never trained on.
+   modulo 5, is 0. A withheld word gets no slip case, no twin and no space case, and a pair
+   with a withheld word gets no phrase case. The word still stands in clean running text and
+   in the words before another case. The evaluation counts its slips apart, so they show what
+   the model does for a word of the pack whose slips it never trained on.
+Rules 1 and 2 bind a case with a slip. A clean case can hold a correct word that is also the
+typed text of a real-word typo, as "parameters".
 
 Every case holds `u`, a fixed number from 0 to 1 from SHA-256 of its sentence. An arm with the
 domain share S trains on the cases with u under S, so a larger share holds a smaller one.
@@ -40,7 +43,6 @@ Usage, from the repository root (needs wordfreq):
         --everyday build/lm-domain/data/everyday --out build/lm-domain/data/domain
 """
 import argparse
-import hashlib
 import json
 import random
 import sys
@@ -49,9 +51,11 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts" / "typing-evaluation"))
 sys.path.insert(0, str(ROOT / "scripts" / "domain-pack"))
+sys.path.insert(0, str(ROOT / "scripts" / "lm-domain"))
 import build_english_domain_cases as dom  # noqa: E402
 import keyboard_noise as noise  # noqa: E402
 from build_pack import read_base_lexicon  # noqa: E402
+from domain_terms import is_withheld, number  # noqa: E402
 
 SEED = "lm-domain-20261112"
 QUOTAS = {"stream_technical": 5500, "stream_written": 2200, "term_slip": 13000, "term_space": 3200, "phrase": 4800}
@@ -60,16 +64,7 @@ SLIPS_PER_TERM = 12
 SPACES_PER_TERM = 4
 CASES_PER_PHRASE = 6
 FIELD_START_ONE_IN = 8
-WITHHELD_ONE_IN = 5
 STOP_ONE_IN = 20
-
-
-def number(text: str) -> int:
-    return int.from_bytes(hashlib.sha256(text.encode()).digest()[:8], "big")
-
-
-def is_withheld(term: str) -> bool:
-    return number("lm-domain-term:" + term) % WITHHELD_ONE_IN == 0
 
 
 def split_of(document: str) -> str:
@@ -239,7 +234,7 @@ def main():
         for index in range(len(tokens) - 1):
             left, right = tokens[index], dom.bare(tokens[index + 1])
             if right is not None and dom.LETTERS.fullmatch(left) and dom.LETTERS.fullmatch(right.lower()) and right.islower() \
-                    and f"{left} {right}" in phrases:
+                    and f"{left} {right}" in phrases and left not in withheld and right not in withheld:
                 spots.append(index)
         if not spots:
             return False

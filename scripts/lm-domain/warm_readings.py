@@ -33,7 +33,7 @@ def start_worker(shim: str) -> None:
 def readings_of_chunk(cases: list[dict]) -> dict:
     for case in cases:
         typist.type(case, rerank.engine_choice)
-        typist.type(case, harness.perfect_chooser(case))
+        harness.perfect_typing(typist, case)
     return dict(typist.engine.cache)
 
 

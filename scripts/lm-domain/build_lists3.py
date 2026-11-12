@@ -5,10 +5,16 @@ Each case is typed as the keyboard ships with the work area "AI and software" on
 The protection of a typed new word is off here, so a list holds every reading of the engine and
 the model learns to keep a word of the pack by itself. At every correction the engine gives up
 to 8 readings. The list holds the text before the span, the typed span and the readings, each
-as [text, engine score, slip cost, as typed, chosen]. Its target is the longest reading that
-keeps the field a start of the intended text (harness.perfect_chooser). The typing goes on with
-the target, or with the engine's choice when the list does not hold one. A list without a
-target, and a list of one reading, stay out of the file, and the report counts them.
+as [text, engine score, slip cost, as typed, chosen]. Its target is the reading that the
+perfect chooser takes (harness.perfect_typing): the text as typed in a case without a slip, and
+in a case with a slip a reading that keeps the field a start of the intended text and leads to
+the intended text. A list without a target, and a list of one reading, stay out of the file,
+and the report counts them.
+
+The list builder of rounds 1 and 2 takes the longest reading that keeps the field a start of
+the intended text. In clean running text that rule takes a reading that adds the next word, as
+"pay attention in" for the typed "pay attention": 200 of the 54,759 clean running-text lists of
+round 2 have such a target.
 
 A list keeps the fields `u`, `source` and `term` of its case, when the case has them.
 
@@ -38,27 +44,24 @@ def start_worker(shim: str) -> None:
 
 
 def lists_of_case(case: dict) -> tuple[list[dict], dict]:
-    target_text = ((case["context"] + " " if case["context"] else "") + case["intended"].strip() + " ").lower()
-    found, counts = [], {"events": 0, "one_reading": 0, "without_target": 0}
+    output, corrections = harness.perfect_typing(typist, case)
+    found, counts = [], {"events": len(corrections), "one_reading": 0, "without_target": 0}
     kept = {key: case[key] for key in ("u", "source", "term") if key in case}
-
-    def chooser(readings: list[dict], text_before: str, typed: str | None = None) -> str:
-        counts["events"] += 1
-        before = text_before.lower()
-        matches = [r for r in readings if target_text.startswith(before + r["text"])
-                   and target_text[len(before) + len(r["text"])] in rerank.TERMINATORS]
-        target = max(matches, key=lambda r: len(r["text"])) if matches else None
+    for correction in corrections:
+        readings = correction["readings"]
+        # The target is the reading that the perfect chooser took, when that reading is a match.
+        target = None
+        if correction["choice"] in correction["matches"]:
+            target = next(r for r in readings if r["text"] == correction["choice"])
         if len(readings) < 2:
             counts["one_reading"] += 1
         elif target is None:
             counts["without_target"] += 1
         else:
-            found.append({"case": case["id"], "category": case["category"], "context": text_before.rstrip(" "), "typed": typed,
+            found.append({"case": case["id"], "category": case["category"], "context": correction["text_before"].rstrip(" "),
+                          "typed": correction["typed"],
                           "readings": [[r["text"], r["score"], r["slips"], int(r["as_typed"]), int(r["chosen"])] for r in readings],
                           "target": readings.index(target), **kept})
-        return target["text"] if target is not None else rerank.engine_choice(readings, text_before, typed)
-
-    output = typist.type(case, chooser)
     counts["right_after_perfect_chooser"] = int(harness.is_right(case, output))
     return found, counts
 
