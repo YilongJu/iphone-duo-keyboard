@@ -1,6 +1,6 @@
 {
  "domain_share": 0.3,
- "frequency_share": 1.0,
+ "frequency_share": 0.3,
  "source_groups": [
   "arxiv",
   "docs-ai",

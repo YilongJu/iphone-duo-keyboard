@@ -23,7 +23,8 @@ on:
       - '.github/workflows/domain-pack.yml'
 
 env:
-  HALF: dev
+  # The half that the model job types. The engine job always types the dev half.
+  HALF: test
   # The commit of engine/lm-keyboard that this branch starts from: the engine before the supplement.
   BASE: 4cfa7ef
 
@@ -86,15 +87,15 @@ jobs:
           mkdir -p build/domain-pack
           python3 scripts/domain-pack/build_merged_lexicon.py --out build/domain-pack/lexicon-english-merged.bin | tee build/domain-pack/merged.txt
           cp build/lm-rerank/libduo_shim.so build/lm-rerank/libduo_shim_merged.so
-          python3 scripts/lm-rerank/domain_pack.py --shim build/lm-rerank/libduo_shim.so --half "$HALF" \
+          python3 scripts/lm-rerank/domain_pack.py --shim build/lm-rerank/libduo_shim.so --half dev \
             --merged-lexicon build/domain-pack/lexicon-english-merged.bin --merged-shim build/lm-rerank/libduo_shim_merged.so \
             --out build/lm-rerank/domain-pack/engine
-          python3 scripts/lm-rerank/domain_pack_table.py "build/lm-rerank/domain-pack/engine/result.$HALF.json" \
-            | tee "build/lm-rerank/domain-pack/engine/table.$HALF.md" >> "$GITHUB_STEP_SUMMARY"
+          python3 scripts/lm-rerank/domain_pack_table.py build/lm-rerank/domain-pack/engine/result.dev.json \
+            | tee build/lm-rerank/domain-pack/engine/table.dev.md >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@v7
         if: always()
         with:
-          name: domain-pack-engine-${{ env.HALF }}
+          name: domain-pack-engine-dev
           path: |
             build/lm-rerank/domain-pack/engine
             build/domain-pack/merged.txt
@@ -110,7 +111,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        share: ['0.03', '0.1', '0.3', '1.0']
+        # The dev half compared 0.03, 0.1, 0.3 and 1.0 in run 43122414341, and the rule picked 0.3.
+        share: ['0.3']
     steps:
       - uses: actions/checkout@v7
       - name: Build llama.cpp b4846, the scorer and the engine shim
@@ -123,7 +125,14 @@ jobs:
           export LD_LIBRARY_PATH="$PWD/build/lm-rerank/llama/lib"
           lscpu | grep -E 'Model name' | tee runner.txt
           variant="scripts/domain-pack/variants/share-${{ matrix.share }}"
-          python3 scripts/lm-rerank/domain_pack.py --shim build/lm-rerank/libduo_shim.so --lm build/lm-rerank/lm_score             --model Shared/smollm2-lora-typed-seed1.Q4_K_M.gguf --threads 4 --half "$HALF" --also-unprotected             --supplement "$variant/supplement-ai-software.bin" --table "$variant/supplement-ai-software.tsv"             --out build/lm-rerank/domain-pack/rerank
+          # The dev half also types the alternative without the protection. The test half types
+          # the chosen design alone.
+          extra=()
+          if [ "$HALF" = dev ]; then extra=(--also-unprotected); fi
+          python3 scripts/lm-rerank/domain_pack.py --shim build/lm-rerank/libduo_shim.so --lm build/lm-rerank/lm_score \
+            --model Shared/smollm2-lora-typed-seed1.Q4_K_M.gguf --threads 4 --half "$HALF" "${extra[@]}" \
+            --supplement "$variant/supplement-ai-software.bin" --table "$variant/supplement-ai-software.tsv" \
+            --out build/lm-rerank/domain-pack/rerank
           mv runner.txt build/lm-rerank/domain-pack/rerank/
           python3 scripts/lm-rerank/domain_pack_table.py "build/lm-rerank/domain-pack/rerank/result.$HALF.json"             | tee "build/lm-rerank/domain-pack/rerank/table.$HALF.md" >> "$GITHUB_STEP_SUMMARY"
       - name: Compare frequencies for the requested words, on the dev cases of the group required

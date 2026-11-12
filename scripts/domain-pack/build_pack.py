@@ -70,12 +70,12 @@ BASE_LEXICON = ROOT / "Shared" / "lexicon-english.bin"
 TATOEBA = ROOT / "build" / "typing-evaluation" / "eng_sentences.tsv.bz2"
 NAME = "ai-software"
 
-# The share of domain text in the text of a person who works in the area. The dev cases of
-# docs/domain-pack-design.md compare several values.
+# The share of domain text in the text of a person who works in the area. It picks the words.
 DOMAIN_SHARE = 0.3
-# The share of domain text that the frequencies of the pack assume. The words of the pack stay
-# those of DOMAIN_SHARE, so the two values can differ.
-FREQUENCY_SHARE = 1.0
+# The share of domain text that the frequencies of the pack assume. The share rule of
+# docs/domain-pack-design.md picked 0.3 among 0.03, 0.1, 0.3 and 1.0 on the dev half. The words
+# of the pack stay those of DOMAIN_SHARE, so --frequency-share can compare other values.
+FREQUENCY_SHARE = 0.3
 MINIMUM_ZIPF = 2.5
 RAISE_ZIPF = 1.0
 MINIMUM_SOURCES = 2
