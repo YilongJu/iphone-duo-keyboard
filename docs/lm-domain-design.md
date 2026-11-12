@@ -294,17 +294,17 @@ Table 8. Parts of the fresh held-out set and the source of each.
 | stream, everyday, 4,000 sentences | The same buckets | The same rule |
 | github, 1,500 and 458 cases | GitHub Typo Corpus, held-out half by the hash of the right word | The row and its typed and right pair are no pick of round 2 |
 | birkbeck, 600 pairs | Roger Mitton's Birkbeck list | The pair is in no earlier case of any round |
-| domain cases | Test-bucket sentences of the pack's corpus | The document is the source of no dev or test case of the pack, and the sentence has the letters of no sentence of such a document |
+| domain cases, 4,611 cases | Test-bucket sentences of the pack's corpus, and Tatoeba sentences of the held-out buckets for the everyday controls | The document is the source of no dev or test case of the pack, and the sentence has the letters of no sentence of such a document |
 | stream, technical and written, 1,300 sentences | The same sentences | The same rule |
 
 Three more rules bind the set.
 
-1. A Tatoeba sentence passes the filters of `build_cases2.py`: it is no source of a round 1 case, and its words differ from every such source.
+1. A Tatoeba sentence passes the filters of `build_cases2.py`: it is no source of a round 1 case, and its words differ from every such source. It is also no source of a dev or test case of the pack. The held-out buckets hold 204 such sources, and the checker found 19 of them in a first build of the set.
 2. A fresh domain slip case never has the typed and intended pair of a training case or of a dev or test case of the pack. A fresh domain case never equals such a case.
 3. A word of a list-based clean category and an open word of a stream stand in no training sentence.
 
 The builder reads the round 2 held-out files for one purpose: the sentence ids and the list words that must stay out. It repeats the seeded GitHub and Birkbeck picks of round 2 with that round's own code. It prints counts only, and no person reads those files or their results.
-The set, its six SHA-256 values and its sizes are fixed before any candidate result exists.
+The set, its six SHA-256 values and its sizes are fixed before any candidate result exists. `scripts/lm-domain/reports/fresh-holdout-report.json` holds them.
 
 ## Replacement rule on the fresh held-out set
 
