@@ -1,8 +1,9 @@
 name: Scorer probe
 
 # Scores one request, and requests near it, with lm_score and the keyboard's scorer, each built
-# with several step and call sizes: scripts/lm-keyboard/scorer-probe. The request is the one on
-# which the two scorers differ on the macOS runner in run 43142371994.
+# with several step and call sizes: scripts/lm-keyboard/scorer-probe. The context of the request
+# has one token more than a call of the keyboard's scorer. The workflow fails when the scorer as
+# the keyboard builds it differs from lm_score in any number.
 on:
   push:
     branches: [engine/domain-pack]

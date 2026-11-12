@@ -42,7 +42,9 @@ struct PreferredCapitals {
             precondition(fields[4] == "0" || fields[4] == "1", "the line of \(fields[0]) in the table of preferred capitals is not valid")
             if fields[4] == "1" { newWords.insert(String(fields[0])) }
             guard !fields[2].isEmpty else { continue }
-            precondition(fields[2].lowercased() == fields[0] && (fields[3] == "0" || fields[3] == "1"),
+            // A preferred form may hold a sign between its letters, as "Next.js" for "nextjs".
+            precondition(fields[2].lowercased().filter({ $0.isLetter || $0 == "'" }) == fields[0]
+                         && (fields[3] == "0" || fields[3] == "1"),
                          "the line of \(fields[0]) in the table of preferred capitals is not valid")
             entries[String(fields[0])] = Entry(preferred: String(fields[2]), everyday: fields[3] == "1")
         }
@@ -88,13 +90,14 @@ struct PreferredCapitals {
     /// 5. Two or more capitals: the preferred form or all capitals, whichever differs from the
     ///    typed capitals in fewer letters, and the preferred form on a tie.
     ///
-    /// An apostrophe is not a letter of the rule, so "Gpu's" becomes "GPU's".
+    /// An apostrophe is not a letter of the rule, so "Gpu's" becomes "GPU's". A sign of the
+    /// preferred form is not one either, so "Nextjs" becomes "Next.js".
     func form(of word: String, typed: String, automaticFirst: Bool) -> String {
         let lower = word.lowercased()
         guard let entry = entries[lower], word.allSatisfy({ $0.isASCII && ($0.isLetter || $0 == "'") }) else { return word }
         let lowerCharacters = Array(lower)
         let typedCharacters = Array(typed)
-        let preferredCharacters = Array(entry.preferred)
+        let preferredLetters = entry.preferred.filter { $0.isLetter }
         let letters = lowerCharacters.indices.filter { lowerCharacters[$0] != "'" }
         guard let firstLetter = letters.first else { return word }
         // A corrected slip of another length keeps only the case of its first letter. The
@@ -116,7 +119,7 @@ struct PreferredCapitals {
             return entry.everyday ? word : entry.preferred
         }
         if count == 1 { return entry.preferred }
-        let toPreferred = zip(capitals, letters).filter { $0 != preferredCharacters[$1].isUppercase }.count
+        let toPreferred = zip(capitals, preferredLetters).filter { $0 != $1.isUppercase }.count
         let toAllCapitals = letters.count - count
         return toAllCapitals < toPreferred ? lower.uppercased() : entry.preferred
     }

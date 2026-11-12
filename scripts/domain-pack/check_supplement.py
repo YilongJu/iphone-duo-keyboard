@@ -107,7 +107,7 @@ def check_capitals() -> None:
         table = Path(folder) / "table.tsv"
         table.write_text("word\tzipf\tpreferred\teveryday\tnew\n"
                          "gpu\t4.9\tGPU\t0\t0\ngpu's\t3.5\tGPU's\t0\t0\npytorch\t4.3\tPyTorch\t0\t1\nvllm\t4.6\tvLLM\t0\t1\n"
-                         "rag\t4.6\tRAG\t1\t0\ntokenizer\t4.1\t\t0\t1\n",
+                         "rag\t4.6\tRAG\t1\t0\ntokenizer\t4.1\t\t0\t1\nnextjs\t4.5\tNext.js\t0\t1\nxcode\t4.5\tXcode\t0\t1\n",
                          encoding="utf-8")
         capitals = rerank.PreferredCapitals(table)
     cases = [
@@ -128,6 +128,11 @@ def check_capitals() -> None:
         ("Monday", "Monday", False, "Monday"), ("It", "It", True, "It"), ("us", "us", False, "us"),      # outside the table
         ("Gpu's", "Gpu's", False, "GPU's"), ("gpu's", "gpu's", False, "gpu's"), ("Gpu's", "Gpus", True, "GPU's"),  # a possessive
         ("GPU'S", "GPU'S", False, "GPU'S"),
+        # A preferred form with a sign between its letters, and one that equals the plain capital.
+        ("nextjs", "nextjs", False, "nextjs"), ("Nextjs", "Nextjs", False, "Next.js"), ("Nextjs", "Nextjs", True, "Next.js"),
+        ("NEXTJS", "NEXTJS", False, "NEXTJS"), ("NextJS", "NextJS", False, "Next.js"), ("Nextjs", "Nextjd", False, "Next.js"),
+        ("nextjs", "nextjd", False, "nextjs"), ("Xcode", "Xcode", True, "Xcode"), ("XCode", "XCode", False, "Xcode"),
+        ("xcode", "xcode", False, "xcode"), ("XCODE", "XCODE", False, "XCODE"),
         # A symbol key in place of the first letter: the keyboard typed the capital by itself, or typed none.
         ("Pytorch", "[ytorch", False, "PyTorch"), ("pytorch", "[ytorch", False, "pytorch"),
     ]

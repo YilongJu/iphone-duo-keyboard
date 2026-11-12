@@ -15,6 +15,8 @@ final class PreferredCapitalsTests: XCTestCase {
         vllm\t4.6\tvLLM\t0\t1
         rag\t4.6\tRAG\t1\t0
         tokenizer\t4.1\t\t0\t1
+        nextjs\t4.5\tNext.js\t0\t1
+        xcode\t4.5\tXcode\t0\t1
 
         """)
 
@@ -77,6 +79,20 @@ final class PreferredCapitalsTests: XCTestCase {
         XCTAssertEqual(form("Monday"), "Monday")
         XCTAssertEqual(form("It", automatic: true), "It")
         XCTAssertEqual(form("us"), "us")
+    }
+
+    func testAPreferredFormMayHoldASignBetweenItsLetters() {
+        XCTAssertEqual(form("nextjs"), "nextjs")
+        XCTAssertEqual(form("Nextjs"), "Next.js")
+        XCTAssertEqual(form("Nextjs", automatic: true), "Next.js")
+        XCTAssertEqual(form("NEXTJS"), "NEXTJS")
+        XCTAssertEqual(form("NextJS"), "Next.js")
+        XCTAssertEqual(form("Nextjd", corrected: "Nextjs"), "Next.js")
+        XCTAssertEqual(form("nextjd", corrected: "nextjs"), "nextjs")
+        // A preferred form that equals the plain capital still pulls a second capital back.
+        XCTAssertEqual(form("XCode"), "Xcode")
+        XCTAssertEqual(form("Xcode", automatic: true), "Xcode")
+        XCTAssertEqual(form("XCODE"), "XCODE")
     }
 
     func testAnApostropheIsNotALetterOfTheRule() {
@@ -178,6 +194,45 @@ final class SupplementEngineTests: XCTestCase {
         XCTAssertEqual(engine.reading(previousWord: "the", typed: "pytorch"), "porch")
         engine.setSupplement(Self.supplement)
         XCTAssertEqual(engine.reading(previousWord: "the", typed: "pytorch"), "pytorch")
+    }
+
+    func testEachLaterRequestedWordStaysAsTyped() {
+        for (word, without) in [("worktree", "work tree"), ("worktrees", "work trees"), ("ultraplan", "ultra plan"),
+                                ("ultrareview", "ultra review"), ("autocompact", "auto compact"), ("codegen", "code gen"),
+                                ("typecheck", "type check"), ("precommit", "recommit"), ("devcontainer", "de container"),
+                                ("testflight", "test flight"), ("nextjs", "next is"), ("swiftui", "swift"),
+                                ("xcode", "code"), ("vite", "vote"), ("todo", "to do")] {
+            XCTAssertEqual(reading(word, withSupplement: false), without, word)
+            XCTAssertEqual(reading(word, withSupplement: true), word, word)
+        }
+        // The engine leaves "pnpm" as typed without the supplement too. The supplement makes
+        // the word a target of a correction.
+        XCTAssertEqual(reading("pnpm", withSupplement: true), "pnpm")
+        XCTAssertNotEqual(reading("pnmp", withSupplement: false), "pnpm")
+        XCTAssertEqual(reading("pnmp", withSupplement: true), "pnpm")
+    }
+
+    func testASlipIsCorrectedIntoALaterRequestedWord() {
+        for (typed, word) in [("worktre", "worktree"), ("ultraplna", "ultraplan"), ("ultrareveiw", "ultrareview"),
+                              ("autocompat", "autocompact"), ("codegne", "codegen"), ("typechekc", "typecheck"),
+                              ("precomit", "precommit"), ("devcontaner", "devcontainer"), ("testflihgt", "testflight"),
+                              ("nextjd", "nextjs"), ("swiftiu", "swiftui"), ("xcoed", "xcode"), ("vitr", "vite")] {
+            XCTAssertNotEqual(reading(typed, withSupplement: false), word, typed)
+            XCTAssertEqual(reading(typed, withSupplement: true), word, typed)
+        }
+    }
+
+    func testEverydayTextsNearALaterRequestedWordStay() {
+        for word in ["vote", "code"] {
+            XCTAssertEqual(reading(word, withSupplement: true), word, word)
+        }
+        for words in ["work tree", "to do", "test flight"] {
+            XCTAssertEqual(reading(words, after: "", withSupplement: true), words, words)
+        }
+        // "todo" has a lower frequency than the other requested words. After a word that "to do"
+        // often follows, a typed "todo" is still "to do".
+        XCTAssertEqual(reading("todo", after: "lot", withSupplement: true), "to do")
+        XCTAssertEqual(reading("todo", after: "a", withSupplement: true), "todo")
     }
 
     func testTheReadingsHoldAWordOfTheSupplementForTheLanguageModel() throws {
@@ -328,6 +383,69 @@ final class WorkAreaKeyboardTests: XCTestCase {
         makeController(before: "an ")
         type("ultrathin ultrasound ultra ")
         XCTAssertEqual(document.text, "an ultrathin ultrasound ultra ")
+    }
+
+    func testTheLaterRequestedWordsStayInASentence() {
+        makeController(before: "open the ")
+        type("worktree and run the typecheck ")
+        XCTAssertEqual(document.text, "open the worktree and run the typecheck ")
+        makeController(before: "please ")
+        type("ultraplan this and ultrareview it ")
+        XCTAssertEqual(document.text, "please ultraplan this and ultrareview it ")
+        makeController(before: "the ")
+        type("devcontainer runs the precommit and the codegen ")
+        XCTAssertEqual(document.text, "the devcontainer runs the precommit and the codegen ")
+        makeController(before: "we run ")
+        type("vite and pnpm ")
+        XCTAssertEqual(document.text, "we run vite and pnpm ")
+        makeController(before: "it will ")
+        type("autocompact ")
+        XCTAssertEqual(document.text, "it will autocompact ")
+        makeController(before: "in the ")
+        type("worktrees ")
+        XCTAssertEqual(document.text, "in the worktrees ")
+    }
+
+    func testARequestedWordWithAPreferredFormFollowsTheTypedCapitals() {
+        makeController(before: "we use ")
+        type("testflight and Testflight ")
+        XCTAssertEqual(document.text, "we use testflight and TestFlight ")
+        makeController(before: "we build with ")
+        type("Xcode and ship with Testflight ")
+        XCTAssertEqual(document.text, "we build with Xcode and ship with TestFlight ")
+        makeController(before: "we use ")
+        type("xcode ")
+        XCTAssertEqual(document.text, "we use xcode ")
+        makeController(before: "we use ")
+        type("Testflihgt ")
+        XCTAssertEqual(document.text, "we use TestFlight ")
+    }
+
+    func testAPreferredFormWithASignIsWrittenWithItsSign() {
+        makeController(before: "we use ")
+        type("nextjs ")
+        XCTAssertEqual(document.text, "we use nextjs ")
+        makeController(before: "we use ")
+        type("Nextjs and Swiftui ")
+        XCTAssertEqual(document.text, "we use Next.js and SwiftUI ")
+        makeController(before: "")
+        type("Nextjs ")
+        XCTAssertEqual(document.text, "Next.js ")
+        makeController(before: "we use ")
+        type("NEXTJS ")
+        XCTAssertEqual(document.text, "we use NEXTJS ")
+    }
+
+    func testATypedTodoStaysWhereItIsANameAndIsTwoWordsAfterALot() {
+        makeController(before: "add a ")
+        type("todo ")
+        XCTAssertEqual(document.text, "add a todo ")
+        makeController(before: "add it to the ")
+        type("todo ")
+        XCTAssertEqual(document.text, "add it to the todo ")
+        makeController(before: "I have a lot ")
+        type("todo ")
+        XCTAssertEqual(document.text, "I have a lot to do ")
     }
 
     func testTheTriggerTurnsTheWorkAreaOffAndOnAndTheStoreRemembersIt() {

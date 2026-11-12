@@ -1,8 +1,13 @@
-"""Probe of one request on which the keyboard's scorer and lm_score differ on the macOS runner.
+"""Check of the request whose answer depends on how the keyboard's scorer splits a context into calls.
 
-Run 43142371994 gave one request of 12,886 with a difference: the context below and the
-candidate " egg nns", -33.07924 from lm_score and -32.79410 from scorer_cli. This script writes
-that request and nearby requests, and then compares the answers of several builds.
+The keyboard's scorer reads a long context in calls of 31 tokens at most. llama.cpp b4846
+computes a call of one token with another routine than a call of two tokens or more, and on the
+macOS runner the two routines differ in the last bits of their sums. The scorer therefore
+splits a context into calls whose sizes differ by one token at most (call_size in
+LanguageModel/duo_lm_scorer.c). The context below has 32 tokens, one more than a call. With a
+last call of one token, the candidate " egg nns" gets -32.79410 on the macOS runner, and
+lm_score gives -33.07924. This script writes that request and nearby requests, and then
+compares the answers of several builds.
 
     probe.py requests OUT.tsv      writes the requests, one per line, and OUT.tsv.names with a
                                    name per request

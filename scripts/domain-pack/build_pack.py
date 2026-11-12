@@ -9,7 +9,8 @@ Inputs:
 - The Tatoeba English sentences, as build_english_cases.py reads them: the letter case of a
   word in everyday text. Four pairs of ids in five are read. The fifth pair feeds the everyday
   cases of build_english_domain_cases.py, and this script does not read it.
-- pack/required-terms.tsv: the words the user asked for by name. The corpus does not decide them.
+- pack/required-terms.tsv: the words the user asked for by name, each with its preferred form
+  and its frequency. The corpus does not decide them.
 
 Outputs:
 - scripts/domain-pack/pack/ai-software.terms.tsv     the words from the corpus, with every number
@@ -84,7 +85,8 @@ SLIP_ZIPF_GAP = 2.0
 PREFERRED_SHARE = 0.5
 # A word of two letters is one key away from many common words, so it needs a higher frequency.
 SHORT_WORD_MINIMUM_ZIPF = 4.0
-# A requested word gets the frequency of a word that the person uses about once in 30,000 words.
+# A requested word gets the frequency of a word that the person uses about once in 30,000 words,
+# unless pack/required-terms.tsv gives the word a frequency of its own.
 REQUESTED_ZIPF = 4.5
 PHRASE_RATIO = 10.0
 EDGE = ".,!?;:\"()[]"
@@ -94,6 +96,36 @@ SEED = ["gpu", "gpus", "llm", "llms", "api", "sdk", "cli", "rag", "mcp", "lora",
         "kubernetes", "kubectl", "docker", "github", "tokenizer", "embeddings", "quantization", "backprop",
         "hyperparameter", "inference", "agentic", "multimodal", "guardrails", "evals", "repo", "async", "refactor",
         "monorepo", "finetuning"]
+
+
+def letters_of_form(form: str) -> str:
+    """The letters and apostrophes of a preferred form in lower case: "nextjs" for "Next.js"."""
+    return "".join(character for character in form.lower() if character.isalpha() or character == "'")
+
+
+def read_required_terms() -> list[dict]:
+    """The words of pack/required-terms.tsv, in the order of the file: the word, its preferred
+    form or "", its Zipf frequency, and its source. A line without a frequency gets REQUESTED_ZIPF."""
+    lines = [line for line in (PACK / "required-terms.tsv").read_text(encoding="utf-8").splitlines()
+             if line.strip() and not line.startswith("#")]
+    if not lines or lines[0].split("\t") != ["word", "preferred", "zipf", "source"]:
+        raise SystemExit("required-terms.tsv does not have the columns word, preferred, zipf, source")
+    rows = []
+    for line in lines[1:]:
+        fields = line.split("\t")
+        if len(fields) != 4:
+            raise SystemExit(f"required-terms.tsv: the line {line!r} does not have 4 columns")
+        word, preferred, zipf, source = fields
+        if not WORD.fullmatch(word):
+            raise SystemExit(f"required-terms.tsv: {word!r} is not a word of lower-case letters")
+        if preferred and (letters_of_form(preferred) != word or preferred == word):
+            raise SystemExit(f"required-terms.tsv: {preferred!r} is not a form of {word!r} with a capital")
+        if not source.strip():
+            raise SystemExit(f"required-terms.tsv: {word!r} does not have a source")
+        rows.append({"word": word, "preferred": preferred, "zipf": float(zipf) if zipf else REQUESTED_ZIPF, "source": source})
+    if len({row["word"] for row in rows}) != len(rows):
+        raise SystemExit("required-terms.tsv holds a word twice")
+    return rows
 
 
 def read_base_lexicon(path: Path) -> dict[str, float]:
@@ -235,13 +267,8 @@ def main():
     report["of them new to the base lexicon"] = sum(1 for word in words if word not in base)
     report["of them raised in the base lexicon"] = sum(1 for word in words if word in base)
 
-    requested = []
-    for line in (PACK / "required-terms.tsv").read_text(encoding="utf-8").splitlines():
-        if line.strip() and not line.startswith("#"):
-            term = line.split("\t")[0].strip()
-            if not WORD.fullmatch(term):
-                raise SystemExit(f"required-terms.tsv: {term!r} is not a word of lower-case letters")
-            requested.append(term)
+    required = read_required_terms()
+    requested = [row["word"] for row in required]
 
     everyday_forms = tatoeba_forms(set(words) | set(requested))
     rows = []
@@ -273,17 +300,23 @@ def main():
         "\t".join(columns) + "\n" + "".join("\t".join(str(row[c]) for c in columns) + "\n" for row in rows),
         encoding="utf-8", newline="\n")
 
-    # The supplement holds the corpus words and the requested words. A requested word is lower
-    # case, so it has no preferred capitals.
+    # The supplement holds the corpus words and the requested words.
     shift = math.log10(arguments.frequency_share / share)
     # The last value marks a word that the base lexicon lacks. The keyboard's language model
     # may not change such a word when the person typed it.
     entries = [(row["word"], round(row["zipf"] + shift, 2), row["preferred"], row["everyday"], int(row["kind"] == "new"))
                for row in rows]
-    for term in requested:
+    for row in required:
+        term, preferred = row["word"], row["preferred"]
         if term in base:
             raise SystemExit(f"required-terms.tsv: the base lexicon already holds {term!r}")
-        entries.append((term, REQUESTED_ZIPF, "", 0, 1))
+        # The everyday mark follows the rule of the corpus words.
+        other_everyday = sum(count for form, count in everyday_forms[term].items() if form != preferred)
+        is_everyday = int(bool(preferred) and other_everyday >= max(5, everyday_forms[term][preferred]))
+        entries.append((term, row["zipf"], preferred, is_everyday, 1))
+    report["requested words with a preferred form"] = sum(1 for row in required if row["preferred"])
+    report["requested words with a frequency of their own"] = {
+        row["word"]: row["zipf"] for row in required if row["zipf"] != REQUESTED_ZIPF}
     stats = write_lexicon(arguments.out_shared / f"supplement-{NAME}.bin",
                           [(word, word, (zipf - 9) * math.log(10), 0.0) for word, zipf, _, _, _ in sorted(entries)], {}, MODEL_MIXED)
     table = "".join(f"{word}\t{zipf:.2f}\t{preferred}\t{flag}\t{new}\n" for word, zipf, preferred, flag, new in sorted(entries))

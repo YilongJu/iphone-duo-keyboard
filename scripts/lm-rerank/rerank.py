@@ -480,7 +480,9 @@ class PreferredCapitals:
             if new == "1":
                 self.new_words.add(word)
             if preferred:
-                if preferred.lower() != word or everyday not in ("0", "1"):
+                # A preferred form may hold a sign between its letters, as "Next.js" for "nextjs".
+                letters = "".join(c for c in preferred.lower() if c.isalpha() or c == "'")
+                if letters != word or everyday not in ("0", "1"):
                     raise SystemExit(f"{path}: the row of {word!r} is not valid")
                 self.entries[word] = (preferred, everyday == "1")
 
@@ -488,7 +490,8 @@ class PreferredCapitals:
         """The form of `word` to show. `word` is the keyboard's text for the typed word `typed`
         after restoring_capitals and capitalizing_repaired_first_letters, and `automatic_first`
         says that the keyboard typed the first letter as a capital by itself. An apostrophe is
-        not a letter of the rule, so "Gpu's" becomes "GPU's"."""
+        not a letter of the rule, so "Gpu's" becomes "GPU's". A sign of the preferred form is not
+        one either, so "Nextjs" becomes "Next.js"."""
         lower = word.lower()
         entry = self.entries.get(lower)
         if entry is None or not all(c.isascii() and (c.isalpha() or c == "'") for c in word):
@@ -518,7 +521,8 @@ class PreferredCapitals:
             return word if everyday else preferred
         if count == 1:
             return preferred
-        to_preferred = sum(capital != preferred[index].isupper() for capital, index in zip(capitals, letters))
+        preferred_letters = [character for character in preferred if character.isalpha()]
+        to_preferred = sum(capital != letter.isupper() for capital, letter in zip(capitals, preferred_letters))
         to_all_capitals = len(letters) - count
         return lower.upper() if to_all_capitals < to_preferred else preferred
 

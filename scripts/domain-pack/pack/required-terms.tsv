@@ -1,4 +1,24 @@
-# Words the user asked for by name. The corpus does not decide them, and build_pack.py gives each
-# one the frequency REQUESTED_ZIPF. One lower-case word per line, then a tab and the source.
-ultrathink	requested by the user
-ultracode	requested by the user
+# Words the user asked for by name. The corpus does not decide them. build_pack.py reads four
+# columns with a tab between them: the word in lower case, its preferred form or nothing, its
+# frequency on the Zipf scale or nothing for REQUESTED_ZIPF, and the source.
+# "todo" has the highest frequency of the grid of requested_frequency.py --word todo at which
+# the keyboard still reads a typed "todo" as "to do" in the two existing dev cases that mean it.
+word	preferred	zipf	source
+ultrathink			requested by the user
+ultracode			requested by the user
+worktree			requested by the user
+worktrees			requested by the user
+ultraplan			requested by the user
+ultrareview			requested by the user
+autocompact			requested by the user
+codegen			requested by the user
+typecheck			requested by the user
+precommit			requested by the user
+devcontainer			requested by the user
+testflight	TestFlight		requested by the user
+nextjs	Next.js		requested by the user
+swiftui	SwiftUI		requested by the user
+xcode	Xcode		requested by the user
+pnpm			requested by the user
+vite			requested by the user
+todo		4.0	requested by the user

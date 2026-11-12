@@ -87,6 +87,7 @@ authenticates	3.27		0	0
 authenticating	3.41		0	0
 authentication	4.86		0	0
 authorizer	2.96		0	1
+autocompact	4.50		0	1
 autocompletion	3.09		0	1
 autoencoder	3.78		0	1
 autoencoders	3.54		0	1
@@ -234,6 +235,7 @@ codebases	3.63		0	1
 codebert	2.62	CodeBERT	0	1
 codebook	3.35		0	1
 codebooks	3.06		0	1
+codegen	4.50		0	1
 codepipeline	2.82	CodePipeline	0	1
 codepoint	2.77		0	1
 codepoints	2.73		0	1
@@ -405,6 +407,7 @@ detectably	2.52		0	1
 deterministic	4.48		0	0
 deterministically	3.32		0	0
 detr	3.08	DETR	0	1
+devcontainer	4.50		0	1
 devops	4.71	DevOps	0	0
 dflash	3.20	DFlash	0	1
 dhi	3.79	DHI	0	1
@@ -1003,6 +1006,7 @@ neuromorphic	2.68		0	1
 neurosymbolic	2.76		0	1
 newline	3.14		0	0
 newlines	2.81		0	0
+nextjs	4.50	Next.js	0	1
 ng's	2.73	Ng's	0	1
 nginx	4.24		0	0
 ngram	2.84		0	1
@@ -1162,6 +1166,7 @@ pluggable	2.93		0	1
 plugin	4.72		0	0
 plugin's	2.86		0	1
 plugins	4.44		0	0
+pnpm	4.50		0	1
 pod	4.97	Pod	1	0
 pod's	3.78	Pod's	0	1
 podman	3.29	Podman	0	1
@@ -1181,6 +1186,7 @@ powershell	4.10	PowerShell	0	0
 ppo	3.59	PPO	0	1
 prebuilt	3.29		0	0
 precisions	2.91		0	0
+precommit	4.50		0	1
 precompiled	2.60		0	1
 precompute	2.54		0	1
 precomputed	3.25		0	0
@@ -1569,6 +1575,7 @@ svd	3.61	SVD	0	1
 svm	3.76	SVM	0	1
 svms	3.00	SVMs	0	1
 svn	3.42	SVN	0	1
+swiftui	4.50	SwiftUI	0	1
 sycophancy	3.28		0	0
 symlink	3.35		0	1
 symlinks	3.24		0	1
@@ -1604,6 +1611,7 @@ testability	2.87		0	0
 testbed	3.57		0	0
 testbench	2.58		0	1
 testcontainers	3.36	Testcontainers	0	1
+testflight	4.50	TestFlight	0	1
 tfidf	2.96	TFIDF	0	1
 tfms	2.98	TFMs	0	1
 tfvc	2.84	TFVC	0	1
@@ -1619,6 +1627,7 @@ timestep	3.39		0	1
 timesteps	3.29		0	1
 tldr	2.89	TLDR	0	1
 tmpfs	3.10		0	1
+todo	4.00		0	1
 toggles	3.27		0	0
 token	5.19		0	0
 tokenisation	2.94		0	1
@@ -1669,10 +1678,13 @@ tui	4.53	TUI	0	0
 tuple	3.53		0	0
 tuples	3.33		0	0
 twilio	3.14	Twilio	0	1
+typecheck	4.50		0	1
 typeerror	2.82	TypeError	0	1
 typesafe	2.70		0	1
 typescript	3.69	TypeScript	0	0
 ultracode	4.50		0	1
+ultraplan	4.50		0	1
+ultrareview	4.50		0	1
 ultrathink	4.50		0	1
 unauthenticated	3.21		0	0
 uncached	3.09		0	1
@@ -1751,6 +1763,7 @@ vgg	2.89	VGG	0	1
 virtualbox	3.34	VirtualBox	0	0
 virtualenv	2.77		0	1
 virtualisation	2.56		0	0
+vite	4.50		0	1
 vla	3.53	VLA	0	1
 vlas	2.84	VLAs	0	1
 vllm	4.65	vLLM	0	1
@@ -1796,9 +1809,12 @@ workflows	4.75		0	0
 workloads	4.20		0	0
 workspace	4.77		0	0
 workspaces	3.76		0	0
+worktree	4.50		0	1
+worktrees	4.50		0	1
 writable	3.48		0	0
 writeable	2.54		0	0
 wsl	3.95	WSL	0	0
+xcode	4.50	Xcode	0	1
 xgb	2.58	XGB	0	1
 xgboost	3.70	XGBoost	0	1
 xlnet	2.72	XLNet	0	1

@@ -13,8 +13,12 @@ its date and its licence.
   the repository from pack/ai-software.sources.json.
 - Tatoeba: the address of the sentence, which names its author. CC BY 2.0 FR.
 
+With --reuse TABLE the script takes the row of a Stack Exchange source from an earlier table,
+and reads the data dump only for the sources that the earlier table does not hold. The workflow
+runs without it, so the workflow checks every row against the dump.
+
 Usage, on Linux with 7z installed, from the repository root:
-    python3 scripts/domain-pack/attribute_cases.py --work build/domain-pack/attribution
+    python3 scripts/domain-pack/attribute_cases.py --work build/domain-pack/attribution [--reuse TABLE]
 """
 import argparse
 import json
@@ -41,7 +45,15 @@ def stack_exchange_licence(date: str) -> str:
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--work", type=Path, required=True)
+    parser.add_argument("--reuse", type=Path, help="an earlier table whose Stack Exchange rows stay as they are")
     arguments = parser.parse_args()
+    earlier = {}
+    if arguments.reuse is not None:
+        for line in arguments.reuse.read_text(encoding="utf-8").splitlines()[1:]:
+            fields = line.split("	")
+            if len(fields) != 6:
+                raise SystemExit(f"{arguments.reuse}: the line {line!r} does not have 6 columns")
+            earlier[fields[0]] = tuple(fields)
     arguments.work.mkdir(parents=True, exist_ok=True)
     settings = json.loads((HERE / "sources.json").read_text(encoding="utf-8"))
     recorded = json.loads((HERE / "pack" / "ai-software.sources.json").read_text(encoding="utf-8"))["licences"]["repositories"]
@@ -64,6 +76,8 @@ def main():
             rows.append((source, f"https://github.com/{repository}/blob/{entry['commit']}/{path}", "", "", "", entry["licence"]))
         elif kind == "tatoeba":
             rows.append((source, f"https://tatoeba.org/sentences/show/{source.split(':')[1]}", "", "", "", "CC BY 2.0 FR"))
+        elif kind == "stackexchange" and source in earlier:
+            rows.append(earlier[source])
         elif kind == "stackexchange":
             _, site, file, row_id = source.split(":")
             wanted.setdefault(site, {}).setdefault(file, set()).add(row_id)

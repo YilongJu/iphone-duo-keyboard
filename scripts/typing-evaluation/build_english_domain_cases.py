@@ -19,6 +19,7 @@ A case holds the fields of build_english_cases.py and these:
 - `scoring`: "case" for a case that is right only with the intended capitals. Every other case
   is right when the letters agree, as in the other English files.
 - `twin`: for a slip, the case with the same text typed without the slip.
+- `requested`: for a case of a requested word after the first two, the requested word.
 
 The context of a technical case is the sentence before the word, as the source wrote it, with
 its capitals and punctuation. The typed word is in lower case, unless the case is about capitals.
@@ -36,7 +37,11 @@ domain_phrases      a frequent pair of the domain text, and the space bar inside
     term_space_extra, term_letter_to_space
     hyphen_second_part_slip                  a slip after the hyphen of a compound
 required            the words of scripts/domain-pack/pack/required-terms.tsv
-    required_clean, required_clean_next_word, required_slip_named, required_slip, required_control
+    required_clean, required_clean_next_word  the word typed right, alone and before a next word
+    required_slip_named, required_slip        a slip that the user named, and one slip of keyboard_noise.py
+    required_control                          an everyday text near a requested word, typed right. It
+                                              must stay: "ultra", "vote" beside "vite", and "to do"
+                                              typed as two words beside "todo".
 neighbour_controls  everyday sentences with a common word one edit away from a word of the pack
     neighbour_clean                          the common word typed right. It must stay.
     neighbour_slip                           a slip of the common word. It must go to the common word.
@@ -45,6 +50,8 @@ term_for_everyday_word  an everyday sentence where a slip of a common word spell
     neighbour_slip_onto_term                 "gpt" typed for "got". With the pack the keyboard takes
                                              the typed text for the word of the pack, so this
                                              group is the price of the pack. It is not a control.
+    requested_term_for_everyday_word         the same for a requested word: "vite" typed for "vote",
+                                             and "todo" typed for "to do"
 capitals            the preferred capitals of a word of the pack (scoring "case")
     capital_lower_stays                      "gpu" inside a sentence stays "gpu"
     capital_deliberate                       "Gpu" inside a sentence becomes "GPU"
@@ -60,6 +67,9 @@ capitals            the preferred capitals of a word of the pack (scoring "case"
     capital_possessive                       "Gpu's" becomes "GPU's", and "gpu's" stays
     capital_symbol_first                     "[ytorch" as the first word of the field becomes "PyTorch",
                                              and inside a sentence "pytorch"
+    capital_requested                        a requested word with a preferred form: "Testflight"
+                                             becomes "TestFlight", "Nextjs" becomes "Next.js", and
+                                             "xcode" stays
     capital_control_everyday_start, capital_control_everyday_deliberate, capital_control_everyday_lower
                                              a word of the pack that is also an everyday word, as "rag"
     capital_control_ordinary_word            a word outside the pack keeps its typed capital
@@ -88,7 +98,7 @@ import keyboard_noise as noise
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 sys.path.insert(0, str(ROOT / "scripts" / "domain-pack"))
-from build_pack import read_base_lexicon, tatoeba_feeds_the_cases  # noqa: E402
+from build_pack import read_base_lexicon, read_required_terms, tatoeba_feeds_the_cases  # noqa: E402
 
 CORPUS = ROOT / "build" / "domain-pack" / "corpus"
 PACK = ROOT / "scripts" / "domain-pack" / "pack"
@@ -107,19 +117,33 @@ GROUPS = {
                        "term_space_extra", "term_letter_to_space", "hyphen_second_part_slip"],
     "required": ["required_clean", "required_clean_next_word", "required_slip_named", "required_slip", "required_control"],
     "neighbour_controls": ["neighbour_clean", "neighbour_slip", "neighbour_slip_between"],
-    "term_for_everyday_word": ["neighbour_slip_onto_term"],
+    "term_for_everyday_word": ["neighbour_slip_onto_term", "requested_term_for_everyday_word"],
     "capitals": ["capital_lower_stays", "capital_deliberate", "capital_sentence_start", "capital_inner",
                  "capital_preferred_stays", "capital_all_capitals_stay", "capital_two_capitals_nearest",
                  "capital_slip_lower", "capital_slip_deliberate", "capital_slip_sentence_start",
                  "capital_plain_word_keeps_capital", "capital_possessive", "capital_symbol_first",
                  "capital_control_everyday_start",
                  "capital_control_everyday_deliberate", "capital_control_everyday_lower",
-                 "capital_control_ordinary_word", "capital_control_collision_lower"],
+                 "capital_control_ordinary_word", "capital_control_collision_lower", "capital_requested"],
 }
 GROUP_OF = {category: group for group, categories in GROUPS.items() for category in categories}
 
-# The contexts of the requested words. No public text holds these words yet, so the contexts
-# are written by hand: the start of a request to a coding agent. Each half has its own.
+# The contexts of the requested words. No public text holds most of these words yet, so the
+# contexts are written by hand. Each half has its own. A word that a person types as an order to
+# a coding agent gets the start of a request. A word that names a tool or a thing gets the
+# contexts of a name.
+COMMAND_WORDS = {"ultrathink", "ultracode", "ultraplan", "ultrareview"}
+NAME_CONTEXTS = {
+    "dev": ["", "the", "add a", "we use", "check the", "it runs in"],
+    "test": ["a", "this", "open", "try", "fix the", "it works with"],
+}
+NAME_NEXT_WORDS = {"dev": ["and", "is", "for"], "test": ["in", "to", "with"]}
+# The requested words of the first cases of this file. A later word also names itself in the
+# field `requested` of its cases, and gets the controls that build_requested_neighbours derives.
+FIRST_REQUESTED = ["ultrathink", "ultracode"]
+# Sentences per everyday text near a requested word: typed right, and typed as the requested word.
+CONTROL_SENTENCES = 4
+PRICE_SENTENCES = 12
 REQUIRED_CONTEXTS = {
     "dev": ["", "please", "can you", "I want you to", "let's", "think hard and"],
     "test": ["now", "ok", "this time", "go ahead and", "before you answer", "you should"],
@@ -170,7 +194,7 @@ class Builder:
         self.cases: list[dict] = []
         self.numbers: dict[str, int] = {}
 
-    def add(self, category, context, typed, intended, source, term=None, scoring=None, twin=None) -> str:
+    def add(self, category, context, typed, intended, source, term=None, scoring=None, twin=None, requested=None) -> str:
         number = self.numbers.get(category, 0)
         self.numbers[category] = number + 1
         case = {"id": f"endom-{self.half}-{category}-{number:04d}", "split": self.half, "category": category,
@@ -181,6 +205,8 @@ class Builder:
             case["scoring"] = scoring
         if twin is not None:
             case["twin"] = twin
+        if requested is not None:
+            case["requested"] = requested
         for field in (context, typed, intended):
             if "|" in field or "\t" in field or "\n" in field or not field.isascii():
                 raise SystemExit(f"a case text holds a sign that the harness cannot type: {case}")
@@ -191,9 +217,9 @@ class Builder:
         return self.numbers.get(category, 0)
 
 
-def read_table() -> tuple[dict[str, tuple[str, bool]], dict[str, str], list[str]]:
+def read_table() -> tuple[dict[str, tuple[str, bool]], dict[str, str], list[dict]]:
     """The words of the supplement with their preferred form and everyday mark, the kind (new or
-    raised) of each corpus word, and the requested words."""
+    raised) of each corpus word, and the rows of the requested words."""
     table = {}
     for line in TABLE.read_text(encoding="utf-8").splitlines()[1:]:
         word, _, preferred, everyday, _ = line.split("\t")
@@ -204,8 +230,9 @@ def read_table() -> tuple[dict[str, tuple[str, bool]], dict[str, str], list[str]
     for line in lines[1:]:
         row = dict(zip(columns, line.split("\t")))
         kinds[row["word"]] = row["kind"]
-    requested = [line.split("\t")[0] for line in (PACK / "required-terms.tsv").read_text(encoding="utf-8").splitlines()
-                 if line.strip() and not line.startswith("#")]
+    requested = read_required_terms()
+    if [row["word"] for row in requested[:len(FIRST_REQUESTED)]] != FIRST_REQUESTED:
+        raise SystemExit(f"required-terms.tsv must start with {FIRST_REQUESTED}, so their cases keep their numbers")
     return table, kinds, requested
 
 
@@ -362,7 +389,9 @@ def build_technical(builder: Builder, sentences: list[dict], table, kinds, phras
                 break
 
     # ---- Capitals ----
-    cased = {word: preferred for word, (preferred, everyday) in table.items() if preferred and not everyday and word.isalpha()}
+    # The requested words have their own capital cases (capital_requested).
+    cased = {word: preferred for word, (preferred, everyday) in table.items()
+             if preferred and not everyday and word.isalpha() and word in kinds}
     plain = {word for word, (preferred, _) in table.items() if not preferred and word in kinds and word.isalpha()}
     used.clear()
     middle = ["capital_lower_stays", "capital_deliberate", "capital_inner", "capital_preferred_stays",
@@ -476,37 +505,132 @@ def build_technical(builder: Builder, sentences: list[dict], table, kinds, phras
             break
 
 
-def build_required(builder: Builder, requested: list[str]) -> None:
+def build_required(builder: Builder, requested: list[dict], everyday, base_words: dict[str, float]) -> None:
     half = builder.half
     rng = random.Random(f"{SEED}-{half}-required")
-    contexts = REQUIRED_CONTEXTS[half]
-    for term in requested:
+    for row in requested:
+        term = row["word"]
+        command = term in COMMAND_WORDS
+        contexts = REQUIRED_CONTEXTS[half] if command else NAME_CONTEXTS[half]
+        next_words = REQUIRED_NEXT_WORDS[half] if command else NAME_NEXT_WORDS[half]
+        mark = None if term in FIRST_REQUESTED else term
         clean = {}
         for context in contexts:
-            clean[context] = builder.add("required_clean", context, term, term, "requested by the user", term=term)
-            for next_word in REQUIRED_NEXT_WORDS[half]:
+            clean[context] = builder.add("required_clean", context, term, term, row["source"], term=term, requested=mark)
+            for next_word in next_words:
                 builder.add("required_clean_next_word", context, f"{term} {next_word}", f"{term} {next_word}",
-                            "requested by the user", term=term)
+                            row["source"], term=term, requested=mark)
         for typed in REQUIRED_NAMED_SLIPS.get(term, []):
             for context in contexts:
-                builder.add("required_slip_named", context, typed, term, "requested by the user", term=term, twin=clean[context])
+                builder.add("required_slip_named", context, typed, term, row["source"], term=term, twin=clean[context])
         named = set(REQUIRED_NAMED_SLIPS.get(term, []))
         slips = sorted(typed for typed in all_slips(term)
                        if typed not in builder.known and typed not in named and split_of(f"{term}:{typed}") == half)
         rng.shuffle(slips)
         for typed in slips[:40]:
             context = rng.choice(contexts)
-            builder.add("required_slip", context, typed, term, "requested by the user", term=term, twin=clean[context])
+            builder.add("required_slip", context, typed, term, row["source"], term=term, twin=clean[context], requested=mark)
     for word in REQUIRED_CONTROLS:
         for context in CONTROL_CONTEXTS[half]:
             builder.add("required_control", context, word, word, "written for this file", term=word)
+    build_requested_neighbours(builder, requested, everyday, base_words)
+    build_requested_capitals(builder, requested)
 
 
-def build_everyday(builder: Builder, sentences, table, kinds, requested: list[str], base_words: dict[str, float]) -> None:
+def everyday_texts_near(term: str, base_words: dict[str, float]) -> tuple[list[str], list[str]]:
+    """The everyday texts near a requested word: the common words one edit away, most frequent
+    first and 6 at most, and each way to write the letters of the word as two common words."""
+    singles = [word for word in base_one_edit(term)
+               if word in base_words and word.isalpha() and len(word) >= 3 and zipf_frequency(word, "en") >= 4.0]
+    singles = sorted(singles, key=lambda word: (-zipf_frequency(word, "en"), word))[:6]
+    pairs = [f"{term[:cut]} {term[cut:]}" for cut in range(2, len(term) - 1)
+             if all(part in base_words and zipf_frequency(part, "en") >= 4.0 for part in (term[:cut], term[cut:]))]
+    return singles, pairs
+
+
+def places_of(sentences, text: str) -> list[tuple[int, list[str], int]]:
+    """The everyday sentences that hold `text`, one word or two words in a row, each with the
+    place of its first word."""
+    parts = text.split(" ")
+    found = []
+    for sentence_id, words in sentences:
+        for index in range(len(words) - len(parts) + 1):
+            if words[index:index + len(parts)] == parts:
+                found.append((sentence_id, words, index))
+                break
+    return found
+
+
+def build_requested_neighbours(builder: Builder, requested: list[dict], everyday, base_words: dict[str, float]) -> None:
+    """The everyday texts near each requested word. Typed right, a text must stay
+    (required_control). Typed as the requested word, the text is the price of the word
+    (requested_term_for_everyday_word): a slip that spells the word, or two words typed with the
+    space missing. The sentences are Tatoeba sentences. A text that Tatoeba does not hold, as
+    "work tree", gets the first written contexts as a control and no price case."""
+    half = builder.half
+    rng = random.Random(f"{SEED}-{half}-required-neighbours")
+    for row in requested:
+        term = row["word"]
+        singles, pairs = everyday_texts_near(term, base_words)
+        for text in singles + pairs:
+            found = places_of(everyday, text)
+            rng.shuffle(found)
+            if found:
+                for sentence_id, words, index in found[:CONTROL_SENTENCES]:
+                    builder.add("required_control", " ".join(words[:index]), text, text, f"tatoeba:{sentence_id}",
+                                term=text, requested=term)
+            else:
+                for context in CONTROL_CONTEXTS[half][:3]:
+                    builder.add("required_control", context, text, text, "written for this file", term=text, requested=term)
+            # The requested word is one slip of the text: a letter slip of the one word, or the
+            # two words with the space missing.
+            if " " in text or term in all_slips(text):
+                for sentence_id, words, index in found[CONTROL_SENTENCES:CONTROL_SENTENCES + PRICE_SENTENCES]:
+                    builder.add("requested_term_for_everyday_word", " ".join(words[:index]), term, text,
+                                f"tatoeba:{sentence_id}", term=text, requested=term)
+
+
+def build_requested_capitals(builder: Builder, requested: list[dict]) -> None:
+    """The capitals of the requested words that have a preferred form, scored with the capitals."""
+    half = builder.half
+    rng = random.Random(f"{SEED}-{half}-required-capitals")
+    inside = NAME_CONTEXTS[half][3]
+    for row in requested:
+        term, preferred = row["word"], row["preferred"]
+        if not preferred:
+            continue
+
+        def add(context, typed, intended):
+            builder.add("capital_requested", context, typed, intended, row["source"], term=term, scoring="case", requested=term)
+
+        add(inside, term, term)
+        add(inside, term.capitalize(), preferred)
+        add("", term.capitalize(), preferred)
+        add(inside, term.upper(), term.upper())
+        # A preferred form with a sign, as "Next.js", is not one typed word. A preferred form that
+        # is the plain capital, as "Xcode", is the case above.
+        if preferred.isalpha() and preferred != term.capitalize():
+            add(inside, preferred, preferred)
+        # One capital after the first letter: at the place of the second capital of the preferred
+        # form, or at the second letter.
+        letters = [character for character in preferred if character.isalpha()]
+        later = [place for place in range(1, len(letters)) if letters[place].isupper()]
+        place = later[0] if later else 1
+        add(inside, term[:place] + term[place].upper() + term[place + 1:], preferred)
+        slips = sorted(typed for typed in all_slips(term) if typed not in builder.known and split_of(f"{term}:{typed}") == half)
+        rng.shuffle(slips)
+        for typed in slips[:3]:
+            add(inside, typed, term)
+            add(inside, typed.capitalize(), preferred)
+            add("", typed.capitalize(), preferred)
+
+
+def build_everyday(builder: Builder, sentences, table, kinds, base_words: dict[str, float]) -> None:
     half = builder.half
     rng = random.Random(f"{SEED}-{half}-neighbours")
     known = builder.known
-    pack = set(kinds) | set(requested)
+    # The words from the corpus. The requested words have their own controls (build_requested_neighbours).
+    pack = set(kinds)
     new_terms = {word for word in pack if word not in base_words}
 
     # A common word and the words of the pack one edit away from it.
@@ -658,8 +782,8 @@ def main():
             dev_letters = {letters_of(" ".join(row["tokens"])) for row in technical}
         builder = Builder(half, known)
         build_technical(builder, technical, table, kinds, phrases)
-        build_required(builder, requested)
-        build_everyday(builder, everyday[half], table, kinds, requested, base_words)
+        build_required(builder, requested, everyday[half], base_words)
+        build_everyday(builder, everyday[half], table, kinds, base_words)
         order = {category: place for place, category in enumerate(GROUP_OF)}
         cases = sorted(builder.cases, key=lambda case: (order[case["category"]], case["id"]))
         path = OUTPUT_DIR / f"english-domain.{half}.jsonl"
