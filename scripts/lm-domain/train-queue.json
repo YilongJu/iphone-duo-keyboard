@@ -219,6 +219,52 @@
     "--train-lists",
     "build/lm-domain/data/everyday-pack-on/lists.train.jsonl.gz"
    ]
+  },
+  {
+   "name": "dom-s100-seed2",
+   "memory_gb": 3.2,
+   "needs": [
+    "build/lm-domain/data/domain/lists.stop.jsonl.gz",
+    "build/lm-domain/data/domain/lists.train.jsonl.gz",
+    "build/lm-domain/data/everyday-pack-on/lists.train.jsonl.gz"
+   ],
+   "arguments": [
+    "--seed",
+    "2",
+    "--loss",
+    "cross-entropy",
+    "--clean-weight",
+    "1",
+    "--train-lists",
+    "build/lm-domain/data/everyday-pack-on/lists.train.jsonl.gz",
+    "--sampled-train-lists",
+    "build/lm-domain/data/domain/lists.train.jsonl.gz",
+    "--sample-share",
+    "1.0"
+   ]
+  },
+  {
+   "name": "dom-s100-seed3",
+   "memory_gb": 3.2,
+   "needs": [
+    "build/lm-domain/data/domain/lists.stop.jsonl.gz",
+    "build/lm-domain/data/domain/lists.train.jsonl.gz",
+    "build/lm-domain/data/everyday-pack-on/lists.train.jsonl.gz"
+   ],
+   "arguments": [
+    "--seed",
+    "3",
+    "--loss",
+    "cross-entropy",
+    "--clean-weight",
+    "1",
+    "--train-lists",
+    "build/lm-domain/data/everyday-pack-on/lists.train.jsonl.gz",
+    "--sampled-train-lists",
+    "build/lm-domain/data/domain/lists.train.jsonl.gz",
+    "--sample-share",
+    "1.0"
+   ]
   }
  ]
 }

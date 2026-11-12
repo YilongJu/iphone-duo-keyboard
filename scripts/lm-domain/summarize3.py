@@ -36,7 +36,7 @@ TERM_SLIP_CATEGORIES = ("domain_slip_new", "domain_slip_raised", "capital_slip_l
                         "capital_slip_sentence_start", "term_space_extra", "term_letter_to_space")
 # The order of the arms in every table: the order of Table 5 of the design.
 ORDER = ["ship", "full-mix-seed1", "mix-hinge-seed1", "mix-seed1", "mix-seed2", "mix-seed3", "soup-mix", "soup-r1", "ce-c1-seed1", "dom-s0-seed1", "dom-s0-seed2",
-         "ce-c4-seed1", "ce-c4-seed2", "ec-c4-seed1", "ec-c4-seed2", "dom-s15-seed1", "dom-s40-seed1", "dom-s100-seed1"]
+         "ce-c4-seed1", "ce-c4-seed2", "ec-c4-seed1", "ec-c4-seed2", "dom-s15-seed1", "dom-s40-seed1", "dom-s100-seed1", "dom-s100-seed2", "dom-s100-seed3"]
 SHARES = {"dom-s15-seed1": "0.15", "dom-s40-seed1": "0.4", "dom-s100-seed1": "1.0"}
 LOSS_MINIMUM_GAIN = 10
 
