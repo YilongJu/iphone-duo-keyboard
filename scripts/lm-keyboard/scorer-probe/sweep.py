@@ -1,5 +1,5 @@
-"""Second probe of the scorer difference on the macOS runner: which split of a call moves the
-numbers, and how often it moves them over all requests of run 43142371994.
+"""Sweep of the call size of the keyboard's scorer on the macOS runner: which split of a call
+moves the numbers, and how often a split moves them over all requests of run 43142371994.
 
     sweep.py requests OUT.tsv     writes the requests of the sweep, and OUT.tsv.names
     sweep.py calls DIR            the table of the call-size sweep, from DIR/sweep-c*.answers

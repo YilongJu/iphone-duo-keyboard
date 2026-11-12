@@ -45,6 +45,27 @@ CASES = ROOT / "scripts" / "typing-evaluation" / "cases"
 EXISTING = [CASES / "english.dev.jsonl", CASES / "english-symbols.dev.jsonl"]
 
 
+# The kinds of case of a requested word, by category.
+REQUESTED_KINDS = {"required_clean": "clean", "required_clean_next_word": "clean", "required_slip_named": "slips",
+                   "required_slip": "slips", "required_control": "controls",
+                   "requested_term_for_everyday_word": "typed for an everyday text", "capital_requested": "capitals"}
+
+
+def tally_requested(cases: list[dict], outputs: dict[str, str]) -> dict:
+    """Right cases and cases per requested word and kind of case. A case names its word in
+    `requested`. The cases of the first two requested words name it in `term`, and their first
+    controls name the control word there."""
+    result: dict[str, dict[str, list[int]]] = {}
+    for case in cases:
+        kind = REQUESTED_KINDS.get(case["category"])
+        if kind is None:
+            continue
+        cell = result.setdefault(case.get("requested", case["term"]), {}).setdefault(kind, [0, 0])
+        cell[0] += int(rerank.case_is_right(case, outputs[case["id"]]))
+        cell[1] += 1
+    return result
+
+
 def word_distance(first: list[str], second: list[str]) -> int:
     previous = list(range(len(second) + 1))
     for i, a in enumerate(first, 1):
@@ -166,6 +187,10 @@ def main():
             entry = {}
             shown = {"domain": run(domain), "stream": run(stream)}
             entry["domain"] = rerank.tally_by_group(domain, shown["domain"])
+            entry["requested_words"] = tally_requested(domain, shown["domain"])
+            # The cases from before the 16 later requested words: every case without `requested`.
+            entry["domain_earlier"] = rerank.tally_by_group(
+                [case for case in domain if "requested" not in case], shown["domain"])
             entry["stream"] = tally_stream(stream, shown["stream"], pack_words)
             if with_existing:
                 shown["existing"] = run(existing)

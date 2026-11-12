@@ -50,5 +50,5 @@ supplement-ai-software.bin and supplement-ai-software.tsv
   the SymSpell pair list, and the Tatoeba English sentences (CC BY 2.0 FR, https://tatoeba.org)
   for the letter case of a word in everyday text. The two files hold single words with numbers
   and no text of a source. They are under CC BY-SA 4.0, as the Stack Exchange content and the
-  wordfreq data are. The two words of scripts/domain-pack/pack/required-terms.tsv come from the
+  wordfreq data are. The 18 words of scripts/domain-pack/pack/required-terms.tsv come from the
   user of the keyboard and from no text.

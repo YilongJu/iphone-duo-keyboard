@@ -145,8 +145,8 @@ corrects the letters before it at once. The cases do not hold that slip.
 
 ## Cases of the vocabulary pack "AI and software"
 
-`build_english_domain_cases.py` writes `cases/english-domain.{dev,test}.jsonl`, 5,988 dev and
-5,953 test cases, and `cases/english-domain-stream.{dev,test}.jsonl`. The other case files do
+`build_english_domain_cases.py` writes `cases/english-domain.{dev,test}.jsonl`, 7,137 dev and
+7,085 test cases, and `cases/english-domain-stream.{dev,test}.jsonl`. The other case files do
 not change. `docs/domain-pack-design.md` describes the pack, the groups and the results.
 
 - The technical sentences come from documents that the pack builder did not read: 10 of 100

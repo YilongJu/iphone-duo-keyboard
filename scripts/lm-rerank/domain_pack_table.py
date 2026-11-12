@@ -32,6 +32,17 @@ def main():
         print(f"| {name} | " + " | ".join(cell(groups[g]) for g in GROUPS)
               + f" | {entry['domain']['right']}/{entry['domain']['cases']} |")
     print()
+    if all("domain_earlier" in entry for entry in runs.values()):
+        earlier = next(iter(runs.values()))["domain_earlier"]["cases"]
+        print(f"Table 1b. Right {half} cases among the {earlier} cases from before the 16 later requested words.")
+        print()
+        print("| Configuration | " + " | ".join(GROUPS) + " | all |")
+        print("| --- |" + " --- |" * (len(GROUPS) + 1))
+        for name, entry in runs.items():
+            groups = entry["domain_earlier"]["groups"]
+            print(f"| {name} | " + " | ".join(cell(groups[g]) for g in GROUPS)
+                  + f" | {entry['domain_earlier']['right']}/{entry['domain_earlier']['cases']} |")
+        print()
     print(f"Table 2. Right {half} cases of each category.")
     print()
     names = list(runs)
@@ -40,6 +51,21 @@ def main():
     for category in next(iter(runs.values()))["domain"]["categories"]:
         print(f"| `{category}` | " + " | ".join(cell(runs[name]["domain"]["categories"][category]) for name in names) + " |")
     print()
+    kinds = ["clean", "slips", "controls", "typed for an everyday text", "capitals"]
+    shown = [name for name in runs if name.endswith("pack on") and "requested_words" in runs[name]]
+    if shown:
+        print(f"Table 2b. Right {half} cases per requested word with the pack on. The rows ultra, ultrathin and "
+              "ultrasound are the first controls of ultrathink and ultracode.")
+        print()
+        print("| Requested word | " + " | ".join(f"{name.split(',')[0]}: {kind}" for name in shown for kind in kinds) + " |")
+        print("| --- |" + " --- |" * (len(shown) * len(kinds)))
+        for word in runs[shown[0]]["requested_words"]:
+            cells = []
+            for name in shown:
+                row = runs[name]["requested_words"][word]
+                cells += [cell(row[kind]) if kind in row else "" for kind in kinds]
+            print(f"| {word} | " + " | ".join(cells) + " |")
+        print()
     print(f"Table 3. Changed words of clean running text on the {half} half: per 1,000 typed words, the count, "
           "and the changed sentences with those that hold a changed word of the pack.")
     print()

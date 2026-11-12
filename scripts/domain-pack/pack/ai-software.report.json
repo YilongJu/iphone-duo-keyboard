@@ -19,14 +19,18 @@
   "of them raised in the base lexicon": 803,
   "words with preferred capitals": 529,
   "of them everyday words": 8,
-  "words requested by the user": 2,
-  "supplement": {
-   "nodes": 7688,
-   "words": 1809,
-   "pairs": 0,
-   "bytes": 138343
+  "words requested by the user": 18,
+  "requested words with a preferred form": 4,
+  "requested words with a frequency of their own": {
+   "todo": 4.0
   },
-  "supplement table bytes": 38414,
+  "supplement": {
+   "nodes": 7753,
+   "words": 1825,
+   "pairs": 0,
+   "bytes": 139520
+  },
+  "supplement table bytes": 38744,
   "phrases": 1310
  },
  "seed_check": {
