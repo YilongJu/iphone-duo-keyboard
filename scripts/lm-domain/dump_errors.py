@@ -42,7 +42,7 @@ def main():
     if digest != result["model_sha256"]:
         raise SystemExit("the model file is not the file of the result")
     perfect = {}
-    with (arguments.result / "outputs.perfect.jsonl").open(encoding="utf-8") as file:
+    with (arguments.result / "outputs.select.perfect.jsonl").open(encoding="utf-8") as file:
         for line in file:
             row = json.loads(line)
             perfect[(row["set"], row["id"])] = row["output"]
