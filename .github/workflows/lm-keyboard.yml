@@ -177,7 +177,7 @@ jobs:
             exit 1
           fi
           cases=scripts/typing-evaluation/cases
-          for task in english english-symbols; do
+          for task in english english-symbols english-space-before-mark; do
             for run in "" ".engine-only"; do
               python3 scripts/typing-evaluation/score.py --task english --engine "keyboard$run" \
                 --cases "$cases/$task.dev.jsonl" --predictions "$out/$task.dev$run.jsonl" \

@@ -194,6 +194,25 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
     private var lastSpaceTime: TimeInterval = 0
     private var notice: String?
 
+    /// The spaces the person typed right after a word as the last keys, and the end of the text
+    /// after them. A cursor move, a paste, a delete or any other key forgets them.
+    private struct TypedSpaces {
+        let count: Int
+        let context: String
+    }
+
+    private var typedSpaces: TypedSpaces?
+
+    /// A closing mark the keyboard put against the word, as "hello ," to "hello,", with the
+    /// spaces it took away and the end of the text after the mark.
+    private struct GluedMark {
+        let mark: String
+        let spaces: Int
+        let context: String
+    }
+
+    private var gluedMark: GluedMark?
+
     /// The document's text at the moment the user pressed select all.
     private struct AllText: Equatable {
         let before: String
@@ -639,6 +658,10 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
     // MARK: Typing
 
     private func insert(_ text: String) {
+        let spacesBefore = typedSpaces
+        typedSpaces = nil
+        let glued = gluedMark
+        gluedMark = nil
         if text == " ", startLanguageModelTest() {
             updateAutoShift()
             return
@@ -651,12 +674,64 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
             previousInsertWasSpace = false
             recentWord = nil
         } else {
+            // A letter or a digit right after a mark that the keyboard moved against the word
+            // shows that the mark was a slip for the next word's first key, as in ",ore" for
+            // "more", and a second period starts an ellipsis typed with a space, as in "wait ...".
+            // The space comes back first, so the text reads as the person typed it.
+            if let glued, Self.bringsBackTheSpace(text, after: glued.mark),
+                document.textBeforeCursor.hasSuffix(glued.context) {
+                restore(glued)
+            }
+            let continuesSpaces = spacesBefore.map { document.textBeforeCursor.hasSuffix($0.context) } ?? false
             correctLastWord(beforeTyping: text)
+            let spacesToRemove = spacesToGlue(text, typed: continuesSpaces ? spacesBefore : nil)
+            deleteBackward(count: spacesToRemove)
             document.insertText(text)
+            if spacesToRemove > 0 {
+                gluedMark = GluedMark(mark: text, spaces: spacesToRemove, context: recentContext())
+            }
+            if text == " " {
+                typedSpaces = spacesAfterThisSpace(continuing: continuesSpaces ? spacesBefore : nil)
+            }
             previousInsertWasSpace = text == " "
             lastSpaceTime = now
         }
         updateAutoShift()
+    }
+
+    // MARK: A space typed before a closing mark
+
+    /// The count of spaces to take away before `mark`: every space the person typed right after
+    /// the word as the last keys, or 0. Chinese typing, a field without autocorrection and any
+    /// other text keep their spaces.
+    private func spacesToGlue(_ mark: String, typed spaces: TypedSpaces?) -> Int {
+        guard !chineseMode, document.allowsAutocorrection, KeyboardTextLogic.marksAfterWord.contains(mark),
+            let spaces, KeyboardTextLogic.spacesAfterWord(before: document.textBeforeCursor) == spaces.count
+        else { return 0 }
+        return spaces.count
+    }
+
+    /// The typed spaces after a space key: one more when the person typed the spaces before it
+    /// right here, or one when this space follows a word.
+    private func spacesAfterThisSpace(continuing earlier: TypedSpaces?) -> TypedSpaces? {
+        let count = KeyboardTextLogic.spacesAfterWord(before: document.textBeforeCursor)
+        guard count > 0, count == 1 || earlier?.count == count - 1 else { return nil }
+        return TypedSpaces(count: count, context: recentContext())
+    }
+
+    private static func bringsBackTheSpace(_ key: String, after mark: String) -> Bool {
+        guard key.count == 1, let character = key.first else { return false }
+        return character.isLetter || character.isNumber || (key == "." && mark == ".")
+    }
+
+    /// Puts the spaces back before the mark, as the person typed them.
+    private func restore(_ glued: GluedMark) {
+        deleteBackward(count: glued.mark.count)
+        document.insertText(String(repeating: " ", count: glued.spaces) + glued.mark)
+    }
+
+    private func recentContext() -> String {
+        String(document.textBeforeCursor.suffix(Self.recentContextLength))
     }
 
     /// Corrects the text right before the cursor, when `terminator` ends a word.
@@ -795,6 +870,8 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
 
     func keyboardView(_ keyboardView: KeyboardView, didSelectCandidateAt index: Int) {
         defer { proofreadAfterAPause() }
+        typedSpaces = nil
+        gluedMark = nil
         if proofreadSuggestion != nil {
             applyProofreadSuggestion()
             return
@@ -816,7 +893,14 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
             return
         }
         previousInsertWasSpace = false
-        if !undoLastCorrection() {
+        typedSpaces = nil
+        let glued = gluedMark
+        gluedMark = nil
+        // One backspace right after a mark that the keyboard moved against the word brings back
+        // the keys as the person typed them, spaces and mark, as for an autocorrection.
+        if let glued, document.textBeforeCursor.hasSuffix(glued.context) {
+            restore(glued)
+        } else if !undoLastCorrection() {
             document.deleteBackward()
         }
         recentWord = nil
@@ -835,6 +919,8 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
         previousInsertWasSpace = false
         lastCorrection = nil
         recentWord = nil
+        typedSpaces = nil
+        gluedMark = nil
         document.moveCursor(byUTF16Offset: utf16Offset(forCharacters: offset))
     }
 
@@ -844,6 +930,8 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
         previousInsertWasSpace = false
         lastCorrection = nil
         recentWord = nil
+        typedSpaces = nil
+        gluedMark = nil
         commitPinyinLetters()
         switch command {
         case .toggleLanguage:

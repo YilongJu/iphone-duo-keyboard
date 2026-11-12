@@ -317,6 +317,26 @@ final class EnglishRerankingTests: XCTestCase {
         XCTAssertTrue(last?.readings.contains { $0.asTyped && $0.text == "th e" } ?? false, "\(String(describing: last))")
     }
 
+    func testTheModelReadsTheGluedMarkInTheTextBeforeTheNextWord() {
+        makeController(before: "", answer: FakeScorer.favoring("the"))
+        var traces: [RerankTrace] = []
+        reranker.onTrace = { traces.append($0) }
+        type("hello , teh ")
+        XCTAssertEqual(document.text, "hello, the ")
+        XCTAssertEqual(traces.last?.textBefore, "hello, ")
+        XCTAssertEqual(traces.last?.prompt.context, "Hello, | teh |")
+    }
+
+    func testTheTwoWordSpanAfterAGluedMarkStartsAfterTheMark() {
+        makeController(before: "", answer: FakeScorer.favoring("it's going"))
+        var traces: [RerankTrace] = []
+        reranker.onTrace = { traces.append($0) }
+        type("yes , its going ")
+        let last = traces.last
+        XCTAssertEqual(last?.textBefore, "yes, ")
+        XCTAssertTrue(last?.readings.contains { $0.asTyped && $0.text == "its going" } ?? false, "\(String(describing: last))")
+    }
+
     func testTheWordsTypedDuringASelectAllReplacementGoToTheModel() throws {
         let other = try otherReading(previousWord: "", typed: "teh")
         makeController(before: "hello ", after: "world", answer: FakeScorer.favoring(other))
