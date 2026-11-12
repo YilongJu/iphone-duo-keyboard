@@ -149,11 +149,11 @@ def pick_conditions(entry: dict, ship: dict, engine: dict, parity_passes: bool |
     }
 
 
-def parity_of(folder: Path, arm: str) -> dict | None:
+def parity_of(folder: Path, arm: str, name: str = "parity.json") -> dict | None:
     """The parity results of an arm, or None for an arm without both of them."""
     found = {}
     for lists in ("everyday", "domain"):
-        path = folder / arm / lists / "parity.json"
+        path = folder / arm / lists / name
         if not path.exists():
             return None
         report = json.loads(path.read_text(encoding="utf-8"))
@@ -211,6 +211,8 @@ def main():
     parser.add_argument("--data", type=Path, required=True)
     parser.add_argument("--parity", type=Path, required=True)
     parser.add_argument("--out", type=Path, required=True)
+    parser.add_argument("--parity-name", default="parity.json",
+                        help="parity.json for the f16 file of check_parity.py, or parity-f32.json of parity_report.py")
     arguments = parser.parse_args()
     select_sets = harness.load_sets(arguments.data, "select")
     test_sets = harness.load_sets(arguments.data, "test")
@@ -221,7 +223,7 @@ def main():
     names = [arm for arm in ORDER if arm in found] + [arm for arm in found if arm not in ORDER]
     if "ship" not in names:
         raise SystemExit("the results hold no arm `ship`")
-    summary: dict = {"arms": {}, "marked_cases": {name: len(ids) for name, ids in marked.items()}}
+    summary: dict = {"parity_file": arguments.parity_name, "arms": {}, "marked_cases": {name: len(ids) for name, ids in marked.items()}}
     engine = perfect = None
     engine_test = perfect_test = None
     for arm in names:
@@ -232,7 +234,7 @@ def main():
         if engine is None:
             engine = select_metrics(select_sets, result["engine"]["evaluation"], read_outputs(folder / "outputs.select.engine.jsonl"), requested, marked)
             perfect = select_metrics(select_sets, result["perfect"]["evaluation"], read_outputs(folder / "outputs.select.perfect.jsonl"), requested, marked)
-        entry = {"model_sha256": result["model_sha256"], "parity": parity_of(arguments.parity, arm), "rules": {}, "test": None}
+        entry = {"model_sha256": result["model_sha256"], "parity": parity_of(arguments.parity, arm, arguments.parity_name), "rules": {}, "test": None}
         for rule in RULES:
             evaluation = result["evaluation"][rule]
             tuning = result["tuning"]["rules"][rule]
@@ -385,7 +387,7 @@ def tables(summary: dict) -> str:
     candidate = summary["pick"]["candidate"]
     lines += ["", "Candidate: " + (f"`{candidate['arm']}` at `{candidate['rule']}`" if candidate else "none"), ""]
     lines += ["Third wave: " + json.dumps(summary["third_wave"]), ""]
-    lines += ["Table. Parity: largest difference between PyTorch and lm_score on the f16 file in nats, limit 0.05.", "",
+    lines += [f"Table. Parity from {summary['parity_file']}: largest difference between PyTorch and lm_score in nats, limit 0.05.", "",
               "| Arm | everyday lists, log probability | everyday lists, space | domain lists, log probability | domain lists, space | token mismatches | passes |",
               "| --- | --- | --- | --- | --- | --- | --- |"]
     for arm, entry in summary["arms"].items():
