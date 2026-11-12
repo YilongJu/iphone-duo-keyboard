@@ -259,11 +259,10 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
     var typingLog: TypingLog? {
         didSet {
             typingLog?.onProblem = { [weak self] reason in
-                // A problem can come in the middle of a command, which shows its own notice
-                // right after. The problem's notice waits for that one, as a model error does.
-                Task { @MainActor [weak self] in
-                    self?.showNotice("Typing log: \(reason)")
-                }
+                // The notice goes to the space bar at once, so it does not depend on a later
+                // turn of the main queue. A command that meets a problem shows its own notice
+                // right after this one.
+                self?.showNotice("Typing log: \(reason)")
             }
         }
     }
