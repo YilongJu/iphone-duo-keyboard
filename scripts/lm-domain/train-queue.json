@@ -34,10 +34,12 @@
    ]
   },
   {
-   "name": "ce-c4-seed1",
+   "name": "dom-s0-seed1",
    "memory_gb": 3.7,
    "needs": [
-    "build/lm-domain/data/domain/lists.stop.jsonl.gz"
+    "build/lm-domain/data/domain/lists.stop.jsonl.gz",
+    "build/lm-domain/data/domain/lists.train.jsonl.gz",
+    "build/lm-domain/data/everyday-pack-on/lists.train.jsonl.gz"
    ],
    "arguments": [
     "--seed",
@@ -45,68 +47,9 @@
     "--loss",
     "cross-entropy",
     "--clean-weight",
-    "4",
-    "--train-lists",
-    "build/lm-domain/data/everyday/lists.train.jsonl.gz",
-    "build/lm-domain/data/everyday/lists2.train.jsonl.gz"
-   ]
-  },
-  {
-   "name": "ec-c4-seed1",
-   "memory_gb": 3.7,
-   "needs": [
-    "build/lm-domain/data/domain/lists.stop.jsonl.gz"
-   ],
-   "arguments": [
-    "--seed",
     "1",
-    "--loss",
-    "expected-cost",
-    "--clean-cost",
-    "4",
-    "--cross-entropy-share",
-    "0.1",
     "--train-lists",
-    "build/lm-domain/data/everyday/lists.train.jsonl.gz",
-    "build/lm-domain/data/everyday/lists2.train.jsonl.gz"
-   ]
-  },
-  {
-   "name": "ce-c4-seed2",
-   "memory_gb": 3.7,
-   "needs": [
-    "build/lm-domain/data/domain/lists.stop.jsonl.gz"
-   ],
-   "arguments": [
-    "--seed",
-    "2",
-    "--loss",
-    "cross-entropy",
-    "--clean-weight",
-    "4",
-    "--train-lists",
-    "build/lm-domain/data/everyday/lists.train.jsonl.gz",
-    "build/lm-domain/data/everyday/lists2.train.jsonl.gz"
-   ]
-  },
-  {
-   "name": "ec-c4-seed2",
-   "memory_gb": 3.7,
-   "needs": [
-    "build/lm-domain/data/domain/lists.stop.jsonl.gz"
-   ],
-   "arguments": [
-    "--seed",
-    "2",
-    "--loss",
-    "expected-cost",
-    "--clean-cost",
-    "4",
-    "--cross-entropy-share",
-    "0.1",
-    "--train-lists",
-    "build/lm-domain/data/everyday/lists.train.jsonl.gz",
-    "build/lm-domain/data/everyday/lists2.train.jsonl.gz"
+    "build/lm-domain/data/everyday-pack-on/lists.train.jsonl.gz"
    ]
   },
   {
@@ -179,7 +122,7 @@
    ]
   },
   {
-   "name": "dom-s0-seed1",
+   "name": "ce-c4-seed1",
    "memory_gb": 3.7,
    "needs": [
     "build/lm-domain/data/domain/lists.stop.jsonl.gz",
@@ -192,7 +135,87 @@
     "--loss",
     "cross-entropy",
     "--clean-weight",
+    "4",
+    "--train-lists",
+    "build/lm-domain/data/everyday-pack-on/lists.train.jsonl.gz"
+   ]
+  },
+  {
+   "name": "ec-c4-seed1",
+   "memory_gb": 3.7,
+   "needs": [
+    "build/lm-domain/data/domain/lists.stop.jsonl.gz",
+    "build/lm-domain/data/domain/lists.train.jsonl.gz",
+    "build/lm-domain/data/everyday-pack-on/lists.train.jsonl.gz"
+   ],
+   "arguments": [
+    "--seed",
     "1",
+    "--loss",
+    "expected-cost",
+    "--clean-cost",
+    "4",
+    "--cross-entropy-share",
+    "0.1",
+    "--train-lists",
+    "build/lm-domain/data/everyday-pack-on/lists.train.jsonl.gz"
+   ]
+  },
+  {
+   "name": "dom-s0-seed2",
+   "memory_gb": 3.7,
+   "needs": [
+    "build/lm-domain/data/domain/lists.stop.jsonl.gz",
+    "build/lm-domain/data/domain/lists.train.jsonl.gz",
+    "build/lm-domain/data/everyday-pack-on/lists.train.jsonl.gz"
+   ],
+   "arguments": [
+    "--seed",
+    "2",
+    "--loss",
+    "cross-entropy",
+    "--clean-weight",
+    "1",
+    "--train-lists",
+    "build/lm-domain/data/everyday-pack-on/lists.train.jsonl.gz"
+   ]
+  },
+  {
+   "name": "ce-c4-seed2",
+   "memory_gb": 3.7,
+   "needs": [
+    "build/lm-domain/data/domain/lists.stop.jsonl.gz",
+    "build/lm-domain/data/domain/lists.train.jsonl.gz",
+    "build/lm-domain/data/everyday-pack-on/lists.train.jsonl.gz"
+   ],
+   "arguments": [
+    "--seed",
+    "2",
+    "--loss",
+    "cross-entropy",
+    "--clean-weight",
+    "4",
+    "--train-lists",
+    "build/lm-domain/data/everyday-pack-on/lists.train.jsonl.gz"
+   ]
+  },
+  {
+   "name": "ec-c4-seed2",
+   "memory_gb": 3.7,
+   "needs": [
+    "build/lm-domain/data/domain/lists.stop.jsonl.gz",
+    "build/lm-domain/data/domain/lists.train.jsonl.gz",
+    "build/lm-domain/data/everyday-pack-on/lists.train.jsonl.gz"
+   ],
+   "arguments": [
+    "--seed",
+    "2",
+    "--loss",
+    "expected-cost",
+    "--clean-cost",
+    "4",
+    "--cross-entropy-share",
+    "0.1",
     "--train-lists",
     "build/lm-domain/data/everyday-pack-on/lists.train.jsonl.gz"
    ]

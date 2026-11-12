@@ -1,8 +1,9 @@
 """Writes scripts/lm-domain/train-queue.json: the arms of docs/lm-domain-design.md, in their order.
 
-The first nine arms are fixed. --third-wave SHARE [LOSS] adds the arms that the share rule and
-the loss rule of the design name after the first nine arms are scored: seeds 2 and 3 of the
-picked share, and the picked share with the picked loss ("ce-c4" or "ec-c4").
+The first ten arms are fixed. --third-wave SHARE [LOSS] adds the arms that the share rule and
+the loss rule of the design name after the first ten arms are scored: seeds 2 and 3 of the
+picked share, and the picked share with the picked loss ("ce-c4" or "ec-c4"). summarize3.py
+applies the two rules and prints the share and the loss to pass here.
 
 Usage, from the repository root:
     python scripts/lm-domain/make_train_queue.py
@@ -43,9 +44,10 @@ def main():
     needs_stop = [DOMAIN + "lists.stop.jsonl.gz"]
     needs_domain = [DOMAIN + "lists.stop.jsonl.gz", DOMAIN + "lists.train.jsonl.gz", PACK_ON + "lists.train.jsonl.gz"]
 
-    def loss_arm(loss: str, seed: int) -> dict:
-        return {"name": f"{loss}-seed{seed}", "memory_gb": MEMORY_GB, "needs": needs_stop,
-                "arguments": ["--seed", str(seed), *LOSSES[loss], *mix]}
+    def bridge_arm(seed: int) -> dict:
+        """The lists of round 2 as they are, with the recipe of this round."""
+        return {"name": f"ce-c1-seed{seed}", "memory_gb": MEMORY_GB, "needs": needs_stop,
+                "arguments": ["--seed", str(seed), *LOSSES["ce-c1"], *mix]}
 
     def domain_arm(name: str, share: float, seed: int, loss: str = "ce-c1") -> dict:
         values = ["--seed", str(seed), *LOSSES[loss], "--train-lists", PACK_ON + "lists.train.jsonl.gz"]
@@ -53,9 +55,12 @@ def main():
             values += ["--sampled-train-lists", DOMAIN + "lists.train.jsonl.gz", "--sample-share", str(share)]
         return {"name": name, "memory_gb": MEMORY_GB, "needs": needs_domain, "arguments": values}
 
-    arms = [loss_arm("ce-c1", 1), loss_arm("ce-c4", 1), loss_arm("ec-c4", 1), loss_arm("ce-c4", 2), loss_arm("ec-c4", 2),
-            domain_arm("dom-s40-seed1", 0.4, 1), domain_arm("dom-s100-seed1", 1.0, 1), domain_arm("dom-s15-seed1", 0.15, 1),
-            domain_arm("dom-s0-seed1", 0.0, 1)]
+    # The bridge arm needs no new list, so it starts first. Every other arm trains on the
+    # everyday lists that build_lists3.py builds with the work area on.
+    arms = [bridge_arm(1),
+            domain_arm("dom-s0-seed1", 0.0, 1), domain_arm("dom-s40-seed1", 0.4, 1), domain_arm("dom-s100-seed1", 1.0, 1),
+            domain_arm("dom-s15-seed1", 0.15, 1), domain_arm("ce-c4-seed1", 0.0, 1, "ce-c4"), domain_arm("ec-c4-seed1", 0.0, 1, "ec-c4"),
+            domain_arm("dom-s0-seed2", 0.0, 2), domain_arm("ce-c4-seed2", 0.0, 2, "ce-c4"), domain_arm("ec-c4-seed2", 0.0, 2, "ec-c4")]
     if arguments.third_wave:
         share = arguments.third_wave[0]
         if share not in SHARES:
