@@ -73,6 +73,18 @@ final class LanguageModelScorerTests: XCTestCase {
         XCTAssertEqual(alone.spaceAfter, together[7].spaceAfter, accuracy: 1e-3)
     }
 
+    func testAContextOfOneTokenMoreThanACallGivesTheNumbersOfLmScore() throws {
+        // This context is 32 tokens with the start token. Read as calls of 31 and 1 token it gave
+        // -32.79410 for " egg nns" in the simulator, and lm_score gives -33.07924 and -3.59276 on
+        // the macOS runner (scripts/lm-keyboard/scorer-probe). The simulator part of the app's
+        // framework computes as that runner does (scripts/lm-keyboard/README.md, Table 7).
+        let context = "To bridge this gap, we propose SHiFT, which synergizes the reasoning power of LLMs with the "
+            + "structural representation capability of | ggnns |"
+        let value = try scores(context, [" egg nns"])[0]
+        XCTAssertEqual(value.logProbability, -33.07924, accuracy: 0.01)
+        XCTAssertEqual(value.spaceAfter, -3.59276, accuracy: 0.01)
+    }
+
     func testTextsWithLoneSpacePiecesGiveScores() throws {
         // These texts give a lone space piece in the GPT-2 vocabulary (scripts/lm-rerank/README.md).
         // The SmolLM2 vocabulary has its own merges, so the count of repairs is not fixed here.
