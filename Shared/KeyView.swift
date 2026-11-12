@@ -6,6 +6,9 @@ struct KeyDisplay {
     /// Text with its own fonts and colors. The key draws this text in place of `primary`.
     var styledPrimary: NSAttributedString?
     var secondary: String?
+    /// The slide character of a letter key: small gray text at the top of the key. A slide up
+    /// or down on the key types this character.
+    var slideCharacter: String?
     var symbolName: String?
     var primaryFontSize: CGFloat = 22
     /// A key drawn in the pressed color while a mode is on, such as shift.
@@ -39,6 +42,7 @@ final class KeyView: UIView {
     private var emphasized = false
     private let primaryLabel = UILabel()
     private let secondaryLabel = UILabel()
+    private let slideCharacterLabel = UILabel()
     private let iconView = UIImageView()
 
     init(key: Key) {
@@ -58,6 +62,10 @@ final class KeyView: UIView {
             label.minimumScaleFactor = 0.5
             addSubview(label)
         }
+        slideCharacterLabel.textAlignment = .center
+        slideCharacterLabel.textColor = .secondaryLabel
+        slideCharacterLabel.font = .systemFont(ofSize: Self.slideCharacterFontSize)
+        addSubview(slideCharacterLabel)
         iconView.contentMode = .center
         iconView.tintColor = KeyColors.text
         addSubview(iconView)
@@ -67,6 +75,15 @@ final class KeyView: UIView {
     @available(*, unavailable)
     required init?(coder: NSCoder) {
         fatalError("KeyView is built in code only")
+    }
+
+    /// The font size of the slide character, in points.
+    static let slideCharacterFontSize: CGFloat = 11
+
+    /// The text the key shows now: the main text, the upper text of a two-character key, and
+    /// the slide character. The unit tests read these values.
+    var shownTexts: (primary: String?, secondary: String?, slideCharacter: String?) {
+        (primaryLabel.text, secondaryLabel.text, slideCharacterLabel.text)
     }
 
     func apply(_ display: KeyDisplay) {
@@ -79,6 +96,7 @@ final class KeyView: UIView {
         }
         secondaryLabel.text = display.secondary
         secondaryLabel.font = .systemFont(ofSize: 14)
+        slideCharacterLabel.text = display.slideCharacter
         if let symbolName = display.symbolName {
             let configuration = UIImage.SymbolConfiguration(pointSize: 19, weight: .regular)
             let image = UIImage(systemName: symbolName, withConfiguration: configuration)
@@ -98,6 +116,7 @@ final class KeyView: UIView {
         let alpha: CGFloat = faded ? 0.15 : 1
         primaryLabel.alpha = alpha
         secondaryLabel.alpha = alpha
+        slideCharacterLabel.alpha = alpha
         iconView.alpha = alpha
     }
 
@@ -106,7 +125,16 @@ final class KeyView: UIView {
         layer.shadowPath = UIBezierPath(roundedRect: bounds, cornerRadius: layer.cornerRadius).cgPath
         let content = bounds.insetBy(dx: 2, dy: 2)
         iconView.frame = content
-        if secondaryLabel.text != nil {
+        slideCharacterLabel.frame = .zero
+        if slideCharacterLabel.text != nil {
+            // The slide character sits at the top centre of the key and the letter a little
+            // lower, as on the iPad keyboard of iOS. The letter keeps its full frame, so a
+            // short key does not cut the letter.
+            let topHeight = min(13, content.height * 0.4)
+            slideCharacterLabel.frame = CGRect(x: content.minX, y: content.minY, width: content.width, height: topHeight)
+            secondaryLabel.frame = .zero
+            primaryLabel.frame = content.offsetBy(dx: 0, dy: min(4, content.height * 0.12))
+        } else if secondaryLabel.text != nil {
             let topHeight = content.height * 0.42
             secondaryLabel.frame = CGRect(x: content.minX, y: content.minY, width: content.width, height: topHeight)
             primaryLabel.frame = CGRect(

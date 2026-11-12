@@ -47,6 +47,10 @@ jobs:
           set -euo pipefail
           mkdir -p build/engine build/base-engine
           for file in duo_engine.c duo_engine.h duo_cli.c; do git show "$BASE:Engine/$file" > "build/base-engine/$file"; done
+          # The engine before the supplement holds the symbol keys of the layout of its commit. It gets
+          # the symbol keys of the layout file of this commit, so the comparison below reads the
+          # change of the supplement alone.
+          python3 scripts/typing-evaluation/symbol_keys.py --write-engine-table build/base-engine/duo_engine.c
           gcc -std=c11 -O2 -Wall -Wextra -Werror build/base-engine/duo_engine.c build/base-engine/duo_cli.c -lm -o build/engine/duo_cli_base
           gcc -std=c11 -O2 -Wall -Wextra -Werror Engine/duo_engine.c Engine/duo_cli.c -lm -o build/engine/duo_cli
           bash scripts/lm-rerank/build_on_linux.sh

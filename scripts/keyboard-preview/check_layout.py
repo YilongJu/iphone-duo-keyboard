@@ -12,6 +12,13 @@ The script exits with an error and lists every broken rule. The rules:
    two-character key does not count, because the compact number row repeats those on purpose.
 5. Each layout style reaches all 32 ASCII punctuation characters and all 10 digits.
 6. Every wide row names the key where the split layout puts its empty middle.
+7. A slide character (the "a" of a key such as {"c": "a", "a": "@"}) sits only on a letter key
+   of the letters layer, and that key has no upper character. A slide character is one
+   character, and it is not a letter, a digit or a space.
+8. A character is the slide character of at most one key in a layer, and it is not the main
+   character of a key in that layer, because a tap on that key already types it. A slide
+   character can repeat the upper character of a two-character key: the slide characters of the
+   compact letters repeat those of the number row on purpose.
 """
 import json
 import string
@@ -37,9 +44,27 @@ def key_parts(key):
     if isinstance(key, list):
         return None, key[0], list(key), 1
     if "c" in key:
-        typed = [key["c"]] + ([key["s"]] if "s" in key else [])
+        typed = [key["c"]] + [key[name] for name in ("s", "a") if name in key]
         return None, key["c"], typed, key.get("w", 1)
     return key["f"], None, [], key.get("w", 1)
+
+
+def is_letter_key(character):
+    """True for the main character of a letter key: one letter in lower case."""
+    return len(character) == 1 and character.isalpha() and character == character.lower()
+
+
+def slide_problems(key, layer_name):
+    """The broken parts of rule 7 for one key that holds a slide character."""
+    slide = key["a"]
+    problems = []
+    if "c" not in key or "s" in key or "f" in key:
+        problems.append(f"the key {key} holds a slide character and must hold \"c\" and no \"s\" or \"f\"")
+    elif layer_name != "letters" or not is_letter_key(key["c"]):
+        problems.append(f"the slide character {slide!r} sits on {key['c']!r}, which is not a letter key of the letters layer")
+    if not isinstance(slide, str) or len(slide) != 1 or slide.isalnum() or slide.isspace():
+        problems.append(f"the slide character {slide!r} is not one character that is no letter, digit or space")
+    return problems
 
 
 def check(layout):
@@ -55,9 +80,13 @@ def check(layout):
             where = f"{style_name}/{layer_name}"
             functions = []
             main_characters = []
+            slide_characters = []
             for row_index, row in enumerate(style[layer_name]):
                 width = 0
                 for key in row["keys"]:
+                    if isinstance(key, dict) and "a" in key:
+                        problems.extend(f"{where} row {row_index}: {problem}" for problem in slide_problems(key, layer_name))
+                        slide_characters.append(key["a"])
                     function, main, typed, key_width = key_parts(key)
                     width += key_width
                     if function:
@@ -86,6 +115,12 @@ def check(layout):
             repeated = sorted({c for c in main_characters if main_characters.count(c) > 1})
             if repeated:
                 problems.append(f"{where}: characters appear more than once: {' '.join(repeated)}")
+            repeated_slides = sorted({c for c in slide_characters if slide_characters.count(c) > 1})
+            if repeated_slides:
+                problems.append(f"{where}: slide characters appear more than once: {' '.join(repeated_slides)}")
+            tapped_slides = sorted(set(slide_characters) & set(main_characters))
+            if tapped_slides:
+                problems.append(f"{where}: slide characters that a tap on another key already types: {' '.join(tapped_slides)}")
         missing = sorted(set(string.punctuation + string.digits) - reachable)
         if missing:
             problems.append(f"{style_name}: characters out of reach: {' '.join(missing)}")

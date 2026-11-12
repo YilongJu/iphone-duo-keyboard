@@ -14,6 +14,47 @@ protocol KeyboardViewDelegate: AnyObject {
     func keyboardViewDidPressKey(_ keyboardView: KeyboardView)
 }
 
+/// The rule for a finger that moves on a letter key with a slide character.
+///
+/// The rule reads the move from the point where the touch took the key: `dx` to the side and
+/// `dy` up or down, in points. A move is vertical when `dy` is larger than `dx`.
+/// 1. A vertical move longer than 0.4 of a letter row's height selects the slide character.
+/// 2. A selected slide character stays selected until the finger comes back to less than half
+///    of that distance from the start height. A move to the side does not end the selection.
+/// 3. While the move is vertical, the touch stays with its key. A touch on any other text key
+///    moves to the key under the finger, and a slide leaves its key after a few points: a
+///    slide up from the top edge of "a" is over "q" at once. So a vertical move never moves
+///    the touch, and a short one types the letter of the key where it started.
+/// 4. A move that is not vertical can move the touch to the key under the finger, as on every
+///    other text key. The new key then starts its own move at the point where the touch took it.
+/// The rule holds no time, so a slow press never selects the slide character.
+enum SlideGesture {
+    /// The length of a slide that selects the slide character, as a part of a letter row's height.
+    static let selectDistanceInRowHeights: CGFloat = 0.4
+
+    /// What the touch does after a move.
+    enum Step: Equatable {
+        /// The key will type its slide character, and the touch stays with the key.
+        case slideCharacter
+        /// The key will type its letter, and the touch stays with the key.
+        case letter
+        /// The key will type its letter, and the touch moves to another text key when the finger is over one.
+        case letterOrOtherKey
+    }
+
+    /// `selected` is true when the slide character is selected before this move.
+    static func step(selected: Bool, dx: CGFloat, dy: CGFloat, rowHeight: CGFloat) -> Step {
+        let selectDistance = rowHeight * selectDistanceInRowHeights
+        let vertical = abs(dy) > abs(dx)
+        let staysSelected = selected && abs(dy) >= selectDistance / 2
+        let becomesSelected = !selected && vertical && abs(dy) > selectDistance
+        if staysSelected || becomesSelected {
+            return .slideCharacter
+        }
+        return vertical ? .letter : .letterOrOtherKey
+    }
+}
+
 /// Draws the keys and turns touches into typing actions.
 /// The view picks the compact or the wide layout from its own width.
 /// Every layout and size comes from `keyboard-layout.json`.
@@ -138,7 +179,9 @@ final class KeyboardView: UIView {
         var latestX: CGFloat = 0
         var holdTimer: Timer?
         var startPoint: CGPoint = .zero
-        /// True while the key will type its shifted character, after a long press or a slide up or down.
+        /// True while the key will type its alternate character: the shifted character of a
+        /// two-character key after a long press or a slide up or down, and the slide character
+        /// of a letter key after a slide up or down.
         var alternateActive = false
         var alternateFromHold = false
 
@@ -291,6 +334,9 @@ final class KeyboardView: UIView {
             return KeyDisplay(primary: characterText(character), primaryFontSize: letterSize)
         case .dual(let base, let shifted):
             return KeyDisplay(primary: base, secondary: shifted, primaryFontSize: 19)
+        case .slide(let letter, let slideCharacter):
+            return KeyDisplay(
+                primary: characterText(letter), slideCharacter: slideCharacter, primaryFontSize: letterSize)
         case .space:
             if let spaceCaption {
                 return KeyDisplay(primary: spaceCaption, primaryFontSize: 13)
@@ -510,9 +556,23 @@ final class KeyboardView: UIView {
                 continue
             }
             guard !state.committed, state.keyView.key.kind.isTextKey else { continue }
-            if case .dual = state.keyView.key.kind {
+            switch state.keyView.key.kind {
+            case .dual:
                 updateAlternate(state, at: point)
                 if state.alternateActive { continue }
+            case .slide:
+                // `SlideGesture` holds the rule. Only a move that is not vertical goes on to
+                // the code below, which moves the touch to the key under the finger.
+                guard let metrics = metrics() else { continue }
+                let step = SlideGesture.step(
+                    selected: state.alternateActive, dx: point.x - state.startPoint.x,
+                    dy: point.y - state.startPoint.y, rowHeight: metrics.rowHeight)
+                if (step == .slideCharacter) != state.alternateActive {
+                    setAlternate(state, active: step == .slideCharacter)
+                }
+                if step != .letterOrOtherKey { continue }
+            default:
+                break
             }
             guard let target = keyView(at: point), target !== state.keyView, target.key.kind.isTextKey else {
                 continue
@@ -628,7 +688,8 @@ final class KeyboardView: UIView {
     }
 
     /// A finger held for 0.3 seconds selects the shifted character on a key with two characters,
-    /// and turns the keyboard into a cursor trackpad on the space bar.
+    /// and turns the keyboard into a cursor trackpad on the space bar. A letter key with a slide
+    /// character has no long press, so a slow press on a letter never types a symbol.
     @objc private func holdTimerFired(_ timer: Timer) {
         guard let state = timer.userInfo as? TouchState, !state.committed else { return }
         state.holdTimer = nil
@@ -669,20 +730,23 @@ final class KeyboardView: UIView {
         if !active {
             state.alternateFromHold = false
         }
-        guard case .dual(_, let shifted) = state.keyView.key.kind else { return }
+        guard let alternate = state.keyView.key.kind.alternateCharacter else { return }
         if active {
             state.holdTimer?.invalidate()
             state.holdTimer = nil
-            state.keyView.apply(KeyDisplay(primary: shifted, primaryFontSize: 26))
+            state.keyView.apply(KeyDisplay(primary: alternate, primaryFontSize: 26))
         } else {
             state.keyView.apply(display(for: state.keyView.key.kind))
         }
     }
 
+    /// Types the alternate character of a key. The shift state stays as it is: the owner sets
+    /// it again after each text change, so an automatic shift is still on for the next letter
+    /// when the text before the cursor still asks for a capital.
     private func performAlternate(_ kind: KeyKind) {
-        guard case .dual(_, let shifted) = kind else { return }
+        guard let alternate = kind.alternateCharacter else { return }
         lastShiftTapTime = 0
-        delegate?.keyboardView(self, insert: shifted)
+        delegate?.keyboardView(self, insert: alternate)
     }
 
     // MARK: Actions
@@ -691,7 +755,9 @@ final class KeyboardView: UIView {
         // Any other key between two shift taps ends the double-tap window for caps lock.
         lastShiftTapTime = 0
         switch kind {
-        case .character(let character):
+        case .character(let character), .slide(let character, _):
+            // Shift, in each of its states, changes the case of a letter with a slide character
+            // and never selects the slide character.
             let text = characterText(character)
             // Shift resets before the delegate call, because the delegate may turn shift on again.
             if shiftState == .on { shiftState = .off }

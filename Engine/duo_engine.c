@@ -461,8 +461,8 @@ static const char *symbol_neighbors(char symbol) {
     case '-': return "p";
     case '[': return "p";
     case ';': return "lp";
-    case ',': return "klm";
-    case '.': return "ln";
+    case ',': return "klmn";
+    case '.': return "lm";
     default: return NULL;
     }
 }

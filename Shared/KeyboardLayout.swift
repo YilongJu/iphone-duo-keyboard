@@ -62,6 +62,9 @@ enum KeyKind: Equatable {
     case character(String)
     /// A key with a base character and a shifted character, as on a hardware keyboard.
     case dual(String, String)
+    /// A letter with a slide character: a second character that a slide up or down on the key
+    /// types. Shift changes the case of the letter and never selects the slide character.
+    case slide(String, String)
     case space
     case backspace
     case shift
@@ -90,8 +93,19 @@ enum KeyKind: Equatable {
     /// Text keys commit on finger lift, and a finger can slide between them before lifting.
     var isTextKey: Bool {
         switch self {
-        case .character, .dual, .space: return true
+        case .character, .dual, .slide, .space: return true
         default: return false
+        }
+    }
+
+    /// The character that a slide up or down on the key types in place of the key's main
+    /// character: the shifted character of a two-character key, and the slide character of a
+    /// letter that has one. Every other key gives nil.
+    var alternateCharacter: String? {
+        switch self {
+        case .dual(_, let shifted): return shifted
+        case .slide(_, let slideCharacter): return slideCharacter
+        default: return nil
         }
     }
 
@@ -106,7 +120,7 @@ enum KeyKind: Equatable {
     /// Function keys get the darker key color.
     var isFunctionKey: Bool {
         switch self {
-        case .character, .dual, .space: return false
+        case .character, .dual, .slide, .space: return false
         default: return true
         }
     }
@@ -142,10 +156,11 @@ enum KeyKind: Equatable {
     }
 }
 
-/// One key. In `keyboard-layout.json` a key takes one of four forms:
+/// One key. In `keyboard-layout.json` a key takes one of six forms:
 /// `"a"` for a character, `["1", "!"]` for a base and a shifted character,
 /// `{"c": "_", "w": 0.85}` for a character with a width, `{"c": "1", "s": "!", "w": 0.9}` for a base
-/// and a shifted character with a width, and `{"f": "shift", "w": 2.25}` for a function key.
+/// and a shifted character with a width, `{"c": "a", "a": "@"}` for a letter with a slide
+/// character, and `{"f": "shift", "w": 2.25}` for a function key. A key holds "s" or "a", never both.
 struct Key: Decodable {
     let kind: KeyKind
     /// Width in key units. A letter key is 1 unit.
@@ -159,6 +174,7 @@ struct Key: Decodable {
     private struct ObjectForm: Decodable {
         let c: String?
         let s: String?
+        let a: String?
         let f: String?
         let w: CGFloat?
     }
@@ -178,7 +194,13 @@ struct Key: Decodable {
             return
         }
         let object = try container.decode(ObjectForm.self)
-        if let character = object.c, let shifted = object.s {
+        if object.a != nil, object.c == nil || object.s != nil || object.f != nil {
+            throw DecodingError.dataCorruptedError(
+                in: container, debugDescription: "A slide character \"a\" needs \"c\" and takes no \"s\" or \"f\"")
+        }
+        if let character = object.c, let slideCharacter = object.a {
+            self.init(.slide(character, slideCharacter), object.w ?? 1)
+        } else if let character = object.c, let shifted = object.s {
             self.init(.dual(character, shifted), object.w ?? 1)
         } else if let character = object.c {
             self.init(.character(character), object.w ?? 1)

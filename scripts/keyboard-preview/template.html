@@ -45,6 +45,9 @@
   .key .top { font-size: 14px; line-height: 1; margin-bottom: 3px; }
   .key .main { line-height: 1; }
   .key.alt .top { display: none; }
+  .key .slide { position: absolute; top: 4px; left: 0; right: 0; text-align: center; font-size: 11px;
+    line-height: 1; color: var(--muted); }
+  .key.alt .slide { display: none; }
   table { border-collapse: collapse; margin-top: 22px; font-size: 14px; }
   caption { text-align: left; color: var(--muted); padding-bottom: 6px; }
   th, td { text-align: left; padding: 4px 14px 4px 0; border-bottom: 1px solid var(--line); }
@@ -54,7 +57,8 @@
 <h1>Duo Keyboard preview</h1>
 <p class="lead">This page draws all three keyboard layers from <code>Shared/keyboard-layout.json</code>,
 the same file the iPhone app reads. Click a key to type into the text box. Hold a two-character key,
-or drag up or down on it, for the upper character. A layer key such as <code>.?123</code> outlines the layer
+or drag up or down on it, for the upper character. A letter key with a small gray character types that
+character after a drag up or down of 0.4 of a row's height. A layer key such as <code>.?123</code> outlines the layer
 it opens.</p>
 
 <div class="controls">
@@ -110,6 +114,8 @@ const state = {
 function normalize(key, layer) {
   if (typeof key === "string") return { type: "char", base: key, w: 1, layer };
   if (Array.isArray(key)) return { type: "dual", base: key[0], alt: key[1], w: 1, layer };
+  if (key.c !== undefined && key.a !== undefined && (key.s !== undefined || key.f !== undefined)) throw new Error("Unknown key: " + JSON.stringify(key));
+  if (key.c !== undefined && key.a !== undefined) return { type: "slide", base: key.c, alt: key.a, w: key.w ?? 1, layer };
   if (key.c !== undefined && key.s !== undefined) return { type: "dual", base: key.c, alt: key.s, w: key.w ?? 1, layer };
   if (key.c !== undefined) return { type: "char", base: key.c, w: key.w ?? 1, layer };
   if (FN_LABEL[key.f] === undefined) throw new Error("Unknown key: " + key.f);
@@ -253,9 +259,17 @@ function paint(el, key, style) {
     el.appendChild(top);
     main.textContent = key.base;
     main.style.fontSize = "19px";
-  } else if (key.type === "char") {
+  } else if (key.type === "char" || key.type === "slide") {
     main.textContent = characterText(key);
     main.style.fontSize = style === "compact" ? "23px" : "24px";
+    if (key.type === "slide") {
+      // The slide character is small and gray at the top centre, and the letter sits a little lower.
+      const slide = document.createElement("span");
+      slide.className = "slide";
+      slide.textContent = key.alt;
+      el.appendChild(slide);
+      main.style.marginTop = "8px";
+    }
   } else {
     let label = FN_LABEL[key.name];
     const caption = state.notice ?? (state.allSelected ? "All text selected" : null);
@@ -279,17 +293,19 @@ function paint(el, key, style) {
 }
 
 function attach(el, key, rowHeight) {
-  let startY = 0, alt = false, held = false, holdTimer = null, repeatTimer = null, down = false;
+  let startX = 0, startY = 0, alt = false, held = false, holdTimer = null, repeatTimer = null, down = false;
   const repeats = key.type === "fn" && ["backspace", "forwardDelete", "left", "right", "up", "down"].includes(key.name);
+  const baseSize = el.querySelector(".main").style.fontSize;
   const setAlt = value => {
     alt = value;
     el.classList.toggle("alt", value);
-    el.querySelector(".main").textContent = value ? key.alt : key.base;
-    el.querySelector(".main").style.fontSize = value ? "26px" : "19px";
+    el.querySelector(".main").textContent = value ? key.alt : key.type === "slide" ? characterText(key) : key.base;
+    el.querySelector(".main").style.fontSize = value ? "26px" : baseSize;
+    if (key.type === "slide") el.querySelector(".main").style.marginTop = value ? "0" : "8px";
   };
   el.addEventListener("pointerdown", event => {
     el.setPointerCapture(event.pointerId);
-    down = true; startY = event.clientY; alt = false; held = false;
+    down = true; startX = event.clientX; startY = event.clientY; alt = false; held = false;
     el.classList.add("pressed");
     if (repeats) {
       act(key, false, true);
@@ -299,6 +315,15 @@ function attach(el, key, rowHeight) {
     }
   });
   el.addEventListener("pointermove", event => {
+    if (down && key.type === "slide") {
+      // The rule of SlideGesture in KeyboardView.swift: a mostly vertical move longer than 0.4 of a
+      // row's height selects the slide character, and a move back under half of that ends it.
+      // A slide key has no long press. The preview does not move a touch to another key.
+      const dx = event.clientX - startX, dy = event.clientY - startY, distance = rowHeight * 0.4;
+      if (!alt && Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > distance) setAlt(true);
+      else if (alt && Math.abs(dy) < distance / 2) setAlt(false);
+      return;
+    }
     if (!down || key.type !== "dual" || held) return;
     const dy = event.clientY - startY;
     const threshold = Math.max(14, rowHeight * 0.35);
@@ -370,7 +395,11 @@ function autoShift() {
 }
 function act(key, alt, keepLayerView) {
   let layerToFlash = null;
-  if (key.type === "char") {
+  if (key.type === "slide" && alt) {
+    // A slide types the slide character in every shift state.
+    insert(key.alt);
+    autoShift();
+  } else if (key.type === "char" || key.type === "slide") {
     insert(characterText(key));
     if (state.shift === "on") state.shift = "off";
     autoShift();

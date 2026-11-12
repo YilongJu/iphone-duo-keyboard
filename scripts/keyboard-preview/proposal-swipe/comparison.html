@@ -1,0 +1,241 @@
+<meta charset="utf-8">
+<title>Duo Slide Keys Proposal</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one column. The proposed keyboard comes first and takes touches, then today's keyboard, then two small tables. */
+:root {
+  --bg: #f3f4f7; --panel: #ffffff; --fg: #1c2230; --muted: #5d6577; --line: #d5d9e2;
+  --board: #d3d7df; --key: #ffffff; --fn: #aeb4c0; --keytext: #11151d; --hint: #7b8496;
+  --new: #2f5fd0; --press: #c9d6f6; --grow: #1f7a4d; --shrink: #a04a1c;
+  --display: "Space Grotesk", "Segoe UI", system-ui, sans-serif;
+  --body: "Inter", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #12151b; --panel: #1b2029; --fg: #e6e9ef; --muted: #9aa3b5; --line: #2e3543;
+  --board: #2a2f38; --key: #6a6f7a; --fn: #444a55; --keytext: #f4f6fa; --hint: #b9c0cd;
+  --new: #8fb0ff; --press: #3d4a66; --grow: #5fd39a; --shrink: #f2a072; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #12151b; --panel: #1b2029; --fg: #e6e9ef; --muted: #9aa3b5; --line: #2e3543;
+  --board: #2a2f38; --key: #6a6f7a; --fn: #444a55; --keytext: #f4f6fa; --hint: #b9c0cd;
+  --new: #8fb0ff; --press: #3d4a66; --grow: #5fd39a; --shrink: #f2a072; color-scheme: dark }
+body { background: var(--bg); color: var(--fg); font-family: var(--body); line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 24px 48px; }
+main { max-width: 560px; margin: 0 auto; display: grid; gap: 22px; }
+h1 { font-family: var(--display); font-size: 1.6rem; margin: 0; text-wrap: balance; }
+h2 { font-family: var(--display); font-size: 1.1rem; margin: 0 0 4px; text-wrap: balance; }
+h2 span { font: 400 0.85rem var(--body); color: var(--muted); margin-left: 6px; }
+p { margin: 0; max-width: 66ch; }
+  .muted { color: var(--muted); font-size: 0.92rem; }
+  .summary { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; display: grid; gap: 8px; }
+  .summary ol, .summary ul { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
+  .block { display: grid; gap: 8px; min-width: 0; }
+  .typed { display: flex; gap: 8px; align-items: stretch; }
+#typed { flex: 1; min-height: 44px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px;
+  padding: 9px 12px; font: 400 1rem var(--mono); white-space: pre-wrap; overflow-wrap: anywhere; }
+#typed:empty::before { content: "Typed text shows here"; color: var(--muted); font-family: var(--body); }
+button { font: 500 0.9rem var(--body); border: 1px solid var(--line); background: var(--panel); color: var(--fg);
+  padding: 6px 12px; border-radius: 8px; cursor: pointer; }
+button:focus-visible { outline: 2px solid var(--new); outline-offset: 2px; }
+  .board svg { display: block; width: 100%; height: auto; border-radius: 12px; }
+#after svg { touch-action: none; user-select: none; -webkit-user-select: none; cursor: pointer; }
+svg text { font-family: var(--body); pointer-events: none; }
+  .tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); }
+table { border-collapse: collapse; width: 100%; font-size: 0.9rem; font-variant-numeric: tabular-nums; }
+th, td { padding: 7px 10px; text-align: left; border-bottom: 1px solid var(--line); }
+tr:last-child td { border-bottom: 0; }
+thead th { position: sticky; top: 0; background: var(--panel); font-weight: 600; }
+td.num, th.num { text-align: right; white-space: nowrap; }
+td.up { color: var(--grow); font-weight: 600; }
+td.down { color: var(--shrink); font-weight: 600; }
+code, .k { font-family: var(--mono); font-size: 0.9em; }
+</style>
+
+<main>
+  <h1>Duo Slide Keys Proposal</h1>
+
+  <section class="summary" aria-label="Summary">
+    <p><strong>Summary.</strong> On the folded phone, the return key gets 42% narrower, a comma key sits left of the period, and 18 keys type a second character when you slide up or down on them.</p>
+    <ol>
+      <li>Try the proposed keyboard below. Slide up or down on a key with a small gray character.</li>
+      <li>Tell me to ship it, or name the keys to change.</li>
+    </ol>
+    <p class="muted">Not settled: how often a fast tap counts as a slide by mistake. Only a phone build shows that.</p>
+  </section>
+
+  <section class="block">
+    <h2>After<span>proposal, takes touches</span></h2>
+    <div class="typed"><div id="typed" aria-live="polite"></div><button id="clear" type="button">Clear</button></div>
+    <div class="board" id="after"></div>
+    <p class="muted">A slide needs 18 pt of mostly vertical travel on a letter, about 40% of a key's height. A slide back to the start cancels it. The Q to P row stays plain, so the most used letters (E, T, O, I) do not have a slide.</p>
+  </section>
+
+  <section class="block">
+    <h2>Before<span>today's keyboard</span></h2>
+    <div class="board" id="before"></div>
+  </section>
+
+  <section class="block">
+    <h2>Second characters by key</h2>
+    <p class="muted">The characters and their places are those of the iPad keyboard of iOS, so the two keyboards feel the same.</p>
+    <div class="tablewrap"><table><thead><tr><th>Keys</th><th>A slide types</th><th>Other way to type them</th></tr></thead><tbody>
+      <tr><td class="k">, .</td><td class="k">! ?</td><td>A long press on the key</td></tr>
+      <tr><td class="k">A S D F G H J K L</td><td class="k">@ # $ &amp; * ( ) ' "</td><td>Number row or the 123 layer</td></tr>
+      <tr><td class="k">Z X C V B N M</td><td class="k">% - + = / ; :</td><td>The 123 layer</td></tr>
+      <tr><td class="k">1 to 0</td><td class="k">! @ # $ % ^ &amp; * ( )</td><td>Unchanged from today</td></tr>
+    </tbody></table></div>
+  </section>
+
+  <section class="block">
+    <h2>Bottom row key widths on the folded Duo (458 pt)</h2>
+    <p class="muted">The period moves one key to the right. The comma takes the period's old place, in the same order as the open phone's keyboard.</p>
+    <div class="tablewrap"><table id="sizes"><thead><tr><th>Key</th><th class="num">Before, pt</th><th class="num">After, pt</th><th class="num">Change</th></tr></thead><tbody></tbody></table></div>
+  </section>
+
+  <section class="block">
+    <h2>Rules that stay the same</h2>
+    <div class="summary"><ul>
+      <li>Shift and a letter still type the capital letter, never the second character.</li>
+      <li>In Chinese mode a slide types the Chinese form, such as ， 。 ？ ！.</li>
+      <li>A second character ends a word like any typed punctuation, so autocorrection and the space rules run as they do today.</li>
+      <li>A long press on a letter does nothing new, so a slow press never types a symbol.</li>
+    </ul></div>
+  </section>
+</main>
+
+<script>
+const BEFORE = {"metrics": {"wideMinimumWidth": 600, "splitMinimumWidth": 800, "splitGapUnits": 6, "topPadding": 4, "bottomPadding": 8, "horizontalPadding": 3, "bottomRowCornerInset": 16, "gapX": 2, "gapYWide": 2.5, "gapYCompact": 3, "wideRowHeightPerUnit": 1.05, "wideRowHeightMin": 46, "wideRowHeightMax": 54, "compactRowHeight": 46, "landscapePhoneRowHeight": 34, "padWideRowHeightMax": 58, "padSplitMaxKeyWidth": 52, "padShortcutButtonsWidth": 140}, "wide": {"units": 13.5, "letters": [{"height": 0.72, "split": 3, "keys": [{"f": "selectAll", "w": 2.3}, {"f": "cut", "w": 2.3}, {"f": "copy", "w": 2.3}, {"f": "paste", "w": 2.3}, {"f": "home", "w": 2.15}, {"f": "end", "w": 2.15}]}, {"height": 1, "split": 6, "keys": [{"c": "`", "w": 1.0, "s": "~"}, {"c": "1", "w": 0.9, "s": "!"}, {"c": "2", "w": 0.9, "s": "@"}, {"c": "3", "w": 0.9, "s": "#"}, {"c": "4", "w": 0.9, "s": "$"}, {"c": "5", "w": 0.9, "s": "%"}, {"c": "6", "w": 0.9, "s": "^"}, {"c": "7", "w": 0.9, "s": "&"}, {"c": "8", "w": 0.9, "s": "*"}, {"c": "9", "w": 0.9, "s": "("}, {"c": "0", "w": 0.9, "s": ")"}, {"c": "-", "w": 0.95, "s": "_"}, {"c": "=", "w": 0.95, "s": "+"}, {"f": "backspace", "w": 1.6}]}, {"height": 1, "split": 6, "keys": [{"f": "tab", "w": 1.35}, "q", "w", "e", "r", "t", "y", "u", "i", "o", "p", {"c": "[", "w": 0.72, "s": "{"}, {"c": "]", "w": 0.72, "s": "}"}, {"c": "\\", "w": 0.71, "s": "|"}]}, {"height": 1, "split": 6, "keys": [{"f": "capsLock", "w": 1.75}, "a", "s", "d", "f", "g", "h", "j", "k", "l", {"c": ";", "w": 0.7, "s": ":"}, {"c": "'", "w": 0.7, "s": "\""}, {"f": "return", "w": 1.35}]}, {"height": 1, "split": 6, "keys": [{"f": "shift", "w": 2.3}, "z", "x", "c", "v", "b", "n", "m", {"c": ",", "w": 0.8, "s": "<"}, {"c": ".", "w": 0.8, "s": ">"}, {"c": "/", "w": 0.8, "s": "?"}, {"f": "up", "w": 0.9}, {"f": "shift", "w": 0.9}]}, {"height": 1, "split": 3, "keys": [{"f": "globe", "w": 1.1}, {"f": "symbols", "w": 1.1}, {"f": "language", "w": 1.1}, {"f": "space", "w": 6.5}, {"f": "dismiss", "w": 1.0}, {"f": "left", "w": 0.9}, {"f": "down", "w": 0.9}, {"f": "right", "w": 0.9}]}], "symbols": [{"height": 0.72, "split": 3, "keys": [{"f": "selectAll", "w": 2.3}, {"f": "cut", "w": 2.3}, {"f": "copy", "w": 2.3}, {"f": "paste", "w": 2.3}, {"f": "home", "w": 2.15}, {"f": "end", "w": 2.15}]}, {"height": 1, "split": 6, "keys": [{"c": "`", "w": 1.0}, {"c": "1", "w": 0.9}, {"c": "2", "w": 0.9}, {"c": "3", "w": 0.9}, {"c": "4", "w": 0.9}, {"c": "5", "w": 0.9}, {"c": "6", "w": 0.9}, {"c": "7", "w": 0.9}, {"c": "8", "w": 0.9}, {"c": "9", "w": 0.9}, {"c": "0", "w": 0.9}, {"c": "<", "w": 0.95}, {"c": ">", "w": 0.95}, {"f": "backspace", "w": 1.6}]}, {"height": 1, "split": 6, "keys": [{"f": "tab", "w": 1.41}, {"c": "[", "w": 0.93}, {"c": "]", "w": 0.93}, {"c": "{", "w": 0.93}, {"c": "}", "w": 0.93}, {"c": "#", "w": 0.93}, {"c": "%", "w": 0.93}, {"c": "^", "w": 0.93}, {"c": "*", "w": 0.93}, {"c": "+", "w": 0.93}, {"c": "=", "w": 0.93}, {"c": "\\", "w": 0.93}, {"c": "|", "w": 0.93}, {"c": "~", "w": 0.93}]}, {"height": 1, "split": 6, "keys": [{"c": "-", "w": 1.0}, {"c": "/", "w": 1.0}, {"c": ":", "w": 1.0}, {"c": ";", "w": 1.0}, {"c": "(", "w": 1.0}, {"c": ")", "w": 1.0}, {"c": "$", "w": 1.0}, {"c": "&", "w": 1.0}, {"c": "@", "w": 1.0}, {"c": "\"", "w": 1.0}, {"c": "€", "w": 1.0}, {"c": "£", "w": 1.0}, {"f": "return", "w": 1.5}]}, {"height": 1, "split": 6, "keys": [{"f": "more", "w": 1.25}, {"c": ".", "w": 0.95}, {"c": ",", "w": 0.95}, {"c": "?", "w": 0.95}, {"c": "!", "w": 0.95}, {"c": "'", "w": 0.95}, {"c": "_", "w": 0.95}, {"c": "…", "w": 0.95}, {"c": "•", "w": 0.95}, {"c": "°", "w": 0.95}, {"c": "–", "w": 0.95}, {"c": "¥", "w": 0.95}, {"f": "up", "w": 0.9}, {"f": "forwardDelete", "w": 0.9}]}, {"height": 1, "split": 2, "keys": [{"f": "globe", "w": 1.1}, {"f": "letters", "w": 1.1}, {"f": "space", "w": 7.6}, {"f": "dismiss", "w": 1.0}, {"f": "left", "w": 0.9}, {"f": "down", "w": 0.9}, {"f": "right", "w": 0.9}]}], "more": [{"height": 0.72, "split": 3, "keys": [{"f": "selectAll", "w": 2.3}, {"f": "cut", "w": 2.3}, {"f": "copy", "w": 2.3}, {"f": "paste", "w": 2.3}, {"f": "home", "w": 2.15}, {"f": "end", "w": 2.15}]}, {"height": 1, "split": 6, "keys": [{"c": "¢", "w": 1.0}, {"c": "₹", "w": 0.9}, {"c": "₩", "w": 0.9}, {"c": "₽", "w": 0.9}, {"c": "₿", "w": 0.9}, {"c": "§", "w": 0.9}, {"c": "¶", "w": 0.9}, {"c": "©", "w": 0.9}, {"c": "®", "w": 0.9}, {"c": "™", "w": 0.9}, {"c": "²", "w": 0.9}, {"c": "³", "w": 0.95}, {"c": "½", "w": 0.95}, {"f": "backspace", "w": 1.6}]}, {"height": 1, "split": 6, "keys": [{"f": "tab", "w": 1.41}, {"c": "×", "w": 0.93}, {"c": "÷", "w": 0.93}, {"c": "±", "w": 0.93}, {"c": "≠", "w": 0.93}, {"c": "≈", "w": 0.93}, {"c": "≤", "w": 0.93}, {"c": "≥", "w": 0.93}, {"c": "∞", "w": 0.93}, {"c": "√", "w": 0.93}, {"c": "∑", "w": 0.93}, {"c": "π", "w": 0.93}, {"c": "µ", "w": 0.93}, {"c": "∆", "w": 0.93}]}, {"height": 1, "split": 6, "keys": [{"c": "←", "w": 1.0}, {"c": "→", "w": 1.0}, {"c": "↑", "w": 1.0}, {"c": "↓", "w": 1.0}, {"c": "↔", "w": 1.0}, {"c": "⇐", "w": 1.0}, {"c": "⇒", "w": 1.0}, {"c": "⇔", "w": 1.0}, {"c": "∈", "w": 1.0}, {"c": "∀", "w": 1.0}, {"c": "∃", "w": 1.0}, {"c": "∂", "w": 1.0}, {"f": "return", "w": 1.5}]}, {"height": 1, "split": 6, "keys": [{"f": "symbols", "w": 1.25}, {"c": "·", "w": 0.95}, {"c": "“", "w": 0.95}, {"c": "”", "w": 0.95}, {"c": "‘", "w": 0.95}, {"c": "’", "w": 0.95}, {"c": "«", "w": 0.95}, {"c": "»", "w": 0.95}, {"c": "¿", "w": 0.95}, {"c": "¡", "w": 0.95}, {"c": "✓", "w": 0.95}, {"c": "✗", "w": 0.95}, {"f": "up", "w": 0.9}, {"f": "forwardDelete", "w": 0.9}]}, {"height": 1, "split": 2, "keys": [{"f": "globe", "w": 1.1}, {"f": "letters", "w": 1.1}, {"f": "space", "w": 7.6}, {"f": "dismiss", "w": 1.0}, {"f": "left", "w": 0.9}, {"f": "down", "w": 0.9}, {"f": "right", "w": 0.9}]}]}, "compact": {"units": 10, "letters": [{"height": 0.72, "keys": [{"f": "selectAll", "w": 1.75}, {"f": "cut", "w": 1.75}, {"f": "copy", "w": 1.75}, {"f": "paste", "w": 1.75}, {"f": "home", "w": 1.5}, {"f": "end", "w": 1.5}]}, {"height": 1, "keys": [["1", "!"], ["2", "@"], ["3", "#"], ["4", "$"], ["5", "%"], ["6", "^"], ["7", "&"], ["8", "*"], ["9", "("], ["0", ")"]]}, {"height": 1, "keys": ["q", "w", "e", "r", "t", "y", "u", "i", "o", "p"]}, {"height": 1, "keys": ["a", "s", "d", "f", "g", "h", "j", "k", "l"]}, {"height": 1, "keys": [{"f": "shift", "w": 1.5}, "z", "x", "c", "v", "b", "n", "m", {"f": "backspace", "w": 1.5}]}, {"height": 1, "keys": [{"f": "symbols", "w": 1.25}, {"f": "globe", "w": 1.25}, {"f": "language", "w": 1}, {"f": "space", "w": 3}, ".", {"f": "return", "w": 2.5}]}], "symbols": [{"height": 0.72, "keys": [{"f": "selectAll", "w": 1.75}, {"f": "cut", "w": 1.75}, {"f": "copy", "w": 1.75}, {"f": "paste", "w": 1.75}, {"f": "home", "w": 1.5}, {"f": "end", "w": 1.5}]}, {"height": 1, "keys": [["1", "!"], ["2", "@"], ["3", "#"], ["4", "$"], ["5", "%"], ["6", "^"], ["7", "&"], ["8", "*"], ["9", "("], ["0", ")"]]}, {"height": 1, "keys": ["-", "/", ":", ";", "(", ")", "$", "&", "@", "\""]}, {"height": 1, "keys": ["[", "]", "{", "}", "#", "%", "^", "*", "+", "="]}, {"height": 1, "keys": [{"f": "more", "w": 1.5}, ".", ",", "?", "!", "'", "`", "_", {"f": "backspace", "w": 1.5}]}, {"height": 1, "keys": [{"f": "letters", "w": 1.25}, {"f": "globe", "w": 1.25}, {"f": "space", "w": 5}, {"f": "return", "w": 2.5}]}], "more": [{"height": 0.72, "keys": [{"f": "selectAll", "w": 1.75}, {"f": "cut", "w": 1.75}, {"f": "copy", "w": 1.75}, {"f": "paste", "w": 1.75}, {"f": "home", "w": 1.5}, {"f": "end", "w": 1.5}]}, {"height": 1, "keys": [["1", "!"], ["2", "@"], ["3", "#"], ["4", "$"], ["5", "%"], ["6", "^"], ["7", "&"], ["8", "*"], ["9", "("], ["0", ")"]]}, {"height": 1, "keys": ["\\", "|", "~", "<", ">", "€", "£", "¥", "•", "°"]}, {"height": 1, "keys": ["×", "÷", "±", "≠", "≈", "≤", "≥", "…", "–", "✓"]}, {"height": 1, "keys": [{"f": "symbols", "w": 1.5}, "←", "→", "↑", "↓", "∞", "π", "µ", {"f": "backspace", "w": 1.5}]}, {"height": 1, "keys": [{"f": "letters", "w": 1.25}, {"f": "globe", "w": 1.25}, {"f": "space", "w": 5}, {"f": "return", "w": 2.5}]}]}};
+const AFTER = {"metrics": {"wideMinimumWidth": 600, "splitMinimumWidth": 800, "splitGapUnits": 6, "topPadding": 4, "bottomPadding": 8, "horizontalPadding": 3, "bottomRowCornerInset": 16, "gapX": 2, "gapYWide": 2.5, "gapYCompact": 3, "wideRowHeightPerUnit": 1.05, "wideRowHeightMin": 46, "wideRowHeightMax": 54, "compactRowHeight": 46, "landscapePhoneRowHeight": 34, "padWideRowHeightMax": 58, "padSplitMaxKeyWidth": 52, "padShortcutButtonsWidth": 140}, "wide": {"units": 13.5, "letters": [{"height": 0.72, "split": 3, "keys": [{"f": "selectAll", "w": 2.3}, {"f": "cut", "w": 2.3}, {"f": "copy", "w": 2.3}, {"f": "paste", "w": 2.3}, {"f": "home", "w": 2.15}, {"f": "end", "w": 2.15}]}, {"height": 1, "split": 6, "keys": [{"c": "`", "w": 1.0, "s": "~"}, {"c": "1", "w": 0.9, "s": "!"}, {"c": "2", "w": 0.9, "s": "@"}, {"c": "3", "w": 0.9, "s": "#"}, {"c": "4", "w": 0.9, "s": "$"}, {"c": "5", "w": 0.9, "s": "%"}, {"c": "6", "w": 0.9, "s": "^"}, {"c": "7", "w": 0.9, "s": "&"}, {"c": "8", "w": 0.9, "s": "*"}, {"c": "9", "w": 0.9, "s": "("}, {"c": "0", "w": 0.9, "s": ")"}, {"c": "-", "w": 0.95, "s": "_"}, {"c": "=", "w": 0.95, "s": "+"}, {"f": "backspace", "w": 1.6}]}, {"height": 1, "split": 6, "keys": [{"f": "tab", "w": 1.35}, "q", "w", "e", "r", "t", "y", "u", "i", "o", "p", {"c": "[", "w": 0.72, "s": "{"}, {"c": "]", "w": 0.72, "s": "}"}, {"c": "\\", "w": 0.71, "s": "|"}]}, {"height": 1, "split": 6, "keys": [{"f": "capsLock", "w": 1.75}, "a", "s", "d", "f", "g", "h", "j", "k", "l", {"c": ";", "w": 0.7, "s": ":"}, {"c": "'", "w": 0.7, "s": "\""}, {"f": "return", "w": 1.35}]}, {"height": 1, "split": 6, "keys": [{"f": "shift", "w": 2.3}, "z", "x", "c", "v", "b", "n", "m", {"c": ",", "w": 0.8, "s": "<"}, {"c": ".", "w": 0.8, "s": ">"}, {"c": "/", "w": 0.8, "s": "?"}, {"f": "up", "w": 0.9}, {"f": "shift", "w": 0.9}]}, {"height": 1, "split": 3, "keys": [{"f": "globe", "w": 1.1}, {"f": "symbols", "w": 1.1}, {"f": "language", "w": 1.1}, {"f": "space", "w": 6.5}, {"f": "dismiss", "w": 1.0}, {"f": "left", "w": 0.9}, {"f": "down", "w": 0.9}, {"f": "right", "w": 0.9}]}], "symbols": [{"height": 0.72, "split": 3, "keys": [{"f": "selectAll", "w": 2.3}, {"f": "cut", "w": 2.3}, {"f": "copy", "w": 2.3}, {"f": "paste", "w": 2.3}, {"f": "home", "w": 2.15}, {"f": "end", "w": 2.15}]}, {"height": 1, "split": 6, "keys": [{"c": "`", "w": 1.0}, {"c": "1", "w": 0.9}, {"c": "2", "w": 0.9}, {"c": "3", "w": 0.9}, {"c": "4", "w": 0.9}, {"c": "5", "w": 0.9}, {"c": "6", "w": 0.9}, {"c": "7", "w": 0.9}, {"c": "8", "w": 0.9}, {"c": "9", "w": 0.9}, {"c": "0", "w": 0.9}, {"c": "<", "w": 0.95}, {"c": ">", "w": 0.95}, {"f": "backspace", "w": 1.6}]}, {"height": 1, "split": 6, "keys": [{"f": "tab", "w": 1.41}, {"c": "[", "w": 0.93}, {"c": "]", "w": 0.93}, {"c": "{", "w": 0.93}, {"c": "}", "w": 0.93}, {"c": "#", "w": 0.93}, {"c": "%", "w": 0.93}, {"c": "^", "w": 0.93}, {"c": "*", "w": 0.93}, {"c": "+", "w": 0.93}, {"c": "=", "w": 0.93}, {"c": "\\", "w": 0.93}, {"c": "|", "w": 0.93}, {"c": "~", "w": 0.93}]}, {"height": 1, "split": 6, "keys": [{"c": "-", "w": 1.0}, {"c": "/", "w": 1.0}, {"c": ":", "w": 1.0}, {"c": ";", "w": 1.0}, {"c": "(", "w": 1.0}, {"c": ")", "w": 1.0}, {"c": "$", "w": 1.0}, {"c": "&", "w": 1.0}, {"c": "@", "w": 1.0}, {"c": "\"", "w": 1.0}, {"c": "€", "w": 1.0}, {"c": "£", "w": 1.0}, {"f": "return", "w": 1.5}]}, {"height": 1, "split": 6, "keys": [{"f": "more", "w": 1.25}, {"c": ".", "w": 0.95}, {"c": ",", "w": 0.95}, {"c": "?", "w": 0.95}, {"c": "!", "w": 0.95}, {"c": "'", "w": 0.95}, {"c": "_", "w": 0.95}, {"c": "…", "w": 0.95}, {"c": "•", "w": 0.95}, {"c": "°", "w": 0.95}, {"c": "–", "w": 0.95}, {"c": "¥", "w": 0.95}, {"f": "up", "w": 0.9}, {"f": "forwardDelete", "w": 0.9}]}, {"height": 1, "split": 2, "keys": [{"f": "globe", "w": 1.1}, {"f": "letters", "w": 1.1}, {"f": "space", "w": 7.6}, {"f": "dismiss", "w": 1.0}, {"f": "left", "w": 0.9}, {"f": "down", "w": 0.9}, {"f": "right", "w": 0.9}]}], "more": [{"height": 0.72, "split": 3, "keys": [{"f": "selectAll", "w": 2.3}, {"f": "cut", "w": 2.3}, {"f": "copy", "w": 2.3}, {"f": "paste", "w": 2.3}, {"f": "home", "w": 2.15}, {"f": "end", "w": 2.15}]}, {"height": 1, "split": 6, "keys": [{"c": "¢", "w": 1.0}, {"c": "₹", "w": 0.9}, {"c": "₩", "w": 0.9}, {"c": "₽", "w": 0.9}, {"c": "₿", "w": 0.9}, {"c": "§", "w": 0.9}, {"c": "¶", "w": 0.9}, {"c": "©", "w": 0.9}, {"c": "®", "w": 0.9}, {"c": "™", "w": 0.9}, {"c": "²", "w": 0.9}, {"c": "³", "w": 0.95}, {"c": "½", "w": 0.95}, {"f": "backspace", "w": 1.6}]}, {"height": 1, "split": 6, "keys": [{"f": "tab", "w": 1.41}, {"c": "×", "w": 0.93}, {"c": "÷", "w": 0.93}, {"c": "±", "w": 0.93}, {"c": "≠", "w": 0.93}, {"c": "≈", "w": 0.93}, {"c": "≤", "w": 0.93}, {"c": "≥", "w": 0.93}, {"c": "∞", "w": 0.93}, {"c": "√", "w": 0.93}, {"c": "∑", "w": 0.93}, {"c": "π", "w": 0.93}, {"c": "µ", "w": 0.93}, {"c": "∆", "w": 0.93}]}, {"height": 1, "split": 6, "keys": [{"c": "←", "w": 1.0}, {"c": "→", "w": 1.0}, {"c": "↑", "w": 1.0}, {"c": "↓", "w": 1.0}, {"c": "↔", "w": 1.0}, {"c": "⇐", "w": 1.0}, {"c": "⇒", "w": 1.0}, {"c": "⇔", "w": 1.0}, {"c": "∈", "w": 1.0}, {"c": "∀", "w": 1.0}, {"c": "∃", "w": 1.0}, {"c": "∂", "w": 1.0}, {"f": "return", "w": 1.5}]}, {"height": 1, "split": 6, "keys": [{"f": "symbols", "w": 1.25}, {"c": "·", "w": 0.95}, {"c": "“", "w": 0.95}, {"c": "”", "w": 0.95}, {"c": "‘", "w": 0.95}, {"c": "’", "w": 0.95}, {"c": "«", "w": 0.95}, {"c": "»", "w": 0.95}, {"c": "¿", "w": 0.95}, {"c": "¡", "w": 0.95}, {"c": "✓", "w": 0.95}, {"c": "✗", "w": 0.95}, {"f": "up", "w": 0.9}, {"f": "forwardDelete", "w": 0.9}]}, {"height": 1, "split": 2, "keys": [{"f": "globe", "w": 1.1}, {"f": "letters", "w": 1.1}, {"f": "space", "w": 7.6}, {"f": "dismiss", "w": 1.0}, {"f": "left", "w": 0.9}, {"f": "down", "w": 0.9}, {"f": "right", "w": 0.9}]}]}, "compact": {"units": 10, "letters": [{"height": 0.72, "keys": [{"f": "selectAll", "w": 1.75}, {"f": "cut", "w": 1.75}, {"f": "copy", "w": 1.75}, {"f": "paste", "w": 1.75}, {"f": "home", "w": 1.5}, {"f": "end", "w": 1.5}]}, {"height": 1, "keys": [["1", "!"], ["2", "@"], ["3", "#"], ["4", "$"], ["5", "%"], ["6", "^"], ["7", "&"], ["8", "*"], ["9", "("], ["0", ")"]]}, {"height": 1, "keys": ["q", "w", "e", "r", "t", "y", "u", "i", "o", "p"]}, {"height": 1, "keys": [{"c": "a", "a": "@"}, {"c": "s", "a": "#"}, {"c": "d", "a": "$"}, {"c": "f", "a": "&"}, {"c": "g", "a": "*"}, {"c": "h", "a": "("}, {"c": "j", "a": ")"}, {"c": "k", "a": "'"}, {"c": "l", "a": "\""}]}, {"height": 1, "keys": [{"f": "shift", "w": 1.5}, {"c": "z", "a": "%"}, {"c": "x", "a": "-"}, {"c": "c", "a": "+"}, {"c": "v", "a": "="}, {"c": "b", "a": "/"}, {"c": "n", "a": ";"}, {"c": "m", "a": ":"}, {"f": "backspace", "w": 1.5}]}, {"height": 1, "keys": [{"f": "symbols", "w": 1.25}, {"f": "globe", "w": 1.25}, {"f": "language", "w": 1}, {"f": "space", "w": 3}, [",", "!"], [".", "?"], {"f": "return", "w": 1.5}]}], "symbols": [{"height": 0.72, "keys": [{"f": "selectAll", "w": 1.75}, {"f": "cut", "w": 1.75}, {"f": "copy", "w": 1.75}, {"f": "paste", "w": 1.75}, {"f": "home", "w": 1.5}, {"f": "end", "w": 1.5}]}, {"height": 1, "keys": [["1", "!"], ["2", "@"], ["3", "#"], ["4", "$"], ["5", "%"], ["6", "^"], ["7", "&"], ["8", "*"], ["9", "("], ["0", ")"]]}, {"height": 1, "keys": ["-", "/", ":", ";", "(", ")", "$", "&", "@", "\""]}, {"height": 1, "keys": ["[", "]", "{", "}", "#", "%", "^", "*", "+", "="]}, {"height": 1, "keys": [{"f": "more", "w": 1.5}, ".", ",", "?", "!", "'", "`", "_", {"f": "backspace", "w": 1.5}]}, {"height": 1, "keys": [{"f": "letters", "w": 1.25}, {"f": "globe", "w": 1.25}, {"f": "space", "w": 6.0}, {"f": "return", "w": 1.5}]}], "more": [{"height": 0.72, "keys": [{"f": "selectAll", "w": 1.75}, {"f": "cut", "w": 1.75}, {"f": "copy", "w": 1.75}, {"f": "paste", "w": 1.75}, {"f": "home", "w": 1.5}, {"f": "end", "w": 1.5}]}, {"height": 1, "keys": [["1", "!"], ["2", "@"], ["3", "#"], ["4", "$"], ["5", "%"], ["6", "^"], ["7", "&"], ["8", "*"], ["9", "("], ["0", ")"]]}, {"height": 1, "keys": ["\\", "|", "~", "<", ">", "€", "£", "¥", "•", "°"]}, {"height": 1, "keys": ["×", "÷", "±", "≠", "≈", "≤", "≥", "…", "–", "✓"]}, {"height": 1, "keys": [{"f": "symbols", "w": 1.5}, "←", "→", "↑", "↓", "∞", "π", "µ", {"f": "backspace", "w": 1.5}]}, {"height": 1, "keys": [{"f": "letters", "w": 1.25}, {"f": "globe", "w": 1.25}, {"f": "space", "w": 6.0}, {"f": "return", "w": 1.5}]}]}};
+const WIDTH = 458;
+const LABELS = { selectAll: "Select All", cut: "✂", copy: "Copy", paste: "Paste", home: "Home", end: "End",
+  backspace: "⌫", return: "⏎", shift: "⇧", globe: "🌐", symbols: "123", letters: "ABC", language: "中/A",
+  space: "space", more: "#+=" };
+const NAMES = { symbols: "123", globe: "globe", language: "language (中/A)", space: "space", return: "return" };
+
+function norm(k) {
+  if (typeof k === "string") return { kind: "char", main: k, w: 1 };
+  if (Array.isArray(k)) return { kind: "char", main: k[0], top: k[1], w: 1 };
+  if (k.c !== undefined) return { kind: "char", main: k.c, top: k.s, alt: k.a, w: k.w ?? 1 };
+  return { kind: "fn", name: k.f, w: k.w ?? 1 };
+}
+function geometry(spec) {
+  const M = spec.metrics, units = spec.compact.units, rows = spec.compact.letters;
+  const usable = WIDTH - 2 * M.horizontalPadding;
+  let y = M.topPadding; const keys = [];
+  rows.forEach((row, ri) => {
+    const inset = ri === rows.length - 1 ? M.bottomRowCornerInset : 0;
+    const unit = (usable - 2 * inset) / units;
+    const ks = row.keys.map(norm);
+    const rowW = ks.reduce((s, k) => s + k.w, 0);
+    let x = M.horizontalPadding + inset + (units - rowW) / 2 * unit;
+    const h = row.height * M.compactRowHeight;
+    for (const k of ks) {
+      keys.push({ ...k, cx: x, cy: y, cw: k.w * unit, ch: h,
+        x: x + M.gapX, y: y + M.gapYCompact, w: k.w * unit - 2 * M.gapX, h: h - 2 * M.gapYCompact, row: ri });
+      x += k.w * unit;
+    }
+    y += h;
+  });
+  return { keys, height: y + M.bottomPadding, rowH: M.compactRowHeight };
+}
+const SVGNS = "http://www.w3.org/2000/svg";
+function el(name, attrs, text) {
+  const e = document.createElementNS(SVGNS, name);
+  for (const [a, v] of Object.entries(attrs)) e.setAttribute(a, v);
+  if (text !== undefined) e.textContent = text;
+  return e;
+}
+function drawKey(group, k, state) {
+  group.replaceChildren();
+  const isFn = k.kind === "fn" && k.name !== "space";
+  const fill = state ? "var(--press)" : isFn ? "var(--fn)" : "var(--key)";
+  group.appendChild(el("rect", { x: k.x, y: k.y, width: k.w, height: k.h, rx: 5, fill }));
+  const mid = k.x + k.w / 2;
+  const second = k.alt ?? k.top;
+  if (state === "second") {
+    group.appendChild(el("text", { x: mid, y: k.y + k.h / 2 + 9, "text-anchor": "middle", "font-size": 25, "font-weight": 600, fill: "var(--new)" }, second));
+    return;
+  }
+  if (k.kind === "fn") {
+    const label = LABELS[k.name] ?? k.name, small = label.length > 3;
+    group.appendChild(el("text", { x: mid, y: k.y + k.h / 2 + (small ? 4 : 6), "text-anchor": "middle", "font-size": small ? 12 : 16, fill: "var(--keytext)" }, label));
+  } else if (k.alt) {
+    group.appendChild(el("text", { x: mid, y: k.y + 13, "text-anchor": "middle", "font-size": 11, fill: "var(--hint)" }, k.alt));
+    group.appendChild(el("text", { x: mid, y: k.y + k.h - 8, "text-anchor": "middle", "font-size": 20, fill: "var(--keytext)" }, k.main.toUpperCase()));
+  } else if (k.top) {
+    group.appendChild(el("text", { x: mid, y: k.y + 14, "text-anchor": "middle", "font-size": 12, fill: "var(--keytext)" }, k.top));
+    group.appendChild(el("text", { x: mid, y: k.y + k.h - 8, "text-anchor": "middle", "font-size": 17, fill: "var(--keytext)" }, k.main));
+  } else {
+    const isLetter = /^[a-z]$/.test(k.main);
+    group.appendChild(el("text", { x: mid, y: k.y + k.h / 2 + 7, "text-anchor": "middle", "font-size": isLetter ? 20 : 18, fill: "var(--keytext)" }, isLetter ? k.main.toUpperCase() : k.main));
+  }
+}
+function draw(target, spec, label) {
+  const g = geometry(spec);
+  const svg = el("svg", { viewBox: `0 0 ${WIDTH} ${g.height}`, role: "img", "aria-label": label });
+  svg.appendChild(el("rect", { x: 0, y: 0, width: WIDTH, height: g.height, rx: 12, fill: "var(--board)" }));
+  for (const k of g.keys) { k.group = el("g", {}); drawKey(k.group, k, null); svg.appendChild(k.group); }
+  target.replaceChildren(svg);
+  return { g, svg };
+}
+draw(document.getElementById("before"), BEFORE, "Today's compact letters layer");
+const live = draw(document.getElementById("after"), AFTER, "Proposed compact letters layer");
+
+// Touches on the proposed keyboard. Distances are in keyboard points, as in the app.
+const typed = document.getElementById("typed");
+const touches = new Map();
+function toBoard(e) {
+  const r = live.svg.getBoundingClientRect(), s = WIDTH / r.width;
+  return { x: (e.clientX - r.left) * s, y: (e.clientY - r.top) * s };
+}
+function keyAt(p) { return live.g.keys.find(k => p.x >= k.cx && p.x < k.cx + k.cw && p.y >= k.cy && p.y < k.cy + k.ch); }
+live.svg.addEventListener("pointerdown", e => {
+  const p = toBoard(e), k = keyAt(p);
+  if (!k) return;
+  live.svg.setPointerCapture(e.pointerId);
+  touches.set(e.pointerId, { k, start: p, second: false });
+  drawKey(k.group, k, "down");
+});
+live.svg.addEventListener("pointermove", e => {
+  const t = touches.get(e.pointerId);
+  if (!t || !(t.k.alt ?? t.k.top)) return;
+  const p = toBoard(e), dx = p.x - t.start.x, dy = p.y - t.start.y;
+  const threshold = t.k.alt ? live.g.rowH * 0.4 : Math.max(14, live.g.rowH * 0.35);
+  if (!t.second && Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > threshold) { t.second = true; drawKey(t.k.group, t.k, "second"); }
+  else if (t.second && Math.abs(dy) < threshold / 2) { t.second = false; drawKey(t.k.group, t.k, "down"); }
+});
+function end(e, commit) {
+  const t = touches.get(e.pointerId);
+  if (!t) return;
+  touches.delete(e.pointerId);
+  drawKey(t.k.group, t.k, null);
+  if (!commit) return;
+  const k = t.k;
+  if (k.kind === "char") typed.textContent += t.second ? (k.alt ?? k.top) : k.main;
+  else if (k.name === "space") typed.textContent += " ";
+  else if (k.name === "backspace") typed.textContent = typed.textContent.slice(0, -1);
+  else if (k.name === "return") typed.textContent += "\n";
+}
+live.svg.addEventListener("pointerup", e => end(e, true));
+live.svg.addEventListener("pointercancel", e => end(e, false));
+document.getElementById("clear").addEventListener("click", () => { typed.textContent = ""; });
+
+// Bottom row widths.
+function bottom(spec) {
+  const out = new Map();
+  for (const k of geometry(spec).keys.filter(k => k.row === 5)) out.set(k.kind === "fn" ? NAMES[k.name] : k.main === "," ? "comma" : "period", k.w);
+  return out;
+}
+const wb = bottom(BEFORE), wa = bottom(AFTER), tbody = document.querySelector("#sizes tbody");
+for (const n of ["123", "globe", "language (中/A)", "space", "comma", "period", "return"]) {
+  const b = wb.get(n), a = wa.get(n), tr = document.createElement("tr");
+  const pct = b && a ? (a / b - 1) * 100 : null;
+  const cls = pct === null ? "" : pct > 0.5 ? "up" : pct < -0.5 ? "down" : "";
+  const change = pct === null ? "new key" : Math.abs(pct) < 0.5 ? "same" : `${pct > 0 ? "+" : ""}${pct.toFixed(0)}%`;
+  tr.innerHTML = `<td></td><td class="num">${b ? b.toFixed(1) : ""}</td><td class="num">${a.toFixed(1)}</td><td class="num ${cls}">${change}</td>`;
+  tr.firstChild.textContent = n;
+  tbody.appendChild(tr);
+}
+</script>
