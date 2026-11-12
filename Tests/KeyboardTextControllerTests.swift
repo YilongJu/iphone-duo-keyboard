@@ -192,6 +192,213 @@ final class KeyboardTextControllerTests: XCTestCase {
         XCTAssertEqual(measurer.runs, 2)
     }
 
+    // MARK: A space typed before a closing mark
+
+    func testASpaceTypedBeforeACommaGoesAway() {
+        makeController(before: "")
+        type("hello ,")
+        XCTAssertEqual(document.text, "hello,")
+        type(" world")
+        XCTAssertEqual(document.text, "hello, world")
+    }
+
+    func testEveryClosingMarkGoesAgainstTheWord() {
+        for mark in [",", ".", "?", "!", ")", "]", "}"] {
+            makeController(before: "")
+            type("word " + mark)
+            XCTAssertEqual(document.text, "word" + mark, mark)
+        }
+    }
+
+    func testOtherKeysAfterASpaceStayWhereThePersonTypedThem() {
+        // Colons and semicolons start emoticons, and the rest open a text or stand alone.
+        for key in [":", ";", "(", "\"", "'", "-", "@", "#", "$", "&"] {
+            makeController(before: "")
+            type("word " + key)
+            XCTAssertEqual(document.text, "word " + key, key)
+        }
+    }
+
+    func testAnEmoticonASpacedDashAndASpacedEllipsisStay() {
+        for text in ["see you :)", "see you ;)", "this - that", "wait ...", "hm ..."] {
+            makeController(before: "")
+            type(text)
+            XCTAssertEqual(document.text, text, text)
+        }
+    }
+
+    func testSpacesTypedSlowlyAllGoAway() {
+        makeController(before: "")
+        type("word ")
+        // Past the 1.5 seconds of the double-space period.
+        RunLoop.current.run(until: Date().addingTimeInterval(1.6))
+        type(" ,")
+        XCTAssertEqual(document.text, "word,")
+    }
+
+    func testTheTextBeforeTheSpacesMustBeAWord() {
+        for text in ["12 ,", "example.com ,", "@name ,", "#tag !", "$5 .", "a.b ?", "x86 ,"] {
+            makeController(before: "")
+            type(text)
+            XCTAssertEqual(document.text, text, text)
+        }
+        // A line start and a field start hold no word.
+        makeController(before: "one\n")
+        type(" ,")
+        XCTAssertEqual(document.text, "one\n ,")
+        makeController(before: "")
+        type(" ,")
+        XCTAssertEqual(document.text, " ,")
+        // A word after an opening bracket or quote counts.
+        makeController(before: "")
+        type("(see below )")
+        XCTAssertEqual(document.text, "(see below)")
+    }
+
+    func testOnlySpacesTypedAsTheLastKeysGoAway() {
+        // The field held the space before the keyboard typed anything.
+        makeController(before: "hello ")
+        type(",")
+        XCTAssertEqual(document.text, "hello ,")
+        // A cursor move between the space and the mark.
+        makeController(before: "")
+        type("hello ")
+        controller.keyboardView(keyboardView, moveCursorBy: 0)
+        type(",")
+        XCTAssertEqual(document.text, "hello ,")
+        // A backspace between them.
+        makeController(before: "")
+        type("hello x")
+        controller.keyboardViewDeleteBackward(keyboardView)
+        type(",")
+        XCTAssertEqual(document.text, "hello ,")
+        // A pasted space.
+        makeController(before: "hello")
+        UIPasteboard.general.string = " "
+        controller.keyboardView(keyboardView, edit: .paste)
+        type(",")
+        XCTAssertEqual(document.text, "hello ,")
+        // The app moved the cursor away and back to the same place.
+        makeController(before: "")
+        type("hello ")
+        document.cursor = 0
+        controller.documentDidChange()
+        document.cursor = 6
+        controller.documentDidChange()
+        type(",")
+        XCTAssertEqual(document.text, "hello,", "the text right before the cursor is the same, so the spaces still count")
+    }
+
+    func testAFieldWithoutAutocorrectionKeepsTheSpace() {
+        makeController(before: "")
+        document.allowsAutocorrection = false
+        type("hello ,")
+        XCTAssertEqual(document.text, "hello ,")
+    }
+
+    func testTheCorrectionOfTheSpacePressStays() {
+        makeController(before: "")
+        type("teh ,")
+        XCTAssertEqual(document.text, "the,")
+    }
+
+    func testBackspaceRightAfterBringsBackTheTypedKeys() {
+        makeController(before: "")
+        type("hello ,")
+        controller.keyboardViewDeleteBackward(keyboardView)
+        XCTAssertEqual(document.text, "hello ,")
+        // The next backspace deletes as usual.
+        controller.keyboardViewDeleteBackward(keyboardView)
+        XCTAssertEqual(document.text, "hello ")
+        // Undo after a correction and the mark: the mark's spaces come back, the correction stays.
+        makeController(before: "")
+        type("teh .")
+        controller.keyboardViewDeleteBackward(keyboardView)
+        XCTAssertEqual(document.text, "the .")
+    }
+
+    func testALetterRightAfterTheMarkBringsBackTheSpaceForASlipOfTheNextWord() {
+        makeController(before: "")
+        spellChecker.corrections = ["tell ,ore": "tell more"]
+        type("tell ,")
+        XCTAssertEqual(document.text, "tell,")
+        type("ore ")
+        XCTAssertEqual(document.text, "tell more ")
+        XCTAssertEqual(spellChecker.requests.last, "|tell ,ore")
+        // A digit too, as in ".5".
+        makeController(before: "")
+        type("is .5")
+        XCTAssertEqual(document.text, "is .5")
+    }
+
+    func testTheDoubleSpacePeriodStillWorksAndACommaAfterItStays() {
+        makeController(before: "word")
+        type("  ")
+        XCTAssertEqual(document.text, "word. ")
+        type(",")
+        XCTAssertEqual(document.text, "word. ,")
+        // The double space after a glued mark types two spaces, as after any comma.
+        makeController(before: "")
+        type("word ,  ")
+        XCTAssertEqual(document.text, "word,  ")
+    }
+
+    func testTheCapitalComesAfterAGluedPeriodAndAGluedQuestionMark() {
+        for mark in [".", "?", "!"] {
+            makeController(before: "")
+            document.autocapitalizationType = .sentences
+            type("hello " + mark)
+            XCTAssertEqual(document.text, "hello" + mark, mark)
+            XCTAssertEqual(keyboardView.shiftState, .off, mark)
+            type(" ")
+            XCTAssertEqual(keyboardView.shiftState, .on, mark)
+        }
+    }
+
+    func testTheProofreaderReadsTheGluedSentenceAndItsFixKeepsTheSpaces() async {
+        let proofreader = makeProofreadingController(
+            before: "", answers: ["I came form the office.": "I came from the office."])
+        type("I came form the office .")
+        await controller.proofreadTask?.value
+        XCTAssertEqual(proofreader.requests, ["I came form the office."])
+        XCTAssertEqual(controller.proofreadSuggestion?.corrected, "I came from the office.")
+        type(" ")
+        controller.keyboardView(keyboardView, didSelectCandidateAt: 0)
+        XCTAssertEqual(document.text, "I came from the office. ")
+    }
+
+    func testThePauseStillReadsTheSentenceAfterAGluedComma() async {
+        let proofreader = makeProofreadingController(before: "", answers: [:])
+        controller.proofreadPauseSeconds = 0.05
+        type("I came form the office , and ")
+        await controller.pauseTask?.value
+        await controller.proofreadTask?.value
+        XCTAssertEqual(proofreader.requests, ["I came form the office,", "I came form the office, and"])
+    }
+
+    func testAFixOnTheRowClearsAtAMarkAfterTheSentenceAsBefore() async {
+        _ = makeProofreadingController(before: "", answers: ["I came form the office.": "I came from the office."])
+        type("I came form the office.")
+        await controller.proofreadTask?.value
+        type(" ")
+        XCTAssertNotNil(controller.proofreadSuggestion)
+        type(",")
+        XCTAssertNil(controller.proofreadSuggestion)
+        // The space follows a period and not a word, so it stays.
+        XCTAssertEqual(document.text, "I came form the office. ,")
+    }
+
+    func testChineseTypingKeepsItsSpacesAndMarks() {
+        makeController(before: "hello")
+        controller.keyboardView(keyboardView, edit: .toggleLanguage)
+        type(" ,")
+        XCTAssertEqual(document.text, "hello \u{FF0C}")
+        makeController(before: "")
+        controller.keyboardView(keyboardView, edit: .toggleLanguage)
+        type("nihao ,")
+        XCTAssertEqual(document.text, "\u{4F60}\u{597D}\u{FF0C}")
+    }
+
     private func makeProofreadingController(before: String, answers: [String: String]) -> FakeProofreader {
         makeController(before: before)
         let proofreader = FakeProofreader()
@@ -1125,6 +1332,17 @@ final class KeyboardTextLogicTests: XCTestCase {
         XCTAssertNil(KeyboardTextLogic.correctableWord(before: "file_teh"))
         XCTAssertNil(KeyboardTextLogic.correctableWord(before: "abc123"))
         XCTAssertNil(KeyboardTextLogic.correctableWord(before: "word "))
+    }
+
+    func testSpacesAfterAWord() {
+        XCTAssertEqual(KeyboardTextLogic.spacesAfterWord(before: "hello "), 1)
+        XCTAssertEqual(KeyboardTextLogic.spacesAfterWord(before: "say hello  "), 2)
+        XCTAssertEqual(KeyboardTextLogic.spacesAfterWord(before: "don't "), 1)
+        XCTAssertEqual(KeyboardTextLogic.spacesAfterWord(before: "(hello "), 1)
+        XCTAssertEqual(KeyboardTextLogic.spacesAfterWord(before: "\"hello "), 1)
+        for text in ["hello", "", " ", "12 ", "x86 ", "e.g ", "word. ", "@name ", "a/b ", "line\n ", "'s "] {
+            XCTAssertEqual(KeyboardTextLogic.spacesAfterWord(before: text), 0, text)
+        }
     }
 
     func testAutomaticCapitalizationFollowsSentenceEnds() {

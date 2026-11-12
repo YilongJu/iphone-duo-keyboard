@@ -177,7 +177,12 @@ final class TypingEvaluationTests: XCTestCase {
         try typeEnglishCases(named: "english-symbols")
     }
 
-    private func type(_ cases: [EnglishCase], with spellChecker: SpellChecking, before: (EnglishCase) -> Void) -> [Output] {
+    /// Types each case into a field that holds its context and a space. `spaceAfter` adds one
+    /// space after the typed characters, as a person ends a word.
+    private func type(
+        _ cases: [EnglishCase], with spellChecker: SpellChecking, spaceAfter: Bool = true,
+        before: (EnglishCase) -> Void
+    ) -> [Output] {
         cases.map { item in
             before(item)
             let start = item.context.isEmpty ? "" : item.context + " "
@@ -186,7 +191,7 @@ final class TypingEvaluationTests: XCTestCase {
             let controller = KeyboardTextController(
                 keyboardView: keyboardView, document: document, spellChecker: spellChecker,
                 pinyinEngine: { PinyinEngine(dictionaryText: "") })
-            for character in item.typed + " " {
+            for character in item.typed + (spaceAfter ? " " : "") {
                 controller.keyboardView(keyboardView, insert: String(character))
             }
             let produced = String(document.text.dropFirst(start.count)).trimmingCharacters(in: .whitespaces)
@@ -267,6 +272,36 @@ final class TypingEvaluationTests: XCTestCase {
                 try write(type(typedCases, with: engineOnly) { _ in },
                           to: outputFolder.appendingPathComponent("\(name).\(half)\(suffix).engine-only.jsonl"))
             }
+        }
+    }
+
+    /// Types the sentences with a space between a word and the closing mark after it, key by
+    /// key into an empty field, with no space after the last key. The whole field must equal the
+    /// intended sentence. The outputs go to `english-space-before-mark.<half>.jsonl`, with the
+    /// model and with the engine alone. A cases folder without the files skips them.
+    func testEnglishSpaceBeforeMarkCasesThroughTheTypingController() throws {
+        let (casesFolder, outputFolder) = try folders()
+        let name = "english-space-before-mark"
+        guard FileManager.default.fileExists(atPath: casesFolder.appendingPathComponent("\(name).dev.jsonl").path) else {
+            throw XCTSkip("\(name).dev.jsonl is not in the cases folder")
+        }
+        let model = try loadedModel()
+        let engine = EnglishTypingEngine(lexicon: TypingLexicon(resource: "lexicon-english", fullCheck: false))
+        let storeName = "TypingEvaluationTests"
+        UserDefaults().removePersistentDomain(forName: storeName)
+        let store = try XCTUnwrap(UserDefaults(suiteName: storeName))
+        for half in try halves() {
+            let cases = try loadCases(EnglishCase.self, from: casesFolder.appendingPathComponent("\(name).\(half).jsonl"))
+            let reranker = EnglishReranker(scorer: model, rule: KeyboardLanguageModel.rule)
+            let shipping = EngineSpellChecker(engine: engine, reranker: reranker, store: store)
+            try write(type(cases, with: shipping, spaceAfter: false) { _ in },
+                      to: outputFolder.appendingPathComponent("\(name).\(half).jsonl"))
+            let statistics = reranker.statistics
+            XCTAssertEqual(statistics.notReadyCount + statistics.refusedCount + statistics.failedCount, 0,
+                           "\(name) \(half): \(statistics.lastProblem ?? "")")
+            let engineOnly = EngineSpellChecker(engine: engine, reranker: nil, store: store)
+            try write(type(cases, with: engineOnly, spaceAfter: false) { _ in },
+                      to: outputFolder.appendingPathComponent("\(name).\(half).engine-only.jsonl"))
         }
     }
 

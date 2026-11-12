@@ -26,6 +26,29 @@ enum KeyboardTextLogic {
     }
 
     /// True when a second space should turn the previous space into a period and a space.
+    /// Marks that close a word, as in "hello,": a space typed between the word and one of these
+    /// goes away. The set is the part of `symbols_followed_by_space` of Android's AOSP keyboard
+    /// (LatinIME) that does not also start an emoticon or slip for a letter key here: ":" and ";"
+    /// start ":)" and ";)", and ";" also stands beside "l" (`symbolsBesideLetters`).
+    static let marksAfterWord: Set<String> = [",", ".", "?", "!", ")", "]", "}"]
+
+    /// The count of spaces at the end of `before` when they stand right after a word, or 0. A
+    /// word is a run of letters and apostrophes that starts with a letter, at the start of the
+    /// text or after white space, an opening bracket or an opening quote. A number, a mark, a
+    /// line start, an address or a code-like token such as "example.com" or "@name" is not.
+    static func spacesAfterWord(before: String) -> Int {
+        let spaces = before.reversed().prefix { $0 == " " }.count
+        guard spaces > 0 else { return 0 }
+        let head = before.dropLast(spaces)
+        let word = head.reversed().prefix { $0.isLetter || $0 == "'" || $0 == "\u{2019}" }
+        guard let first = word.last, first.isLetter else { return 0 }
+        if let preceding = head.dropLast(word.count).last,
+            !(preceding.isWhitespace || "([{\"'\u{201C}\u{2018}".contains(preceding)) {
+            return 0
+        }
+        return spaces
+    }
+
     static func shouldReplaceDoubleSpace(before: String?) -> Bool {
         guard let before, before.hasSuffix(" ") else { return false }
         guard let previous = before.dropLast().last else { return false }
