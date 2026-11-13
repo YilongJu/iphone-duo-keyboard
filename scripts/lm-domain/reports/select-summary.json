@@ -18624,7 +18624,19 @@
   },
   "dom-s100-seed3": {
    "model_sha256": "5ee41847538ee945e61acfd4f89ac3aafec5d879336e0e6b619926fed8f7c2c8",
-   "parity": null,
+   "parity": {
+    "everyday": {
+     "token_mismatches": 0,
+     "largest_log_probability_difference": 0.0001,
+     "largest_space_after_difference": 0.0
+    },
+    "domain": {
+     "token_mismatches": 0,
+     "largest_log_probability_difference": 0.0001,
+     "largest_space_after_difference": 0.0001
+    },
+    "passes": true
+   },
    "rules": {
     "shipped": {
      "setting": {
@@ -20984,7 +20996,7 @@
      "6 pinned dev counts": false,
      "7 domain dev": true,
      "8 apostrophe words": false,
-     "9 parity": false
+     "9 parity": true
     },
     "qualifies": false,
     "technical_written_changed": 53,
@@ -21003,7 +21015,7 @@
      "6 pinned dev counts": false,
      "7 domain dev": true,
      "8 apostrophe words": false,
-     "9 parity": false
+     "9 parity": true
     },
     "qualifies": false,
     "technical_written_changed": 36,

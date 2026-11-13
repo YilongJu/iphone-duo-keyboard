@@ -416,8 +416,8 @@ Table. Conditions of the pick per entry. Condition 9 holds only for a file with 
 | `dom-s100-seed1` | `ceiling-0.3` | yes | yes | yes | yes | yes | no | yes | yes | yes | no | 38 |
 | `dom-s100-seed2` | `shipped` | yes | yes | yes | yes | yes | no | yes | no | yes | no | 43 |
 | `dom-s100-seed2` | `ceiling-0.3` | yes | no | yes | yes | yes | no | no | no | yes | no | 44 |
-| `dom-s100-seed3` | `shipped` | yes | yes | yes | yes | yes | no | yes | no | no | no | 53 |
-| `dom-s100-seed3` | `ceiling-0.3` | yes | no | yes | yes | yes | no | yes | no | no | no | 36 |
+| `dom-s100-seed3` | `shipped` | yes | yes | yes | yes | yes | no | yes | no | yes | no | 53 |
+| `dom-s100-seed3` | `ceiling-0.3` | yes | no | yes | yes | yes | no | yes | no | yes | no | 36 |
 
 Candidate: `soup-mix` at `ceiling-0.3`
 
@@ -446,4 +446,4 @@ Table. Parity from parity-kv32.json: largest difference between PyTorch and lm_s
 | `dom-s40-seed1` | 0.0001 | 0.0 | 0.0002 | 0.0 | 0 | yes |
 | `dom-s100-seed1` | 0.0001 | 0.0 | 0.0001 | 0.0001 | 0 | yes |
 | `dom-s100-seed2` | 0.0001 | 0.0001 | 0.0003 | 0.0002 | 0 | yes |
-| `dom-s100-seed3` | not measured | | | | | no |
+| `dom-s100-seed3` | 0.0001 | 0.0 | 0.0001 | 0.0001 | 0 | yes |
