@@ -65,7 +65,7 @@ In 128 documents `dom-s100-seed1` at its ceiling setting changes fewer technical
 
 ## Parity of the converted files
 
-The conversion keeps the tokens, the prompt and the weights. With an F32 file and a 32-bit cache, `lm_score` is within 0.0002 nats of PyTorch float32 for the 19 files with a complete reading. The reading of `dom-s100-seed3` on the domain lists is in `scripts/lm-domain/reports/parity-table.md`.
+The conversion keeps the tokens, the prompt and the weights. With an F32 file and a 32-bit cache, `lm_score` is within 0.0002 nats of PyTorch float32 for all 20 files. `scripts/lm-domain/reports/parity-table.md` gives every file.
 The f16 file of `check_parity.py` passes the 0.05 limit for 5 of 20 files, and an F32 file with the standard `lm_score` for 15 of 20. The differences come from 16-bit weights and the 16-bit key and value cache of llama.cpp.
 The Q4_K_M file that the phone runs takes another reading than PyTorch float32 in 181 to 270 of about 46,970 corrections: 270 for `ship`, 235 for `soup-mix`, 181 for `dom-s100-seed1`.
 
