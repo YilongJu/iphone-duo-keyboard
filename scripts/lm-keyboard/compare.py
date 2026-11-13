@@ -67,12 +67,12 @@ def recorded_choice(entry: dict) -> str:
                  "chosen": r["chosen"]} for r in entry["readings"]]
     return rerank.choose(readings, "", SETTING, RecordedScores(entry), None)
 GROUPS = ["clean", "letter_slips", "space_slips", "symbol_slips", "clean_symbols"]
-# The x86 harness numbers of the shipped configuration: SmolLM2 in the typed format with the
-# apostrophe step of docs/apostrophe-words-design.md and the work area "AI and software" of
+# The x86 harness numbers of the shipped configuration: the SmolLM2 fine-tune dom-s100-seed1 in
+# the typed format at the setting above, with the apostrophe step of
+# docs/apostrophe-words-design.md and the work area "AI and software" of
 # docs/domain-pack-design.md on. scripts/lm-keyboard/README.md names the run. Right cases per
-# group, then all dev cases of english.dev.jsonl and english-symbols.dev.jsonl. The work area
-# adds 4 engine cases in the group clean, and with the model 1 case in the group clean_symbols.
-PUBLISHED = {"engine only": [961, 1943, 1299, 1132, 427, 6079], "with the model": [953, 2057, 1387, 1165, 429, 6543]}
+# group, then all dev cases of english.dev.jsonl and english-symbols.dev.jsonl.
+PUBLISHED = {"engine only": [961, 1943, 1299, 1132, 427, 6079], "with the model": [957, 2052, 1387, 1164, 429, 6538]}
 TASKS = ["english", "english-symbols", "english-domain"]
 
 

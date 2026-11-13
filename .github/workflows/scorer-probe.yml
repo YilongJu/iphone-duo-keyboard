@@ -6,7 +6,7 @@ name: Scorer probe
 # the keyboard builds it differs from lm_score in any number.
 on:
   push:
-    branches: [engine/domain-pack, engine/domain-model]
+    branches: [engine/domain-pack]
     paths:
       - 'scripts/lm-keyboard/scorer-probe/**'
       - 'LanguageModel/duo_lm_scorer.c'

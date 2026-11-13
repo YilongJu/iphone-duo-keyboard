@@ -74,15 +74,16 @@ final class LanguageModelScorerTests: XCTestCase {
     }
 
     func testAContextOfOneTokenMoreThanACallGivesTheNumbersOfLmScore() throws {
-        // This context is 32 tokens with the start token. Read as calls of 31 and 1 token it gave
-        // -32.79410 for " egg nns" in the simulator, and lm_score gives -33.07924 and -3.59276 on
-        // the macOS runner (scripts/lm-keyboard/scorer-probe). The simulator part of the app's
+        // This context is 32 tokens with the start token, one more than a call of the scorer. The
+        // scorer reads it as two calls of 16 tokens (call_size in LanguageModel/duo_lm_scorer.c).
+        // lm_score gives -28.46739 and -0.02816 for " egg nns" on the macOS runner, in run
+        // 43477574581 of scripts/lm-keyboard/scorer-probe. The simulator part of the app's
         // framework computes as that runner does (scripts/lm-keyboard/README.md, Table 7).
         let context = "To bridge this gap, we propose SHiFT, which synergizes the reasoning power of LLMs with the "
             + "structural representation capability of | ggnns |"
         let value = try scores(context, [" egg nns"])[0]
-        XCTAssertEqual(value.logProbability, -33.07924, accuracy: 0.01)
-        XCTAssertEqual(value.spaceAfter, -3.59276, accuracy: 0.01)
+        XCTAssertEqual(value.logProbability, -28.46739, accuracy: 0.01)
+        XCTAssertEqual(value.spaceAfter, -0.02816, accuracy: 0.01)
     }
 
     func testTextsWithLoneSpacePiecesGiveScores() throws {
