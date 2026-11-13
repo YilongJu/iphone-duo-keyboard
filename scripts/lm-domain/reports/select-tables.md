@@ -302,124 +302,124 @@ Table. Test half of the domain cases, per setting rule. It decides nothing.
 | `dom-s100-seed3` | `ceiling-0.3` | 6371/6862 | 3254/3283 | 3100/3412 | 1145/1185 | 25 | 9 | 1 |
 | `dom-s100-seed3` | `ceiling-0.2` | 6371/6862 | 3254/3283 | 3100/3412 | 1145/1185 | 25 | 9 | 1 |
 
-Table. Dev groups against the pinned floors (953, 2,057, 1,387, 1,165, 428, total 6,542), and the dev cases that only one of the two has right, per entry.
+Table. Paired dev comparison of each entry with `ship` (pick condition 6). A net loss is the cases that only `ship` has right, less the cases that only the entry has right. A part passes when under 5 percent of the paired bootstrap draws reach its margin and the score test has p under 0.05. The margins: 34 of the 6,799 dev cases, 21 of the 2,100 letter slips, 15 of the 1,500 space slips, 12 of the 1,197 symbol slips.
 
-| Arm | rule | clean | letter slips | space slips | symbol slips | clean symbols | dev total | only `ship` right | only this entry right |
+| Arm | rule | dev total | only `ship` right | only this entry right | net loss, share of draws at the margin, p of the score test | letter slips: net loss, share, p | space slips: net loss, share, p | symbol slips: net loss, share, p | passes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `ship` | `shipped` | 954 | 2057 | 1388 | 1165 | 428 | 6544 | 0 | 0 |
-| `ship` | `ceiling-0.3` | 958 | 2046 | 1382 | 1162 | 429 | 6532 | 43 | 31 |
-| `ship` | `ceiling-0.2` | 958 | 2043 | 1380 | 1162 | 429 | 6527 | 48 | 31 |
-| `full-mix-seed1` | `shipped` | 956 | 2056 | 1398 | 1165 | 429 | 6557 | 20 | 33 |
-| `full-mix-seed1` | `ceiling-0.3` | 954 | 2053 | 1391 | 1166 | 429 | 6548 | 42 | 46 |
-| `full-mix-seed1` | `ceiling-0.2` | 954 | 2053 | 1391 | 1166 | 429 | 6548 | 42 | 46 |
-| `mix-hinge-seed1` | `shipped` | 960 | 2056 | 1389 | 1164 | 429 | 6537 | 40 | 33 |
-| `mix-hinge-seed1` | `ceiling-0.3` | 957 | 2055 | 1383 | 1165 | 428 | 6535 | 57 | 48 |
-| `mix-hinge-seed1` | `ceiling-0.2` | 957 | 2055 | 1383 | 1165 | 428 | 6535 | 57 | 48 |
-| `mix-seed1` | `shipped` | 953 | 2058 | 1398 | 1165 | 429 | 6556 | 25 | 37 |
-| `mix-seed1` | `ceiling-0.3` | 950 | 2062 | 1388 | 1164 | 429 | 6549 | 47 | 52 |
-| `mix-seed1` | `ceiling-0.2` | 950 | 2062 | 1388 | 1164 | 429 | 6549 | 47 | 52 |
-| `mix-seed2` | `shipped` | 952 | 2051 | 1386 | 1166 | 429 | 6534 | 33 | 23 |
-| `mix-seed2` | `ceiling-0.3` | 945 | 2054 | 1387 | 1167 | 429 | 6538 | 48 | 42 |
-| `mix-seed3` | `shipped` | 954 | 2059 | 1393 | 1166 | 428 | 6543 | 32 | 31 |
-| `mix-seed3` | `ceiling-0.3` | 945 | 2059 | 1389 | 1167 | 428 | 6543 | 44 | 43 |
-| `soup-mix` | `shipped` | 956 | 2057 | 1396 | 1166 | 429 | 6558 | 17 | 31 |
-| `soup-mix` | `ceiling-0.3` | 954 | 2063 | 1392 | 1165 | 429 | 6560 | 32 | 48 |
-| `soup-mix` | `ceiling-0.2` | 954 | 2063 | 1392 | 1165 | 429 | 6560 | 32 | 48 |
-| `soup-r1` | `shipped` | 955 | 2055 | 1390 | 1164 | 429 | 6546 | 18 | 20 |
-| `soup-r1` | `ceiling-0.3` | 955 | 2052 | 1389 | 1166 | 429 | 6550 | 38 | 44 |
-| `soup-r1` | `ceiling-0.2` | 960 | 2052 | 1390 | 1164 | 429 | 6549 | 36 | 41 |
-| `ce-c1-seed1` | `shipped` | 955 | 2053 | 1397 | 1166 | 429 | 6553 | 26 | 35 |
-| `ce-c1-seed1` | `ceiling-0.3` | 952 | 2050 | 1387 | 1166 | 429 | 6546 | 47 | 49 |
-| `ce-c1-seed1` | `ceiling-0.2` | 952 | 2050 | 1387 | 1166 | 429 | 6546 | 47 | 49 |
-| `dom-s0-seed1` | `shipped` | 954 | 2051 | 1388 | 1165 | 429 | 6541 | 33 | 30 |
-| `dom-s0-seed1` | `ceiling-0.3` | 948 | 2053 | 1387 | 1165 | 428 | 6542 | 51 | 49 |
-| `dom-s0-seed1` | `ceiling-0.2` | 948 | 2053 | 1387 | 1165 | 428 | 6542 | 51 | 49 |
-| `dom-s0-seed2` | `shipped` | 958 | 2056 | 1397 | 1165 | 429 | 6561 | 25 | 42 |
-| `dom-s0-seed2` | `ceiling-0.3` | 958 | 2055 | 1390 | 1167 | 429 | 6554 | 41 | 51 |
-| `dom-s0-seed2` | `ceiling-0.2` | 958 | 2055 | 1390 | 1167 | 429 | 6554 | 41 | 51 |
-| `ce-c4-seed1` | `shipped` | 957 | 2054 | 1389 | 1162 | 428 | 6541 | 31 | 28 |
-| `ce-c4-seed1` | `ceiling-0.3` | 955 | 2051 | 1386 | 1164 | 429 | 6541 | 49 | 46 |
-| `ce-c4-seed1` | `ceiling-0.2` | 955 | 2051 | 1386 | 1164 | 429 | 6541 | 49 | 46 |
-| `ce-c4-seed2` | `shipped` | 956 | 2054 | 1396 | 1166 | 429 | 6544 | 34 | 34 |
-| `ce-c4-seed2` | `ceiling-0.3` | 954 | 2050 | 1389 | 1166 | 428 | 6535 | 53 | 44 |
-| `ce-c4-seed2` | `ceiling-0.2` | 954 | 2050 | 1389 | 1166 | 428 | 6535 | 53 | 44 |
-| `ec-c4-seed1` | `shipped` | 961 | 2054 | 1387 | 1167 | 428 | 6545 | 36 | 37 |
-| `ec-c4-seed1` | `ceiling-0.3` | 958 | 2051 | 1385 | 1166 | 428 | 6539 | 52 | 47 |
-| `ec-c4-seed1` | `ceiling-0.2` | 958 | 2051 | 1385 | 1166 | 428 | 6539 | 52 | 47 |
-| `ec-c4-seed2` | `shipped` | 960 | 2058 | 1391 | 1166 | 429 | 6556 | 29 | 41 |
-| `ec-c4-seed2` | `ceiling-0.3` | 962 | 2057 | 1390 | 1166 | 429 | 6554 | 32 | 42 |
-| `ec-c4-seed2` | `ceiling-0.2` | 962 | 2057 | 1390 | 1166 | 429 | 6554 | 32 | 42 |
-| `dom-s15-seed1` | `shipped` | 955 | 2053 | 1391 | 1166 | 429 | 6550 | 27 | 33 |
-| `dom-s15-seed1` | `ceiling-0.3` | 953 | 2048 | 1379 | 1160 | 429 | 6527 | 63 | 46 |
-| `dom-s15-seed1` | `ceiling-0.2` | 953 | 2048 | 1379 | 1160 | 429 | 6527 | 63 | 46 |
-| `dom-s40-seed1` | `shipped` | 958 | 2057 | 1390 | 1163 | 429 | 6550 | 29 | 35 |
-| `dom-s40-seed1` | `ceiling-0.3` | 951 | 2057 | 1389 | 1163 | 429 | 6547 | 48 | 51 |
-| `dom-s100-seed1` | `shipped` | 958 | 2054 | 1398 | 1166 | 429 | 6541 | 39 | 36 |
-| `dom-s100-seed1` | `ceiling-0.3` | 957 | 2052 | 1387 | 1164 | 429 | 6538 | 47 | 41 |
-| `dom-s100-seed2` | `shipped` | 956 | 2049 | 1386 | 1165 | 429 | 6528 | 52 | 36 |
-| `dom-s100-seed2` | `ceiling-0.3` | 948 | 2055 | 1387 | 1167 | 429 | 6545 | 48 | 49 |
-| `dom-s100-seed3` | `shipped` | 956 | 2054 | 1389 | 1164 | 429 | 6530 | 48 | 34 |
-| `dom-s100-seed3` | `ceiling-0.3` | 952 | 2052 | 1380 | 1165 | 428 | 6537 | 55 | 48 |
+| `ship` | `shipped` | 6544 | 0 | 0 | 0, 0.0000, 0.0000 | 0, 0.0000, 0.0000 | 0, 0.0000, 0.0001 | 0, 0.0000, 0.0003 | yes |
+| `ship` | `ceiling-0.3` | 6532 | 43 | 31 | 12, 0.0065, 0.0078 | 11, 0.0217, 0.0297 | 6, 0.0363, 0.0411 | 3, 0.0015, 0.0088 | yes |
+| `ship` | `ceiling-0.2` | 6527 | 48 | 31 | 17, 0.0323, 0.0330 | 14, 0.0936, 0.0961 | 8, 0.0927, 0.0913 | 3, 0.0015, 0.0088 | no |
+| `full-mix-seed1` | `shipped` | 6557 | 20 | 33 | -13, 0.0000, 0.0000 | 1, 0.0000, 0.0001 | -10, 0.0000, 0.0000 | 0, 0.0000, 0.0011 | yes |
+| `full-mix-seed1` | `ceiling-0.3` | 6548 | 42 | 46 | -4, 0.0000, 0.0001 | 4, 0.0003, 0.0014 | -3, 0.0001, 0.0005 | -1, 0.0000, 0.0010 | yes |
+| `full-mix-seed1` | `ceiling-0.2` | 6548 | 42 | 46 | -4, 0.0000, 0.0001 | 4, 0.0003, 0.0014 | -3, 0.0001, 0.0005 | -1, 0.0000, 0.0010 | yes |
+| `mix-hinge-seed1` | `shipped` | 6537 | 40 | 33 | 7, 0.0010, 0.0016 | 1, 0.0000, 0.0001 | -1, 0.0000, 0.0006 | 1, 0.0000, 0.0017 | yes |
+| `mix-hinge-seed1` | `ceiling-0.3` | 6535 | 57 | 48 | 9, 0.0086, 0.0092 | 2, 0.0003, 0.0010 | 5, 0.0297, 0.0335 | 0, 0.0002, 0.0023 | yes |
+| `mix-hinge-seed1` | `ceiling-0.2` | 6535 | 57 | 48 | 9, 0.0086, 0.0092 | 2, 0.0003, 0.0010 | 5, 0.0297, 0.0335 | 0, 0.0002, 0.0023 | yes |
+| `mix-seed1` | `shipped` | 6556 | 25 | 37 | -12, 0.0000, 0.0000 | -1, 0.0000, 0.0000 | -10, 0.0000, 0.0000 | 0, 0.0001, 0.0016 | yes |
+| `mix-seed1` | `ceiling-0.3` | 6549 | 47 | 52 | -5, 0.0001, 0.0001 | -5, 0.0000, 0.0000 | 0, 0.0032, 0.0052 | 1, 0.0022, 0.0065 | yes |
+| `mix-seed1` | `ceiling-0.2` | 6549 | 47 | 52 | -5, 0.0001, 0.0001 | -5, 0.0000, 0.0000 | 0, 0.0032, 0.0052 | 1, 0.0022, 0.0065 | yes |
+| `mix-seed2` | `shipped` | 6534 | 33 | 23 | 10, 0.0010, 0.0018 | 6, 0.0009, 0.0031 | 2, 0.0006, 0.0030 | -1, 0.0000, 0.0001 | yes |
+| `mix-seed2` | `ceiling-0.3` | 6538 | 48 | 42 | 6, 0.0020, 0.0025 | 3, 0.0003, 0.0012 | 1, 0.0027, 0.0051 | -2, 0.0000, 0.0006 | yes |
+| `mix-seed3` | `shipped` | 6543 | 32 | 31 | 1, 0.0000, 0.0001 | -2, 0.0000, 0.0000 | -5, 0.0000, 0.0001 | -1, 0.0000, 0.0003 | yes |
+| `mix-seed3` | `ceiling-0.3` | 6543 | 44 | 43 | 1, 0.0003, 0.0004 | -2, 0.0000, 0.0000 | -1, 0.0010, 0.0024 | -2, 0.0000, 0.0003 | yes |
+| `soup-mix` | `shipped` | 6558 | 17 | 31 | -14, 0.0000, 0.0000 | 0, 0.0000, 0.0001 | -8, 0.0000, 0.0000 | -1, 0.0000, 0.0004 | yes |
+| `soup-mix` | `ceiling-0.3` | 6560 | 32 | 48 | -16, 0.0000, 0.0000 | -6, 0.0000, 0.0000 | -4, 0.0000, 0.0003 | 0, 0.0006, 0.0032 | yes |
+| `soup-mix` | `ceiling-0.2` | 6560 | 32 | 48 | -16, 0.0000, 0.0000 | -6, 0.0000, 0.0000 | -4, 0.0000, 0.0003 | 0, 0.0006, 0.0032 | yes |
+| `soup-r1` | `shipped` | 6546 | 18 | 20 | -2, 0.0000, 0.0000 | 2, 0.0000, 0.0001 | -2, 0.0000, 0.0002 | 1, 0.0000, 0.0017 | yes |
+| `soup-r1` | `ceiling-0.3` | 6550 | 38 | 44 | -6, 0.0000, 0.0000 | 5, 0.0005, 0.0021 | -1, 0.0004, 0.0015 | -1, 0.0000, 0.0010 | yes |
+| `soup-r1` | `ceiling-0.2` | 6549 | 36 | 41 | -5, 0.0000, 0.0000 | 5, 0.0005, 0.0021 | -2, 0.0001, 0.0007 | 1, 0.0011, 0.0049 | yes |
+| `ce-c1-seed1` | `shipped` | 6553 | 26 | 35 | -9, 0.0000, 0.0000 | 4, 0.0001, 0.0009 | -9, 0.0000, 0.0000 | -1, 0.0000, 0.0004 | yes |
+| `ce-c1-seed1` | `ceiling-0.3` | 6546 | 47 | 49 | -2, 0.0001, 0.0003 | 7, 0.0031, 0.0066 | 1, 0.0049, 0.0075 | -1, 0.0000, 0.0010 | yes |
+| `ce-c1-seed1` | `ceiling-0.2` | 6546 | 47 | 49 | -2, 0.0001, 0.0003 | 7, 0.0031, 0.0066 | 1, 0.0049, 0.0075 | -1, 0.0000, 0.0010 | yes |
+| `dom-s0-seed1` | `shipped` | 6541 | 33 | 30 | 3, 0.0001, 0.0002 | 6, 0.0006, 0.0025 | 0, 0.0001, 0.0009 | 0, 0.0000, 0.0011 | yes |
+| `dom-s0-seed1` | `ceiling-0.3` | 6542 | 51 | 49 | 2, 0.0008, 0.0011 | 4, 0.0005, 0.0018 | 1, 0.0049, 0.0075 | 0, 0.0002, 0.0023 | yes |
+| `dom-s0-seed1` | `ceiling-0.2` | 6542 | 51 | 49 | 2, 0.0008, 0.0011 | 4, 0.0005, 0.0018 | 1, 0.0049, 0.0075 | 0, 0.0002, 0.0023 | yes |
+| `dom-s0-seed2` | `shipped` | 6561 | 25 | 42 | -17, 0.0000, 0.0000 | 1, 0.0000, 0.0001 | -9, 0.0000, 0.0000 | 0, 0.0000, 0.0011 | yes |
+| `dom-s0-seed2` | `ceiling-0.3` | 6554 | 41 | 51 | -10, 0.0000, 0.0000 | 2, 0.0002, 0.0008 | -2, 0.0009, 0.0020 | -2, 0.0000, 0.0004 | yes |
+| `dom-s0-seed2` | `ceiling-0.2` | 6554 | 41 | 51 | -10, 0.0000, 0.0000 | 2, 0.0002, 0.0008 | -2, 0.0009, 0.0020 | -2, 0.0000, 0.0004 | yes |
+| `ce-c4-seed1` | `shipped` | 6541 | 31 | 28 | 3, 0.0000, 0.0001 | 3, 0.0000, 0.0003 | -1, 0.0002, 0.0011 | 3, 0.0004, 0.0065 | yes |
+| `ce-c4-seed1` | `ceiling-0.3` | 6541 | 49 | 46 | 3, 0.0009, 0.0012 | 6, 0.0009, 0.0031 | 2, 0.0094, 0.0124 | 1, 0.0004, 0.0036 | yes |
+| `ce-c4-seed1` | `ceiling-0.2` | 6541 | 49 | 46 | 3, 0.0009, 0.0012 | 6, 0.0009, 0.0031 | 2, 0.0094, 0.0124 | 1, 0.0004, 0.0036 | yes |
+| `ce-c4-seed2` | `shipped` | 6544 | 34 | 34 | 0, 0.0000, 0.0001 | 3, 0.0000, 0.0004 | -8, 0.0000, 0.0000 | -1, 0.0000, 0.0004 | yes |
+| `ce-c4-seed2` | `ceiling-0.3` | 6535 | 53 | 44 | 9, 0.0066, 0.0073 | 7, 0.0042, 0.0077 | -1, 0.0015, 0.0030 | -1, 0.0000, 0.0010 | yes |
+| `ce-c4-seed2` | `ceiling-0.2` | 6535 | 53 | 44 | 9, 0.0066, 0.0073 | 7, 0.0042, 0.0077 | -1, 0.0015, 0.0030 | -1, 0.0000, 0.0010 | yes |
+| `ec-c4-seed1` | `shipped` | 6545 | 36 | 37 | -1, 0.0000, 0.0001 | 3, 0.0002, 0.0010 | 1, 0.0018, 0.0042 | -2, 0.0000, 0.0001 | yes |
+| `ec-c4-seed1` | `ceiling-0.3` | 6539 | 52 | 47 | 5, 0.0022, 0.0026 | 6, 0.0057, 0.0086 | 3, 0.0199, 0.0224 | -1, 0.0000, 0.0006 | yes |
+| `ec-c4-seed1` | `ceiling-0.2` | 6539 | 52 | 47 | 5, 0.0022, 0.0026 | 6, 0.0057, 0.0086 | 3, 0.0199, 0.0224 | -1, 0.0000, 0.0006 | yes |
+| `ec-c4-seed2` | `shipped` | 6556 | 29 | 41 | -12, 0.0000, 0.0000 | -1, 0.0000, 0.0001 | -3, 0.0000, 0.0003 | -1, 0.0000, 0.0006 | yes |
+| `ec-c4-seed2` | `ceiling-0.3` | 6554 | 32 | 42 | -10, 0.0000, 0.0000 | 0, 0.0000, 0.0002 | -2, 0.0001, 0.0006 | -1, 0.0000, 0.0006 | yes |
+| `ec-c4-seed2` | `ceiling-0.2` | 6554 | 32 | 42 | -10, 0.0000, 0.0000 | 0, 0.0000, 0.0002 | -2, 0.0001, 0.0006 | -1, 0.0000, 0.0006 | yes |
+| `dom-s15-seed1` | `shipped` | 6550 | 27 | 33 | -6, 0.0000, 0.0000 | 4, 0.0001, 0.0009 | -3, 0.0000, 0.0003 | -1, 0.0000, 0.0003 | yes |
+| `dom-s15-seed1` | `ceiling-0.3` | 6527 | 63 | 46 | 17, 0.0573, 0.0556 | 9, 0.0177, 0.0223 | 9, 0.1751, 0.1626 | 5, 0.0283, 0.0408 | no |
+| `dom-s15-seed1` | `ceiling-0.2` | 6527 | 63 | 46 | 17, 0.0573, 0.0556 | 9, 0.0177, 0.0223 | 9, 0.1751, 0.1626 | 5, 0.0283, 0.0408 | no |
+| `dom-s40-seed1` | `shipped` | 6550 | 29 | 35 | -6, 0.0000, 0.0000 | 0, 0.0000, 0.0001 | -2, 0.0001, 0.0007 | 2, 0.0002, 0.0041 | yes |
+| `dom-s40-seed1` | `ceiling-0.3` | 6547 | 48 | 51 | -3, 0.0001, 0.0002 | 0, 0.0000, 0.0002 | -1, 0.0044, 0.0060 | 2, 0.0008, 0.0056 | yes |
+| `dom-s100-seed1` | `shipped` | 6541 | 39 | 36 | 3, 0.0002, 0.0004 | 3, 0.0000, 0.0003 | -10, 0.0000, 0.0000 | -1, 0.0000, 0.0003 | yes |
+| `dom-s100-seed1` | `ceiling-0.3` | 6538 | 47 | 41 | 6, 0.0018, 0.0023 | 5, 0.0003, 0.0017 | 1, 0.0049, 0.0075 | 1, 0.0000, 0.0017 | yes |
+| `dom-s100-seed2` | `shipped` | 6528 | 52 | 36 | 16, 0.0315, 0.0319 | 8, 0.0024, 0.0066 | 2, 0.0042, 0.0075 | 0, 0.0000, 0.0011 | yes |
+| `dom-s100-seed2` | `ceiling-0.3` | 6545 | 48 | 49 | -1, 0.0002, 0.0004 | 2, 0.0000, 0.0003 | 1, 0.0079, 0.0102 | -2, 0.0000, 0.0003 | yes |
+| `dom-s100-seed3` | `shipped` | 6530 | 48 | 34 | 14, 0.0161, 0.0172 | 3, 0.0001, 0.0006 | -1, 0.0000, 0.0006 | 1, 0.0000, 0.0017 | yes |
+| `dom-s100-seed3` | `ceiling-0.3` | 6537 | 55 | 48 | 7, 0.0046, 0.0052 | 5, 0.0012, 0.0032 | 8, 0.1174, 0.1114 | 0, 0.0002, 0.0023 | no |
 
 Table. Conditions of the pick per entry. Condition 9 holds only for a file with a parity result under the limit.
 
-| Arm | rule | 1 select stream | 2 dev clean | 3 real misspellings | 4 non-word slips | 5 real-word slips | 6 pinned dev counts | 7 domain dev | 8 apostrophe words | 9 parity | qualifies | technical and written changed |
+| Arm | rule | 1 select stream | 2 dev clean | 3 real misspellings | 4 non-word slips | 5 real-word slips | 6 paired dev comparison | 7 domain dev | 8 apostrophe words | 9 parity | qualifies | technical and written changed |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `ship` | `ceiling-0.3` | yes | yes | no | yes | yes | no | no | yes | yes | no | 135 |
+| `ship` | `ceiling-0.3` | yes | yes | no | yes | yes | yes | no | yes | yes | no | 135 |
 | `ship` | `ceiling-0.2` | yes | yes | no | yes | yes | no | no | yes | yes | no | 125 |
-| `full-mix-seed1` | `shipped` | yes | yes | yes | yes | yes | no | yes | no | yes | no | 127 |
-| `full-mix-seed1` | `ceiling-0.3` | yes | yes | yes | yes | yes | no | no | no | yes | no | 109 |
-| `full-mix-seed1` | `ceiling-0.2` | yes | yes | yes | yes | yes | no | no | no | yes | no | 109 |
-| `mix-hinge-seed1` | `shipped` | yes | yes | yes | yes | yes | no | no | no | yes | no | 85 |
-| `mix-hinge-seed1` | `ceiling-0.3` | yes | yes | no | yes | yes | no | no | no | yes | no | 69 |
-| `mix-hinge-seed1` | `ceiling-0.2` | yes | yes | no | yes | yes | no | no | no | yes | no | 69 |
+| `full-mix-seed1` | `shipped` | yes | yes | yes | yes | yes | yes | yes | no | yes | no | 127 |
+| `full-mix-seed1` | `ceiling-0.3` | yes | yes | yes | yes | yes | yes | no | no | yes | no | 109 |
+| `full-mix-seed1` | `ceiling-0.2` | yes | yes | yes | yes | yes | yes | no | no | yes | no | 109 |
+| `mix-hinge-seed1` | `shipped` | yes | yes | yes | yes | yes | yes | no | no | yes | no | 85 |
+| `mix-hinge-seed1` | `ceiling-0.3` | yes | yes | no | yes | yes | yes | no | no | yes | no | 69 |
+| `mix-hinge-seed1` | `ceiling-0.2` | yes | yes | no | yes | yes | yes | no | no | yes | no | 69 |
 | `mix-seed1` | `shipped` | yes | no | yes | yes | yes | yes | yes | yes | yes | no | 154 |
-| `mix-seed1` | `ceiling-0.3` | yes | no | no | yes | yes | no | yes | no | yes | no | 128 |
-| `mix-seed1` | `ceiling-0.2` | yes | no | no | yes | yes | no | yes | no | yes | no | 128 |
-| `mix-seed2` | `shipped` | yes | no | yes | yes | yes | no | no | no | yes | no | 150 |
-| `mix-seed2` | `ceiling-0.3` | yes | no | yes | yes | yes | no | no | yes | yes | no | 144 |
+| `mix-seed1` | `ceiling-0.3` | yes | no | no | yes | yes | yes | yes | no | yes | no | 128 |
+| `mix-seed1` | `ceiling-0.2` | yes | no | no | yes | yes | yes | yes | no | yes | no | 128 |
+| `mix-seed2` | `shipped` | yes | no | yes | yes | yes | yes | no | no | yes | no | 150 |
+| `mix-seed2` | `ceiling-0.3` | yes | no | yes | yes | yes | yes | no | yes | yes | no | 144 |
 | `mix-seed3` | `shipped` | yes | yes | yes | yes | yes | yes | yes | no | yes | no | 189 |
-| `mix-seed3` | `ceiling-0.3` | yes | no | yes | yes | yes | no | no | no | yes | no | 142 |
+| `mix-seed3` | `ceiling-0.3` | yes | no | yes | yes | yes | yes | no | no | yes | no | 142 |
 | `soup-mix` | `shipped` | yes | yes | yes | yes | yes | yes | yes | no | yes | no | 162 |
 | `soup-mix` | `ceiling-0.3` | yes | yes | yes | yes | yes | yes | yes | yes | yes | yes | 140 |
 | `soup-mix` | `ceiling-0.2` | yes | yes | yes | yes | yes | yes | yes | yes | yes | yes | 140 |
-| `soup-r1` | `shipped` | yes | yes | yes | yes | yes | no | no | yes | yes | no | 227 |
-| `soup-r1` | `ceiling-0.3` | yes | yes | no | yes | yes | no | no | yes | yes | no | 150 |
-| `soup-r1` | `ceiling-0.2` | yes | yes | no | yes | yes | no | no | yes | yes | no | 127 |
-| `ce-c1-seed1` | `shipped` | yes | yes | yes | yes | yes | no | yes | no | yes | no | 142 |
-| `ce-c1-seed1` | `ceiling-0.3` | yes | no | no | yes | yes | no | no | yes | yes | no | 105 |
-| `ce-c1-seed1` | `ceiling-0.2` | yes | no | no | yes | yes | no | no | yes | yes | no | 105 |
-| `dom-s0-seed1` | `shipped` | yes | yes | yes | yes | yes | no | yes | no | yes | no | 149 |
-| `dom-s0-seed1` | `ceiling-0.3` | yes | no | yes | yes | yes | no | no | no | yes | no | 140 |
-| `dom-s0-seed1` | `ceiling-0.2` | yes | no | yes | yes | yes | no | no | no | yes | no | 140 |
-| `dom-s0-seed2` | `shipped` | yes | yes | yes | yes | yes | no | yes | no | yes | no | 132 |
-| `dom-s0-seed2` | `ceiling-0.3` | yes | yes | yes | yes | yes | no | yes | no | yes | no | 131 |
-| `dom-s0-seed2` | `ceiling-0.2` | yes | yes | yes | yes | yes | no | yes | no | yes | no | 131 |
-| `ce-c4-seed1` | `shipped` | yes | yes | yes | yes | yes | no | no | no | yes | no | 109 |
-| `ce-c4-seed1` | `ceiling-0.3` | yes | yes | no | yes | yes | no | no | no | yes | no | 107 |
-| `ce-c4-seed1` | `ceiling-0.2` | yes | yes | no | yes | yes | no | no | no | yes | no | 107 |
-| `ce-c4-seed2` | `shipped` | yes | yes | no | yes | yes | no | no | no | yes | no | 119 |
-| `ce-c4-seed2` | `ceiling-0.3` | yes | yes | no | yes | yes | no | no | no | yes | no | 106 |
-| `ce-c4-seed2` | `ceiling-0.2` | yes | yes | no | yes | yes | no | no | no | yes | no | 106 |
-| `ec-c4-seed1` | `shipped` | yes | yes | yes | yes | yes | no | no | no | yes | no | 113 |
-| `ec-c4-seed1` | `ceiling-0.3` | yes | yes | no | yes | yes | no | no | no | yes | no | 104 |
-| `ec-c4-seed1` | `ceiling-0.2` | yes | yes | no | yes | yes | no | no | no | yes | no | 104 |
+| `soup-r1` | `shipped` | yes | yes | yes | yes | yes | yes | no | yes | yes | no | 227 |
+| `soup-r1` | `ceiling-0.3` | yes | yes | no | yes | yes | yes | no | yes | yes | no | 150 |
+| `soup-r1` | `ceiling-0.2` | yes | yes | no | yes | yes | yes | no | yes | yes | no | 127 |
+| `ce-c1-seed1` | `shipped` | yes | yes | yes | yes | yes | yes | yes | no | yes | no | 142 |
+| `ce-c1-seed1` | `ceiling-0.3` | yes | no | no | yes | yes | yes | no | yes | yes | no | 105 |
+| `ce-c1-seed1` | `ceiling-0.2` | yes | no | no | yes | yes | yes | no | yes | yes | no | 105 |
+| `dom-s0-seed1` | `shipped` | yes | yes | yes | yes | yes | yes | yes | no | yes | no | 149 |
+| `dom-s0-seed1` | `ceiling-0.3` | yes | no | yes | yes | yes | yes | no | no | yes | no | 140 |
+| `dom-s0-seed1` | `ceiling-0.2` | yes | no | yes | yes | yes | yes | no | no | yes | no | 140 |
+| `dom-s0-seed2` | `shipped` | yes | yes | yes | yes | yes | yes | yes | no | yes | no | 132 |
+| `dom-s0-seed2` | `ceiling-0.3` | yes | yes | yes | yes | yes | yes | yes | no | yes | no | 131 |
+| `dom-s0-seed2` | `ceiling-0.2` | yes | yes | yes | yes | yes | yes | yes | no | yes | no | 131 |
+| `ce-c4-seed1` | `shipped` | yes | yes | yes | yes | yes | yes | no | no | yes | no | 109 |
+| `ce-c4-seed1` | `ceiling-0.3` | yes | yes | no | yes | yes | yes | no | no | yes | no | 107 |
+| `ce-c4-seed1` | `ceiling-0.2` | yes | yes | no | yes | yes | yes | no | no | yes | no | 107 |
+| `ce-c4-seed2` | `shipped` | yes | yes | no | yes | yes | yes | no | no | yes | no | 119 |
+| `ce-c4-seed2` | `ceiling-0.3` | yes | yes | no | yes | yes | yes | no | no | yes | no | 106 |
+| `ce-c4-seed2` | `ceiling-0.2` | yes | yes | no | yes | yes | yes | no | no | yes | no | 106 |
+| `ec-c4-seed1` | `shipped` | yes | yes | yes | yes | yes | yes | no | no | yes | no | 113 |
+| `ec-c4-seed1` | `ceiling-0.3` | yes | yes | no | yes | yes | yes | no | no | yes | no | 104 |
+| `ec-c4-seed1` | `ceiling-0.2` | yes | yes | no | yes | yes | yes | no | no | yes | no | 104 |
 | `ec-c4-seed2` | `shipped` | yes | yes | no | yes | yes | yes | no | no | yes | no | 88 |
 | `ec-c4-seed2` | `ceiling-0.3` | yes | yes | no | yes | yes | yes | no | no | yes | no | 77 |
 | `ec-c4-seed2` | `ceiling-0.2` | yes | yes | no | yes | yes | yes | no | no | yes | no | 77 |
-| `dom-s15-seed1` | `shipped` | yes | yes | yes | yes | yes | no | yes | no | yes | no | 103 |
+| `dom-s15-seed1` | `shipped` | yes | yes | yes | yes | yes | yes | yes | no | yes | no | 103 |
 | `dom-s15-seed1` | `ceiling-0.3` | yes | no | no | yes | yes | no | yes | no | yes | no | 63 |
 | `dom-s15-seed1` | `ceiling-0.2` | yes | no | no | yes | yes | no | yes | no | yes | no | 63 |
-| `dom-s40-seed1` | `shipped` | yes | yes | yes | yes | yes | no | yes | no | yes | no | 81 |
-| `dom-s40-seed1` | `ceiling-0.3` | yes | no | yes | yes | yes | no | yes | no | yes | no | 76 |
-| `dom-s100-seed1` | `shipped` | yes | yes | yes | yes | yes | no | yes | no | yes | no | 57 |
-| `dom-s100-seed1` | `ceiling-0.3` | yes | yes | yes | yes | yes | no | yes | yes | yes | no | 38 |
-| `dom-s100-seed2` | `shipped` | yes | yes | yes | yes | yes | no | yes | no | yes | no | 43 |
-| `dom-s100-seed2` | `ceiling-0.3` | yes | no | yes | yes | yes | no | no | no | yes | no | 44 |
-| `dom-s100-seed3` | `shipped` | yes | yes | yes | yes | yes | no | yes | no | yes | no | 53 |
+| `dom-s40-seed1` | `shipped` | yes | yes | yes | yes | yes | yes | yes | no | yes | no | 81 |
+| `dom-s40-seed1` | `ceiling-0.3` | yes | no | yes | yes | yes | yes | yes | no | yes | no | 76 |
+| `dom-s100-seed1` | `shipped` | yes | yes | yes | yes | yes | yes | yes | no | yes | no | 57 |
+| `dom-s100-seed1` | `ceiling-0.3` | yes | yes | yes | yes | yes | yes | yes | yes | yes | yes | 38 |
+| `dom-s100-seed2` | `shipped` | yes | yes | yes | yes | yes | yes | yes | no | yes | no | 43 |
+| `dom-s100-seed2` | `ceiling-0.3` | yes | no | yes | yes | yes | yes | no | no | yes | no | 44 |
+| `dom-s100-seed3` | `shipped` | yes | yes | yes | yes | yes | yes | yes | no | yes | no | 53 |
 | `dom-s100-seed3` | `ceiling-0.3` | yes | no | yes | yes | yes | no | yes | no | yes | no | 36 |
 
-Candidate: `soup-mix` at `ceiling-0.3`
+Candidate: `dom-s100-seed1` at `ceiling-0.3`
 
 Third wave: {"share": {"rows": [{"arm": "dom-s15-seed1", "share": "0.15", "passes_conditions_1_to_5": true, "technical_written_changed": 103}, {"arm": "dom-s40-seed1", "share": "0.4", "passes_conditions_1_to_5": true, "technical_written_changed": 81}, {"arm": "dom-s100-seed1", "share": "1.0", "passes_conditions_1_to_5": true, "technical_written_changed": 57}], "picked": "1.0"}, "loss": {"rows": [{"loss": "ce-c4", "pairs_of_loss_and_base": [[[8201, 10], [8226, 21]], [[8206, 12], [8256, 23]]], "helps": false, "mean_score": 8203.5}, {"loss": "ec-c4", "pairs_of_loss_and_base": [[[8194, 11], [8226, 21]], [[8223, 10], [8256, 23]]], "helps": false, "mean_score": 8208.5}], "picked": null}}
 

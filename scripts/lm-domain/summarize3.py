@@ -3,7 +3,7 @@
 For every arm in build/lm-domain/results and every setting rule, the script gives the counts of
 each evaluation set, beside the engine alone and the perfect chooser, with the share of the gap
 closed. It then applies three rules of docs/lm-domain-design.md to the selection sets:
-- the pick of one candidate (nine conditions against `ship`),
+- the pick of one candidate (nine conditions against `ship`, with the paired dev comparison of paired_dev.py),
 - the share rule of the third wave,
 - the loss rule of the third wave.
 The domain counts leave out the cases that audit_overlap.py marks, because a training case
@@ -25,12 +25,11 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts" / "lm-domain"))
 import harness  # noqa: E402
+import paired_dev  # noqa: E402
 from domain_terms import is_withheld  # noqa: E402
 
 RULES = ("shipped", "ceiling-0.3", "ceiling-0.2", "control-rule")
 PICK_RULES = ("shipped", "ceiling-0.3", "ceiling-0.2")
-# The pinned dev numbers of engine/lm-keyboard (scripts/lm-keyboard/compare.py, PUBLISHED).
-PINNED = {"clean": 953, "letter_slips": 2057, "space_slips": 1387, "symbol_slips": 1165, "clean_symbols": 428, "all": 6542}
 PRICE_CATEGORIES = ("neighbour_slip_onto_term", "requested_term_for_everyday_word")
 TERM_SLIP_CATEGORIES = ("domain_slip_new", "domain_slip_raised", "capital_slip_lower", "capital_slip_deliberate",
                         "capital_slip_sentence_start", "term_space_extra", "term_letter_to_space")
@@ -132,14 +131,13 @@ def pick_conditions(entry: dict, ship: dict, engine: dict, parity_passes: bool |
     dev, ship_dev = entry["dev_groups"], ship["dev_groups"]
     domain, ship_domain = entry["domain_dev"], ship["domain_dev"]
     gain = ship_dev["real_word_slip"] - engine["dev_groups"]["real_word_slip"]
-    pinned = all(dev[name] >= count for name, count in PINNED.items() if name != "all") and entry["dev_right"] >= PINNED["all"]
     return {
         "1 select stream": entry["stream_select_changed"] <= ship["stream_select_changed"],
         "2 dev clean": dev["clean"] >= ship_dev["clean"] and dev["clean_symbols"] >= ship_dev["clean_symbols"],
         "3 real misspellings": entry["real_misspellings"] >= ship["real_misspellings"],
         "4 non-word slips": entry["dev_non_word_slips"] >= ship["dev_non_word_slips"] - 25,
         "5 real-word slips": dev["real_word_slip"] - engine["dev_groups"]["real_word_slip"] >= gain / 2,
-        "6 pinned dev counts": pinned,
+        "6 paired dev comparison": entry["dev_paired_with_ship"] is not None and entry["dev_paired_with_ship"]["passes"],
         "7 domain dev": domain["clean"][0] >= ship_domain["clean"][0]
         and domain["slips"][0] >= ship_domain["slips"][0] - 0.005 * ship_domain["slips"][1]
         and domain["required"][0] >= ship_domain["required"][0] - 0.01 * ship_domain["required"][1],
@@ -260,14 +258,11 @@ def main():
             else:
                 outputs = read_outputs(folder / f"outputs.select.{source}.jsonl")
                 metrics = select_metrics(select_sets, result["evaluation"][source]["sets"], outputs, requested, marked)
-            # The dev cases that only the shipped file at the shipped setting has right, and that only this entry has right.
+            # The paired dev comparison of pick condition 6: this entry against the shipped file at the shipped setting.
             paired = None
             if ship_dev_outputs is not None:
-                dev_cases = select_sets["dev"]["cases"]
-                mine = {case["id"]: harness.is_right(case, outputs["dev"][case["id"]]) for case in dev_cases}
-                theirs = {case["id"]: harness.is_right(case, ship_dev_outputs[case["id"]]) for case in dev_cases}
-                paired = {"only_ship_right": sum(1 for key in mine if theirs[key] and not mine[key]),
-                          "only_this_right": sum(1 for key in mine if mine[key] and not theirs[key])}
+                parts = paired_dev.compare(select_sets["dev"]["cases"], ship_dev_outputs, outputs["dev"])
+                paired = {"parts": parts, "passes": all(part["passes"] for part in parts.values())}
             entry["rules"][rule] = {"setting": tuning["setting"], "lead": lead, "same_setting_as": source if source != rule else None,
                                     "tune_right": tuning["tune_right"], "tune_changed_words": tuning["tune_changed_words"],
                                     "dev_paired_with_ship": paired, **metrics}
@@ -402,21 +397,30 @@ def tables(summary: dict) -> str:
                     lines.append(test_row(f"`{arm}`", f"`{rule}`", entry["test"][rule]))
         lines.append("")
 
-    lines += ["Table. Dev groups against the pinned floors (953, 2,057, 1,387, 1,165, 428, total 6,542), and the dev cases that only one of the two has right, per entry.", "",
-              "| Arm | rule | clean | letter slips | space slips | symbol slips | clean symbols | dev total | only `ship` right | only this entry right |",
+    lines += ["Table. Paired dev comparison of each entry with `ship` (pick condition 6). A net loss is the cases that only `ship` has right, "
+              "less the cases that only the entry has right. A part passes when under 5 percent of the paired bootstrap draws reach its margin "
+              "and the score test has p under 0.05. The margins: "
+              "34 of the 6,799 dev cases, 21 of the 2,100 letter slips, 15 of the 1,500 space slips, 12 of the 1,197 symbol slips.", "",
+              "| Arm | rule | dev total | only `ship` right | only this entry right | net loss, share of draws at the margin, p of the score test "
+              "| letter slips: net loss, share, p | space slips: net loss, share, p | symbol slips: net loss, share, p | passes |",
               "| --- |" + " --- |" * 9]
     for arm, entry in summary["arms"].items():
         for rule in PICK_RULES:
             metrics = entry["rules"][rule]
             if metrics is None or metrics["same_setting_as"] in PICK_RULES[:PICK_RULES.index(rule)]:
                 continue
-            groups, paired = metrics["dev_groups"], metrics["dev_paired_with_ship"] or {"only_ship_right": "", "only_this_right": ""}
-            lines.append(f"| `{arm}` | `{rule}` | " + " | ".join(str(groups[name]) for name in ("clean", "letter_slips", "space_slips", "symbol_slips", "clean_symbols"))
-                         + f" | {metrics['dev_right']} | {paired['only_ship_right']} | {paired['only_this_right']} |")
+            paired = metrics["dev_paired_with_ship"]
+            if paired is None:
+                continue
+            parts = paired["parts"]
+            lines.append(f"| `{arm}` | `{rule}` | {metrics['dev_right']} | {parts['all']['only_first_right']} | {parts['all']['only_second_right']} | "
+                         + " | ".join(f"{parts[name]['net_loss']}, {parts[name]['share_of_draws_at_or_over_the_margin']:.4f}, {parts[name]['score_test_p']:.4f}"
+                                      for name in ("all", "letter_slips", "space_slips", "symbol_slips"))
+                         + f" | {'yes' if paired['passes'] else 'no'} |")
     lines.append("")
     lines += ["Table. Conditions of the pick per entry. Condition 9 holds only for a file with a parity result under the limit.", "",
               "| Arm | rule | " + " | ".join(["1 select stream", "2 dev clean", "3 real misspellings", "4 non-word slips", "5 real-word slips",
-                                           "6 pinned dev counts", "7 domain dev", "8 apostrophe words", "9 parity"])
+                                           "6 paired dev comparison", "7 domain dev", "8 apostrophe words", "9 parity"])
               + " | qualifies | technical and written changed |", "| --- |" + " --- |" * 12]
     for entry in summary["pick"]["entries"]:
         lines.append(f"| `{entry['arm']}` | `{entry['rule']}` | " + " | ".join("yes" if value else "no" for value in entry["conditions"].values())

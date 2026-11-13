@@ -32,13 +32,17 @@ def main():
     parser.add_argument("--queue", type=Path, default=ROOT / "scripts" / "lm-domain" / "eval-queue.json")
     parser.add_argument("--also", nargs="*", default=[])
     parser.add_argument("--out", type=Path, default=ROOT / "scripts" / "lm-domain" / "holdout-plan.json")
+    parser.add_argument("--set-folder", default="fresh-holdout", help="the folder of the set under --data")
+    parser.add_argument("--label", default="fresh", help="the name of the set in its ids and file names")
+    parser.add_argument("--rule", default="docs/lm-domain-design.md, section \"Replacement rule on the fresh held-out set\"")
+    parser.add_argument("--expect-candidate", help="ARM@RULE: stop unless the pick names this entry")
     arguments = parser.parse_args()
     summary = json.loads(arguments.summary.read_text(encoding="utf-8"))
     models = {arm["name"]: arm["model"] for arm in json.loads(arguments.queue.read_text(encoding="utf-8"))["arms"]}
-    report = json.loads((arguments.data / "fresh-holdout" / "report.json").read_text(encoding="utf-8"))
+    report = json.loads((arguments.data / arguments.set_folder / "report.json").read_text(encoding="utf-8"))
     files = {}
     for name, entry in report["files"].items():
-        digest = hashlib.sha256((arguments.data / "fresh-holdout" / name).read_bytes()).hexdigest()
+        digest = hashlib.sha256((arguments.data / arguments.set_folder / name).read_bytes()).hexdigest()
         if digest != entry["sha256"]:
             raise SystemExit(f"{name} does not have the SHA-256 value of its report")
         files[name] = digest
@@ -61,13 +65,16 @@ def main():
     if candidate is not None:
         candidate_label = f"{candidate['arm']}@{candidate['rule']}"
         arms.append(arm_of(candidate["arm"], candidate["rule"], candidate_label))
+    if arguments.expect_candidate is not None and candidate_label != arguments.expect_candidate:
+        raise SystemExit(f"the pick names {candidate_label}, and the design names {arguments.expect_candidate}")
     for text in arguments.also:
         name, rule = text.split("@")
         if text not in [arm["name"] for arm in arms]:
             arms.append(arm_of(name, rule, text))
-    plan = {"rule": "docs/lm-domain-design.md, section \"Replacement rule on the fresh held-out set\"",
-            "files": files, "reference": "ship", "candidate": candidate_label, "arms": arms,
+    plan = {"rule": arguments.rule, "files": files, "reference": "ship", "candidate": candidate_label, "arms": arms,
             "pick": {"qualified_entries": [f"{entry['arm']}@{entry['rule']}" for entry in summary["pick"]["entries"] if entry["qualifies"]]}}
+    if arguments.set_folder != "fresh-holdout":
+        plan["set"] = {"folder": arguments.set_folder, "label": arguments.label}
     text = json.dumps(plan, indent=1) + "\n"
     arguments.out.write_text(text, encoding="utf-8", newline="\n")
     print(f"wrote {arguments.out}: candidate {candidate_label}, {len(arms)} arms, SHA-256 {hashlib.sha256(text.encode('utf-8')).hexdigest()}")
