@@ -52,7 +52,8 @@ def main():
         digest = harness.sha256_of(path)
         if digest != entry["model_sha256"]:
             raise SystemExit(f"{path} is not the file that summarize3.py read for {name}")
-        return {"name": label, "arm": name, "rule": rule, "model": models[name], "model_sha256": digest, "setting": metrics["setting"]}
+        return {"name": label, "arm": name, "rule": rule, "model": models[name], "model_sha256": digest, "setting": metrics["setting"],
+                "apostrophe_lead": metrics["lead"]}
 
     arms = [arm_of("ship", "shipped", "ship")]
     candidate = summary["pick"]["candidate"]

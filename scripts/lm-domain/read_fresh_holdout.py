@@ -50,7 +50,10 @@ def type_arm(job: dict) -> dict:
                                                 out / f"answers.{arm['name']}.jsonl")
     if digest != arm["model_sha256"]:
         raise SystemExit(f"{arm['name']}: the model file has the SHA-256 value {digest}, and the plan says {arm['model_sha256']}")
-    chooser = rerank.setting_chooser(harness.setting_of(arm["setting"]), scorer)
+    # The setting of the plan, with the arm's own lead of the apostrophe step.
+    setting = rerank.Setting(**{name: arm["setting"][name] for name in harness.GRID_FIELDS},
+                             **dict(harness.STEP, margin_apostrophe=arm["apostrophe_lead"]))
+    chooser = rerank.setting_chooser(setting, scorer)
     outputs = {name: typist.run(entry["cases"], chooser) for name, entry in sets.items()}
     scorer.close()
     typist.save_readings()
