@@ -141,6 +141,7 @@ The candidate file is `dom-s100-seed1.Q4_K_M.gguf` of this round: 105,453,504 by
 - Harness of the keyboard workflow: `scripts/lm-keyboard/harness_trace.py` with the candidate file and its setting gets 6,538 of 6,799 dev cases right. The harness of this round gives the same count, and `scripts/lm-domain/candidate.json` holds the counts per group.
 - Run 43389818855 of the workflow "Domain candidate file in the Linux harness" passes. Its x86 job fetches the file of the pre-release and gets the same counts as the local run. The keyboard's scorer and `lm_score` give the same answers byte for byte on 13,930 requests.
 - The ARM job of that run gets 6,536 of 6,799 dev cases right, 2 fewer than the x86 job. The shipped file shows the same step in run 43258534212: 6,543 on x86 and 6,541 on ARM.
+- Run 43389818826 of the workflow "Language model in the keyboard" passes on the commit 4ba1043. That workflow types with the shipped file, on Linux and in the simulator.
 
 ## Remaining errors of the shipped file
 
