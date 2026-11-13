@@ -1,0 +1,143 @@
+name: Domain candidate file in the Linux harness
+
+# Types the dev cases through the harness of scripts/lm-rerank with the candidate file of the
+# domain round at its own setting, on an x86 Linux runner and an ARM Linux runner, and compares
+# the keyboard's scorer with lm_score on every request. The file is the asset of the pre-release
+# lm-domain-candidate-1. The app does not hold this file, so no job here builds the app.
+# docs/lm-domain-results.md gives the counts, and the x86 job checks them.
+on:
+  push:
+    branches: [engine/lm-domain]
+    paths:
+      - '.github/workflows/lm-domain-candidate.yml'
+      - 'scripts/lm-domain/candidate.json'
+      - 'scripts/lm-domain/check_candidate_harness.py'
+
+concurrency:
+  group: lm-domain-candidate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  harness:
+    name: Linux harness with the candidate file and its setting, and the keyboard's scorer against lm_score
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v7
+      - name: Build llama.cpp b4846, lm_score, the engine shim, and the keyboard's scorer
+        run: |
+          set -euo pipefail
+          bash scripts/lm-rerank/build_on_linux.sh llama
+          mkdir -p build/lm-domain-candidate
+          gcc -std=c11 -O2 -Wall -Wextra -Werror -I build/lm-rerank/llama/include -I LanguageModel \
+            LanguageModel/duo_lm_scorer.c scripts/lm-keyboard/scorer_cli.c \
+            -L build/lm-rerank/llama/lib -lllama -lggml -lggml-cpu -lggml-base -lm -o build/lm-domain-candidate/scorer_cli
+      - name: Fetch the candidate file and check its SHA-256 value
+        run: |
+          set -euo pipefail
+          python3 scripts/lm-domain/check_candidate_harness.py fetch --candidate scripts/lm-domain/candidate.json \
+            --out build/lm-domain-candidate/model.gguf
+      - name: Type the dev cases through the harness with the setting of the candidate
+        run: |
+          set -euo pipefail
+          export LD_LIBRARY_PATH="$PWD/build/lm-rerank/llama/lib"
+          mkdir -p build/lm-domain-candidate/harness
+          lscpu | grep -E 'Model name|Flags' | tee build/lm-domain-candidate/harness/runner.txt
+          # shellcheck disable=SC2046
+          python3 scripts/lm-keyboard/harness_trace.py --shim build/lm-rerank/libduo_shim.so --lm build/lm-rerank/lm_score \
+            --model build/lm-domain-candidate/model.gguf --out build/lm-domain-candidate/harness \
+            $(python3 scripts/lm-domain/check_candidate_harness.py arguments --candidate scripts/lm-domain/candidate.json)
+      - name: Score the harness requests with lm_score at 4 threads and the keyboard's scorer at 2 threads
+        run: |
+          set -euo pipefail
+          export LD_LIBRARY_PATH="$PWD/build/lm-rerank/llama/lib"
+          out=build/lm-domain-candidate/harness
+          model=build/lm-domain-candidate/model.gguf
+          # lm_score writes a line that starts with "ready" before its answers.
+          build/lm-rerank/lm_score "$model" 4 < "$out/requests.tsv" 2> "$out/lm_score.log" | tail -n +2 > "$out/lm_score.answers"
+          build/lm-domain-candidate/scorer_cli "$model" 2 < "$out/requests.tsv" > "$out/scorer_cli.answers" 2> "$out/scorer_cli.log"
+          {
+            echo "requests: $(wc -l < "$out/requests.tsv")"
+            echo "lm_score answers: $(wc -l < "$out/lm_score.answers"), scorer_cli answers: $(wc -l < "$out/scorer_cli.answers")"
+            if cmp -s "$out/lm_score.answers" "$out/scorer_cli.answers"; then
+              echo "the answers are the same byte for byte, 5 decimals each"
+            else
+              echo "the answers differ in $(diff "$out/lm_score.answers" "$out/scorer_cli.answers" | grep -c '^<') lines"
+            fi
+            cat "$out/scorer_cli.log"
+          } | tee "$out/scorer-check.txt"
+          cmp "$out/lm_score.answers" "$out/scorer_cli.answers"
+      - name: Compare the counts with the counts of the local run
+        run: |
+          set -euo pipefail
+          python3 scripts/lm-domain/check_candidate_harness.py counts --candidate scripts/lm-domain/candidate.json \
+            --result build/lm-domain-candidate/harness/result.json
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: candidate-harness
+          path: build/lm-domain-candidate/harness
+          if-no-files-found: error
+
+  harness-arm:
+    # The same harness on an ARM processor, which computes like the phone.
+    name: ARM Linux harness with the candidate file and its setting, and the keyboard's scorer against lm_score
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v7
+      - name: Build llama.cpp b4846, lm_score, the engine shim, and the keyboard's scorer
+        run: |
+          set -euo pipefail
+          bash scripts/lm-rerank/build_on_linux.sh llama
+          mkdir -p build/lm-domain-candidate
+          gcc -std=c11 -O2 -Wall -Wextra -Werror -I build/lm-rerank/llama/include -I LanguageModel \
+            LanguageModel/duo_lm_scorer.c scripts/lm-keyboard/scorer_cli.c \
+            -L build/lm-rerank/llama/lib -lllama -lggml -lggml-cpu -lggml-base -lm -o build/lm-domain-candidate/scorer_cli
+      - name: Fetch the candidate file and check its SHA-256 value
+        run: |
+          set -euo pipefail
+          python3 scripts/lm-domain/check_candidate_harness.py fetch --candidate scripts/lm-domain/candidate.json \
+            --out build/lm-domain-candidate/model.gguf
+      - name: Type the dev cases through the harness with the setting of the candidate
+        run: |
+          set -euo pipefail
+          export LD_LIBRARY_PATH="$PWD/build/lm-rerank/llama/lib"
+          mkdir -p build/lm-domain-candidate/harness
+          lscpu | grep -E 'Model name|Flags' | tee build/lm-domain-candidate/harness/runner.txt
+          # shellcheck disable=SC2046
+          python3 scripts/lm-keyboard/harness_trace.py --shim build/lm-rerank/libduo_shim.so --lm build/lm-rerank/lm_score \
+            --model build/lm-domain-candidate/model.gguf --out build/lm-domain-candidate/harness \
+            $(python3 scripts/lm-domain/check_candidate_harness.py arguments --candidate scripts/lm-domain/candidate.json)
+      - name: Score the harness requests with lm_score at 4 threads and the keyboard's scorer at 2 threads
+        run: |
+          set -euo pipefail
+          export LD_LIBRARY_PATH="$PWD/build/lm-rerank/llama/lib"
+          out=build/lm-domain-candidate/harness
+          model=build/lm-domain-candidate/model.gguf
+          build/lm-rerank/lm_score "$model" 4 < "$out/requests.tsv" 2> "$out/lm_score.log" | tail -n +2 > "$out/lm_score.answers"
+          build/lm-domain-candidate/scorer_cli "$model" 2 < "$out/requests.tsv" > "$out/scorer_cli.answers" 2> "$out/scorer_cli.log"
+          {
+            echo "requests: $(wc -l < "$out/requests.tsv")"
+            echo "lm_score answers: $(wc -l < "$out/lm_score.answers"), scorer_cli answers: $(wc -l < "$out/scorer_cli.answers")"
+            if cmp -s "$out/lm_score.answers" "$out/scorer_cli.answers"; then
+              echo "the answers are the same byte for byte, 5 decimals each"
+            else
+              echo "the answers differ in $(diff "$out/lm_score.answers" "$out/scorer_cli.answers" | grep -c '^<') lines"
+            fi
+            cat "$out/scorer_cli.log"
+          } | tee "$out/scorer-check.txt"
+          # A report only on this runner, as in the workflow "Language model in the keyboard": its
+          # i8mm kernels pair the rows of one product, so the split of a batch moves some answers
+          # in their last digits.
+      - name: Report the counts beside the counts of the local run
+        run: |
+          set -euo pipefail
+          python3 scripts/lm-domain/check_candidate_harness.py counts --candidate scripts/lm-domain/candidate.json \
+            --result build/lm-domain-candidate/harness/result.json --report-only
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: candidate-harness-arm
+          path: build/lm-domain-candidate/harness
+          if-no-files-found: error
