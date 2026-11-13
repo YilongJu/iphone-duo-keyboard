@@ -93,7 +93,7 @@ Table 3. Scripts in `scripts/lm-domain`, by their step.
 | `build_fresh_holdout.py`, `check_fresh_holdout.py`, `read_fresh_holdout.py` | The fresh held-out set and the confirmation set, their checks, and the one read of each |
 | `make_holdout_plan.py`, `holdout-plan.json`, `confirm-plan.json` | The plan of a read: the files of the set, the arms, the settings and the candidate |
 | `decision_changes.py` | The corrections where a Q4_K_M file takes another reading than its F32 file with a 32-bit cache, with the apostrophe step on |
-| `candidate.json`, `check_candidate_harness.py` | The candidate file of the domain round, its setting, and the steps of the workflow that types the dev cases with it |
+| `candidate.json`, `check_candidate_harness.py`, `.github/workflows/lm-domain-candidate.yml` | The candidate file of the domain round, its setting, and the workflow that types the dev cases with it on an x86 and an ARM Linux runner |
 | `detach.ps1`, `job.sh`, `jobs/` | Long jobs that outlive the shell that starts them |
 
 ## Files that one scoring run writes

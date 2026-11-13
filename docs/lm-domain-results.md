@@ -137,7 +137,10 @@ The candidate file is `dom-s100-seed1.Q4_K_M.gguf` of this round: 105,453,504 by
 - Parity under the reading of pick condition 9: the F32 file with a 32-bit cache is within 0.0001 nats of PyTorch float32, with no token mismatch. That holds on the everyday lists and on the domain lists, and the limit is 0.05.
 - Decisions with the apostrophe step, at the candidate setting: the Q4_K_M file takes another reading than the F32 file with a 32-bit cache in 261 of 46,956 corrections. These are the corrections of the six selection sets, and without the step the count is 245.
 - On the two sets of apostrophe words the count is 34 of 2,144 corrections with the step, and 43 without it. `scripts/lm-domain/decision_changes.py` counts both.
+- The same count for `ship` at the shipped setting is 271 of 46,950 corrections with the step and 270 without it. On the apostrophe words it is 69 of 2,144 with the step.
 - Harness of the keyboard workflow: `scripts/lm-keyboard/harness_trace.py` with the candidate file and its setting gets 6,538 of 6,799 dev cases right. The harness of this round gives the same count, and `scripts/lm-domain/candidate.json` holds the counts per group.
+- Run 43389818855 of the workflow "Domain candidate file in the Linux harness" passes. Its x86 job fetches the file of the pre-release and gets the same counts as the local run. The keyboard's scorer and `lm_score` give the same answers byte for byte on 13,930 requests.
+- The ARM job of that run gets 6,536 of 6,799 dev cases right, 2 fewer than the x86 job. The shipped file shows the same step in run 43258534212: 6,543 on x86 and 6,541 on ARM.
 
 ## Remaining errors of the shipped file
 
