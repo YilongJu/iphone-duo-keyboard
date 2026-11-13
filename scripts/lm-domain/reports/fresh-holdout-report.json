@@ -1,0 +1,168 @@
+{
+ "seed": "lm-domain-fresh-20261112",
+ "training": {
+  "everyday_cases": 126196,
+  "domain_cases": 37769,
+  "pairs": 66557,
+  "words": 36018
+ },
+ "export_lines": 2040567,
+ "pass_filter": 1611121,
+ "drops": {
+  "id": 13541,
+  "same_as_source": 67,
+  "same_as_context": 266,
+  "holds_context_and_intended": 914154
+ },
+ "pool": 683093,
+ "tatoeba": {
+  "held_out_buckets": 85621,
+  "sources_of_round2_held_out_cases": 10474,
+  "sources_of_dev_or_test_cases_of_the_pack": 204,
+  "sentences_left": 75969
+ },
+ "generated": {
+  "cases": 6727,
+  "dropped": {
+   "intended_holds_a_dev_or_test_list_word": 6,
+   "typed_is_a_published_misspelling": 66
+  },
+  "categories": {
+   "apostrophe_missing": 295,
+   "clean_bracket_or_dot_word": 300,
+   "clean_common": 300,
+   "clean_names_and_terms": 73,
+   "clean_rare": 299,
+   "clean_symbol_token": 129,
+   "clean_two_words": 299,
+   "deletion": 284,
+   "double_letter": 300,
+   "extra_adjacent": 300,
+   "letter_to_space": 287,
+   "real_word_slip": 300,
+   "short_word_slip": 297,
+   "space_extra": 293,
+   "space_missing": 300,
+   "space_to_letter": 300,
+   "space_transposed": 293,
+   "substitution_adjacent": 296,
+   "symbol_first_letter": 300,
+   "symbol_first_letter_two_words": 299,
+   "symbol_inner_letter": 296,
+   "symbol_plus_letter_slip": 299,
+   "transposition": 288,
+   "two_errors": 300
+  },
+  "word_lists": {
+   "rare": 20917,
+   "names": 73,
+   "symbol_tokens": 129
+  }
+ },
+ "stream": {
+  "closed": {
+   "sentences": 3000,
+   "words": 19435
+  },
+  "open": {
+   "sentences": 1000,
+   "words": 6539
+  }
+ },
+ "github": {
+  "picks_of_round2": 2500,
+  "github_misspelling": {
+   "usable_outside_round2": 12016,
+   "kept": 1500,
+   "with_context": 1172
+  },
+  "github_real_word": {
+   "usable_outside_round2": 458,
+   "kept": 458,
+   "with_context": 384
+  }
+ },
+ "birkbeck": {
+  "picks_of_round2": 721,
+  "pairs_left": 13007,
+  "kept": 600
+ },
+ "domain": {
+  "technical_sentences_left": 94217,
+  "technical_sentences_with_the_letters_of_an_evaluated_sentence": 20,
+  "cases": 4611,
+  "dropped": {
+   "same_as_a_dev_or_test_case": 68,
+   "pair_of_a_dev_or_test_case": 580,
+   "pair_of_a_training_case": 404
+  },
+  "categories": {
+   "domain_clean_new": 396,
+   "domain_clean_raised": 398,
+   "domain_clean_hyphenated": 150,
+   "domain_slip_new": 254,
+   "domain_slip_raised": 301,
+   "phrase_clean": 297,
+   "phrase_space_missing": 32,
+   "phrase_space_to_letter": 98,
+   "phrase_space_transposed": 54,
+   "term_space_extra": 81,
+   "term_letter_to_space": 27,
+   "hyphen_second_part_slip": 143,
+   "required_clean": 108,
+   "required_slip": 164,
+   "neighbour_clean": 369,
+   "neighbour_slip": 334,
+   "neighbour_slip_between": 129,
+   "capital_lower_stays": 150,
+   "capital_deliberate": 150,
+   "capital_inner": 100,
+   "capital_preferred_stays": 100,
+   "capital_all_capitals_stay": 100,
+   "capital_two_capitals_nearest": 60,
+   "capital_slip_lower": 114,
+   "capital_slip_deliberate": 124,
+   "capital_slip_sentence_start": 100,
+   "capital_plain_word_keeps_capital": 100,
+   "capital_control_ordinary_word": 150,
+   "capital_control_collision_lower": 28
+  },
+  "neighbour_sentences": 15110,
+  "stream": {
+   "technical": {
+    "sentences": 1000,
+    "words": 15185
+   },
+   "written": {
+    "sentences": 300,
+    "words": 4740
+   }
+  }
+ },
+ "files": {
+  "cases.generated.fresh.jsonl": {
+   "cases": 6727,
+   "sha256": "a007ba5a778de100428b7eb0a514d2e26c712fc64e0e413be0afd13ef1f361ab"
+  },
+  "cases.stream.fresh.jsonl": {
+   "cases": 4000,
+   "sha256": "f98d881ab55565096cb66684637ec25406bdb88df2f7241a4980710d3f3f3a25"
+  },
+  "cases.github.fresh.jsonl": {
+   "cases": 1958,
+   "sha256": "b8d2271fbd7881b51a25979d4d19f34eb46dbd8683d87bbd1a647ef4582d7b58"
+  },
+  "cases.birkbeck.fresh.jsonl": {
+   "cases": 600,
+   "sha256": "ef17868c95b9413c2dc34666e42eb4a3adfe2ca0d5367244852e38d3da3c2da0"
+  },
+  "cases.domain.fresh.jsonl": {
+   "cases": 4611,
+   "sha256": "eaea090e59e33f80815348ac03a8dd02cb07a45eb124a0ae0394943d128ce02a"
+  },
+  "cases.domain-stream.fresh.jsonl": {
+   "cases": 1300,
+   "sha256": "be13462dc1955256c4cd566ab7163b000165c7d78a7e1c206ee2f2a45201397f"
+  }
+ }
+}

@@ -1,0 +1,140 @@
+{
+ "seed": "lm-domain-20261112",
+ "quotas": {
+  "stream_technical": 5500,
+  "stream_written": 2200,
+  "term_slip": 13000,
+  "term_space": 3200,
+  "phrase": 4800
+ },
+ "made": {
+  "stream_technical": 5500,
+  "stream_written": 2200,
+  "term_slip": 11684,
+  "term_space": 2884,
+  "phrase": 3817
+ },
+ "kinds_under_their_quota": {
+  "term_slip": 11684,
+  "term_space": 2884,
+  "phrase": 3817
+ },
+ "sentences_read": 181659,
+ "sentences_used": 26085,
+ "dropped_sentences": {
+  "not_plain_text": 3584,
+  "same_letters_as_another_build_sentence": 10850,
+  "same_letters_as_a_held_out_sentence": 0
+ },
+ "skipped": {
+  "pair_of_a_domain_dev_or_test_case": 2872,
+  "typed_text_of_an_evaluation_misspelling": 9,
+  "no_slip_left": 0
+ },
+ "pack_words": 1807,
+ "withheld_words": 337,
+ "evaluation_pairs": 6377,
+ "evaluation_typed": 2749,
+ "splits": {
+  "train": {
+   "cases": 35727,
+   "categories": {
+    "clean_stream_technical": 5198,
+    "clean_stream_written": 2095,
+    "domain_train_clean_new": 4888,
+    "domain_train_clean_raised": 6145,
+    "domain_train_phrase_clean": 1401,
+    "domain_train_phrase_space": 2224,
+    "domain_train_slip_new": 4888,
+    "domain_train_slip_raised": 6145,
+    "domain_train_term_space": 2743
+   },
+   "source_groups": {
+    "arxiv": 10076,
+    "docs-ai": 9795,
+    "docs-software": 6666,
+    "questions-ai": 4974,
+    "questions-software": 4216
+   },
+   "sources": {
+    "arxiv:cs.AI": 2476,
+    "arxiv:cs.CL": 2334,
+    "arxiv:cs.LG": 2707,
+    "arxiv:cs.SE": 2559,
+    "github:anthropics/claude-cookbooks": 730,
+    "github:astral-sh/uv": 307,
+    "github:docker/docs": 1911,
+    "github:ggml-org/llama.cpp": 372,
+    "github:github/docs": 1691,
+    "github:google-gemini/gemini-cli": 413,
+    "github:huggingface/peft": 272,
+    "github:huggingface/smolagents": 50,
+    "github:huggingface/transformers": 1789,
+    "github:kubernetes/website": 2329,
+    "github:langchain-ai/docs": 1882,
+    "github:microsoft/autogen": 200,
+    "github:ollama/ollama": 119,
+    "github:openai/codex": 15,
+    "github:openai/openai-agents-python": 299,
+    "github:openai/openai-cookbook": 1685,
+    "github:run-llama/llama_index": 1408,
+    "github:vllm-project/vllm": 989,
+    "stackexchange:ai": 2095,
+    "stackexchange:datascience": 2296,
+    "stackexchange:devops": 2352,
+    "stackexchange:genai": 583,
+    "stackexchange:softwareengineering": 1864
+   },
+   "words_of_the_pack_with_a_slip_case": 1368
+  },
+  "stop": {
+   "cases": 2042,
+   "categories": {
+    "clean_stream_technical": 302,
+    "clean_stream_written": 105,
+    "domain_train_clean_new": 296,
+    "domain_train_clean_raised": 355,
+    "domain_train_phrase_clean": 74,
+    "domain_train_phrase_space": 118,
+    "domain_train_slip_new": 296,
+    "domain_train_slip_raised": 355,
+    "domain_train_term_space": 141
+   },
+   "source_groups": {
+    "arxiv": 491,
+    "docs-ai": 532,
+    "docs-software": 543,
+    "questions-ai": 264,
+    "questions-software": 212
+   },
+   "sources": {
+    "arxiv:cs.AI": 129,
+    "arxiv:cs.CL": 134,
+    "arxiv:cs.LG": 116,
+    "arxiv:cs.SE": 112,
+    "github:anthropics/claude-cookbooks": 32,
+    "github:astral-sh/uv": 3,
+    "github:docker/docs": 296,
+    "github:ggml-org/llama.cpp": 33,
+    "github:github/docs": 86,
+    "github:google-gemini/gemini-cli": 25,
+    "github:huggingface/peft": 21,
+    "github:huggingface/transformers": 86,
+    "github:kubernetes/website": 133,
+    "github:langchain-ai/docs": 83,
+    "github:microsoft/autogen": 8,
+    "github:ollama/ollama": 4,
+    "github:openai/openai-agents-python": 26,
+    "github:openai/openai-cookbook": 141,
+    "github:run-llama/llama_index": 74,
+    "github:vllm-project/vllm": 24,
+    "stackexchange:ai": 125,
+    "stackexchange:datascience": 105,
+    "stackexchange:devops": 117,
+    "stackexchange:genai": 34,
+    "stackexchange:softwareengineering": 95
+   },
+   "words_of_the_pack_with_a_slip_case": 452
+  }
+ }
+}

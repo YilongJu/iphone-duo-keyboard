@@ -103,7 +103,7 @@ jobs:
         run: |
           set -euo pipefail
           bash scripts/ci/fetch_language_model.sh model
-          echo Shared/smollm2-lora-typed-seed1.Q4_K_M.gguf > build/lm-rerank/model-path.txt
+          echo Shared/smollm2-lora-domain-s100-seed1.Q4_K_M.gguf > build/lm-rerank/model-path.txt
       - name: Type the cases through the harness
         run: |
           set -euo pipefail

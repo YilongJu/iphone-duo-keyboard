@@ -1,0 +1,2173 @@
+{
+ "plan_sha256": "6313db6c70c9a8a6bf14783d7a087b3d06be64bf356b5a7f5df37e24c926a467",
+ "reference": "ship",
+ "candidate": "dom-s100-seed1@ceiling-0.3",
+ "sets": {
+  "generated": 6709,
+  "stream": 4000,
+  "github": 1500,
+  "birkbeck": 600,
+  "domain": 4480,
+  "domain_stream": 1300,
+  "real_word": 375
+ },
+ "arms": {
+  "engine": {
+   "wikipedia_real_word": [
+    29,
+    375
+   ],
+   "generated_right": 6007,
+   "generated_groups": {
+    "clean": 935,
+    "letter_slips": 1891,
+    "space_slips": 1318,
+    "symbol_slips": 1135,
+    "clean_symbols": 411,
+    "apostrophe_missing": 260,
+    "real_word_slip": 57
+   },
+   "generated_categories": {
+    "clean_common": [
+     300,
+     300
+    ],
+    "clean_rare": [
+     285,
+     298
+    ],
+    "clean_names_and_terms": [
+     51,
+     73
+    ],
+    "clean_two_words": [
+     299,
+     300
+    ],
+    "substitution_adjacent": [
+     278,
+     297
+    ],
+    "deletion": [
+     217,
+     277
+    ],
+    "double_letter": [
+     296,
+     300
+    ],
+    "extra_adjacent": [
+     290,
+     299
+    ],
+    "transposition": [
+     269,
+     292
+    ],
+    "two_errors": [
+     268,
+     299
+    ],
+    "short_word_slip": [
+     273,
+     290
+    ],
+    "space_missing": [
+     249,
+     298
+    ],
+    "space_to_letter": [
+     269,
+     300
+    ],
+    "space_transposed": [
+     272,
+     298
+    ],
+    "space_extra": [
+     275,
+     290
+    ],
+    "letter_to_space": [
+     253,
+     285
+    ],
+    "apostrophe_missing": [
+     260,
+     299
+    ],
+    "real_word_slip": [
+     57,
+     300
+    ],
+    "symbol_first_letter": [
+     291,
+     299
+    ],
+    "symbol_inner_letter": [
+     289,
+     297
+    ],
+    "symbol_first_letter_two_words": [
+     285,
+     299
+    ],
+    "symbol_plus_letter_slip": [
+     270,
+     300
+    ],
+    "clean_symbol_token": [
+     112,
+     119
+    ],
+    "clean_bracket_or_dot_word": [
+     299,
+     300
+    ]
+   },
+   "non_word_slips": [
+    4604,
+    5019
+   ],
+   "everyday_stream": {
+    "clean_stream_closed": 263,
+    "clean_stream_open": 100
+   },
+   "everyday_stream_changed": 363,
+   "everyday_stream_words": 25904,
+   "github_misspelling": [
+    1273,
+    1500
+   ],
+   "github_real_word": null,
+   "birkbeck": [
+    333,
+    600
+   ],
+   "domain": {
+    "all": [
+     4120,
+     4480
+    ],
+    "marked": [
+     0,
+     0
+    ],
+    "clean": [
+     2632,
+     2642
+    ],
+    "slips": [
+     1488,
+     1838
+    ],
+    "price": [
+     0,
+     0
+    ],
+    "required": [
+     249,
+     251
+    ],
+    "slips_trained_words": [
+     670,
+     773
+    ],
+    "slips_withheld_words": [
+     194,
+     223
+    ],
+    "slips_requested_words": [
+     143,
+     144
+    ],
+    "groups": {
+     "domain_clean": [
+      941,
+      941
+     ],
+     "domain_slips": [
+      494,
+      549
+     ],
+     "domain_phrases": [
+      517,
+      705
+     ],
+     "required": [
+      249,
+      251
+     ],
+     "neighbour_controls": [
+      711,
+      758
+     ],
+     "capitals": [
+      1208,
+      1276
+     ]
+    }
+   },
+   "domain_stream": {
+    "technical": 178,
+    "written": 51
+   },
+   "technical_written_changed": 229,
+   "technical_written_words": 19249
+  },
+  "perfect": {
+   "wikipedia_real_word": [
+    286,
+    375
+   ],
+   "generated_right": 6640,
+   "generated_groups": {
+    "clean": 971,
+    "letter_slips": 2051,
+    "space_slips": 1412,
+    "symbol_slips": 1190,
+    "clean_symbols": 419,
+    "apostrophe_missing": 299,
+    "real_word_slip": 298
+   },
+   "generated_categories": {
+    "clean_common": [
+     300,
+     300
+    ],
+    "clean_rare": [
+     298,
+     298
+    ],
+    "clean_names_and_terms": [
+     73,
+     73
+    ],
+    "clean_two_words": [
+     300,
+     300
+    ],
+    "substitution_adjacent": [
+     297,
+     297
+    ],
+    "deletion": [
+     276,
+     277
+    ],
+    "double_letter": [
+     300,
+     300
+    ],
+    "extra_adjacent": [
+     299,
+     299
+    ],
+    "transposition": [
+     291,
+     292
+    ],
+    "two_errors": [
+     298,
+     299
+    ],
+    "short_word_slip": [
+     290,
+     290
+    ],
+    "space_missing": [
+     271,
+     298
+    ],
+    "space_to_letter": [
+     284,
+     300
+    ],
+    "space_transposed": [
+     283,
+     298
+    ],
+    "space_extra": [
+     290,
+     290
+    ],
+    "letter_to_space": [
+     284,
+     285
+    ],
+    "apostrophe_missing": [
+     299,
+     299
+    ],
+    "real_word_slip": [
+     298,
+     300
+    ],
+    "symbol_first_letter": [
+     299,
+     299
+    ],
+    "symbol_inner_letter": [
+     297,
+     297
+    ],
+    "symbol_first_letter_two_words": [
+     294,
+     299
+    ],
+    "symbol_plus_letter_slip": [
+     300,
+     300
+    ],
+    "clean_symbol_token": [
+     119,
+     119
+    ],
+    "clean_bracket_or_dot_word": [
+     300,
+     300
+    ]
+   },
+   "non_word_slips": [
+    4952,
+    5019
+   ],
+   "everyday_stream": {
+    "clean_stream_closed": 0,
+    "clean_stream_open": 0
+   },
+   "everyday_stream_changed": 0,
+   "everyday_stream_words": 25904,
+   "github_misspelling": [
+    1460,
+    1500
+   ],
+   "github_real_word": null,
+   "birkbeck": [
+    417,
+    600
+   ],
+   "domain": {
+    "all": [
+     4327,
+     4480
+    ],
+    "marked": [
+     0,
+     0
+    ],
+    "clean": [
+     2642,
+     2642
+    ],
+    "slips": [
+     1685,
+     1838
+    ],
+    "price": [
+     0,
+     0
+    ],
+    "required": [
+     250,
+     251
+    ],
+    "slips_trained_words": [
+     770,
+     773
+    ],
+    "slips_withheld_words": [
+     223,
+     223
+    ],
+    "slips_requested_words": [
+     143,
+     144
+    ],
+    "groups": {
+     "domain_clean": [
+      941,
+      941
+     ],
+     "domain_slips": [
+      546,
+      549
+     ],
+     "domain_phrases": [
+      557,
+      705
+     ],
+     "required": [
+      250,
+      251
+     ],
+     "neighbour_controls": [
+      757,
+      758
+     ],
+     "capitals": [
+      1276,
+      1276
+     ]
+    }
+   },
+   "domain_stream": {
+    "technical": 0,
+    "written": 4
+   },
+   "technical_written_changed": 4,
+   "technical_written_words": 19249
+  },
+  "soup-mix@ceiling-0.3": {
+   "wikipedia_real_word": [
+    139,
+    375
+   ],
+   "generated_right": 6485,
+   "generated_groups": {
+    "clean": 943,
+    "letter_slips": 1998,
+    "space_slips": 1390,
+    "symbol_slips": 1179,
+    "clean_symbols": 416,
+    "apostrophe_missing": 297,
+    "real_word_slip": 262
+   },
+   "generated_categories": {
+    "clean_common": [
+     296,
+     300
+    ],
+    "clean_rare": [
+     281,
+     298
+    ],
+    "clean_names_and_terms": [
+     66,
+     73
+    ],
+    "clean_two_words": [
+     300,
+     300
+    ],
+    "substitution_adjacent": [
+     289,
+     297
+    ],
+    "deletion": [
+     257,
+     277
+    ],
+    "double_letter": [
+     299,
+     300
+    ],
+    "extra_adjacent": [
+     295,
+     299
+    ],
+    "transposition": [
+     283,
+     292
+    ],
+    "two_errors": [
+     290,
+     299
+    ],
+    "short_word_slip": [
+     285,
+     290
+    ],
+    "space_missing": [
+     263,
+     298
+    ],
+    "space_to_letter": [
+     281,
+     300
+    ],
+    "space_transposed": [
+     278,
+     298
+    ],
+    "space_extra": [
+     288,
+     290
+    ],
+    "letter_to_space": [
+     280,
+     285
+    ],
+    "apostrophe_missing": [
+     297,
+     299
+    ],
+    "real_word_slip": [
+     262,
+     300
+    ],
+    "symbol_first_letter": [
+     298,
+     299
+    ],
+    "symbol_inner_letter": [
+     293,
+     297
+    ],
+    "symbol_first_letter_two_words": [
+     291,
+     299
+    ],
+    "symbol_plus_letter_slip": [
+     297,
+     300
+    ],
+    "clean_symbol_token": [
+     116,
+     119
+    ],
+    "clean_bracket_or_dot_word": [
+     300,
+     300
+    ]
+   },
+   "non_word_slips": [
+    4864,
+    5019
+   ],
+   "everyday_stream": {
+    "clean_stream_closed": 20,
+    "clean_stream_open": 14
+   },
+   "everyday_stream_changed": 34,
+   "everyday_stream_words": 25904,
+   "github_misspelling": [
+    1310,
+    1500
+   ],
+   "github_real_word": null,
+   "birkbeck": [
+    337,
+    600
+   ],
+   "domain": {
+    "all": [
+     4129,
+     4480
+    ],
+    "marked": [
+     0,
+     0
+    ],
+    "clean": [
+     2621,
+     2642
+    ],
+    "slips": [
+     1508,
+     1838
+    ],
+    "price": [
+     0,
+     0
+    ],
+    "required": [
+     245,
+     251
+    ],
+    "slips_trained_words": [
+     661,
+     773
+    ],
+    "slips_withheld_words": [
+     194,
+     223
+    ],
+    "slips_requested_words": [
+     139,
+     144
+    ],
+    "groups": {
+     "domain_clean": [
+      935,
+      941
+     ],
+     "domain_slips": [
+      494,
+      549
+     ],
+     "domain_phrases": [
+      531,
+      705
+     ],
+     "required": [
+      245,
+      251
+     ],
+     "neighbour_controls": [
+      732,
+      758
+     ],
+     "capitals": [
+      1192,
+      1276
+     ]
+    }
+   },
+   "domain_stream": {
+    "technical": 95,
+    "written": 30
+   },
+   "technical_written_changed": 125,
+   "technical_written_words": 19249
+  },
+  "dom-s100-seed1@ceiling-0.3": {
+   "wikipedia_real_word": [
+    122,
+    375
+   ],
+   "generated_right": 6481,
+   "generated_groups": {
+    "clean": 949,
+    "letter_slips": 2004,
+    "space_slips": 1382,
+    "symbol_slips": 1176,
+    "clean_symbols": 417,
+    "apostrophe_missing": 296,
+    "real_word_slip": 257
+   },
+   "generated_categories": {
+    "clean_common": [
+     298,
+     300
+    ],
+    "clean_rare": [
+     283,
+     298
+    ],
+    "clean_names_and_terms": [
+     68,
+     73
+    ],
+    "clean_two_words": [
+     300,
+     300
+    ],
+    "substitution_adjacent": [
+     289,
+     297
+    ],
+    "deletion": [
+     259,
+     277
+    ],
+    "double_letter": [
+     299,
+     300
+    ],
+    "extra_adjacent": [
+     296,
+     299
+    ],
+    "transposition": [
+     286,
+     292
+    ],
+    "two_errors": [
+     291,
+     299
+    ],
+    "short_word_slip": [
+     284,
+     290
+    ],
+    "space_missing": [
+     261,
+     298
+    ],
+    "space_to_letter": [
+     278,
+     300
+    ],
+    "space_transposed": [
+     273,
+     298
+    ],
+    "space_extra": [
+     289,
+     290
+    ],
+    "letter_to_space": [
+     281,
+     285
+    ],
+    "apostrophe_missing": [
+     296,
+     299
+    ],
+    "real_word_slip": [
+     257,
+     300
+    ],
+    "symbol_first_letter": [
+     297,
+     299
+    ],
+    "symbol_inner_letter": [
+     293,
+     297
+    ],
+    "symbol_first_letter_two_words": [
+     291,
+     299
+    ],
+    "symbol_plus_letter_slip": [
+     295,
+     300
+    ],
+    "clean_symbol_token": [
+     117,
+     119
+    ],
+    "clean_bracket_or_dot_word": [
+     300,
+     300
+    ]
+   },
+   "non_word_slips": [
+    4858,
+    5019
+   ],
+   "everyday_stream": {
+    "clean_stream_closed": 39,
+    "clean_stream_open": 9
+   },
+   "everyday_stream_changed": 48,
+   "everyday_stream_words": 25904,
+   "github_misspelling": [
+    1307,
+    1500
+   ],
+   "github_real_word": null,
+   "birkbeck": [
+    338,
+    600
+   ],
+   "domain": {
+    "all": [
+     4238,
+     4480
+    ],
+    "marked": [
+     0,
+     0
+    ],
+    "clean": [
+     2625,
+     2642
+    ],
+    "slips": [
+     1613,
+     1838
+    ],
+    "price": [
+     0,
+     0
+    ],
+    "required": [
+     250,
+     251
+    ],
+    "slips_trained_words": [
+     739,
+     773
+    ],
+    "slips_withheld_words": [
+     212,
+     223
+    ],
+    "slips_requested_words": [
+     143,
+     144
+    ],
+    "groups": {
+     "domain_clean": [
+      940,
+      941
+     ],
+     "domain_slips": [
+      531,
+      549
+     ],
+     "domain_phrases": [
+      544,
+      705
+     ],
+     "required": [
+      250,
+      251
+     ],
+     "neighbour_controls": [
+      726,
+      758
+     ],
+     "capitals": [
+      1247,
+      1276
+     ]
+    }
+   },
+   "domain_stream": {
+    "technical": 29,
+    "written": 18
+   },
+   "technical_written_changed": 47,
+   "technical_written_words": 19249
+  },
+  "dom-s100-seed1@shipped": {
+   "wikipedia_real_word": [
+    121,
+    375
+   ],
+   "generated_right": 6449,
+   "generated_groups": {
+    "clean": 943,
+    "letter_slips": 1995,
+    "space_slips": 1384,
+    "symbol_slips": 1174,
+    "clean_symbols": 414,
+    "apostrophe_missing": 294,
+    "real_word_slip": 245
+   },
+   "generated_categories": {
+    "clean_common": [
+     298,
+     300
+    ],
+    "clean_rare": [
+     282,
+     298
+    ],
+    "clean_names_and_terms": [
+     63,
+     73
+    ],
+    "clean_two_words": [
+     300,
+     300
+    ],
+    "substitution_adjacent": [
+     289,
+     297
+    ],
+    "deletion": [
+     256,
+     277
+    ],
+    "double_letter": [
+     299,
+     300
+    ],
+    "extra_adjacent": [
+     295,
+     299
+    ],
+    "transposition": [
+     284,
+     292
+    ],
+    "two_errors": [
+     289,
+     299
+    ],
+    "short_word_slip": [
+     283,
+     290
+    ],
+    "space_missing": [
+     260,
+     298
+    ],
+    "space_to_letter": [
+     279,
+     300
+    ],
+    "space_transposed": [
+     277,
+     298
+    ],
+    "space_extra": [
+     289,
+     290
+    ],
+    "letter_to_space": [
+     279,
+     285
+    ],
+    "apostrophe_missing": [
+     294,
+     299
+    ],
+    "real_word_slip": [
+     245,
+     300
+    ],
+    "symbol_first_letter": [
+     296,
+     299
+    ],
+    "symbol_inner_letter": [
+     293,
+     297
+    ],
+    "symbol_first_letter_two_words": [
+     292,
+     299
+    ],
+    "symbol_plus_letter_slip": [
+     293,
+     300
+    ],
+    "clean_symbol_token": [
+     116,
+     119
+    ],
+    "clean_bracket_or_dot_word": [
+     298,
+     300
+    ]
+   },
+   "non_word_slips": [
+    4847,
+    5019
+   ],
+   "everyday_stream": {
+    "clean_stream_closed": 43,
+    "clean_stream_open": 23
+   },
+   "everyday_stream_changed": 66,
+   "everyday_stream_words": 25904,
+   "github_misspelling": [
+    1321,
+    1500
+   ],
+   "github_real_word": null,
+   "birkbeck": [
+    344,
+    600
+   ],
+   "domain": {
+    "all": [
+     4232,
+     4480
+    ],
+    "marked": [
+     0,
+     0
+    ],
+    "clean": [
+     2624,
+     2642
+    ],
+    "slips": [
+     1608,
+     1838
+    ],
+    "price": [
+     0,
+     0
+    ],
+    "required": [
+     250,
+     251
+    ],
+    "slips_trained_words": [
+     735,
+     773
+    ],
+    "slips_withheld_words": [
+     213,
+     223
+    ],
+    "slips_requested_words": [
+     143,
+     144
+    ],
+    "groups": {
+     "domain_clean": [
+      939,
+      941
+     ],
+     "domain_slips": [
+      528,
+      549
+     ],
+     "domain_phrases": [
+      542,
+      705
+     ],
+     "required": [
+      250,
+      251
+     ],
+     "neighbour_controls": [
+      728,
+      758
+     ],
+     "capitals": [
+      1245,
+      1276
+     ]
+    }
+   },
+   "domain_stream": {
+    "technical": 53,
+    "written": 18
+   },
+   "technical_written_changed": 71,
+   "technical_written_words": 19249
+  },
+  "dom-s100-seed2@ceiling-0.3": {
+   "wikipedia_real_word": [
+    139,
+    375
+   ],
+   "generated_right": 6464,
+   "generated_groups": {
+    "clean": 940,
+    "letter_slips": 1993,
+    "space_slips": 1384,
+    "symbol_slips": 1176,
+    "clean_symbols": 416,
+    "apostrophe_missing": 295,
+    "real_word_slip": 260
+   },
+   "generated_categories": {
+    "clean_common": [
+     298,
+     300
+    ],
+    "clean_rare": [
+     281,
+     298
+    ],
+    "clean_names_and_terms": [
+     62,
+     73
+    ],
+    "clean_two_words": [
+     299,
+     300
+    ],
+    "substitution_adjacent": [
+     290,
+     297
+    ],
+    "deletion": [
+     257,
+     277
+    ],
+    "double_letter": [
+     296,
+     300
+    ],
+    "extra_adjacent": [
+     294,
+     299
+    ],
+    "transposition": [
+     284,
+     292
+    ],
+    "two_errors": [
+     290,
+     299
+    ],
+    "short_word_slip": [
+     282,
+     290
+    ],
+    "space_missing": [
+     261,
+     298
+    ],
+    "space_to_letter": [
+     278,
+     300
+    ],
+    "space_transposed": [
+     275,
+     298
+    ],
+    "space_extra": [
+     288,
+     290
+    ],
+    "letter_to_space": [
+     282,
+     285
+    ],
+    "apostrophe_missing": [
+     295,
+     299
+    ],
+    "real_word_slip": [
+     260,
+     300
+    ],
+    "symbol_first_letter": [
+     296,
+     299
+    ],
+    "symbol_inner_letter": [
+     293,
+     297
+    ],
+    "symbol_first_letter_two_words": [
+     291,
+     299
+    ],
+    "symbol_plus_letter_slip": [
+     296,
+     300
+    ],
+    "clean_symbol_token": [
+     117,
+     119
+    ],
+    "clean_bracket_or_dot_word": [
+     299,
+     300
+    ]
+   },
+   "non_word_slips": [
+    4848,
+    5019
+   ],
+   "everyday_stream": {
+    "clean_stream_closed": 12,
+    "clean_stream_open": 14
+   },
+   "everyday_stream_changed": 26,
+   "everyday_stream_words": 25904,
+   "github_misspelling": [
+    1329,
+    1500
+   ],
+   "github_real_word": null,
+   "birkbeck": [
+    334,
+    600
+   ],
+   "domain": {
+    "all": [
+     4231,
+     4480
+    ],
+    "marked": [
+     0,
+     0
+    ],
+    "clean": [
+     2611,
+     2642
+    ],
+    "slips": [
+     1620,
+     1838
+    ],
+    "price": [
+     0,
+     0
+    ],
+    "required": [
+     249,
+     251
+    ],
+    "slips_trained_words": [
+     743,
+     773
+    ],
+    "slips_withheld_words": [
+     212,
+     223
+    ],
+    "slips_requested_words": [
+     143,
+     144
+    ],
+    "groups": {
+     "domain_clean": [
+      937,
+      941
+     ],
+     "domain_slips": [
+      532,
+      549
+     ],
+     "domain_phrases": [
+      548,
+      705
+     ],
+     "required": [
+      249,
+      251
+     ],
+     "neighbour_controls": [
+      722,
+      758
+     ],
+     "capitals": [
+      1243,
+      1276
+     ]
+    }
+   },
+   "domain_stream": {
+    "technical": 28,
+    "written": 21
+   },
+   "technical_written_changed": 49,
+   "technical_written_words": 19249
+  },
+  "dom-s100-seed3@ceiling-0.3": {
+   "wikipedia_real_word": [
+    130,
+    375
+   ],
+   "generated_right": 6466,
+   "generated_groups": {
+    "clean": 946,
+    "letter_slips": 1999,
+    "space_slips": 1376,
+    "symbol_slips": 1174,
+    "clean_symbols": 419,
+    "apostrophe_missing": 297,
+    "real_word_slip": 255
+   },
+   "generated_categories": {
+    "clean_common": [
+     296,
+     300
+    ],
+    "clean_rare": [
+     283,
+     298
+    ],
+    "clean_names_and_terms": [
+     67,
+     73
+    ],
+    "clean_two_words": [
+     300,
+     300
+    ],
+    "substitution_adjacent": [
+     289,
+     297
+    ],
+    "deletion": [
+     258,
+     277
+    ],
+    "double_letter": [
+     298,
+     300
+    ],
+    "extra_adjacent": [
+     295,
+     299
+    ],
+    "transposition": [
+     284,
+     292
+    ],
+    "two_errors": [
+     291,
+     299
+    ],
+    "short_word_slip": [
+     284,
+     290
+    ],
+    "space_missing": [
+     256,
+     298
+    ],
+    "space_to_letter": [
+     280,
+     300
+    ],
+    "space_transposed": [
+     275,
+     298
+    ],
+    "space_extra": [
+     287,
+     290
+    ],
+    "letter_to_space": [
+     278,
+     285
+    ],
+    "apostrophe_missing": [
+     297,
+     299
+    ],
+    "real_word_slip": [
+     255,
+     300
+    ],
+    "symbol_first_letter": [
+     297,
+     299
+    ],
+    "symbol_inner_letter": [
+     293,
+     297
+    ],
+    "symbol_first_letter_two_words": [
+     289,
+     299
+    ],
+    "symbol_plus_letter_slip": [
+     295,
+     300
+    ],
+    "clean_symbol_token": [
+     119,
+     119
+    ],
+    "clean_bracket_or_dot_word": [
+     300,
+     300
+    ]
+   },
+   "non_word_slips": [
+    4846,
+    5019
+   ],
+   "everyday_stream": {
+    "clean_stream_closed": 5,
+    "clean_stream_open": 4
+   },
+   "everyday_stream_changed": 9,
+   "everyday_stream_words": 25904,
+   "github_misspelling": [
+    1318,
+    1500
+   ],
+   "github_real_word": null,
+   "birkbeck": [
+    335,
+    600
+   ],
+   "domain": {
+    "all": [
+     4232,
+     4480
+    ],
+    "marked": [
+     0,
+     0
+    ],
+    "clean": [
+     2617,
+     2642
+    ],
+    "slips": [
+     1615,
+     1838
+    ],
+    "price": [
+     0,
+     0
+    ],
+    "required": [
+     250,
+     251
+    ],
+    "slips_trained_words": [
+     741,
+     773
+    ],
+    "slips_withheld_words": [
+     215,
+     223
+    ],
+    "slips_requested_words": [
+     143,
+     144
+    ],
+    "groups": {
+     "domain_clean": [
+      938,
+      941
+     ],
+     "domain_slips": [
+      535,
+      549
+     ],
+     "domain_phrases": [
+      548,
+      705
+     ],
+     "required": [
+      250,
+      251
+     ],
+     "neighbour_controls": [
+      718,
+      758
+     ],
+     "capitals": [
+      1243,
+      1276
+     ]
+    }
+   },
+   "domain_stream": {
+    "technical": 28,
+    "written": 17
+   },
+   "technical_written_changed": 45,
+   "technical_written_words": 19249
+  },
+  "ship": {
+   "wikipedia_real_word": [
+    125,
+    375
+   ],
+   "generated_right": 6460,
+   "generated_groups": {
+    "clean": 942,
+    "letter_slips": 1993,
+    "space_slips": 1385,
+    "symbol_slips": 1178,
+    "clean_symbols": 416,
+    "apostrophe_missing": 296,
+    "real_word_slip": 250
+   },
+   "generated_categories": {
+    "clean_common": [
+     298,
+     300
+    ],
+    "clean_rare": [
+     281,
+     298
+    ],
+    "clean_names_and_terms": [
+     65,
+     73
+    ],
+    "clean_two_words": [
+     298,
+     300
+    ],
+    "substitution_adjacent": [
+     288,
+     297
+    ],
+    "deletion": [
+     253,
+     277
+    ],
+    "double_letter": [
+     298,
+     300
+    ],
+    "extra_adjacent": [
+     295,
+     299
+    ],
+    "transposition": [
+     285,
+     292
+    ],
+    "two_errors": [
+     289,
+     299
+    ],
+    "short_word_slip": [
+     285,
+     290
+    ],
+    "space_missing": [
+     261,
+     298
+    ],
+    "space_to_letter": [
+     279,
+     300
+    ],
+    "space_transposed": [
+     277,
+     298
+    ],
+    "space_extra": [
+     287,
+     290
+    ],
+    "letter_to_space": [
+     281,
+     285
+    ],
+    "apostrophe_missing": [
+     296,
+     299
+    ],
+    "real_word_slip": [
+     250,
+     300
+    ],
+    "symbol_first_letter": [
+     296,
+     299
+    ],
+    "symbol_inner_letter": [
+     294,
+     297
+    ],
+    "symbol_first_letter_two_words": [
+     292,
+     299
+    ],
+    "symbol_plus_letter_slip": [
+     296,
+     300
+    ],
+    "clean_symbol_token": [
+     116,
+     119
+    ],
+    "clean_bracket_or_dot_word": [
+     300,
+     300
+    ]
+   },
+   "non_word_slips": [
+    4852,
+    5019
+   ],
+   "everyday_stream": {
+    "clean_stream_closed": 110,
+    "clean_stream_open": 54
+   },
+   "everyday_stream_changed": 164,
+   "everyday_stream_words": 25904,
+   "github_misspelling": [
+    1302,
+    1500
+   ],
+   "github_real_word": null,
+   "birkbeck": [
+    329,
+    600
+   ],
+   "domain": {
+    "all": [
+     4112,
+     4480
+    ],
+    "marked": [
+     0,
+     0
+    ],
+    "clean": [
+     2616,
+     2642
+    ],
+    "slips": [
+     1496,
+     1838
+    ],
+    "price": [
+     0,
+     0
+    ],
+    "required": [
+     247,
+     251
+    ],
+    "slips_trained_words": [
+     648,
+     773
+    ],
+    "slips_withheld_words": [
+     193,
+     223
+    ],
+    "slips_requested_words": [
+     141,
+     144
+    ],
+    "groups": {
+     "domain_clean": [
+      937,
+      941
+     ],
+     "domain_slips": [
+      491,
+      549
+     ],
+     "domain_phrases": [
+      528,
+      705
+     ],
+     "required": [
+      247,
+      251
+     ],
+     "neighbour_controls": [
+      729,
+      758
+     ],
+     "capitals": [
+      1180,
+      1276
+     ]
+    }
+   },
+   "domain_stream": {
+    "technical": 162,
+    "written": 45
+   },
+   "technical_written_changed": 207,
+   "technical_written_words": 19249
+  }
+ },
+ "against_the_reference": {
+  "dom-s100-seed1@ceiling-0.3": {
+   "conditions": {
+    "1 fewer changed technical and written words, over documents": true,
+    "2 everyday stream": true,
+    "3 generated clean": true,
+    "4 non-word slips": true,
+    "5 real misspellings": true,
+    "6 real-word slips": true,
+    "7 domain cases": true
+   },
+   "passes": true,
+   "paired_generated_cases_for_the_report": {
+    "all": {
+     "cases": 6709,
+     "only_first_right": 32,
+     "only_second_right": 53,
+     "net_loss": -21,
+     "margin_in_cases": 33.55,
+     "share_of_draws_at_or_over_the_margin": 0.0,
+     "score_test_p": 0.0,
+     "passes": true
+    },
+    "letter_slips": {
+     "cases": 2054,
+     "only_first_right": 7,
+     "only_second_right": 18,
+     "net_loss": -11,
+     "margin_in_cases": 20.54,
+     "share_of_draws_at_or_over_the_margin": 0.0,
+     "score_test_p": 0.0,
+     "passes": true
+    },
+    "space_slips": {
+     "cases": 1471,
+     "only_first_right": 11,
+     "only_second_right": 8,
+     "net_loss": 3,
+     "margin_in_cases": 14.71,
+     "share_of_draws_at_or_over_the_margin": 0.00477,
+     "score_test_p": 0.01019,
+     "passes": true
+    },
+    "symbol_slips": {
+     "cases": 1195,
+     "only_first_right": 5,
+     "only_second_right": 3,
+     "net_loss": 2,
+     "margin_in_cases": 11.95,
+     "share_of_draws_at_or_over_the_margin": 0.00078,
+     "score_test_p": 0.0057,
+     "passes": true
+    }
+   },
+   "documents": {
+    "all": 959,
+    "fewer_changed_words": 133,
+    "more_changed_words": 11,
+    "p_one_sided": 4.563711176571338e-28
+   },
+   "intervals_of_the_difference_to_the_reference": {
+    "technical_written_changed_words_over_documents": [
+     -193.0,
+     -129.0
+    ],
+    "generated_clean_right": [
+     0.0,
+     14.0
+    ],
+    "generated_clean_symbols_right": [
+     0.0,
+     3.0
+    ],
+    "technical_written_changed_words": [
+     -192.0,
+     -130.0
+    ],
+    "everyday_changed_words": [
+     -145.0,
+     -89.0
+    ],
+    "non_word_slips_right": [
+     -10.0,
+     21.0
+    ],
+    "github_misspelling_right": [
+     -12.0,
+     21.0
+    ],
+    "birkbeck_right": [
+     -1.0,
+     19.0
+    ],
+    "real_word_slip_right": [
+     -1.0,
+     15.0
+    ],
+    "domain_clean_right": [
+     0.0,
+     18.0
+    ],
+    "domain_slips_right": [
+     94.0,
+     139.0
+    ]
+   }
+  },
+  "dom-s100-seed1@shipped": {
+   "conditions": {
+    "1 fewer changed technical and written words, over documents": true,
+    "2 everyday stream": true,
+    "3 generated clean": false,
+    "4 non-word slips": true,
+    "5 real misspellings": true,
+    "6 real-word slips": true,
+    "7 domain cases": true
+   },
+   "passes": false,
+   "paired_generated_cases_for_the_report": {
+    "all": {
+     "cases": 6709,
+     "only_first_right": 45,
+     "only_second_right": 34,
+     "net_loss": 11,
+     "margin_in_cases": 33.55,
+     "share_of_draws_at_or_over_the_margin": 0.00594,
+     "score_test_p": 0.00794,
+     "passes": true
+    },
+    "letter_slips": {
+     "cases": 2054,
+     "only_first_right": 9,
+     "only_second_right": 11,
+     "net_loss": -2,
+     "margin_in_cases": 20.54,
+     "share_of_draws_at_or_over_the_margin": 0.0,
+     "score_test_p": 5e-05,
+     "passes": true
+    },
+    "space_slips": {
+     "cases": 1471,
+     "only_first_right": 7,
+     "only_second_right": 6,
+     "net_loss": 1,
+     "margin_in_cases": 14.71,
+     "share_of_draws_at_or_over_the_margin": 0.00015,
+     "score_test_p": 0.0017,
+     "passes": true
+    },
+    "symbol_slips": {
+     "cases": 1195,
+     "only_first_right": 6,
+     "only_second_right": 2,
+     "net_loss": 4,
+     "margin_in_cases": 11.95,
+     "share_of_draws_at_or_over_the_margin": 0.00632,
+     "score_test_p": 0.01808,
+     "passes": true
+    }
+   },
+   "documents": {
+    "all": 959,
+    "fewer_changed_words": 119,
+    "more_changed_words": 11,
+    "p_one_sided": 2.3483067703408027e-24
+   },
+   "intervals_of_the_difference_to_the_reference": {
+    "technical_written_changed_words_over_documents": [
+     -168.0,
+     -106.0
+    ],
+    "generated_clean_right": [
+     -6.0,
+     8.0
+    ],
+    "generated_clean_symbols_right": [
+     -5.0,
+     0.0
+    ],
+    "technical_written_changed_words": [
+     -166.0,
+     -106.0
+    ],
+    "everyday_changed_words": [
+     -126.0,
+     -71.0
+    ],
+    "non_word_slips_right": [
+     -17.0,
+     8.0
+    ],
+    "github_misspelling_right": [
+     4.0,
+     34.0
+    ],
+    "birkbeck_right": [
+     6.0,
+     25.0
+    ],
+    "real_word_slip_right": [
+     -13.0,
+     4.0
+    ],
+    "domain_clean_right": [
+     -1.0,
+     18.0
+    ],
+    "domain_slips_right": [
+     90.0,
+     134.0
+    ]
+   }
+  },
+  "dom-s100-seed2@ceiling-0.3": {
+   "conditions": {
+    "1 fewer changed technical and written words, over documents": true,
+    "2 everyday stream": true,
+    "3 generated clean": false,
+    "4 non-word slips": true,
+    "5 real misspellings": true,
+    "6 real-word slips": true,
+    "7 domain cases": false
+   },
+   "passes": false,
+   "paired_generated_cases_for_the_report": {
+    "all": {
+     "cases": 6709,
+     "only_first_right": 45,
+     "only_second_right": 49,
+     "net_loss": -4,
+     "margin_in_cases": 33.55,
+     "share_of_draws_at_or_over_the_margin": 6e-05,
+     "score_test_p": 0.00013,
+     "passes": true
+    },
+    "letter_slips": {
+     "cases": 2054,
+     "only_first_right": 13,
+     "only_second_right": 13,
+     "net_loss": 0,
+     "margin_in_cases": 20.54,
+     "share_of_draws_at_or_over_the_margin": 4e-05,
+     "score_test_p": 0.00037,
+     "passes": true
+    },
+    "space_slips": {
+     "cases": 1471,
+     "only_first_right": 10,
+     "only_second_right": 9,
+     "net_loss": 1,
+     "margin_in_cases": 14.71,
+     "share_of_draws_at_or_over_the_margin": 0.00115,
+     "score_test_p": 0.00379,
+     "passes": true
+    },
+    "symbol_slips": {
+     "cases": 1195,
+     "only_first_right": 7,
+     "only_second_right": 5,
+     "net_loss": 2,
+     "margin_in_cases": 11.95,
+     "share_of_draws_at_or_over_the_margin": 0.00378,
+     "score_test_p": 0.00998,
+     "passes": true
+    }
+   },
+   "documents": {
+    "all": 959,
+    "fewer_changed_words": 130,
+    "more_changed_words": 6,
+    "p_one_sided": 9.450476270877545e-32
+   },
+   "intervals_of_the_difference_to_the_reference": {
+    "technical_written_changed_words_over_documents": [
+     -191.0,
+     -128.0
+    ],
+    "generated_clean_right": [
+     -9.0,
+     5.0
+    ],
+    "generated_clean_symbols_right": [
+     -3.0,
+     3.0
+    ],
+    "technical_written_changed_words": [
+     -188.0,
+     -128.0
+    ],
+    "everyday_changed_words": [
+     -164.0,
+     -113.0
+    ],
+    "non_word_slips_right": [
+     -20.0,
+     11.0
+    ],
+    "github_misspelling_right": [
+     9.0,
+     45.0
+    ],
+    "birkbeck_right": [
+     -5.0,
+     16.0
+    ],
+    "real_word_slip_right": [
+     2.0,
+     19.0
+    ],
+    "domain_clean_right": [
+     -16.0,
+     6.0
+    ],
+    "domain_slips_right": [
+     101.0,
+     148.0
+    ]
+   }
+  },
+  "dom-s100-seed3@ceiling-0.3": {
+   "conditions": {
+    "1 fewer changed technical and written words, over documents": true,
+    "2 everyday stream": true,
+    "3 generated clean": true,
+    "4 non-word slips": true,
+    "5 real misspellings": true,
+    "6 real-word slips": true,
+    "7 domain cases": true
+   },
+   "passes": true,
+   "paired_generated_cases_for_the_report": {
+    "all": {
+     "cases": 6709,
+     "only_first_right": 50,
+     "only_second_right": 56,
+     "net_loss": -6,
+     "margin_in_cases": 33.55,
+     "share_of_draws_at_or_over_the_margin": 6e-05,
+     "score_test_p": 0.00013,
+     "passes": true
+    },
+    "letter_slips": {
+     "cases": 2054,
+     "only_first_right": 10,
+     "only_second_right": 16,
+     "net_loss": -6,
+     "margin_in_cases": 20.54,
+     "share_of_draws_at_or_over_the_margin": 0.0,
+     "score_test_p": 1e-05,
+     "passes": true
+    },
+    "space_slips": {
+     "cases": 1471,
+     "only_first_right": 20,
+     "only_second_right": 11,
+     "net_loss": 9,
+     "margin_in_cases": 14.71,
+     "share_of_draws_at_or_over_the_margin": 0.1605,
+     "score_test_p": 0.16127,
+     "passes": false
+    },
+    "symbol_slips": {
+     "cases": 1195,
+     "only_first_right": 7,
+     "only_second_right": 3,
+     "net_loss": 4,
+     "margin_in_cases": 11.95,
+     "share_of_draws_at_or_over_the_margin": 0.01126,
+     "score_test_p": 0.02278,
+     "passes": true
+    }
+   },
+   "documents": {
+    "all": 959,
+    "fewer_changed_words": 133,
+    "more_changed_words": 11,
+    "p_one_sided": 4.563711176571338e-28
+   },
+   "intervals_of_the_difference_to_the_reference": {
+    "technical_written_changed_words_over_documents": [
+     -195.0,
+     -131.0
+    ],
+    "generated_clean_right": [
+     -5.0,
+     13.0
+    ],
+    "generated_clean_symbols_right": [
+     0.0,
+     7.0
+    ],
+    "technical_written_changed_words": [
+     -192.0,
+     -132.0
+    ],
+    "everyday_changed_words": [
+     -184.0,
+     -128.0
+    ],
+    "non_word_slips_right": [
+     -22.0,
+     10.0
+    ],
+    "github_misspelling_right": [
+     -1.0,
+     32.0
+    ],
+    "birkbeck_right": [
+     -2.0,
+     15.0
+    ],
+    "real_word_slip_right": [
+     -3.0,
+     13.0
+    ],
+    "domain_clean_right": [
+     -9.0,
+     11.0
+    ],
+    "domain_slips_right": [
+     96.0,
+     143.0
+    ]
+   }
+  },
+  "soup-mix@ceiling-0.3": {
+   "conditions": {
+    "1 fewer changed technical and written words, over documents": true,
+    "2 everyday stream": true,
+    "3 generated clean": true,
+    "4 non-word slips": true,
+    "5 real misspellings": true,
+    "6 real-word slips": true,
+    "7 domain cases": true
+   },
+   "passes": true,
+   "paired_generated_cases_for_the_report": {
+    "all": {
+     "cases": 6709,
+     "only_first_right": 25,
+     "only_second_right": 50,
+     "net_loss": -25,
+     "margin_in_cases": 33.55,
+     "share_of_draws_at_or_over_the_margin": 0.0,
+     "score_test_p": 0.0,
+     "passes": true
+    },
+    "letter_slips": {
+     "cases": 2054,
+     "only_first_right": 8,
+     "only_second_right": 13,
+     "net_loss": -5,
+     "margin_in_cases": 20.54,
+     "share_of_draws_at_or_over_the_margin": 0.0,
+     "score_test_p": 1e-05,
+     "passes": true
+    },
+    "space_slips": {
+     "cases": 1471,
+     "only_first_right": 7,
+     "only_second_right": 12,
+     "net_loss": -5,
+     "margin_in_cases": 14.71,
+     "share_of_draws_at_or_over_the_margin": 0.0,
+     "score_test_p": 0.00012,
+     "passes": true
+    },
+    "symbol_slips": {
+     "cases": 1195,
+     "only_first_right": 3,
+     "only_second_right": 4,
+     "net_loss": -1,
+     "margin_in_cases": 11.95,
+     "share_of_draws_at_or_over_the_margin": 0.0,
+     "score_test_p": 0.00066,
+     "passes": true
+    }
+   },
+   "documents": {
+    "all": 959,
+    "fewer_changed_words": 70,
+    "more_changed_words": 4,
+    "p_one_sided": 6.449234745011358e-17
+   },
+   "intervals_of_the_difference_to_the_reference": {
+    "technical_written_changed_words_over_documents": [
+     -106.0,
+     -58.0
+    ],
+    "generated_clean_right": [
+     -6.0,
+     8.0
+    ],
+    "generated_clean_symbols_right": [
+     0.0,
+     0.0
+    ],
+    "technical_written_changed_words": [
+     -107.0,
+     -58.0
+    ],
+    "everyday_changed_words": [
+     -157.0,
+     -105.0
+    ],
+    "non_word_slips_right": [
+     -2.0,
+     26.0
+    ],
+    "github_misspelling_right": [
+     -6.0,
+     22.0
+    ],
+    "birkbeck_right": [
+     0.0,
+     16.0
+    ],
+    "real_word_slip_right": [
+     5.0,
+     20.0
+    ],
+    "domain_clean_right": [
+     -2.0,
+     12.0
+    ],
+    "domain_slips_right": [
+     -4.0,
+     28.0
+    ]
+   }
+  }
+ },
+ "decision": "the candidate dom-s100-seed1@ceiling-0.3 replaces the reference"
+}

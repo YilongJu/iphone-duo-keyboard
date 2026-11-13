@@ -54,11 +54,11 @@ final class RerankRuleTests: XCTestCase {
 
     func testTheTunedSettingsAreThoseOfTheHarness() {
         XCTAssertEqual(rule, RerankRule(weight: 1.0, marginFromTyped: 24, marginToTyped: 0, marginOther: 2, usesSpaceAfter: true))
-        // The arm smollm2-lora-seed1 of scripts/lm-finetune/test-plan.json.
+        // The setting and the lead of scripts/lm-domain/candidate.json.
         XCTAssertEqual(KeyboardLanguageModel.rule,
-                       RerankRule(weight: 1.0, marginFromTyped: 0, marginToTyped: 4, marginOther: 2, usesSpaceAfter: true,
+                       RerankRule(weight: 1.5, marginFromTyped: 1, marginToTyped: 4, marginOther: 2, usesSpaceAfter: true,
                                   apostrophe: RerankRule.ApostropheStep(
-                                      scope: .firstWordOfSpan, score: .modelLessSlipCost, margin: 4, prompt: .stock)))
+                                      scope: .firstWordOfSpan, score: .modelLessSlipCost, margin: 0.5, prompt: .stock)))
     }
 
     func testTheStockStepDecidesWithTheScoresOfItsOwnPrompt() {
@@ -80,16 +80,16 @@ final class RerankRuleTests: XCTestCase {
         XCTAssertEqual(stock.choose(readings, model(-5, -20)) { _ in self.model(-6, -5.01) }, 0)
     }
 
-    func testTheSmolLM2RuleTakesAnyLeadAwayFromTheTextAsTyped() {
+    func testTheSmolLM2RuleNeedsALeadOfOneAwayFromTheTextAsTyped() {
         let smollm2 = KeyboardLanguageModel.rule
         let readings = [reading("teh", -10, typed: true, chosen: true), reading("the", -12)]
-        // An equal score leaves the first maximum, the engine's choice, and any lead replaces it.
-        XCTAssertEqual(smollm2.choose(readings, model(-30, -28)), 0)
-        XCTAssertEqual(smollm2.choose(readings, model(-30, -27.99)), 1)
-        // A move back to the text as typed needs a lead of 4.
+        // The weight is 1.5. "teh" has -55 and "the" -54.015, then -54: a lead of 0.985, then exactly 1.
+        XCTAssertEqual(smollm2.choose(readings, model(-30, -28.01)), 0)
+        XCTAssertEqual(smollm2.choose(readings, model(-30, -28)), 1)
+        // A move back to the text as typed needs a lead of 4: 3.98 keeps the choice, and 4.01 replaces it.
         let back = [reading("thr", -10, chosen: true), reading("the", -11, typed: true)]
-        XCTAssertEqual(smollm2.choose(back, model(-5, -0.01)), 0)
-        XCTAssertEqual(smollm2.choose(back, model(-5, 0)), 1)
+        XCTAssertEqual(smollm2.choose(back, model(-6, -2.68)), 0)
+        XCTAssertEqual(smollm2.choose(back, model(-6, -2.66)), 1)
     }
 
     func testTheEngineChoiceStaysWhenItHasTheHighestCombinedScore() {

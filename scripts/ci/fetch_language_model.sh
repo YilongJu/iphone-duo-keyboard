@@ -17,11 +17,13 @@ framework_sha256="db3b13169df8870375f212e6ac21194225f1c85f7911d595ab64c8c790068e
 framework_dir="Vendor"
 
 # SmolLM2-135M with a LoRA fine-tune for the re-ranker in the typed format, merged and stored with
-# weights of about 4 bits (Q4_K_M). scripts/lm-finetune on the branch engine/lm-finetune trained
-# it, and the release lm-finetune-smollm2-lora-v1 of this repository holds the file.
-model_url="https://github.com/YilongJu/iphone-duo-keyboard/releases/download/lm-finetune-smollm2-lora-v1/smollm2-lora-typed-seed1.Q4_K_M.gguf"
-model_sha256="fe82c0b617bdf19cf72b92148edbf9406c7547396ca7fac477485884431c07bb"
-model_path="Shared/smollm2-lora-typed-seed1.Q4_K_M.gguf"
+# weights of about 4 bits (Q4_K_M). scripts/lm-domain trained it on everyday text and on text of
+# the work area "AI and software" (the arm dom-s100-seed1 of docs/lm-domain-design.md), and the
+# release lm-domain-candidate-1 of this repository holds the file. scripts/lm-domain/candidate.json
+# names the same address and SHA-256 value.
+model_url="https://github.com/YilongJu/iphone-duo-keyboard/releases/download/lm-domain-candidate-1/smollm2-lora-domain-s100-seed1.Q4_K_M.gguf"
+model_sha256="8c0835e0eeb4787b853b4223facc14612d4d1b6c4bd7e33f7ad1ff9fc167dec8"
+model_path="Shared/smollm2-lora-domain-s100-seed1.Q4_K_M.gguf"
 
 sha256_of() {
   shasum -a 256 "$1" | cut -d ' ' -f 1

@@ -130,15 +130,16 @@ final class KeyboardLanguageModel: CandidateScoring, LanguageModelLoading {
     /// Threads of each call of the model, the count measured on the iPhone Duo.
     nonisolated static let threads = 2
 
-    /// The rule tuned for the bundled model on the tuning split of scripts/lm-finetune, the arm
-    /// smollm2-lora-seed1 of scripts/lm-finetune/test-plan.json on the branch engine/lm-finetune.
-    /// The model reads the typed format of `LanguageModelPrompt.make`. The apostrophe step has the
-    /// scope and score of `RerankRule.distilgpt2WithApostrophes` (docs/apostrophe-words-design.md),
-    /// and it reads the stock prompt: scripts/lm-rerank/apostrophe_words.py --steps prompts with
-    /// this model picks the stock prompt at lead 4 under the design's rule on the dev half.
+    /// The rule of the bundled model: the setting of scripts/lm-domain/candidate.json, which the
+    /// one read of the confirmation set confirmed (docs/lm-domain-results.md). The weight is 1.5.
+    /// A move away from the text as typed needs a lead of 1, a move back to it 4, and a move
+    /// between two corrections 2. The model reads the typed format of `LanguageModelPrompt.make`.
+    /// The apostrophe step has the scope and score of `RerankRule.distilgpt2WithApostrophes`
+    /// (docs/apostrophe-words-design.md). It reads the stock prompt, at the lead 0.5 of
+    /// candidate.json.
     nonisolated static let rule = RerankRule(
-        weight: 1.0, marginFromTyped: 0, marginToTyped: 4, marginOther: 2, usesSpaceAfter: true,
-        apostrophe: RerankRule.ApostropheStep(scope: .firstWordOfSpan, score: .modelLessSlipCost, margin: 4, prompt: .stock))
+        weight: 1.5, marginFromTyped: 1, marginToTyped: 4, marginOther: 2, usesSpaceAfter: true,
+        apostrophe: RerankRule.ApostropheStep(scope: .firstWordOfSpan, score: .modelLessSlipCost, margin: 0.5, prompt: .stock))
 
     enum State: Equatable {
         case notLoaded

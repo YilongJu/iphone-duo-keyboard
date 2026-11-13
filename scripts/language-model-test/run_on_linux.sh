@@ -17,7 +17,7 @@ cd "$(dirname "$0")/../.."
 llama_commit="10131b23ee0dbd9d03dfc618cec9fe3402919277"
 # The model file that ships: the file of fetch_model in scripts/ci/fetch_language_model.sh, and
 # BundledLanguageModelTest.modelResource in Shared/LanguageModelTest.swift.
-model="Shared/smollm2-lora-typed-seed1.Q4_K_M.gguf"
+model="Shared/smollm2-lora-domain-s100-seed1.Q4_K_M.gguf"
 work="build/language-model-test"
 mkdir -p "$work"
 

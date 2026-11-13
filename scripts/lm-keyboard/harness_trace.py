@@ -18,9 +18,14 @@ Outputs in --out:
 Usage, from the repository root, on Linux:
     LD_LIBRARY_PATH=$PWD/build/lm-rerank/llama/lib python3 scripts/lm-keyboard/harness_trace.py \
         --shim build/lm-rerank/libduo_shim.so --lm build/lm-rerank/lm_score \
-        --model Shared/smollm2-lora-typed-seed1.Q4_K_M.gguf --out build/lm-keyboard/harness
+        --model Shared/smollm2-lora-domain-s100-seed1.Q4_K_M.gguf --out build/lm-keyboard/harness
+
+Another model file takes its own setting with --setting and --lead: the weight, the three
+margins and the space-after switch, and the lead of the apostrophe step. Without them the
+script uses the tuned rule of the shipped file.
 """
 import argparse
+import dataclasses
 import json
 import sys
 from pathlib import Path
@@ -29,13 +34,13 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts" / "lm-rerank"))
 import rerank  # noqa: E402
 
-# The setting of the SmolLM2-135M LoRA fine-tune, chosen on the tuning split (the arm
-# smollm2-lora-seed1 of scripts/lm-finetune/test-plan.json on the branch engine/lm-finetune), with
-# the apostrophe step of docs/apostrophe-words-design.md in the stock prompt at lead 4, which
-# apostrophe_words.py --steps prompts picks with this model. KeyboardLanguageModel.rule holds the
+# The setting of the shipped file, the SmolLM2-135M LoRA fine-tune dom-s100-seed1 of
+# scripts/lm-domain: the setting and the lead of scripts/lm-domain/candidate.json, which the one
+# read of the confirmation set confirmed (docs/lm-domain-results.md). The apostrophe step of
+# docs/apostrophe-words-design.md reads the stock prompt. KeyboardLanguageModel.rule holds the
 # same numbers.
-TUNED = rerank.Setting(weight=1.0, margin_from_typed=0, margin_to_typed=4, margin_other=2, space_after=1,
-                       margin_apostrophe=4.0, apostrophe_scope="next", apostrophe_score="slips",
+TUNED = rerank.Setting(weight=1.5, margin_from_typed=1, margin_to_typed=4, margin_other=2, space_after=1,
+                       margin_apostrophe=0.5, apostrophe_scope="next", apostrophe_score="slips",
                        apostrophe_prompt="stock")
 # The input format the model was trained on (language_model_prompt of rerank.py).
 PROMPT_FORMAT = "typed"
@@ -48,7 +53,17 @@ def main():
     parser.add_argument("--model", type=Path, required=True)
     parser.add_argument("--threads", type=int, default=4, help="threads of lm_score, 4 as in the tuning run")
     parser.add_argument("--out", type=Path, required=True)
+    parser.add_argument("--setting", type=float, nargs=5, metavar=("WEIGHT", "FROM_TYPED", "TO_TYPED", "OTHER", "SPACE_AFTER"),
+                        help="the setting of another model file, in place of the tuned rule")
+    parser.add_argument("--lead", type=float, help="the lead of the apostrophe step for --setting")
     arguments = parser.parse_args()
+    if (arguments.setting is None) != (arguments.lead is None):
+        raise SystemExit("--setting and --lead go together")
+    setting = TUNED
+    if arguments.setting is not None:
+        weight, from_typed, to_typed, other, space_after = arguments.setting
+        setting = dataclasses.replace(TUNED, weight=weight, margin_from_typed=from_typed, margin_to_typed=to_typed, margin_other=other,
+                                      space_after=int(space_after), margin_apostrophe=arguments.lead)
 
     # The dev cases of english.dev.jsonl and english-symbols.dev.jsonl, and those of the work area.
     existing = rerank.load_cases(rerank.CASE_FILES)
@@ -76,15 +91,15 @@ def main():
         def chooser(readings, text_before, typed):
             nonlocal step
             context = text_before.rstrip(" ")
-            choice = rerank.choose(readings, context, TUNED, model, typed)
+            choice = rerank.choose(readings, context, setting, model, typed)
             if len(readings) > 1:
                 scores = model.reading_scores(context, readings, typed)
                 # The step's own scores, in the stock prompt, for every reading of a correction
                 # with a twin. A reading's score does not depend on the other candidates.
                 typed_text = next(r["text"] for r in readings if r["as_typed"])
-                has_twin = any(not r["as_typed"] and rerank.is_twin(r["text"], typed_text, TUNED.apostrophe_scope)
+                has_twin = any(not r["as_typed"] and rerank.is_twin(r["text"], typed_text, setting.apostrophe_scope)
                                for r in readings)
-                step_lm = (model.step_scores(context, [r["text"] for r in readings], TUNED.apostrophe_prompt)
+                step_lm = (model.step_scores(context, [r["text"] for r in readings], setting.apostrophe_prompt)
                         if has_twin else {})
                 opens_field = not context
                 lm_context = rerank.language_model_prompt(context, typed, PROMPT_FORMAT)
@@ -115,7 +130,7 @@ def main():
     (arguments.out / "requests.tsv").write_text("".join(request + "\n" for request in requests), encoding="utf-8")
 
     result = {
-        "setting": TUNED.__dict__, "prompt_format": PROMPT_FORMAT, "lm_ready": model.ready,
+        "setting": setting.__dict__, "prompt_format": PROMPT_FORMAT, "lm_ready": model.ready,
         "control": rerank.summarize(existing, control), "reranked": rerank.summarize(existing, reranked),
         "domain_control": rerank.tally_by_group(domain, control), "domain_reranked": rerank.tally_by_group(domain, reranked),
         "corrections_read_by_the_model": len(trace), "distinct_requests": len(requests),

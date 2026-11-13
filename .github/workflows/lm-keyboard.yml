@@ -33,7 +33,7 @@ jobs:
         run: |
           set -euo pipefail
           bash scripts/ci/fetch_language_model.sh model
-          echo Shared/smollm2-lora-typed-seed1.Q4_K_M.gguf > build/lm-keyboard/model-path.txt
+          echo Shared/smollm2-lora-domain-s100-seed1.Q4_K_M.gguf > build/lm-keyboard/model-path.txt
       - name: Type the dev cases through the harness with the tuned rule
         run: |
           set -euo pipefail
@@ -90,7 +90,7 @@ jobs:
         run: |
           set -euo pipefail
           bash scripts/ci/fetch_language_model.sh model
-          echo Shared/smollm2-lora-typed-seed1.Q4_K_M.gguf > build/lm-keyboard/model-path.txt
+          echo Shared/smollm2-lora-domain-s100-seed1.Q4_K_M.gguf > build/lm-keyboard/model-path.txt
       - name: Type the dev cases through the harness with the tuned rule
         run: |
           set -euo pipefail
@@ -217,13 +217,13 @@ jobs:
           set -euo pipefail
           # 2 threads of lm_score, as the runner has 3 cores.
           python3 scripts/lm-keyboard/harness_trace.py --shim build/lm-rerank/libduo_shim.so \
-            --lm build/lm-rerank/lm_score --model Shared/smollm2-lora-typed-seed1.Q4_K_M.gguf --threads 2 --out build/lm-keyboard/harness-mac
+            --lm build/lm-rerank/lm_score --model Shared/smollm2-lora-domain-s100-seed1.Q4_K_M.gguf --threads 2 --out build/lm-keyboard/harness-mac
       - name: Score the harness requests with lm_score and the keyboard's scorer, on this machine
         if: always()
         run: |
           set -euo pipefail
           out=build/lm-keyboard/harness-mac
-          model=Shared/smollm2-lora-typed-seed1.Q4_K_M.gguf
+          model=Shared/smollm2-lora-domain-s100-seed1.Q4_K_M.gguf
           # The runner has 3 cores. More threads than cores make the threads of llama.cpp wait for
           # each other at every step, so both programs run with 2 threads here.
           # lm_score writes a line that starts with "ready" before its answers.

@@ -33,11 +33,12 @@ sys.path.insert(0, str(ROOT / "scripts" / "lm-rerank"))
 import rerank  # noqa: E402
 from score import normalize  # noqa: E402
 
-# The setting of the SmolLM2-135M LoRA fine-tune (harness_trace.py, KeyboardLanguageModel.rule).
-TUNED = {"weight": 1.0, "margin_from_typed": 0.0, "margin_to_typed": 4.0, "margin_other": 2.0}
+# The setting of the shipped file (harness_trace.py, KeyboardLanguageModel.rule,
+# scripts/lm-domain/candidate.json).
+TUNED = {"weight": 1.5, "margin_from_typed": 1.0, "margin_to_typed": 4.0, "margin_other": 2.0}
 # The same setting with the apostrophe step, for rerank.choose.
-SETTING = rerank.Setting(weight=1.0, margin_from_typed=0, margin_to_typed=4, margin_other=2, space_after=1,
-                         margin_apostrophe=4.0, apostrophe_scope="next", apostrophe_score="slips",
+SETTING = rerank.Setting(weight=1.5, margin_from_typed=1, margin_to_typed=4, margin_other=2, space_after=1,
+                         margin_apostrophe=0.5, apostrophe_scope="next", apostrophe_score="slips",
                          apostrophe_prompt="stock")
 
 
