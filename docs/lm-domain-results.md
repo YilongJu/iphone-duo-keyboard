@@ -143,6 +143,8 @@ The candidate file is `dom-s100-seed1.Q4_K_M.gguf` of this round: 105,453,504 by
 - Harness of the keyboard workflow: `scripts/lm-keyboard/harness_trace.py` with the candidate file and its setting gets 6,538 of 6,799 dev cases right. The harness of this round gives the same count, and `scripts/lm-domain/candidate.json` holds the counts per group.
 - Run 43389818855 of the workflow "Domain candidate file in the Linux harness" passes. Its x86 job fetches the file of the pre-release and gets the same counts as the local run. The keyboard's scorer and `lm_score` give the same answers byte for byte on 13,930 requests.
 - The ARM job of that run gets 6,536 of 6,799 dev cases right, 2 fewer than the x86 job. The file of `ship` shows the same step in run 43258534212: 6,543 on x86 and 6,541 on ARM.
+- Run 43481402003 of the workflow "Language model in the keyboard" passes on the commit 6576495, with the candidate file in the app. Every unit test passes in the simulator, and the keyboard's own code agrees with the harness of the same machine in all 13,936 dev cases.
+- In that run the keyboard gets 6,539 of 6,799 dev cases and 6,616 of 7,137 cases of the work area right, on the symbol cases after the comma and period keys moved. With the file of `ship` it got 6,537 and 6,350 in run 43312412590. `scripts/lm-keyboard/README.md` gives the counts per group.
 
 ## Remaining errors of `ship`
 
