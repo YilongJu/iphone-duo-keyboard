@@ -41,7 +41,8 @@ def main():
     if arguments.step == "fetch":
         arguments.out.parent.mkdir(parents=True, exist_ok=True)
         digest = hashlib.sha256()
-        with urllib.request.urlopen(candidate["url"]) as answer, arguments.out.open("wb") as file:
+        request = urllib.request.Request(candidate["url"], headers={"User-Agent": "duo-keyboard-build/1.0", "Accept": "*/*"})
+        with urllib.request.urlopen(request) as answer, arguments.out.open("wb") as file:
             for block in iter(lambda: answer.read(1 << 20), b""):
                 digest.update(block)
                 file.write(block)
