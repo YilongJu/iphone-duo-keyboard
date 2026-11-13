@@ -12,6 +12,7 @@ It compares them with the shipped file on sets typed with the work area "AI and 
 4. Pick at most one candidate with the rule in "Pick of one candidate on the selection sets".
 5. Commit `scripts/lm-domain/holdout-plan.json` with its SHA-256, then read the fresh held-out set once.
 6. Replace the shipped file only when the candidate passes "Replacement rule on the fresh held-out set".
+7. Read "Confirmation round of `dom-s100-seed1`" for the rule of 2026-11-12: one candidate, one setting, and one read of a new set.
 
 This design does not settle the owner's slip rate on the phone. It does not measure phone time or memory.
 
@@ -36,6 +37,9 @@ This design does not settle the owner's slip rate on the phone. It does not meas
 | withheld word | One pack word in five. It gets no slip case in training. It still stands in clean running text. |
 | real misspelling | A wrong form that a person wrote, from a public list or corpus. |
 | non-word slip | A generated slip case outside `real_word_slip`: letter, space and symbol slips and `apostrophe_missing`. |
+| net loss | For two files on the same cases: the cases that only the first file has right, less the cases that only the second file has right. |
+| paired bootstrap | A draw takes the cases of one part again with replacement, as many as the part holds, and counts the net loss of the draw. |
+| confirmation set | The set of 2026-11-12 that no model has scored. It shares no source with a training list, a selection set or an earlier held-out set. |
 
 ## Eight-row task table of the re-ranker
 
@@ -88,7 +92,8 @@ Table 3. Each set, its source and its one role. Every set is typed with the work
 | tune | The setting of each arm | Generated tuning cases of round 1, clean running text of the tune bucket | 6,748 cases, 1,300 sentences (8,487 words) |
 | select | The pick of one candidate | Generated dev half, apostrophe words, published dev misspellings, clean running text of the select bucket, GitHub typos of the select half, dev half of the domain cases and streams | 6,799, 1,623, 751 cases, 8,439 words, 2,500 cases, 7,137 cases, 2,300 sentences |
 | domain test | A second view of every arm. It decides no pick. | Test half of the domain cases and streams | 7,085 cases, 2,300 sentences |
-| fresh held-out | The replacement decision, read once | New cases that no model and no selection has scored ("Fresh held-out set") | fixed in `holdout-plan.json` |
+| fresh held-out | The replacement decision of the first candidate, read once on 2026-11-12 | New cases that no model and no selection had scored ("Fresh held-out set") | fixed in `holdout-plan.json` |
+| confirmation | The replacement decision of `dom-s100-seed1`, read once | New cases from sources that no earlier set holds ("Confirmation round of `dom-s100-seed1`") | fixed in `confirm-plan.json` |
 
 ```mermaid
 flowchart LR
@@ -252,7 +257,7 @@ An entry qualifies when all nine conditions hold against `ship`.
 3. Its right real misspellings are at least those of `ship`. The count pools the 751 published dev misspellings and the 1,500 `github_misspelling` cases.
 4. Its right non-word slips of the dev half are at least those of `ship` less 25 (0.5 percent of 5,097).
 5. Its right `real_word_slip` cases of the dev half keep at least half of the gain of `ship` over the engine alone.
-6. Each of its five dev group counts and its dev total is at least the pinned number of `engine/lm-keyboard`: 953, 2,057, 1,387, 1,165, 428 and 6,542.
+6. It passes the paired dev comparison with `ship` ("Paired dev comparison of pick condition 6"). The comparison covers all dev cases and each of the three slip groups.
 7. Its right clean cases of the domain dev half, pooled, are at least those of `ship`. Its right slip cases of the domain dev half, pooled without the price categories, are at least those of `ship` less 0.5 percent of their count. Its right cases of the group `required` are at least those of `ship` less 1 percent of their count.
 8. Its right apostrophe words, alone and with the next word, are each at least those of `ship` less 8 (0.5 percent of 1,623).
 9. Its file passes the parity check at 0.05 nats, on everyday lists and on domain lists. The check compares PyTorch float32 with `lm_score` on an F32 GGUF, with a 32-bit key and value cache and without flash attention (`jobs/parity-kv32.sh`, read by `summarize3.py --parity-name parity-kv32.json`). The user chose this reading on 2026-11-12, as the coordinator relayed. The tables also give the f16 file of `check_parity.py` and the F32 file with the standard `lm_score`, for the report only.
@@ -262,8 +267,57 @@ When no entry qualifies, there is no candidate, and the shipped file stays at th
 
 Conditions 1 to 5 are the conditions of round 2 with its bands. Condition 1 allows a tie, because this round exists for technical text and the everyday count must only hold.
 A clean case of condition 7 is a domain case whose typed letters are its intended letters, capitals apart. The price categories are `neighbour_slip_onto_term` and `requested_term_for_everyday_word`.
-Condition 6 is a floor from the pinned run of `engine/lm-keyboard`. The table also shows each count of `ship` in this harness, so a reader sees a floor that the reference itself misses.
 The report shows `github_real_word` and no rule uses it, as in round 2. Many of its edits fix grammar.
+
+## Paired dev comparison of pick condition 6
+
+Condition 6 compares an entry with `ship` on the same dev cases. The user approved this form on 2026-11-12, in place of fixed dev counts from another run.
+`paired_dev.py` applies it, and `summarize3.py` calls it for every entry.
+
+The comparison takes the net loss of the entry against `ship` and a non-inferiority margin. A part of the dev half passes when two tests agree.
+
+1. Paired bootstrap: fewer than 5 percent of the draws give a net loss of the margin or more. The script sums the multinomial probabilities of the draws, so the share has no random part.
+2. Score test of Tango for paired shares: it rejects, at the one-sided level 0.05, that the true net loss is the margin or more. The source is Statistics in Medicine 17, 1998, pages 891 to 908.
+
+The level 0.05, one-sided, is the level of condition 1 of the replacement rule. The bootstrap share is an approximate level, and the score test is the calibrated test for paired shares.
+An entry passes condition 6 when all four parts of Table 11 pass. Every part must pass, so one entry needs no correction for four tests.
+The comparison is a gate on development data. It does not correct for the pick among 53 entries, and the confirmation read is the test of the picked entry.
+
+Table 11. Parts of the paired dev comparison and their margins.
+
+| Part | Cases | Margin | Margin in cases |
+| --- | --- | --- | --- |
+| All dev cases | 6,799 | 0.5 percent | 34 |
+| Letter slips | 2,100 | 1 percent | 21 |
+| Space slips | 1,500 | 1 percent | 15 |
+| Symbol slips | 1,197 | 1 percent | 12 |
+
+The more cases only one of the two files has right, the smaller the net loss that passes. At 60, 88 and 120 such cases of the 6,799, a net loss of 20, 18 and 14 cases passes.
+
+The groups clean and clean symbols are not in Table 11, because condition 2 allows no loss there. Conditions 4 and 5 still bind the non-word slips and the real-word slips.
+The margins are engineering tolerances, and they were written with the dev counts of every entry known. They take the bands that this design already uses for a loss that the owner accepts. A pooled slip count has a band of 0.5 percent (conditions 4, 7 and 8). One part of a pooled count has a band of 1 percent (condition 7, and condition 5 of the replacement rule).
+In use, a net loss at the margin means 1 more wrong correction in 200 generated everyday cases. The conditions on clean text still allow no loss, on the dev half and in the read.
+
+Table 12 describes the seed spread beside these margins. Three `mix` seeds and three `dom-s100` seeds give 12 pairs of files of one recipe, at the shipped setting and at the `ceiling-0.3` setting.
+The 12 pairs come from 6 files, so they are not 12 independent measurements. The table shows how the comparison treats files of one recipe, and it does not prove that a loss at the margin is harmless.
+
+Table 12. Net loss between two seeds of one recipe on all 6,799 dev cases, worse seed against better seed.
+
+| Recipe | Setting | Dev totals of seeds 1, 2, 3 | Net loss of the three pairs | Pairs that pass the comparison |
+| --- | --- | --- | --- | --- |
+| `mix` | shipped | 6,556, 6,534, 6,543 | 22, 13, 9 | 2 of 3 |
+| `mix` | `ceiling-0.3` | 6,549, 6,538, 6,543 | 11, 6, 5 | 3 of 3 |
+| `dom-s100` | shipped | 6,541, 6,528, 6,530 | 13, 11, 2 | 1 of 3 |
+| `dom-s100` | `ceiling-0.3` | 6,538, 6,545, 6,537 | 7, 1, 8 | 3 of 3 |
+
+The largest net loss between two seeds is 22 cases. The margin of 34 cases is 3.2 times the standard deviation of the difference of two seeds, 10.5 cases.
+The comparison bars 3 of the 12 pairs. All three miss the space slips, at net losses of 12, 12 and 9 cases. One of them also misses the part of all dev cases, at a net loss of 22.
+So the comparison does not pass every file of a known recipe.
+For comparison, a fixed count of 6,542 allows a net loss of 2 cases, because `ship` has 6,544 in this harness. That is 0.2 standard deviations of a seed pair.
+
+The dev counts of every entry were known when these margins were written, and so were the held-out counts of `dom-s100-seed1`. So the margins are no independent choice, and a reader must weigh the pick with that in mind.
+For `dom-s100-seed1` at `ceiling-0.3` the result does not rest on the exact margin. `ship` alone has 47 cases right, and the entry alone has 41. The bootstrap share is 0.0018, and the score test gives p = 0.0023.
+With condition 6 in this form, 49 of 53 entries pass it. Three entries pass all nine conditions: `soup-mix` at `ceiling-0.3` and at `ceiling-0.2`, and `dom-s100-seed1` at `ceiling-0.3`.
 
 ## Third wave of arms
 
@@ -286,9 +340,14 @@ flowchart TD
   P --> H[holdout-plan.json committed with its SHA-256]
   H --> F[One read of the fresh held-out set]
   F --> D[Replacement rule: ship the candidate or keep the shipped file]
+  D --> A2[Rule of 2026-11-12: paired dev comparison in condition 6]
+  A2 --> P2[Pick again on the selection sets: one entry of dom-s100-seed1]
+  P2 --> H2[confirm-plan.json committed with its SHA-256]
+  H2 --> F2[One read of the confirmation set]
+  F2 --> D2[Seven conditions: publish the candidate file or keep the shipped file]
 ```
 
-Figure 2. Order of the round. Every choice before the read uses the tuning and selection sets only.
+Figure 2. Order of the round. Every choice before a read uses the tuning and selection sets only.
 
 ## Fresh held-out set
 
@@ -329,6 +388,93 @@ The candidate replaces `ship` when all seven conditions hold on the fresh held-o
 
 Condition 1 asks for the improvement that the round exists for, in the unit of the pick: changed words. Conditions 2 to 7 bound each observed loss, and the report gives a 95 percent interval beside each difference.
 A candidate that passes also needs green runs of the existing CI workflows on this branch before it ships.
+
+## Confirmation round of `dom-s100-seed1`
+
+The user approved this round on 2026-11-12, after the one read of the fresh held-out set. It tests one file at one setting on a new set, once.
+
+### Candidate and setting of the confirmation round
+
+The candidate file is `dom-s100-seed1`: `dom-s100-seed1.Q4_K_M.gguf`, SHA-256 `8c0835e0eeb4787b853b4223facc14612d4d1b6c4bd7e33f7ad1ff9fc167dec8`.
+With condition 6 as the paired dev comparison, three entries pass the nine pick conditions. The pick takes the one with the fewest changed technical and written dev words: `dom-s100-seed1` at `ceiling-0.3` with 38, against 140 for `soup-mix`.
+
+The file has two entries, `shipped` and `ceiling-0.3`. Its `ceiling-0.2` setting is its `ceiling-0.3` setting.
+The setting rule: take the entry that passes all nine pick conditions. When both pass, take the one with fewer changed technical and written dev words. When none passes, there is no candidate and no read.
+The entry `shipped` misses condition 8: 1,208 right apostrophe words, and the condition asks for 1,256. The entry `ceiling-0.3` passes all nine.
+So the candidate setting is weight 1.5, margins 1 from typed, 4 to typed and 2 other, with space-after on.
+Its lead of the apostrophe step is 0.5. `tune_apostrophe.py` picked that lead on the dev half of the apostrophe words, by the rule of "Counts of the harness for every arm".
+
+The counts of both entries on the fresh held-out set are seen: both passed its seven conditions as arms for the report. The pick and the setting rule read the selection sets only.
+So the fresh held-out set is no test of this candidate, and the confirmation set is its one test.
+
+### Confirmation set
+
+`build_fresh_holdout.py --label confirm --earlier build/lm-domain/data/fresh-holdout` builds the confirmation set with the code and the rules of the fresh held-out set.
+It adds three rules. The set shares no source with the fresh held-out set. A GitHub or Birkbeck pair of the set is the pair of no earlier real misspelling, in either list. Earlier means round 2 and the fresh held-out set. A GitHub case shares no commit with a case of the select half, of round 2 or of the fresh held-out set.
+The fresh held-out set did not have the commit rule. Of its 1,958 GitHub cases, 29 share a commit with a case of the select half. A commit can hold several edits, and the halves split by the right word. `check_fresh_holdout.py --earlier` checks that rule apart from the build code, as rule 11.
+
+Table 13. Parts of the confirmation set, the source of each and its size.
+
+| Part | Source | Size | Size in the fresh held-out set |
+| --- | --- | --- | --- |
+| generated | Tatoeba sentences of the round 2 held-out buckets 0 to 2 that feed no earlier case | 6,709 cases, of them 971 clean and 419 clean symbols | 6,727, of them 971 and 429 |
+| stream, everyday | The same buckets | 4,000 sentences, 25,904 words | 4,000 sentences, 25,974 words |
+| github misspellings | GitHub Typo Corpus, held-out half: rows whose pair and commit no earlier case holds | 1,500 cases | 1,500 |
+| birkbeck | Roger Mitton's Birkbeck list: pairs in no earlier case | 600 pairs | 600 |
+| domain cases | Test-bucket documents of the pack's corpus that feed no earlier case, and Tatoeba sentences for the everyday controls | 4,480 cases | 4,611 |
+| stream, technical and written | The same documents | 1,300 sentences, 19,249 words | 1,300 sentences, 19,925 words |
+| real-word errors, for the report | RWSE Wikipedia Revision Dataset (Torsten Zesch, CC BY 4.0), sentences of Wikipedia under CC BY-SA | 375 cases | 458 GitHub rows |
+
+Table 14. Cases behind each count that a condition of the read uses, in the two sets.
+
+| Count | Confirmation set | Fresh held-out set |
+| --- | --- | --- |
+| Generated clean, clean symbols (condition 3) | 971, 419 | 971, 429 |
+| Non-word slips (condition 4) | 5,019 | 5,027 |
+| GitHub misspellings, Birkbeck (condition 5) | 1,500, 600 | 1,500, 600 |
+| Real-word slips (condition 6) | 300 | 300 |
+| Domain clean, domain slips (condition 7) | 2,642, 1,838 | 2,656, 1,955 |
+
+The domain slips are 6 percent fewer than in the fresh held-out set, because the pairs of that set stay out. Every other count is within 3 percent. Three sources were short.
+
+1. The held-out half of the GitHub Typo Corpus has no unused real-word row. The set takes real-word errors from the RWSE Wikipedia Revision Dataset, which has 603 instances. Of them 375 pass the filters and hold no pair of an earlier real misspelling. No condition reads this part, as no condition reads `github_real_word`.
+2. The word list has 119 unused tokens with one digit, and the category `clean_symbol_token` held 129 in the earlier sets. The set takes the 119, so its group clean symbols has 419 cases, against 429 in the earlier sets. The test-bucket domain text holds 44 more such tokens, as "conv2d" and "int4". They stay out, because domain tokens can favour a file that trained on domain text, and condition 3 allows no loss.
+3. One reading of the sentences gives 19 of 27 slips of the key "1" inside a word. For this set the generator reads the sentences up to 20 times with new word positions (`SENTENCE_READINGS` in `scripts/lm-finetune/build_cases.py`). The first reading is the reading of the earlier sets, and a rebuild of the fresh held-out set gives its six SHA-256 values.
+
+The requested words get new contexts, written for this set, because their earlier contexts are cases of earlier sets.
+After a later reading, a sentence can feed two cases of one symbol category. So an interval that takes the cases as independent is a little narrow there.
+The set, its seven SHA-256 values and its sizes are fixed before any model scores it. `scripts/lm-domain/reports/confirm-holdout-report.json` holds them.
+
+### Conditions of the confirmation read
+
+The candidate passes when all seven conditions of "Replacement rule on the fresh held-out set" hold on the confirmation set, with `ship` as the reference. The conditions apply as written there.
+Condition 3 stays a count without a band: the right clean cases and the right clean-symbol cases are each at least those of `ship`. The paired dev comparison replaces pick condition 6 only, and no condition of the read uses it.
+A smaller part gives a wider interval. The report gives the size of each part and a 95 percent interval beside each difference.
+
+Four things are in the plan for the report, and they decide nothing.
+
+1. The arms `dom-s100-seed1` at `shipped`, `dom-s100-seed2` and `dom-s100-seed3` at their `ceiling-0.3` settings, and `soup-mix` at `ceiling-0.3`.
+2. The real-word errors of Wikipedia.
+3. The paired comparison of each arm with `ship` on the generated cases, with the margins of Table 11.
+4. The engine alone and the perfect chooser.
+
+`scripts/lm-domain/confirm-plan.json` names the seven files with their SHA-256 values, every arm with its file, SHA-256, setting and lead, the reference and the candidate.
+`make_holdout_plan.py --expect-candidate` stops unless the pick names `dom-s100-seed1` at `ceiling-0.3`.
+The plan is committed before the read, and the commit message holds its SHA-256. `read_fresh_holdout.py` takes that value as `--plan-sha256` and stops when the plan file has another value.
+It first checks the plan and the SHA-256 value of every file. Then it creates `read-started.json` in the folder of the set, with the value and the output folder, before any model types a case.
+From then on it refuses another plan and another output folder, and it refuses an output folder that holds a result. Every start adds a line to `read-attempts.jsonl`.
+These guards are files on this machine. The script does not ask Git whether the plan is committed, so the agent that starts the read checks that the working tree equals the plan commit.
+The report gives the interval of the technical and written streams over documents, and an interval for each of the two clean groups.
+
+After a pass, five steps follow, and the app keeps the shipped file until the user decides.
+
+1. State the parity of the candidate file under the reading of pick condition 9.
+2. Count the corrections where the Q4_K_M file takes another reading than PyTorch float32, with the apostrophe step on.
+3. Run the Linux harness and the CI workflows on this branch with the candidate file.
+4. Publish the file as the GitHub pre-release `lm-domain-candidate-1`, with its licences and attributions.
+5. Write the counts into `docs/lm-domain-results.md`.
+
+After a miss, the shipped file stays, and the report names the condition and its counts. No other setting and no other arm is read on the confirmation set as a candidate.
 
 ## Controls of the domain round
 
@@ -383,6 +529,8 @@ Table 10. Labels of the hand pass, in the order of their test. The first label w
 - The round does not hold a control with the share of clean lists and the everyday exposure of a domain arm, without domain text.
 - The loss comparison has two seeds per loss. A difference inside the seed spread is not a result.
 - The pick and the replacement rule test observed counts. A condition that holds by one case can turn on chance.
-- The floors of pick condition 6 come from another run and another machine than the scores of this harness.
+- The paired dev comparison bounds the net loss on the dev half at about 18 cases. It does not show that an entry equals `ship`.
+- The margins of the paired dev comparison were written with the dev counts of every entry known.
+- The candidate of the confirmation round was named after its counts on the fresh held-out set were seen. Only the confirmation set tests it.
 - One person's labels in the audit are noisy. The rule is written before the pass, and the labels are a diagnostic.
 - The slip rate of the owner is not measured. The typing log of `docs/typing-log-design.md` exists to measure it, and it is off by default.

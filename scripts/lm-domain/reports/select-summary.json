@@ -31,8 +31,49 @@
      "tune_right": 6501,
      "tune_changed_words": 58,
      "dev_paired_with_ship": {
-      "only_ship_right": 0,
-      "only_this_right": 0
+      "parts": {
+       "all": {
+        "cases": 6799,
+        "only_first_right": 0,
+        "only_second_right": 0,
+        "net_loss": 0,
+        "margin_in_cases": 33.99,
+        "share_of_draws_at_or_over_the_margin": 0.0,
+        "score_test_p": 0.0,
+        "passes": true
+       },
+       "letter_slips": {
+        "cases": 2100,
+        "only_first_right": 0,
+        "only_second_right": 0,
+        "net_loss": 0,
+        "margin_in_cases": 21.0,
+        "share_of_draws_at_or_over_the_margin": 0.0,
+        "score_test_p": 0.0,
+        "passes": true
+       },
+       "space_slips": {
+        "cases": 1500,
+        "only_first_right": 0,
+        "only_second_right": 0,
+        "net_loss": 0,
+        "margin_in_cases": 15.0,
+        "share_of_draws_at_or_over_the_margin": 0.0,
+        "score_test_p": 5e-05,
+        "passes": true
+       },
+       "symbol_slips": {
+        "cases": 1197,
+        "only_first_right": 0,
+        "only_second_right": 0,
+        "net_loss": 0,
+        "margin_in_cases": 11.97,
+        "share_of_draws_at_or_over_the_margin": 0.0,
+        "score_test_p": 0.00025,
+        "passes": true
+       }
+      },
+      "passes": true
      },
      "dev_right": 6544,
      "dev_groups": {
@@ -156,8 +197,49 @@
      "tune_right": 6493,
      "tune_changed_words": 17,
      "dev_paired_with_ship": {
-      "only_ship_right": 43,
-      "only_this_right": 31
+      "parts": {
+       "all": {
+        "cases": 6799,
+        "only_first_right": 43,
+        "only_second_right": 31,
+        "net_loss": 12,
+        "margin_in_cases": 33.99,
+        "share_of_draws_at_or_over_the_margin": 0.00654,
+        "score_test_p": 0.00781,
+        "passes": true
+       },
+       "letter_slips": {
+        "cases": 2100,
+        "only_first_right": 16,
+        "only_second_right": 5,
+        "net_loss": 11,
+        "margin_in_cases": 21.0,
+        "share_of_draws_at_or_over_the_margin": 0.02167,
+        "score_test_p": 0.02973,
+        "passes": true
+       },
+       "space_slips": {
+        "cases": 1500,
+        "only_first_right": 14,
+        "only_second_right": 8,
+        "net_loss": 6,
+        "margin_in_cases": 15.0,
+        "share_of_draws_at_or_over_the_margin": 0.03632,
+        "score_test_p": 0.04105,
+        "passes": true
+       },
+       "symbol_slips": {
+        "cases": 1197,
+        "only_first_right": 5,
+        "only_second_right": 2,
+        "net_loss": 3,
+        "margin_in_cases": 11.97,
+        "share_of_draws_at_or_over_the_margin": 0.0015,
+        "score_test_p": 0.00884,
+        "passes": true
+       }
+      },
+      "passes": true
      },
      "dev_right": 6532,
      "dev_groups": {
@@ -281,8 +363,49 @@
      "tune_right": 6482,
      "tune_changed_words": 11,
      "dev_paired_with_ship": {
-      "only_ship_right": 48,
-      "only_this_right": 31
+      "parts": {
+       "all": {
+        "cases": 6799,
+        "only_first_right": 48,
+        "only_second_right": 31,
+        "net_loss": 17,
+        "margin_in_cases": 33.99,
+        "share_of_draws_at_or_over_the_margin": 0.0323,
+        "score_test_p": 0.03304,
+        "passes": true
+       },
+       "letter_slips": {
+        "cases": 2100,
+        "only_first_right": 19,
+        "only_second_right": 5,
+        "net_loss": 14,
+        "margin_in_cases": 21.0,
+        "share_of_draws_at_or_over_the_margin": 0.09358,
+        "score_test_p": 0.09613,
+        "passes": false
+       },
+       "space_slips": {
+        "cases": 1500,
+        "only_first_right": 16,
+        "only_second_right": 8,
+        "net_loss": 8,
+        "margin_in_cases": 15.0,
+        "share_of_draws_at_or_over_the_margin": 0.0927,
+        "score_test_p": 0.0913,
+        "passes": false
+       },
+       "symbol_slips": {
+        "cases": 1197,
+        "only_first_right": 5,
+        "only_second_right": 2,
+        "net_loss": 3,
+        "margin_in_cases": 11.97,
+        "share_of_draws_at_or_over_the_margin": 0.0015,
+        "score_test_p": 0.00884,
+        "passes": true
+       }
+      },
+      "passes": false
      },
      "dev_right": 6527,
      "dev_groups": {
@@ -406,8 +529,49 @@
      "tune_right": 6501,
      "tune_changed_words": 41,
      "dev_paired_with_ship": {
-      "only_ship_right": 35,
-      "only_this_right": 31
+      "parts": {
+       "all": {
+        "cases": 6799,
+        "only_first_right": 35,
+        "only_second_right": 31,
+        "net_loss": 4,
+        "margin_in_cases": 33.99,
+        "share_of_draws_at_or_over_the_margin": 0.00016,
+        "score_test_p": 0.00036,
+        "passes": true
+       },
+       "letter_slips": {
+        "cases": 2100,
+        "only_first_right": 13,
+        "only_second_right": 5,
+        "net_loss": 8,
+        "margin_in_cases": 21.0,
+        "share_of_draws_at_or_over_the_margin": 0.00242,
+        "score_test_p": 0.00664,
+        "passes": true
+       },
+       "space_slips": {
+        "cases": 1500,
+        "only_first_right": 13,
+        "only_second_right": 8,
+        "net_loss": 5,
+        "margin_in_cases": 15.0,
+        "share_of_draws_at_or_over_the_margin": 0.02033,
+        "score_test_p": 0.02587,
+        "passes": true
+       },
+       "symbol_slips": {
+        "cases": 1197,
+        "only_first_right": 3,
+        "only_second_right": 2,
+        "net_loss": 1,
+        "margin_in_cases": 11.97,
+        "share_of_draws_at_or_over_the_margin": 1e-05,
+        "score_test_p": 0.00174,
+        "passes": true
+       }
+      },
+      "passes": true
      },
      "dev_right": 6540,
      "dev_groups": {
@@ -1011,8 +1175,49 @@
      "tune_right": 6507,
      "tune_changed_words": 14,
      "dev_paired_with_ship": {
-      "only_ship_right": 20,
-      "only_this_right": 33
+      "parts": {
+       "all": {
+        "cases": 6799,
+        "only_first_right": 20,
+        "only_second_right": 33,
+        "net_loss": -13,
+        "margin_in_cases": 33.99,
+        "share_of_draws_at_or_over_the_margin": 0.0,
+        "score_test_p": 0.0,
+        "passes": true
+       },
+       "letter_slips": {
+        "cases": 2100,
+        "only_first_right": 7,
+        "only_second_right": 6,
+        "net_loss": 1,
+        "margin_in_cases": 21.0,
+        "share_of_draws_at_or_over_the_margin": 0.0,
+        "score_test_p": 7e-05,
+        "passes": true
+       },
+       "space_slips": {
+        "cases": 1500,
+        "only_first_right": 3,
+        "only_second_right": 13,
+        "net_loss": -10,
+        "margin_in_cases": 15.0,
+        "share_of_draws_at_or_over_the_margin": 0.0,
+        "score_test_p": 0.0,
+        "passes": true
+       },
+       "symbol_slips": {
+        "cases": 1197,
+        "only_first_right": 3,
+        "only_second_right": 3,
+        "net_loss": 0,
+        "margin_in_cases": 11.97,
+        "share_of_draws_at_or_over_the_margin": 1e-05,
+        "score_test_p": 0.00107,
+        "passes": true
+       }
+      },
+      "passes": true
      },
      "dev_right": 6557,
      "dev_groups": {
@@ -1136,8 +1341,49 @@
      "tune_right": 6525,
      "tune_changed_words": 9,
      "dev_paired_with_ship": {
-      "only_ship_right": 42,
-      "only_this_right": 46
+      "parts": {
+       "all": {
+        "cases": 6799,
+        "only_first_right": 42,
+        "only_second_right": 46,
+        "net_loss": -4,
+        "margin_in_cases": 33.99,
+        "share_of_draws_at_or_over_the_margin": 3e-05,
+        "score_test_p": 8e-05,
+        "passes": true
+       },
+       "letter_slips": {
+        "cases": 2100,
+        "only_first_right": 13,
+        "only_second_right": 9,
+        "net_loss": 4,
+        "margin_in_cases": 21.0,
+        "share_of_draws_at_or_over_the_margin": 0.00032,
+        "score_test_p": 0.00145,
+        "passes": true
+       },
+       "space_slips": {
+        "cases": 1500,
+        "only_first_right": 9,
+        "only_second_right": 12,
+        "net_loss": -3,
+        "margin_in_cases": 15.0,
+        "share_of_draws_at_or_over_the_margin": 7e-05,
+        "score_test_p": 0.00048,
+        "passes": true
+       },
+       "symbol_slips": {
+        "cases": 1197,
+        "only_first_right": 4,
+        "only_second_right": 5,
+        "net_loss": -1,
+        "margin_in_cases": 11.97,
+        "share_of_draws_at_or_over_the_margin": 3e-05,
+        "score_test_p": 0.00099,
+        "passes": true
+       }
+      },
+      "passes": true
      },
      "dev_right": 6548,
      "dev_groups": {
@@ -1261,8 +1507,49 @@
      "tune_right": 6525,
      "tune_changed_words": 9,
      "dev_paired_with_ship": {
-      "only_ship_right": 42,
-      "only_this_right": 46
+      "parts": {
+       "all": {
+        "cases": 6799,
+        "only_first_right": 42,
+        "only_second_right": 46,
+        "net_loss": -4,
+        "margin_in_cases": 33.99,
+        "share_of_draws_at_or_over_the_margin": 3e-05,
+        "score_test_p": 8e-05,
+        "passes": true
+       },
+       "letter_slips": {
+        "cases": 2100,
+        "only_first_right": 13,
+        "only_second_right": 9,
+        "net_loss": 4,
+        "margin_in_cases": 21.0,
+        "share_of_draws_at_or_over_the_margin": 0.00032,
+        "score_test_p": 0.00145,
+        "passes": true
+       },
+       "space_slips": {
+        "cases": 1500,
+        "only_first_right": 9,
+        "only_second_right": 12,
+        "net_loss": -3,
+        "margin_in_cases": 15.0,
+        "share_of_draws_at_or_over_the_margin": 7e-05,
+        "score_test_p": 0.00048,
+        "passes": true
+       },
+       "symbol_slips": {
+        "cases": 1197,
+        "only_first_right": 4,
+        "only_second_right": 5,
+        "net_loss": -1,
+        "margin_in_cases": 11.97,
+        "share_of_draws_at_or_over_the_margin": 3e-05,
+        "score_test_p": 0.00099,
+        "passes": true
+       }
+      },
+      "passes": true
      },
      "dev_right": 6548,
      "dev_groups": {
@@ -1386,8 +1673,49 @@
      "tune_right": 6525,
      "tune_changed_words": 9,
      "dev_paired_with_ship": {
-      "only_ship_right": 42,
-      "only_this_right": 46
+      "parts": {
+       "all": {
+        "cases": 6799,
+        "only_first_right": 42,
+        "only_second_right": 46,
+        "net_loss": -4,
+        "margin_in_cases": 33.99,
+        "share_of_draws_at_or_over_the_margin": 3e-05,
+        "score_test_p": 8e-05,
+        "passes": true
+       },
+       "letter_slips": {
+        "cases": 2100,
+        "only_first_right": 13,
+        "only_second_right": 9,
+        "net_loss": 4,
+        "margin_in_cases": 21.0,
+        "share_of_draws_at_or_over_the_margin": 0.00032,
+        "score_test_p": 0.00145,
+        "passes": true
+       },
+       "space_slips": {
+        "cases": 1500,
+        "only_first_right": 9,
+        "only_second_right": 12,
+        "net_loss": -3,
+        "margin_in_cases": 15.0,
+        "share_of_draws_at_or_over_the_margin": 7e-05,
+        "score_test_p": 0.00048,
+        "passes": true
+       },
+       "symbol_slips": {
+        "cases": 1197,
+        "only_first_right": 4,
+        "only_second_right": 5,
+        "net_loss": -1,
+        "margin_in_cases": 11.97,
+        "share_of_draws_at_or_over_the_margin": 3e-05,
+        "score_test_p": 0.00099,
+        "passes": true
+       }
+      },
+      "passes": true
      },
      "dev_right": 6548,
      "dev_groups": {
@@ -1991,8 +2319,49 @@
      "tune_right": 6491,
      "tune_changed_words": 7,
      "dev_paired_with_ship": {
-      "only_ship_right": 40,
-      "only_this_right": 33
+      "parts": {
+       "all": {
+        "cases": 6799,
+        "only_first_right": 40,
+        "only_second_right": 33,
+        "net_loss": 7,
+        "margin_in_cases": 33.99,
+        "share_of_draws_at_or_over_the_margin": 0.00104,
+        "score_test_p": 0.00158,
+        "passes": true
+       },
+       "letter_slips": {
+        "cases": 2100,
+        "only_first_right": 7,
+        "only_second_right": 6,
+        "net_loss": 1,
+        "margin_in_cases": 21.0,
+        "share_of_draws_at_or_over_the_margin": 0.0,
+        "score_test_p": 7e-05,
+        "passes": true
+       },
+       "space_slips": {
+        "cases": 1500,
+        "only_first_right": 7,
+        "only_second_right": 8,
+        "net_loss": -1,
+        "margin_in_cases": 15.0,
+        "share_of_draws_at_or_over_the_margin": 4e-05,
+        "score_test_p": 0.00061,
+        "passes": true
+       },
+       "symbol_slips": {
+        "cases": 1197,
+        "only_first_right": 3,
+        "only_second_right": 2,
+        "net_loss": 1,
+        "margin_in_cases": 11.97,
+        "share_of_draws_at_or_over_the_margin": 1e-05,
+        "score_test_p": 0.00174,
+        "passes": true
+       }
+      },
+      "passes": true
      },
      "dev_right": 6537,
      "dev_groups": {
@@ -2116,8 +2485,49 @@
      "tune_right": 6499,
      "tune_changed_words": 7,
      "dev_paired_with_ship": {
-      "only_ship_right": 57,
-      "only_this_right": 48
+      "parts": {
+       "all": {
+        "cases": 6799,
+        "only_first_right": 57,
+        "only_second_right": 48,
+        "net_loss": 9,
+        "margin_in_cases": 33.99,
+        "share_of_draws_at_or_over_the_margin": 0.00858,
+        "score_test_p": 0.00916,
+        "passes": true
+       },
+       "letter_slips": {
+        "cases": 2100,
+        "only_first_right": 15,
+        "only_second_right": 13,
+        "net_loss": 2,
+        "margin_in_cases": 21.0,
+        "share_of_draws_at_or_over_the_margin": 0.00029,
+        "score_test_p": 0.00104,
+        "passes": true
+       },
+       "space_slips": {
+        "cases": 1500,
+        "only_first_right": 15,
+        "only_second_right": 10,
+        "net_loss": 5,
+        "margin_in_cases": 15.0,
+        "share_of_draws_at_or_over_the_margin": 0.02966,
+        "score_test_p": 0.03345,
+        "passes": true
+       },
+       "symbol_slips": {
+        "cases": 1197,
+        "only_first_right": 5,
+        "only_second_right": 5,
+        "net_loss": 0,
+        "margin_in_cases": 11.97,
+        "share_of_draws_at_or_over_the_margin": 0.00021,
+        "score_test_p": 0.00228,
+        "passes": true
+       }
+      },
+      "passes": true
      },
      "dev_right": 6535,
      "dev_groups": {
@@ -2241,8 +2651,49 @@
      "tune_right": 6499,
      "tune_changed_words": 7,
      "dev_paired_with_ship": {
-      "only_ship_right": 57,
-      "only_this_right": 48
+      "parts": {
+       "all": {
+        "cases": 6799,
+        "only_first_right": 57,
+        "only_second_right": 48,
+        "net_loss": 9,
+        "margin_in_cases": 33.99,
+        "share_of_draws_at_or_over_the_margin": 0.00858,
+        "score_test_p": 0.00916,
+        "passes": true
+       },
+       "letter_slips": {
+        "cases": 2100,
+        "only_first_right": 15,
+        "only_second_right": 13,
+        "net_loss": 2,
+        "margin_in_cases": 21.0,
+        "share_of_draws_at_or_over_the_margin": 0.00029,
+        "score_test_p": 0.00104,
+        "passes": true
+       },
+       "space_slips": {
+        "cases": 1500,
+        "only_first_right": 15,
+        "only_second_right": 10,
+        "net_loss": 5,
+        "margin_in_cases": 15.0,
+        "share_of_draws_at_or_over_the_margin": 0.02966,
+        "score_test_p": 0.03345,
+        "passes": true
+       },
+       "symbol_slips": {
+        "cases": 1197,
+        "only_first_right": 5,
+        "only_second_right": 5,
+        "net_loss": 0,
+        "margin_in_cases": 11.97,
+        "share_of_draws_at_or_over_the_margin": 0.00021,
+        "score_test_p": 0.00228,
+        "passes": true
+       }
+      },
+      "passes": true
      },
      "dev_right": 6535,
      "dev_groups": {
@@ -2366,8 +2817,49 @@
      "tune_right": 6499,
      "tune_changed_words": 7,
      "dev_paired_with_ship": {
-      "only_ship_right": 57,
-      "only_this_right": 48
+      "parts": {
+       "all": {
+        "cases": 6799,
+        "only_first_right": 57,
+        "only_second_right": 48,
+        "net_loss": 9,
+        "margin_in_cases": 33.99,
+        "share_of_draws_at_or_over_the_margin": 0.00858,
+        "score_test_p": 0.00916,
+        "passes": true
+       },
+       "letter_slips": {
+        "cases": 2100,
+        "only_first_right": 15,
+        "only_second_right": 13,
+        "net_loss": 2,
+        "margin_in_cases": 21.0,
+        "share_of_draws_at_or_over_the_margin": 0.00029,
+        "score_test_p": 0.00104,
+        "passes": true
+       },
+       "space_slips": {
+        "cases": 1500,
+        "only_first_right": 15,
+        "only_second_right": 10,
+        "net_loss": 5,
+        "margin_in_cases": 15.0,
+        "share_of_draws_at_or_over_the_margin": 0.02966,
+        "score_test_p": 0.03345,
+        "passes": true
+       },
+       "symbol_slips": {
+        "cases": 1197,
+        "only_first_right": 5,
+        "only_second_right": 5,
+        "net_loss": 0,
+        "margin_in_cases": 11.97,
+        "share_of_draws_at_or_over_the_margin": 0.00021,
+        "score_test_p": 0.00228,
+        "passes": true
+       }
+      },
+      "passes": true
      },
      "dev_right": 6535,
      "dev_groups": {
@@ -2971,8 +3463,49 @@
      "tune_right": 6514,
      "tune_changed_words": 9,
      "dev_paired_with_ship": {
-      "only_ship_right": 25,
-      "only_this_right": 37
+      "parts": {
+       "all": {
+        "cases": 6799,
+        "only_first_right": 25,
+        "only_second_right": 37,
+        "net_loss": -12,
+        "margin_in_cases": 33.99,
+        "share_of_draws_at_or_over_the_margin": 0.0,
+        "score_test_p": 0.0,
+        "passes": true
+       },
+       "letter_slips": {
+        "cases": 2100,
+        "only_first_right": 6,
+        "only_second_right": 7,
+        "net_loss": -1,
+        "margin_in_cases": 21.0,
+        "share_of_draws_at_or_over_the_margin": 0.0,
+        "score_test_p": 2e-05,
+        "passes": true
+       },
+       "space_slips": {
+        "cases": 1500,
+        "only_first_right": 3,
+        "only_second_right": 13,
+        "net_loss": -10,
+        "margin_in_cases": 15.0,
+        "share_of_draws_at_or_over_the_margin": 0.0,
+        "score_test_p": 0.0,
+        "passes": true
+       },
+       "symbol_slips": {
+        "cases": 1197,
+        "only_first_right": 4,
+        "only_second_right": 4,
+        "net_loss": 0,
+        "margin_in_cases": 11.97,
+        "share_of_draws_at_or_over_the_margin": 5e-05,
+        "score_test_p": 0.00159,
+        "passes": true
+       }
+      },
+      "passes": true
      },
      "dev_right": 6556,
      "dev_groups": {
@@ -3096,8 +3629,49 @@
      "tune_right": 6515,
      "tune_changed_words": 7,
      "dev_paired_with_ship": {
-      "only_ship_right": 47,
-      "only_this_right": 52
+      "parts": {
+       "all": {
+        "cases": 6799,
+        "only_first_right": 47,
+        "only_second_right": 52,
+        "net_loss": -5,
+        "margin_in_cases": 33.99,
+        "share_of_draws_at_or_over_the_margin": 6e-05,
+        "score_test_p": 0.0001,
+        "passes": true
+       },
+       "letter_slips": {
+        "cases": 2100,
+        "only_first_right": 9,
+        "only_second_right": 14,
+        "net_loss": -5,
+        "margin_in_cases": 21.0,
+        "share_of_draws_at_or_over_the_margin": 0.0,
+        "score_test_p": 1e-05,
+        "passes": true
+       },
+       "space_slips": {
+        "cases": 1500,
+        "only_first_right": 14,
+        "only_second_right": 14,
+        "net_loss": 0,
+        "margin_in_cases": 15.0,
+        "share_of_draws_at_or_over_the_margin": 0.00319,
+        "score_test_p": 0.0052,
+        "passes": true
+       },
+       "symbol_slips": {
+        "cases": 1197,
+        "only_first_right": 7,
+        "only_second_right": 6,
+        "net_loss": 1,
+        "margin_in_cases": 11.97,
+        "share_of_draws_at_or_over_the_margin": 0.00216,
+        "score_test_p": 0.0065,
+        "passes": true
+       }
+      },
+      "passes": true
      },
      "dev_right": 6549,
      "dev_groups": {
@@ -3221,8 +3795,49 @@
      "tune_right": 6515,
      "tune_changed_words": 7,
      "dev_paired_with_ship": {
-      "only_ship_right": 47,
-      "only_this_right": 52
+      "parts": {
+       "all": {
+        "cases": 6799,
+        "only_first_right": 47,
+        "only_second_right": 52,
+        "net_loss": -5,
+        "margin_in_cases": 33.99,
+        "share_of_draws_at_or_over_the_margin": 6e-05,
+        "score_test_p": 0.0001,
+        "passes": true
+       },
+       "letter_slips": {
+        "cases": 2100,
+        "only_first_right": 9,
+        "only_second_right": 14,
+        "net_loss": -5,
+        "margin_in_cases": 21.0,
+        "share_of_draws_at_or_over_the_margin": 0.0,
+        "score_test_p": 1e-05,
+        "passes": true
+       },
+       "space_slips": {
+        "cases": 1500,
+        "only_first_right": 14,
+        "only_second_right": 14,
+        "net_loss": 0,
+        "margin_in_cases": 15.0,
+        "share_of_draws_at_or_over_the_margin": 0.00319,
+        "score_test_p": 0.0052,
+        "passes": true
+       },
+       "symbol_slips": {
+        "cases": 1197,
+        "only_first_right": 7,
+        "only_second_right": 6,
+        "net_loss": 1,
+        "margin_in_cases": 11.97,
+        "share_of_draws_at_or_over_the_margin": 0.00216,
+        "score_test_p": 0.0065,
+        "passes": true
+       }
+      },
+      "passes": true
      },
      "dev_right": 6549,
      "dev_groups": {
@@ -3346,8 +3961,49 @@
      "tune_right": 6515,
      "tune_changed_words": 7,
      "dev_paired_with_ship": {
-      "only_ship_right": 47,
-      "only_this_right": 52
+      "parts": {
+       "all": {
+        "cases": 6799,
+        "only_first_right": 47,
+        "only_second_right": 52,
+        "net_loss": -5,
+        "margin_in_cases": 33.99,
+        "share_of_draws_at_or_over_the_margin": 6e-05,
+        "score_test_p": 0.0001,
+        "passes": true
+       },
+       "letter_slips": {
+        "cases": 2100,
+        "only_first_right": 9,
+        "only_second_right": 14,
+        "net_loss": -5,
+        "margin_in_cases": 21.0,
+        "share_of_draws_at_or_over_the_margin": 0.0,
+        "score_test_p": 1e-05,
+        "passes": true
+       },
+       "space_slips": {
+        "cases": 1500,
+        "only_first_right": 14,
+        "only_second_right": 14,
+        "net_loss": 0,
+        "margin_in_cases": 15.0,
+        "share_of_draws_at_or_over_the_margin": 0.00319,
+        "score_test_p": 0.0052,
+        "passes": true
+       },
+       "symbol_slips": {
+        "cases": 1197,
+        "only_first_right": 7,
+        "only_second_right": 6,
+        "net_loss": 1,
+        "margin_in_cases": 11.97,
+        "share_of_draws_at_or_over_the_margin": 0.00216,
+        "score_test_p": 0.0065,
+        "passes": true
+       }
+      },
+      "passes": true
      },
      "dev_right": 6549,
      "dev_groups": {
@@ -3951,8 +4607,49 @@
      "tune_right": 6500,
      "tune_changed_words": 14,
      "dev_paired_with_ship": {
-      "only_ship_right": 33,
-      "only_this_right": 23
+      "parts": {
+       "all": {
+        "cases": 6799,
+        "only_first_right": 33,
+        "only_second_right": 23,
+        "net_loss": 10,
+        "margin_in_cases": 33.99,
+        "share_of_draws_at_or_over_the_margin": 0.00098,
+        "score_test_p": 0.00178,
+        "passes": true
+       },
+       "letter_slips": {
+        "cases": 2100,
+        "only_first_right": 13,
+        "only_second_right": 7,
+        "net_loss": 6,
+        "margin_in_cases": 21.0,
+        "share_of_draws_at_or_over_the_margin": 0.0009,
+        "score_test_p": 0.00313,
+        "passes": true
+       },
+       "space_slips": {
+        "cases": 1500,
+        "only_first_right": 8,
+        "only_second_right": 6,
+        "net_loss": 2,
+        "margin_in_cases": 15.0,
+        "share_of_draws_at_or_over_the_margin": 0.00062,
+        "score_test_p": 0.00302,
+        "passes": true
+       },
+       "symbol_slips": {
+        "cases": 1197,
+        "only_first_right": 0,
+        "only_second_right": 1,
+        "net_loss": -1,
+        "margin_in_cases": 11.97,
+        "share_of_draws_at_or_over_the_margin": 0.0,
+        "score_test_p": 0.00015,
+        "passes": true
+       }
+      },
+      "passes": true
      },
      "dev_right": 6534,
      "dev_groups": {
@@ -4076,8 +4773,49 @@
      "tune_right": 6517,
      "tune_changed_words": 11,
      "dev_paired_with_ship": {
-      "only_ship_right": 48,
-      "only_this_right": 42
+      "parts": {
+       "all": {
+        "cases": 6799,
+        "only_first_right": 48,
+        "only_second_right": 42,
+        "net_loss": 6,
+        "margin_in_cases": 33.99,
+        "share_of_draws_at_or_over_the_margin": 0.00196,
+        "score_test_p": 0.00248,
+        "passes": true
+       },
+       "letter_slips": {
+        "cases": 2100,
+        "only_first_right": 14,
+        "only_second_right": 11,
+        "net_loss": 3,
+        "margin_in_cases": 21.0,
+        "share_of_draws_at_or_over_the_margin": 0.00031,
+        "score_test_p": 0.00123,
+        "passes": true
+       },
+       "space_slips": {
+        "cases": 1500,
+        "only_first_right": 12,
+        "only_second_right": 11,
+        "net_loss": 1,
+        "margin_in_cases": 15.0,
+        "share_of_draws_at_or_over_the_margin": 0.00265,
+        "score_test_p": 0.00514,
+        "passes": true
+       },
+       "symbol_slips": {
+        "cases": 1197,
+        "only_first_right": 4,
+        "only_second_right": 6,
+        "net_loss": -2,
+        "margin_in_cases": 11.97,
+        "share_of_draws_at_or_over_the_margin": 1e-05,
+        "score_test_p": 0.00062,
+        "passes": true
+       }
+      },
+      "passes": true
      },
      "dev_right": 6538,
      "dev_groups": {
@@ -4201,8 +4939,49 @@
      "tune_right": 6517,
      "tune_changed_words": 11,
      "dev_paired_with_ship": {
-      "only_ship_right": 48,
-      "only_this_right": 42
+      "parts": {
+       "all": {
+        "cases": 6799,
+        "only_first_right": 48,
+        "only_second_right": 42,
+        "net_loss": 6,
+        "margin_in_cases": 33.99,
+        "share_of_draws_at_or_over_the_margin": 0.00196,
+        "score_test_p": 0.00248,
+        "passes": true
+       },
+       "letter_slips": {
+        "cases": 2100,
+        "only_first_right": 14,
+        "only_second_right": 11,
+        "net_loss": 3,
+        "margin_in_cases": 21.0,
+        "share_of_draws_at_or_over_the_margin": 0.00031,
+        "score_test_p": 0.00123,
+        "passes": true
+       },
+       "space_slips": {
+        "cases": 1500,
+        "only_first_right": 12,
+        "only_second_right": 11,
+        "net_loss": 1,
+        "margin_in_cases": 15.0,
+        "share_of_draws_at_or_over_the_margin": 0.00265,
+        "score_test_p": 0.00514,
+        "passes": true
+       },
+       "symbol_slips": {
+        "cases": 1197,
+        "only_first_right": 4,
+        "only_second_right": 6,
+        "net_loss": -2,
+        "margin_in_cases": 11.97,
+        "share_of_draws_at_or_over_the_margin": 1e-05,
+        "score_test_p": 0.00062,
+        "passes": true
+       }
+      },
+      "passes": true
      },
      "dev_right": 6538,
      "dev_groups": {
@@ -4326,8 +5105,49 @@
      "tune_right": 6515,
      "tune_changed_words": 6,
      "dev_paired_with_ship": {
-      "only_ship_right": 51,
-      "only_this_right": 42
+      "parts": {
+       "all": {
+        "cases": 6799,
+        "only_first_right": 51,
+        "only_second_right": 42,
+        "net_loss": 9,
+        "margin_in_cases": 33.99,
+        "share_of_draws_at_or_over_the_margin": 0.00571,
+        "score_test_p": 0.00646,
+        "passes": true
+       },
+       "letter_slips": {
+        "cases": 2100,
+        "only_first_right": 15,
+        "only_second_right": 11,
+        "net_loss": 4,
+        "margin_in_cases": 21.0,
+        "share_of_draws_at_or_over_the_margin": 0.00077,
+        "score_test_p": 0.0022,
+        "passes": true
+       },
+       "space_slips": {
+        "cases": 1500,
+        "only_first_right": 14,
+        "only_second_right": 10,
+        "net_loss": 4,
+        "margin_in_cases": 15.0,
+        "share_of_draws_at_or_over_the_margin": 0.01686,
+        "score_test_p": 0.02117,
+        "passes": true
+       },
+       "symbol_slips": {
+        "cases": 1197,
+        "only_first_right": 4,
+        "only_second_right": 6,
+        "net_loss": -2,
+        "margin_in_cases": 11.97,
+        "share_of_draws_at_or_over_the_margin": 1e-05,
+        "score_test_p": 0.00062,
+        "passes": true
+       }
+      },
+      "passes": true
      },
      "dev_right": 6535,
      "dev_groups": {
@@ -4931,8 +5751,49 @@
      "tune_right": 6480,
      "tune_changed_words": 26,
      "dev_paired_with_ship": {
-      "only_ship_right": 32,
-      "only_this_right": 31
+      "parts": {
+       "all": {
+        "cases": 6799,
+        "only_first_right": 32,
+        "only_second_right": 31,
+        "net_loss": 1,
+        "margin_in_cases": 33.99,
+        "share_of_draws_at_or_over_the_margin": 2e-05,
+        "score_test_p": 9e-05,
+        "passes": true
+       },
+       "letter_slips": {
+        "cases": 2100,
+        "only_first_right": 5,
+        "only_second_right": 7,
+        "net_loss": -2,
+        "margin_in_cases": 21.0,
+        "share_of_draws_at_or_over_the_margin": 0.0,
+        "score_test_p": 1e-05,
+        "passes": true
+       },
+       "space_slips": {
+        "cases": 1500,
+        "only_first_right": 7,
+        "only_second_right": 12,
+        "net_loss": -5,
+        "margin_in_cases": 15.0,
+        "share_of_draws_at_or_over_the_margin": 0.0,
+        "score_test_p": 0.0001,
+        "passes": true
+       },
+       "symbol_slips": {
+        "cases": 1197,
+        "only_first_right": 1,
+        "only_second_right": 2,
+        "net_loss": -1,
+        "margin_in_cases": 11.97,
+        "share_of_draws_at_or_over_the_margin": 0.0,
+        "score_test_p": 0.00025,
+        "passes": true
+       }
+      },
+      "passes": true
      },
      "dev_right": 6543,
      "dev_groups": {
@@ -5056,8 +5917,49 @@
      "tune_right": 6512,
      "tune_changed_words": 9,
      "dev_paired_with_ship": {
-      "only_ship_right": 44,
-      "only_this_right": 43
+      "parts": {
+       "all": {
+        "cases": 6799,
+        "only_first_right": 44,
+        "only_second_right": 43,
+        "net_loss": 1,
+        "margin_in_cases": 33.99,
+        "share_of_draws_at_or_over_the_margin": 0.00026,
+        "score_test_p": 0.00043,
+        "passes": true
+       },
+       "letter_slips": {
+        "cases": 2100,
+        "only_first_right": 8,
+        "only_second_right": 10,
+        "net_loss": -2,
+        "margin_in_cases": 21.0,
+        "share_of_draws_at_or_over_the_margin": 0.0,
+        "score_test_p": 3e-05,
+        "passes": true
+       },
+       "space_slips": {
+        "cases": 1500,
+        "only_first_right": 12,
+        "only_second_right": 13,
+        "net_loss": -1,
+        "margin_in_cases": 15.0,
+        "share_of_draws_at_or_over_the_margin": 0.00102,
+        "score_test_p": 0.00239,
+        "passes": true
+       },
+       "symbol_slips": {
+        "cases": 1197,
+        "only_first_right": 2,
+        "only_second_right": 4,
+        "net_loss": -2,
+        "margin_in_cases": 11.97,
+        "share_of_draws_at_or_over_the_margin": 0.0,
+        "score_test_p": 0.00025,
+        "passes": true
+       }
+      },
+      "passes": true
      },
      "dev_right": 6543,
      "dev_groups": {
@@ -5181,8 +6083,49 @@
      "tune_right": 6512,
      "tune_changed_words": 9,
      "dev_paired_with_ship": {
-      "only_ship_right": 44,
-      "only_this_right": 43
+      "parts": {
+       "all": {
+        "cases": 6799,
+        "only_first_right": 44,
+        "only_second_right": 43,
+        "net_loss": 1,
+        "margin_in_cases": 33.99,
+        "share_of_draws_at_or_over_the_margin": 0.00026,
+        "score_test_p": 0.00043,
+        "passes": true
+       },
+       "letter_slips": {
+        "cases": 2100,
+        "only_first_right": 8,
+        "only_second_right": 10,
+        "net_loss": -2,
+        "margin_in_cases": 21.0,
+        "share_of_draws_at_or_over_the_margin": 0.0,
+        "score_test_p": 3e-05,
+        "passes": true
+       },
+       "space_slips": {
+        "cases": 1500,
+        "only_first_right": 12,
+        "only_second_right": 13,
+        "net_loss": -1,
+        "margin_in_cases": 15.0,
+        "share_of_draws_at_or_over_the_margin": 0.00102,
+        "score_test_p": 0.00239,
+        "passes": true
+       },
+       "symbol_slips": {
+        "cases": 1197,
+        "only_first_right": 2,
+        "only_second_right": 4,
+        "net_loss": -2,
+        "margin_in_cases": 11.97,
+        "share_of_draws_at_or_over_the_margin": 0.0,
+        "score_test_p": 0.00025,
+        "passes": true
+       }
+      },
+      "passes": true
      },
      "dev_right": 6543,
      "dev_groups": {
@@ -5306,8 +6249,49 @@
      "tune_right": 6506,
      "tune_changed_words": 5,
      "dev_paired_with_ship": {
-      "only_ship_right": 40,
-      "only_this_right": 43
+      "parts": {
+       "all": {
+        "cases": 6799,
+        "only_first_right": 40,
+        "only_second_right": 43,
+        "net_loss": -3,
+        "margin_in_cases": 33.99,
+        "share_of_draws_at_or_over_the_margin": 3e-05,
+        "score_test_p": 8e-05,
+        "passes": true
+       },
+       "letter_slips": {
+        "cases": 2100,
+        "only_first_right": 8,
+        "only_second_right": 10,
+        "net_loss": -2,
+        "margin_in_cases": 21.0,
+        "share_of_draws_at_or_over_the_margin": 0.0,
+        "score_test_p": 3e-05,
+        "passes": true
+       },
+       "space_slips": {
+        "cases": 1500,
+        "only_first_right": 13,
+        "only_second_right": 12,
+        "net_loss": 1,
+        "margin_in_cases": 15.0,
+        "share_of_draws_at_or_over_the_margin": 0.00369,
+        "score_test_p": 0.00624,
+        "passes": true
+       },
+       "symbol_slips": {
+        "cases": 1197,
+        "only_first_right": 3,
+        "only_second_right": 4,
+        "net_loss": -1,
+        "margin_in_cases": 11.97,
+        "share_of_draws_at_or_over_the_margin": 0.0,
+        "score_test_p": 0.00065,
+        "passes": true
+       }
+      },
+      "passes": true
      },
      "dev_right": 6547,
      "dev_groups": {
@@ -5911,8 +6895,49 @@
      "tune_right": 6512,
      "tune_changed_words": 9,
      "dev_paired_with_ship": {
-      "only_ship_right": 17,
-      "only_this_right": 31
+      "parts": {
+       "all": {
+        "cases": 6799,
+        "only_first_right": 17,
+        "only_second_right": 31,
+        "net_loss": -14,
+        "margin_in_cases": 33.99,
+        "share_of_draws_at_or_over_the_margin": 0.0,
+        "score_test_p": 0.0,
+        "passes": true
+       },
+       "letter_slips": {
+        "cases": 2100,
+        "only_first_right": 7,
+        "only_second_right": 7,
+        "net_loss": 0,
+        "margin_in_cases": 21.0,
+        "share_of_draws_at_or_over_the_margin": 0.0,
+        "score_test_p": 5e-05,
+        "passes": true
+       },
+       "space_slips": {
+        "cases": 1500,
+        "only_first_right": 2,
+        "only_second_right": 10,
+        "net_loss": -8,
+        "margin_in_cases": 15.0,
+        "share_of_draws_at_or_over_the_margin": 0.0,
+        "score_test_p": 0.0,
+        "passes": true
+       },
+       "symbol_slips": {
+        "cases": 1197,
+        "only_first_right": 2,
+        "only_second_right": 3,
+        "net_loss": -1,
+        "margin_in_cases": 11.97,
+        "share_of_draws_at_or_over_the_margin": 0.0,
+        "score_test_p": 0.00042,
+        "passes": true
+       }
+      },
+      "passes": true
      },
      "dev_right": 6558,
      "dev_groups": {
@@ -6036,8 +7061,49 @@
      "tune_right": 6540,
      "tune_changed_words": 7,
      "dev_paired_with_ship": {
-      "only_ship_right": 32,
-      "only_this_right": 48
+      "parts": {
+       "all": {
+        "cases": 6799,
+        "only_first_right": 32,
+        "only_second_right": 48,
+        "net_loss": -16,
+        "margin_in_cases": 33.99,
+        "share_of_draws_at_or_over_the_margin": 0.0,
+        "score_test_p": 0.0,
+        "passes": true
+       },
+       "letter_slips": {
+        "cases": 2100,
+        "only_first_right": 6,
+        "only_second_right": 12,
+        "net_loss": -6,
+        "margin_in_cases": 21.0,
+        "share_of_draws_at_or_over_the_margin": 0.0,
+        "score_test_p": 0.0,
+        "passes": true
+       },
+       "space_slips": {
+        "cases": 1500,
+        "only_first_right": 9,
+        "only_second_right": 13,
+        "net_loss": -4,
+        "margin_in_cases": 15.0,
+        "share_of_draws_at_or_over_the_margin": 4e-05,
+        "score_test_p": 0.00031,
+        "passes": true
+       },
+       "symbol_slips": {
+        "cases": 1197,
+        "only_first_right": 6,
+        "only_second_right": 6,
+        "net_loss": 0,
+        "margin_in_cases": 11.97,
+        "share_of_draws_at_or_over_the_margin": 0.00057,
+        "score_test_p": 0.00316,
+        "passes": true
+       }
+      },
+      "passes": true
      },
      "dev_right": 6560,
      "dev_groups": {
@@ -6161,8 +7227,49 @@
      "tune_right": 6540,
      "tune_changed_words": 7,
      "dev_paired_with_ship": {
-      "only_ship_right": 32,
-      "only_this_right": 48
+      "parts": {
+       "all": {
+        "cases": 6799,
+        "only_first_right": 32,
+        "only_second_right": 48,
+        "net_loss": -16,
+        "margin_in_cases": 33.99,
+        "share_of_draws_at_or_over_the_margin": 0.0,
+        "score_test_p": 0.0,
+        "passes": true
+       },
+       "letter_slips": {
+        "cases": 2100,
+        "only_first_right": 6,
+        "only_second_right": 12,
+        "net_loss": -6,
+        "margin_in_cases": 21.0,
+        "share_of_draws_at_or_over_the_margin": 0.0,
+        "score_test_p": 0.0,
+        "passes": true
+       },
+       "space_slips": {
+        "cases": 1500,
+        "only_first_right": 9,
+        "only_second_right": 13,
+        "net_loss": -4,
+        "margin_in_cases": 15.0,
+        "share_of_draws_at_or_over_the_margin": 4e-05,
+        "score_test_p": 0.00031,
+        "passes": true
+       },
+       "symbol_slips": {
+        "cases": 1197,
+        "only_first_right": 6,
+        "only_second_right": 6,
+        "net_loss": 0,
+        "margin_in_cases": 11.97,
+        "share_of_draws_at_or_over_the_margin": 0.00057,
+        "score_test_p": 0.00316,
+        "passes": true
+       }
+      },
+      "passes": true
      },
      "dev_right": 6560,
      "dev_groups": {
@@ -6286,8 +7393,49 @@
      "tune_right": 6540,
      "tune_changed_words": 7,
      "dev_paired_with_ship": {
-      "only_ship_right": 32,
-      "only_this_right": 48
+      "parts": {
+       "all": {
+        "cases": 6799,
+        "only_first_right": 32,
+        "only_second_right": 48,
+        "net_loss": -16,
+        "margin_in_cases": 33.99,
+        "share_of_draws_at_or_over_the_margin": 0.0,
+        "score_test_p": 0.0,
+        "passes": true
+       },
+       "letter_slips": {
+        "cases": 2100,
+        "only_first_right": 6,
+        "only_second_right": 12,
+        "net_loss": -6,
+        "margin_in_cases": 21.0,
+        "share_of_draws_at_or_over_the_margin": 0.0,
+        "score_test_p": 0.0,
+        "passes": true
+       },
+       "space_slips": {
+        "cases": 1500,
+        "only_first_right": 9,
+        "only_second_right": 13,
+        "net_loss": -4,
+        "margin_in_cases": 15.0,
+        "share_of_draws_at_or_over_the_margin": 4e-05,
+        "score_test_p": 0.00031,
+        "passes": true
+       },
+       "symbol_slips": {
+        "cases": 1197,
+        "only_first_right": 6,
+        "only_second_right": 6,
+        "net_loss": 0,
+        "margin_in_cases": 11.97,
+        "share_of_draws_at_or_over_the_margin": 0.00057,
+        "score_test_p": 0.00316,
+        "passes": true
+       }
+      },
+      "passes": true
      },
      "dev_right": 6560,
      "dev_groups": {
@@ -6891,8 +8039,49 @@
      "tune_right": 6507,
      "tune_changed_words": 63,
      "dev_paired_with_ship": {
-      "only_ship_right": 18,
-      "only_this_right": 20
+      "parts": {
+       "all": {
+        "cases": 6799,
+        "only_first_right": 18,
+        "only_second_right": 20,
+        "net_loss": -2,
+        "margin_in_cases": 33.99,
+        "share_of_draws_at_or_over_the_margin": 0.0,
+        "score_test_p": 0.0,
+        "passes": true
+       },
+       "letter_slips": {
+        "cases": 2100,
+        "only_first_right": 5,
+        "only_second_right": 3,
+        "net_loss": 2,
+        "margin_in_cases": 21.0,
+        "share_of_draws_at_or_over_the_margin": 0.0,
+        "score_test_p": 5e-05,
+        "passes": true
+       },
+       "space_slips": {
+        "cases": 1500,
+        "only_first_right": 5,
+        "only_second_right": 7,
+        "net_loss": -2,
+        "margin_in_cases": 15.0,
+        "share_of_draws_at_or_over_the_margin": 0.0,
+        "score_test_p": 0.00019,
+        "passes": true
+       },
+       "symbol_slips": {
+        "cases": 1197,
+        "only_first_right": 3,
+        "only_second_right": 2,
+        "net_loss": 1,
+        "margin_in_cases": 11.97,
+        "share_of_draws_at_or_over_the_margin": 1e-05,
+        "score_test_p": 0.00174,
+        "passes": true
+       }
+      },
+      "passes": true
      },
      "dev_right": 6546,
      "dev_groups": {
@@ -7016,8 +8205,49 @@
      "tune_right": 6521,
      "tune_changed_words": 23,
      "dev_paired_with_ship": {
-      "only_ship_right": 38,
-      "only_this_right": 44
+      "parts": {
+       "all": {
+        "cases": 6799,
+        "only_first_right": 38,
+        "only_second_right": 44,
+        "net_loss": -6,
+        "margin_in_cases": 33.99,
+        "share_of_draws_at_or_over_the_margin": 1e-05,
+        "score_test_p": 2e-05,
+        "passes": true
+       },
+       "letter_slips": {
+        "cases": 2100,
+        "only_first_right": 13,
+        "only_second_right": 8,
+        "net_loss": 5,
+        "margin_in_cases": 21.0,
+        "share_of_draws_at_or_over_the_margin": 0.00054,
+        "score_test_p": 0.00213,
+        "passes": true
+       },
+       "space_slips": {
+        "cases": 1500,
+        "only_first_right": 10,
+        "only_second_right": 11,
+        "net_loss": -1,
+        "margin_in_cases": 15.0,
+        "share_of_draws_at_or_over_the_margin": 0.0004,
+        "score_test_p": 0.00148,
+        "passes": true
+       },
+       "symbol_slips": {
+        "cases": 1197,
+        "only_first_right": 4,
+        "only_second_right": 5,
+        "net_loss": -1,
+        "margin_in_cases": 11.97,
+        "share_of_draws_at_or_over_the_margin": 3e-05,
+        "score_test_p": 0.00099,
+        "passes": true
+       }
+      },
+      "passes": true
      },
      "dev_right": 6550,
      "dev_groups": {
@@ -7141,8 +8371,49 @@
      "tune_right": 6506,
      "tune_changed_words": 13,
      "dev_paired_with_ship": {
-      "only_ship_right": 36,
-      "only_this_right": 41
+      "parts": {
+       "all": {
+        "cases": 6799,
+        "only_first_right": 36,
+        "only_second_right": 41,
+        "net_loss": -5,
+        "margin_in_cases": 33.99,
+        "share_of_draws_at_or_over_the_margin": 1e-05,
+        "score_test_p": 2e-05,
+        "passes": true
+       },
+       "letter_slips": {
+        "cases": 2100,
+        "only_first_right": 13,
+        "only_second_right": 8,
+        "net_loss": 5,
+        "margin_in_cases": 21.0,
+        "share_of_draws_at_or_over_the_margin": 0.00054,
+        "score_test_p": 0.00213,
+        "passes": true
+       },
+       "space_slips": {
+        "cases": 1500,
+        "only_first_right": 9,
+        "only_second_right": 11,
+        "net_loss": -2,
+        "margin_in_cases": 15.0,
+        "share_of_draws_at_or_over_the_margin": 0.00012,
+        "score_test_p": 0.00074,
+        "passes": true
+       },
+       "symbol_slips": {
+        "cases": 1197,
+        "only_first_right": 6,
+        "only_second_right": 5,
+        "net_loss": 1,
+        "margin_in_cases": 11.97,
+        "share_of_draws_at_or_over_the_margin": 0.00106,
+        "score_test_p": 0.00491,
+        "passes": true
+       }
+      },
+      "passes": true
      },
      "dev_right": 6549,
      "dev_groups": {
@@ -7266,8 +8537,49 @@
      "tune_right": 6535,
      "tune_changed_words": 43,
      "dev_paired_with_ship": {
-      "only_ship_right": 28,
-      "only_this_right": 43
+      "parts": {
+       "all": {
+        "cases": 6799,
+        "only_first_right": 28,
+        "only_second_right": 43,
+        "net_loss": -15,
+        "margin_in_cases": 33.99,
+        "share_of_draws_at_or_over_the_margin": 0.0,
+        "score_test_p": 0.0,
+        "passes": true
+       },
+       "letter_slips": {
+        "cases": 2100,
+        "only_first_right": 8,
+        "only_second_right": 8,
+        "net_loss": 0,
+        "margin_in_cases": 21.0,
+        "share_of_draws_at_or_over_the_margin": 0.0,
+        "score_test_p": 7e-05,
+        "passes": true
+       },
+       "space_slips": {
+        "cases": 1500,
+        "only_first_right": 6,
+        "only_second_right": 11,
+        "net_loss": -5,
+        "margin_in_cases": 15.0,
+        "share_of_draws_at_or_over_the_margin": 0.0,
+        "score_test_p": 7e-05,
+        "passes": true
+       },
+       "symbol_slips": {
+        "cases": 1197,
+        "only_first_right": 3,
+        "only_second_right": 5,
+        "net_loss": -2,
+        "margin_in_cases": 11.97,
+        "share_of_draws_at_or_over_the_margin": 0.0,
+        "score_test_p": 0.0004,
+        "passes": true
+       }
+      },
+      "passes": true
      },
      "dev_right": 6559,
      "dev_groups": {
@@ -7871,8 +9183,49 @@
      "tune_right": 6510,
      "tune_changed_words": 5,
      "dev_paired_with_ship": {
-      "only_ship_right": 26,
-      "only_this_right": 35
+      "parts": {
+       "all": {
+        "cases": 6799,
+        "only_first_right": 26,
+        "only_second_right": 35,
+        "net_loss": -9,
+        "margin_in_cases": 33.99,
+        "share_of_draws_at_or_over_the_margin": 0.0,
+        "score_test_p": 0.0,
+        "passes": true
+       },
+       "letter_slips": {
+        "cases": 2100,
+        "only_first_right": 11,
+        "only_second_right": 7,
+        "net_loss": 4,
+        "margin_in_cases": 21.0,
+        "share_of_draws_at_or_over_the_margin": 0.0001,
+        "score_test_p": 0.0009,
+        "passes": true
+       },
+       "space_slips": {
+        "cases": 1500,
+        "only_first_right": 3,
+        "only_second_right": 12,
+        "net_loss": -9,
+        "margin_in_cases": 15.0,
+        "share_of_draws_at_or_over_the_margin": 0.0,
+        "score_test_p": 0.0,
+        "passes": true
+       },
+       "symbol_slips": {
+        "cases": 1197,
+        "only_first_right": 2,
+        "only_second_right": 3,
+        "net_loss": -1,
+        "margin_in_cases": 11.97,
+        "share_of_draws_at_or_over_the_margin": 0.0,
+        "score_test_p": 0.00042,
+        "passes": true
+       }
+      },
+      "passes": true
      },
      "dev_right": 6553,
      "dev_groups": {
@@ -7996,8 +9349,49 @@
      "tune_right": 6522,
      "tune_changed_words": 6,
      "dev_paired_with_ship": {
-      "only_ship_right": 47,
-      "only_this_right": 49
+      "parts": {
+       "all": {
+        "cases": 6799,
+        "only_first_right": 47,
+        "only_second_right": 49,
+        "net_loss": -2,
+        "margin_in_cases": 33.99,
+        "share_of_draws_at_or_over_the_margin": 0.00015,
+        "score_test_p": 0.00025,
+        "passes": true
+       },
+       "letter_slips": {
+        "cases": 2100,
+        "only_first_right": 15,
+        "only_second_right": 8,
+        "net_loss": 7,
+        "margin_in_cases": 21.0,
+        "share_of_draws_at_or_over_the_margin": 0.00309,
+        "score_test_p": 0.00657,
+        "passes": true
+       },
+       "space_slips": {
+        "cases": 1500,
+        "only_first_right": 14,
+        "only_second_right": 13,
+        "net_loss": 1,
+        "margin_in_cases": 15.0,
+        "share_of_draws_at_or_over_the_margin": 0.00491,
+        "score_test_p": 0.00745,
+        "passes": true
+       },
+       "symbol_slips": {
+        "cases": 1197,
+        "only_first_right": 4,
+        "only_second_right": 5,
+        "net_loss": -1,
+        "margin_in_cases": 11.97,
+        "share_of_draws_at_or_over_the_margin": 3e-05,
+        "score_test_p": 0.00099,
+        "passes": true
+       }
+      },
+      "passes": true
      },
      "dev_right": 6546,
      "dev_groups": {
@@ -8121,8 +9515,49 @@
      "tune_right": 6522,
      "tune_changed_words": 6,
      "dev_paired_with_ship": {
-      "only_ship_right": 47,
-      "only_this_right": 49
+      "parts": {
+       "all": {
+        "cases": 6799,
+        "only_first_right": 47,
+        "only_second_right": 49,
+        "net_loss": -2,
+        "margin_in_cases": 33.99,
+        "share_of_draws_at_or_over_the_margin": 0.00015,
+        "score_test_p": 0.00025,
+        "passes": true
+       },
+       "letter_slips": {
+        "cases": 2100,
+        "only_first_right": 15,
+        "only_second_right": 8,
+        "net_loss": 7,
+        "margin_in_cases": 21.0,
+        "share_of_draws_at_or_over_the_margin": 0.00309,
+        "score_test_p": 0.00657,
+        "passes": true
+       },
+       "space_slips": {
+        "cases": 1500,
+        "only_first_right": 14,
+        "only_second_right": 13,
+        "net_loss": 1,
+        "margin_in_cases": 15.0,
+        "share_of_draws_at_or_over_the_margin": 0.00491,
+        "score_test_p": 0.00745,
+        "passes": true
+       },
+       "symbol_slips": {
+        "cases": 1197,
+        "only_first_right": 4,
+        "only_second_right": 5,
+        "net_loss": -1,
+        "margin_in_cases": 11.97,
+        "share_of_draws_at_or_over_the_margin": 3e-05,
+        "score_test_p": 0.00099,
+        "passes": true
+       }
+      },
+      "passes": true
      },
      "dev_right": 6546,
      "dev_groups": {
@@ -8246,8 +9681,49 @@
      "tune_right": 6522,
      "tune_changed_words": 6,
      "dev_paired_with_ship": {
-      "only_ship_right": 47,
-      "only_this_right": 49
+      "parts": {
+       "all": {
+        "cases": 6799,
+        "only_first_right": 47,
+        "only_second_right": 49,
+        "net_loss": -2,
+        "margin_in_cases": 33.99,
+        "share_of_draws_at_or_over_the_margin": 0.00015,
+        "score_test_p": 0.00025,
+        "passes": true
+       },
+       "letter_slips": {
+        "cases": 2100,
+        "only_first_right": 15,
+        "only_second_right": 8,
+        "net_loss": 7,
+        "margin_in_cases": 21.0,
+        "share_of_draws_at_or_over_the_margin": 0.00309,
+        "score_test_p": 0.00657,
+        "passes": true
+       },
+       "space_slips": {
+        "cases": 1500,
+        "only_first_right": 14,
+        "only_second_right": 13,
+        "net_loss": 1,
+        "margin_in_cases": 15.0,
+        "share_of_draws_at_or_over_the_margin": 0.00491,
+        "score_test_p": 0.00745,
+        "passes": true
+       },
+       "symbol_slips": {
+        "cases": 1197,
+        "only_first_right": 4,
+        "only_second_right": 5,
+        "net_loss": -1,
+        "margin_in_cases": 11.97,
+        "share_of_draws_at_or_over_the_margin": 3e-05,
+        "score_test_p": 0.00099,
+        "passes": true
+       }
+      },
+      "passes": true
      },
      "dev_right": 6546,
      "dev_groups": {
@@ -8851,8 +10327,49 @@
      "tune_right": 6515,
      "tune_changed_words": 8,
      "dev_paired_with_ship": {
-      "only_ship_right": 33,
-      "only_this_right": 30
+      "parts": {
+       "all": {
+        "cases": 6799,
+        "only_first_right": 33,
+        "only_second_right": 30,
+        "net_loss": 3,
+        "margin_in_cases": 33.99,
+        "share_of_draws_at_or_over_the_margin": 7e-05,
+        "score_test_p": 0.0002,
+        "passes": true
+       },
+       "letter_slips": {
+        "cases": 2100,
+        "only_first_right": 12,
+        "only_second_right": 6,
+        "net_loss": 6,
+        "margin_in_cases": 21.0,
+        "share_of_draws_at_or_over_the_margin": 0.00055,
+        "score_test_p": 0.00253,
+        "passes": true
+       },
+       "space_slips": {
+        "cases": 1500,
+        "only_first_right": 7,
+        "only_second_right": 7,
+        "net_loss": 0,
+        "margin_in_cases": 15.0,
+        "share_of_draws_at_or_over_the_margin": 8e-05,
+        "score_test_p": 0.00095,
+        "passes": true
+       },
+       "symbol_slips": {
+        "cases": 1197,
+        "only_first_right": 3,
+        "only_second_right": 3,
+        "net_loss": 0,
+        "margin_in_cases": 11.97,
+        "share_of_draws_at_or_over_the_margin": 1e-05,
+        "score_test_p": 0.00107,
+        "passes": true
+       }
+      },
+      "passes": true
      },
      "dev_right": 6541,
      "dev_groups": {
@@ -8976,8 +10493,49 @@
      "tune_right": 6520,
      "tune_changed_words": 9,
      "dev_paired_with_ship": {
-      "only_ship_right": 51,
-      "only_this_right": 49
+      "parts": {
+       "all": {
+        "cases": 6799,
+        "only_first_right": 51,
+        "only_second_right": 49,
+        "net_loss": 2,
+        "margin_in_cases": 33.99,
+        "share_of_draws_at_or_over_the_margin": 0.00084,
+        "score_test_p": 0.00112,
+        "passes": true
+       },
+       "letter_slips": {
+        "cases": 2100,
+        "only_first_right": 14,
+        "only_second_right": 10,
+        "net_loss": 4,
+        "margin_in_cases": 21.0,
+        "share_of_draws_at_or_over_the_margin": 0.00051,
+        "score_test_p": 0.0018,
+        "passes": true
+       },
+       "space_slips": {
+        "cases": 1500,
+        "only_first_right": 14,
+        "only_second_right": 13,
+        "net_loss": 1,
+        "margin_in_cases": 15.0,
+        "share_of_draws_at_or_over_the_margin": 0.00491,
+        "score_test_p": 0.00745,
+        "passes": true
+       },
+       "symbol_slips": {
+        "cases": 1197,
+        "only_first_right": 5,
+        "only_second_right": 5,
+        "net_loss": 0,
+        "margin_in_cases": 11.97,
+        "share_of_draws_at_or_over_the_margin": 0.00021,
+        "score_test_p": 0.00228,
+        "passes": true
+       }
+      },
+      "passes": true
      },
      "dev_right": 6542,
      "dev_groups": {
@@ -9101,8 +10659,49 @@
      "tune_right": 6520,
      "tune_changed_words": 9,
      "dev_paired_with_ship": {
-      "only_ship_right": 51,
-      "only_this_right": 49
+      "parts": {
+       "all": {
+        "cases": 6799,
+        "only_first_right": 51,
+        "only_second_right": 49,
+        "net_loss": 2,
+        "margin_in_cases": 33.99,
+        "share_of_draws_at_or_over_the_margin": 0.00084,
+        "score_test_p": 0.00112,
+        "passes": true
+       },
+       "letter_slips": {
+        "cases": 2100,
+        "only_first_right": 14,
+        "only_second_right": 10,
+        "net_loss": 4,
+        "margin_in_cases": 21.0,
+        "share_of_draws_at_or_over_the_margin": 0.00051,
+        "score_test_p": 0.0018,
+        "passes": true
+       },
+       "space_slips": {
+        "cases": 1500,
+        "only_first_right": 14,
+        "only_second_right": 13,
+        "net_loss": 1,
+        "margin_in_cases": 15.0,
+        "share_of_draws_at_or_over_the_margin": 0.00491,
+        "score_test_p": 0.00745,
+        "passes": true
+       },
+       "symbol_slips": {
+        "cases": 1197,
+        "only_first_right": 5,
+        "only_second_right": 5,
+        "net_loss": 0,
+        "margin_in_cases": 11.97,
+        "share_of_draws_at_or_over_the_margin": 0.00021,
+        "score_test_p": 0.00228,
+        "passes": true
+       }
+      },
+      "passes": true
      },
      "dev_right": 6542,
      "dev_groups": {
@@ -9226,8 +10825,49 @@
      "tune_right": 6520,
      "tune_changed_words": 9,
      "dev_paired_with_ship": {
-      "only_ship_right": 51,
-      "only_this_right": 49
+      "parts": {
+       "all": {
+        "cases": 6799,
+        "only_first_right": 51,
+        "only_second_right": 49,
+        "net_loss": 2,
+        "margin_in_cases": 33.99,
+        "share_of_draws_at_or_over_the_margin": 0.00084,
+        "score_test_p": 0.00112,
+        "passes": true
+       },
+       "letter_slips": {
+        "cases": 2100,
+        "only_first_right": 14,
+        "only_second_right": 10,
+        "net_loss": 4,
+        "margin_in_cases": 21.0,
+        "share_of_draws_at_or_over_the_margin": 0.00051,
+        "score_test_p": 0.0018,
+        "passes": true
+       },
+       "space_slips": {
+        "cases": 1500,
+        "only_first_right": 14,
+        "only_second_right": 13,
+        "net_loss": 1,
+        "margin_in_cases": 15.0,
+        "share_of_draws_at_or_over_the_margin": 0.00491,
+        "score_test_p": 0.00745,
+        "passes": true
+       },
+       "symbol_slips": {
+        "cases": 1197,
+        "only_first_right": 5,
+        "only_second_right": 5,
+        "net_loss": 0,
+        "margin_in_cases": 11.97,
+        "share_of_draws_at_or_over_the_margin": 0.00021,
+        "score_test_p": 0.00228,
+        "passes": true
+       }
+      },
+      "passes": true
      },
      "dev_right": 6542,
      "dev_groups": {
@@ -9831,8 +11471,49 @@
      "tune_right": 6520,
      "tune_changed_words": 10,
      "dev_paired_with_ship": {
-      "only_ship_right": 25,
-      "only_this_right": 42
+      "parts": {
+       "all": {
+        "cases": 6799,
+        "only_first_right": 25,
+        "only_second_right": 42,
+        "net_loss": -17,
+        "margin_in_cases": 33.99,
+        "share_of_draws_at_or_over_the_margin": 0.0,
+        "score_test_p": 0.0,
+        "passes": true
+       },
+       "letter_slips": {
+        "cases": 2100,
+        "only_first_right": 8,
+        "only_second_right": 7,
+        "net_loss": 1,
+        "margin_in_cases": 21.0,
+        "share_of_draws_at_or_over_the_margin": 0.0,
+        "score_test_p": 0.0001,
+        "passes": true
+       },
+       "space_slips": {
+        "cases": 1500,
+        "only_first_right": 4,
+        "only_second_right": 13,
+        "net_loss": -9,
+        "margin_in_cases": 15.0,
+        "share_of_draws_at_or_over_the_margin": 0.0,
+        "score_test_p": 0.0,
+        "passes": true
+       },
+       "symbol_slips": {
+        "cases": 1197,
+        "only_first_right": 3,
+        "only_second_right": 3,
+        "net_loss": 0,
+        "margin_in_cases": 11.97,
+        "share_of_draws_at_or_over_the_margin": 1e-05,
+        "score_test_p": 0.00107,
+        "passes": true
+       }
+      },
+      "passes": true
      },
      "dev_right": 6561,
      "dev_groups": {
@@ -9956,8 +11637,49 @@
      "tune_right": 6521,
      "tune_changed_words": 10,
      "dev_paired_with_ship": {
-      "only_ship_right": 41,
-      "only_this_right": 51
+      "parts": {
+       "all": {
+        "cases": 6799,
+        "only_first_right": 41,
+        "only_second_right": 51,
+        "net_loss": -10,
+        "margin_in_cases": 33.99,
+        "share_of_draws_at_or_over_the_margin": 0.0,
+        "score_test_p": 1e-05,
+        "passes": true
+       },
+       "letter_slips": {
+        "cases": 2100,
+        "only_first_right": 14,
+        "only_second_right": 12,
+        "net_loss": 2,
+        "margin_in_cases": 21.0,
+        "share_of_draws_at_or_over_the_margin": 0.00019,
+        "score_test_p": 0.00083,
+        "passes": true
+       },
+       "space_slips": {
+        "cases": 1500,
+        "only_first_right": 13,
+        "only_second_right": 15,
+        "net_loss": -2,
+        "margin_in_cases": 15.0,
+        "share_of_draws_at_or_over_the_margin": 0.00093,
+        "score_test_p": 0.00202,
+        "passes": true
+       },
+       "symbol_slips": {
+        "cases": 1197,
+        "only_first_right": 3,
+        "only_second_right": 5,
+        "net_loss": -2,
+        "margin_in_cases": 11.97,
+        "share_of_draws_at_or_over_the_margin": 0.0,
+        "score_test_p": 0.0004,
+        "passes": true
+       }
+      },
+      "passes": true
      },
      "dev_right": 6554,
      "dev_groups": {
@@ -10081,8 +11803,49 @@
      "tune_right": 6521,
      "tune_changed_words": 10,
      "dev_paired_with_ship": {
-      "only_ship_right": 41,
-      "only_this_right": 51
+      "parts": {
+       "all": {
+        "cases": 6799,
+        "only_first_right": 41,
+        "only_second_right": 51,
+        "net_loss": -10,
+        "margin_in_cases": 33.99,
+        "share_of_draws_at_or_over_the_margin": 0.0,
+        "score_test_p": 1e-05,
+        "passes": true
+       },
+       "letter_slips": {
+        "cases": 2100,
+        "only_first_right": 14,
+        "only_second_right": 12,
+        "net_loss": 2,
+        "margin_in_cases": 21.0,
+        "share_of_draws_at_or_over_the_margin": 0.00019,
+        "score_test_p": 0.00083,
+        "passes": true
+       },
+       "space_slips": {
+        "cases": 1500,
+        "only_first_right": 13,
+        "only_second_right": 15,
+        "net_loss": -2,
+        "margin_in_cases": 15.0,
+        "share_of_draws_at_or_over_the_margin": 0.00093,
+        "score_test_p": 0.00202,
+        "passes": true
+       },
+       "symbol_slips": {
+        "cases": 1197,
+        "only_first_right": 3,
+        "only_second_right": 5,
+        "net_loss": -2,
+        "margin_in_cases": 11.97,
+        "share_of_draws_at_or_over_the_margin": 0.0,
+        "score_test_p": 0.0004,
+        "passes": true
+       }
+      },
+      "passes": true
      },
      "dev_right": 6554,
      "dev_groups": {
@@ -10206,8 +11969,49 @@
      "tune_right": 6521,
      "tune_changed_words": 10,
      "dev_paired_with_ship": {
-      "only_ship_right": 41,
-      "only_this_right": 51
+      "parts": {
+       "all": {
+        "cases": 6799,
+        "only_first_right": 41,
+        "only_second_right": 51,
+        "net_loss": -10,
+        "margin_in_cases": 33.99,
+        "share_of_draws_at_or_over_the_margin": 0.0,
+        "score_test_p": 1e-05,
+        "passes": true
+       },
+       "letter_slips": {
+        "cases": 2100,
+        "only_first_right": 14,
+        "only_second_right": 12,
+        "net_loss": 2,
+        "margin_in_cases": 21.0,
+        "share_of_draws_at_or_over_the_margin": 0.00019,
+        "score_test_p": 0.00083,
+        "passes": true
+       },
+       "space_slips": {
+        "cases": 1500,
+        "only_first_right": 13,
+        "only_second_right": 15,
+        "net_loss": -2,
+        "margin_in_cases": 15.0,
+        "share_of_draws_at_or_over_the_margin": 0.00093,
+        "score_test_p": 0.00202,
+        "passes": true
+       },
+       "symbol_slips": {
+        "cases": 1197,
+        "only_first_right": 3,
+        "only_second_right": 5,
+        "net_loss": -2,
+        "margin_in_cases": 11.97,
+        "share_of_draws_at_or_over_the_margin": 0.0,
+        "score_test_p": 0.0004,
+        "passes": true
+       }
+      },
+      "passes": true
      },
      "dev_right": 6554,
      "dev_groups": {
@@ -10811,8 +12615,49 @@
      "tune_right": 6513,
      "tune_changed_words": 2,
      "dev_paired_with_ship": {
-      "only_ship_right": 31,
-      "only_this_right": 28
+      "parts": {
+       "all": {
+        "cases": 6799,
+        "only_first_right": 31,
+        "only_second_right": 28,
+        "net_loss": 3,
+        "margin_in_cases": 33.99,
+        "share_of_draws_at_or_over_the_margin": 4e-05,
+        "score_test_p": 0.00014,
+        "passes": true
+       },
+       "letter_slips": {
+        "cases": 2100,
+        "only_first_right": 8,
+        "only_second_right": 5,
+        "net_loss": 3,
+        "margin_in_cases": 21.0,
+        "share_of_draws_at_or_over_the_margin": 0.0,
+        "score_test_p": 0.00025,
+        "passes": true
+       },
+       "space_slips": {
+        "cases": 1500,
+        "only_first_right": 9,
+        "only_second_right": 10,
+        "net_loss": -1,
+        "margin_in_cases": 15.0,
+        "share_of_draws_at_or_over_the_margin": 0.00022,
+        "score_test_p": 0.00113,
+        "passes": true
+       },
+       "symbol_slips": {
+        "cases": 1197,
+        "only_first_right": 4,
+        "only_second_right": 1,
+        "net_loss": 3,
+        "margin_in_cases": 11.97,
+        "share_of_draws_at_or_over_the_margin": 0.00044,
+        "score_test_p": 0.00648,
+        "passes": true
+       }
+      },
+      "passes": true
      },
      "dev_right": 6541,
      "dev_groups": {
@@ -10936,8 +12781,49 @@
      "tune_right": 6514,
      "tune_changed_words": 5,
      "dev_paired_with_ship": {
-      "only_ship_right": 49,
-      "only_this_right": 46
+      "parts": {
+       "all": {
+        "cases": 6799,
+        "only_first_right": 49,
+        "only_second_right": 46,
+        "net_loss": 3,
+        "margin_in_cases": 33.99,
+        "share_of_draws_at_or_over_the_margin": 0.00091,
+        "score_test_p": 0.00123,
+        "passes": true
+       },
+       "letter_slips": {
+        "cases": 2100,
+        "only_first_right": 13,
+        "only_second_right": 7,
+        "net_loss": 6,
+        "margin_in_cases": 21.0,
+        "share_of_draws_at_or_over_the_margin": 0.0009,
+        "score_test_p": 0.00313,
+        "passes": true
+       },
+       "space_slips": {
+        "cases": 1500,
+        "only_first_right": 15,
+        "only_second_right": 13,
+        "net_loss": 2,
+        "margin_in_cases": 15.0,
+        "share_of_draws_at_or_over_the_margin": 0.00944,
+        "score_test_p": 0.01239,
+        "passes": true
+       },
+       "symbol_slips": {
+        "cases": 1197,
+        "only_first_right": 5,
+        "only_second_right": 4,
+        "net_loss": 1,
+        "margin_in_cases": 11.97,
+        "share_of_draws_at_or_over_the_margin": 0.00041,
+        "score_test_p": 0.00359,
+        "passes": true
+       }
+      },
+      "passes": true
      },
      "dev_right": 6541,
      "dev_groups": {
@@ -11061,8 +12947,49 @@
      "tune_right": 6514,
      "tune_changed_words": 5,
      "dev_paired_with_ship": {
-      "only_ship_right": 49,
-      "only_this_right": 46
+      "parts": {
+       "all": {
+        "cases": 6799,
+        "only_first_right": 49,
+        "only_second_right": 46,
+        "net_loss": 3,
+        "margin_in_cases": 33.99,
+        "share_of_draws_at_or_over_the_margin": 0.00091,
+        "score_test_p": 0.00123,
+        "passes": true
+       },
+       "letter_slips": {
+        "cases": 2100,
+        "only_first_right": 13,
+        "only_second_right": 7,
+        "net_loss": 6,
+        "margin_in_cases": 21.0,
+        "share_of_draws_at_or_over_the_margin": 0.0009,
+        "score_test_p": 0.00313,
+        "passes": true
+       },
+       "space_slips": {
+        "cases": 1500,
+        "only_first_right": 15,
+        "only_second_right": 13,
+        "net_loss": 2,
+        "margin_in_cases": 15.0,
+        "share_of_draws_at_or_over_the_margin": 0.00944,
+        "score_test_p": 0.01239,
+        "passes": true
+       },
+       "symbol_slips": {
+        "cases": 1197,
+        "only_first_right": 5,
+        "only_second_right": 4,
+        "net_loss": 1,
+        "margin_in_cases": 11.97,
+        "share_of_draws_at_or_over_the_margin": 0.00041,
+        "score_test_p": 0.00359,
+        "passes": true
+       }
+      },
+      "passes": true
      },
      "dev_right": 6541,
      "dev_groups": {
@@ -11186,8 +13113,49 @@
      "tune_right": 6514,
      "tune_changed_words": 5,
      "dev_paired_with_ship": {
-      "only_ship_right": 49,
-      "only_this_right": 46
+      "parts": {
+       "all": {
+        "cases": 6799,
+        "only_first_right": 49,
+        "only_second_right": 46,
+        "net_loss": 3,
+        "margin_in_cases": 33.99,
+        "share_of_draws_at_or_over_the_margin": 0.00091,
+        "score_test_p": 0.00123,
+        "passes": true
+       },
+       "letter_slips": {
+        "cases": 2100,
+        "only_first_right": 13,
+        "only_second_right": 7,
+        "net_loss": 6,
+        "margin_in_cases": 21.0,
+        "share_of_draws_at_or_over_the_margin": 0.0009,
+        "score_test_p": 0.00313,
+        "passes": true
+       },
+       "space_slips": {
+        "cases": 1500,
+        "only_first_right": 15,
+        "only_second_right": 13,
+        "net_loss": 2,
+        "margin_in_cases": 15.0,
+        "share_of_draws_at_or_over_the_margin": 0.00944,
+        "score_test_p": 0.01239,
+        "passes": true
+       },
+       "symbol_slips": {
+        "cases": 1197,
+        "only_first_right": 5,
+        "only_second_right": 4,
+        "net_loss": 1,
+        "margin_in_cases": 11.97,
+        "share_of_draws_at_or_over_the_margin": 0.00041,
+        "score_test_p": 0.00359,
+        "passes": true
+       }
+      },
+      "passes": true
      },
      "dev_right": 6541,
      "dev_groups": {
@@ -11791,8 +13759,49 @@
      "tune_right": 6512,
      "tune_changed_words": 5,
      "dev_paired_with_ship": {
-      "only_ship_right": 34,
-      "only_this_right": 34
+      "parts": {
+       "all": {
+        "cases": 6799,
+        "only_first_right": 34,
+        "only_second_right": 34,
+        "net_loss": 0,
+        "margin_in_cases": 33.99,
+        "share_of_draws_at_or_over_the_margin": 3e-05,
+        "score_test_p": 9e-05,
+        "passes": true
+       },
+       "letter_slips": {
+        "cases": 2100,
+        "only_first_right": 10,
+        "only_second_right": 7,
+        "net_loss": 3,
+        "margin_in_cases": 21.0,
+        "share_of_draws_at_or_over_the_margin": 3e-05,
+        "score_test_p": 0.00045,
+        "passes": true
+       },
+       "space_slips": {
+        "cases": 1500,
+        "only_first_right": 3,
+        "only_second_right": 11,
+        "net_loss": -8,
+        "margin_in_cases": 15.0,
+        "share_of_draws_at_or_over_the_margin": 0.0,
+        "score_test_p": 0.0,
+        "passes": true
+       },
+       "symbol_slips": {
+        "cases": 1197,
+        "only_first_right": 2,
+        "only_second_right": 3,
+        "net_loss": -1,
+        "margin_in_cases": 11.97,
+        "share_of_draws_at_or_over_the_margin": 0.0,
+        "score_test_p": 0.00042,
+        "passes": true
+       }
+      },
+      "passes": true
      },
      "dev_right": 6544,
      "dev_groups": {
@@ -11916,8 +13925,49 @@
      "tune_right": 6521,
      "tune_changed_words": 7,
      "dev_paired_with_ship": {
-      "only_ship_right": 53,
-      "only_this_right": 44
+      "parts": {
+       "all": {
+        "cases": 6799,
+        "only_first_right": 53,
+        "only_second_right": 44,
+        "net_loss": 9,
+        "margin_in_cases": 33.99,
+        "share_of_draws_at_or_over_the_margin": 0.00661,
+        "score_test_p": 0.00731,
+        "passes": true
+       },
+       "letter_slips": {
+        "cases": 2100,
+        "only_first_right": 16,
+        "only_second_right": 9,
+        "net_loss": 7,
+        "margin_in_cases": 21.0,
+        "share_of_draws_at_or_over_the_margin": 0.00417,
+        "score_test_p": 0.00774,
+        "passes": true
+       },
+       "space_slips": {
+        "cases": 1500,
+        "only_first_right": 13,
+        "only_second_right": 14,
+        "net_loss": -1,
+        "margin_in_cases": 15.0,
+        "share_of_draws_at_or_over_the_margin": 0.00148,
+        "score_test_p": 0.00296,
+        "passes": true
+       },
+       "symbol_slips": {
+        "cases": 1197,
+        "only_first_right": 4,
+        "only_second_right": 5,
+        "net_loss": -1,
+        "margin_in_cases": 11.97,
+        "share_of_draws_at_or_over_the_margin": 3e-05,
+        "score_test_p": 0.00099,
+        "passes": true
+       }
+      },
+      "passes": true
      },
      "dev_right": 6535,
      "dev_groups": {
@@ -12041,8 +14091,49 @@
      "tune_right": 6521,
      "tune_changed_words": 7,
      "dev_paired_with_ship": {
-      "only_ship_right": 53,
-      "only_this_right": 44
+      "parts": {
+       "all": {
+        "cases": 6799,
+        "only_first_right": 53,
+        "only_second_right": 44,
+        "net_loss": 9,
+        "margin_in_cases": 33.99,
+        "share_of_draws_at_or_over_the_margin": 0.00661,
+        "score_test_p": 0.00731,
+        "passes": true
+       },
+       "letter_slips": {
+        "cases": 2100,
+        "only_first_right": 16,
+        "only_second_right": 9,
+        "net_loss": 7,
+        "margin_in_cases": 21.0,
+        "share_of_draws_at_or_over_the_margin": 0.00417,
+        "score_test_p": 0.00774,
+        "passes": true
+       },
+       "space_slips": {
+        "cases": 1500,
+        "only_first_right": 13,
+        "only_second_right": 14,
+        "net_loss": -1,
+        "margin_in_cases": 15.0,
+        "share_of_draws_at_or_over_the_margin": 0.00148,
+        "score_test_p": 0.00296,
+        "passes": true
+       },
+       "symbol_slips": {
+        "cases": 1197,
+        "only_first_right": 4,
+        "only_second_right": 5,
+        "net_loss": -1,
+        "margin_in_cases": 11.97,
+        "share_of_draws_at_or_over_the_margin": 3e-05,
+        "score_test_p": 0.00099,
+        "passes": true
+       }
+      },
+      "passes": true
      },
      "dev_right": 6535,
      "dev_groups": {
@@ -12166,8 +14257,49 @@
      "tune_right": 6521,
      "tune_changed_words": 7,
      "dev_paired_with_ship": {
-      "only_ship_right": 53,
-      "only_this_right": 44
+      "parts": {
+       "all": {
+        "cases": 6799,
+        "only_first_right": 53,
+        "only_second_right": 44,
+        "net_loss": 9,
+        "margin_in_cases": 33.99,
+        "share_of_draws_at_or_over_the_margin": 0.00661,
+        "score_test_p": 0.00731,
+        "passes": true
+       },
+       "letter_slips": {
+        "cases": 2100,
+        "only_first_right": 16,
+        "only_second_right": 9,
+        "net_loss": 7,
+        "margin_in_cases": 21.0,
+        "share_of_draws_at_or_over_the_margin": 0.00417,
+        "score_test_p": 0.00774,
+        "passes": true
+       },
+       "space_slips": {
+        "cases": 1500,
+        "only_first_right": 13,
+        "only_second_right": 14,
+        "net_loss": -1,
+        "margin_in_cases": 15.0,
+        "share_of_draws_at_or_over_the_margin": 0.00148,
+        "score_test_p": 0.00296,
+        "passes": true
+       },
+       "symbol_slips": {
+        "cases": 1197,
+        "only_first_right": 4,
+        "only_second_right": 5,
+        "net_loss": -1,
+        "margin_in_cases": 11.97,
+        "share_of_draws_at_or_over_the_margin": 3e-05,
+        "score_test_p": 0.00099,
+        "passes": true
+       }
+      },
+      "passes": true
      },
      "dev_right": 6535,
      "dev_groups": {
@@ -12771,8 +14903,49 @@
      "tune_right": 6512,
      "tune_changed_words": 2,
      "dev_paired_with_ship": {
-      "only_ship_right": 36,
-      "only_this_right": 37
+      "parts": {
+       "all": {
+        "cases": 6799,
+        "only_first_right": 36,
+        "only_second_right": 37,
+        "net_loss": -1,
+        "margin_in_cases": 33.99,
+        "share_of_draws_at_or_over_the_margin": 3e-05,
+        "score_test_p": 8e-05,
+        "passes": true
+       },
+       "letter_slips": {
+        "cases": 2100,
+        "only_first_right": 13,
+        "only_second_right": 10,
+        "net_loss": 3,
+        "margin_in_cases": 21.0,
+        "share_of_draws_at_or_over_the_margin": 0.00019,
+        "score_test_p": 0.00098,
+        "passes": true
+       },
+       "space_slips": {
+        "cases": 1500,
+        "only_first_right": 11,
+        "only_second_right": 10,
+        "net_loss": 1,
+        "margin_in_cases": 15.0,
+        "share_of_draws_at_or_over_the_margin": 0.00181,
+        "score_test_p": 0.00417,
+        "passes": true
+       },
+       "symbol_slips": {
+        "cases": 1197,
+        "only_first_right": 1,
+        "only_second_right": 3,
+        "net_loss": -2,
+        "margin_in_cases": 11.97,
+        "share_of_draws_at_or_over_the_margin": 0.0,
+        "score_test_p": 0.00015,
+        "passes": true
+       }
+      },
+      "passes": true
      },
      "dev_right": 6545,
      "dev_groups": {
@@ -12896,8 +15069,49 @@
      "tune_right": 6514,
      "tune_changed_words": 2,
      "dev_paired_with_ship": {
-      "only_ship_right": 52,
-      "only_this_right": 47
+      "parts": {
+       "all": {
+        "cases": 6799,
+        "only_first_right": 52,
+        "only_second_right": 47,
+        "net_loss": 5,
+        "margin_in_cases": 33.99,
+        "share_of_draws_at_or_over_the_margin": 0.00216,
+        "score_test_p": 0.00262,
+        "passes": true
+       },
+       "letter_slips": {
+        "cases": 2100,
+        "only_first_right": 19,
+        "only_second_right": 13,
+        "net_loss": 6,
+        "margin_in_cases": 21.0,
+        "share_of_draws_at_or_over_the_margin": 0.00572,
+        "score_test_p": 0.00857,
+        "passes": true
+       },
+       "space_slips": {
+        "cases": 1500,
+        "only_first_right": 17,
+        "only_second_right": 14,
+        "net_loss": 3,
+        "margin_in_cases": 15.0,
+        "share_of_draws_at_or_over_the_margin": 0.01987,
+        "score_test_p": 0.02239,
+        "passes": true
+       },
+       "symbol_slips": {
+        "cases": 1197,
+        "only_first_right": 3,
+        "only_second_right": 4,
+        "net_loss": -1,
+        "margin_in_cases": 11.97,
+        "share_of_draws_at_or_over_the_margin": 0.0,
+        "score_test_p": 0.00065,
+        "passes": true
+       }
+      },
+      "passes": true
      },
      "dev_right": 6539,
      "dev_groups": {
@@ -13021,8 +15235,49 @@
      "tune_right": 6514,
      "tune_changed_words": 2,
      "dev_paired_with_ship": {
-      "only_ship_right": 52,
-      "only_this_right": 47
+      "parts": {
+       "all": {
+        "cases": 6799,
+        "only_first_right": 52,
+        "only_second_right": 47,
+        "net_loss": 5,
+        "margin_in_cases": 33.99,
+        "share_of_draws_at_or_over_the_margin": 0.00216,
+        "score_test_p": 0.00262,
+        "passes": true
+       },
+       "letter_slips": {
+        "cases": 2100,
+        "only_first_right": 19,
+        "only_second_right": 13,
+        "net_loss": 6,
+        "margin_in_cases": 21.0,
+        "share_of_draws_at_or_over_the_margin": 0.00572,
+        "score_test_p": 0.00857,
+        "passes": true
+       },
+       "space_slips": {
+        "cases": 1500,
+        "only_first_right": 17,
+        "only_second_right": 14,
+        "net_loss": 3,
+        "margin_in_cases": 15.0,
+        "share_of_draws_at_or_over_the_margin": 0.01987,
+        "score_test_p": 0.02239,
+        "passes": true
+       },
+       "symbol_slips": {
+        "cases": 1197,
+        "only_first_right": 3,
+        "only_second_right": 4,
+        "net_loss": -1,
+        "margin_in_cases": 11.97,
+        "share_of_draws_at_or_over_the_margin": 0.0,
+        "score_test_p": 0.00065,
+        "passes": true
+       }
+      },
+      "passes": true
      },
      "dev_right": 6539,
      "dev_groups": {
@@ -13146,8 +15401,49 @@
      "tune_right": 6514,
      "tune_changed_words": 2,
      "dev_paired_with_ship": {
-      "only_ship_right": 52,
-      "only_this_right": 47
+      "parts": {
+       "all": {
+        "cases": 6799,
+        "only_first_right": 52,
+        "only_second_right": 47,
+        "net_loss": 5,
+        "margin_in_cases": 33.99,
+        "share_of_draws_at_or_over_the_margin": 0.00216,
+        "score_test_p": 0.00262,
+        "passes": true
+       },
+       "letter_slips": {
+        "cases": 2100,
+        "only_first_right": 19,
+        "only_second_right": 13,
+        "net_loss": 6,
+        "margin_in_cases": 21.0,
+        "share_of_draws_at_or_over_the_margin": 0.00572,
+        "score_test_p": 0.00857,
+        "passes": true
+       },
+       "space_slips": {
+        "cases": 1500,
+        "only_first_right": 17,
+        "only_second_right": 14,
+        "net_loss": 3,
+        "margin_in_cases": 15.0,
+        "share_of_draws_at_or_over_the_margin": 0.01987,
+        "score_test_p": 0.02239,
+        "passes": true
+       },
+       "symbol_slips": {
+        "cases": 1197,
+        "only_first_right": 3,
+        "only_second_right": 4,
+        "net_loss": -1,
+        "margin_in_cases": 11.97,
+        "share_of_draws_at_or_over_the_margin": 0.0,
+        "score_test_p": 0.00065,
+        "passes": true
+       }
+      },
+      "passes": true
      },
      "dev_right": 6539,
      "dev_groups": {
@@ -13751,8 +16047,49 @@
      "tune_right": 6517,
      "tune_changed_words": 6,
      "dev_paired_with_ship": {
-      "only_ship_right": 29,
-      "only_this_right": 41
+      "parts": {
+       "all": {
+        "cases": 6799,
+        "only_first_right": 29,
+        "only_second_right": 41,
+        "net_loss": -12,
+        "margin_in_cases": 33.99,
+        "share_of_draws_at_or_over_the_margin": 0.0,
+        "score_test_p": 0.0,
+        "passes": true
+       },
+       "letter_slips": {
+        "cases": 2100,
+        "only_first_right": 11,
+        "only_second_right": 12,
+        "net_loss": -1,
+        "margin_in_cases": 21.0,
+        "share_of_draws_at_or_over_the_margin": 1e-05,
+        "score_test_p": 0.00011,
+        "passes": true
+       },
+       "space_slips": {
+        "cases": 1500,
+        "only_first_right": 7,
+        "only_second_right": 10,
+        "net_loss": -3,
+        "margin_in_cases": 15.0,
+        "share_of_draws_at_or_over_the_margin": 1e-05,
+        "score_test_p": 0.00025,
+        "passes": true
+       },
+       "symbol_slips": {
+        "cases": 1197,
+        "only_first_right": 3,
+        "only_second_right": 4,
+        "net_loss": -1,
+        "margin_in_cases": 11.97,
+        "share_of_draws_at_or_over_the_margin": 0.0,
+        "score_test_p": 0.00065,
+        "passes": true
+       }
+      },
+      "passes": true
      },
      "dev_right": 6556,
      "dev_groups": {
@@ -13876,8 +16213,49 @@
      "tune_right": 6518,
      "tune_changed_words": 5,
      "dev_paired_with_ship": {
-      "only_ship_right": 32,
-      "only_this_right": 42
+      "parts": {
+       "all": {
+        "cases": 6799,
+        "only_first_right": 32,
+        "only_second_right": 42,
+        "net_loss": -10,
+        "margin_in_cases": 33.99,
+        "share_of_draws_at_or_over_the_margin": 0.0,
+        "score_test_p": 0.0,
+        "passes": true
+       },
+       "letter_slips": {
+        "cases": 2100,
+        "only_first_right": 11,
+        "only_second_right": 11,
+        "net_loss": 0,
+        "margin_in_cases": 21.0,
+        "share_of_draws_at_or_over_the_margin": 1e-05,
+        "score_test_p": 0.00017,
+        "passes": true
+       },
+       "space_slips": {
+        "cases": 1500,
+        "only_first_right": 8,
+        "only_second_right": 10,
+        "net_loss": -2,
+        "margin_in_cases": 15.0,
+        "share_of_draws_at_or_over_the_margin": 6e-05,
+        "score_test_p": 0.00055,
+        "passes": true
+       },
+       "symbol_slips": {
+        "cases": 1197,
+        "only_first_right": 3,
+        "only_second_right": 4,
+        "net_loss": -1,
+        "margin_in_cases": 11.97,
+        "share_of_draws_at_or_over_the_margin": 0.0,
+        "score_test_p": 0.00065,
+        "passes": true
+       }
+      },
+      "passes": true
      },
      "dev_right": 6554,
      "dev_groups": {
@@ -14001,8 +16379,49 @@
      "tune_right": 6518,
      "tune_changed_words": 5,
      "dev_paired_with_ship": {
-      "only_ship_right": 32,
-      "only_this_right": 42
+      "parts": {
+       "all": {
+        "cases": 6799,
+        "only_first_right": 32,
+        "only_second_right": 42,
+        "net_loss": -10,
+        "margin_in_cases": 33.99,
+        "share_of_draws_at_or_over_the_margin": 0.0,
+        "score_test_p": 0.0,
+        "passes": true
+       },
+       "letter_slips": {
+        "cases": 2100,
+        "only_first_right": 11,
+        "only_second_right": 11,
+        "net_loss": 0,
+        "margin_in_cases": 21.0,
+        "share_of_draws_at_or_over_the_margin": 1e-05,
+        "score_test_p": 0.00017,
+        "passes": true
+       },
+       "space_slips": {
+        "cases": 1500,
+        "only_first_right": 8,
+        "only_second_right": 10,
+        "net_loss": -2,
+        "margin_in_cases": 15.0,
+        "share_of_draws_at_or_over_the_margin": 6e-05,
+        "score_test_p": 0.00055,
+        "passes": true
+       },
+       "symbol_slips": {
+        "cases": 1197,
+        "only_first_right": 3,
+        "only_second_right": 4,
+        "net_loss": -1,
+        "margin_in_cases": 11.97,
+        "share_of_draws_at_or_over_the_margin": 0.0,
+        "score_test_p": 0.00065,
+        "passes": true
+       }
+      },
+      "passes": true
      },
      "dev_right": 6554,
      "dev_groups": {
@@ -14126,8 +16545,49 @@
      "tune_right": 6518,
      "tune_changed_words": 5,
      "dev_paired_with_ship": {
-      "only_ship_right": 32,
-      "only_this_right": 42
+      "parts": {
+       "all": {
+        "cases": 6799,
+        "only_first_right": 32,
+        "only_second_right": 42,
+        "net_loss": -10,
+        "margin_in_cases": 33.99,
+        "share_of_draws_at_or_over_the_margin": 0.0,
+        "score_test_p": 0.0,
+        "passes": true
+       },
+       "letter_slips": {
+        "cases": 2100,
+        "only_first_right": 11,
+        "only_second_right": 11,
+        "net_loss": 0,
+        "margin_in_cases": 21.0,
+        "share_of_draws_at_or_over_the_margin": 1e-05,
+        "score_test_p": 0.00017,
+        "passes": true
+       },
+       "space_slips": {
+        "cases": 1500,
+        "only_first_right": 8,
+        "only_second_right": 10,
+        "net_loss": -2,
+        "margin_in_cases": 15.0,
+        "share_of_draws_at_or_over_the_margin": 6e-05,
+        "score_test_p": 0.00055,
+        "passes": true
+       },
+       "symbol_slips": {
+        "cases": 1197,
+        "only_first_right": 3,
+        "only_second_right": 4,
+        "net_loss": -1,
+        "margin_in_cases": 11.97,
+        "share_of_draws_at_or_over_the_margin": 0.0,
+        "score_test_p": 0.00065,
+        "passes": true
+       }
+      },
+      "passes": true
      },
      "dev_right": 6554,
      "dev_groups": {
@@ -14731,8 +17191,49 @@
      "tune_right": 6511,
      "tune_changed_words": 6,
      "dev_paired_with_ship": {
-      "only_ship_right": 27,
-      "only_this_right": 33
+      "parts": {
+       "all": {
+        "cases": 6799,
+        "only_first_right": 27,
+        "only_second_right": 33,
+        "net_loss": -6,
+        "margin_in_cases": 33.99,
+        "share_of_draws_at_or_over_the_margin": 0.0,
+        "score_test_p": 0.0,
+        "passes": true
+       },
+       "letter_slips": {
+        "cases": 2100,
+        "only_first_right": 11,
+        "only_second_right": 7,
+        "net_loss": 4,
+        "margin_in_cases": 21.0,
+        "share_of_draws_at_or_over_the_margin": 0.0001,
+        "score_test_p": 0.0009,
+        "passes": true
+       },
+       "space_slips": {
+        "cases": 1500,
+        "only_first_right": 7,
+        "only_second_right": 10,
+        "net_loss": -3,
+        "margin_in_cases": 15.0,
+        "share_of_draws_at_or_over_the_margin": 1e-05,
+        "score_test_p": 0.00025,
+        "passes": true
+       },
+       "symbol_slips": {
+        "cases": 1197,
+        "only_first_right": 1,
+        "only_second_right": 2,
+        "net_loss": -1,
+        "margin_in_cases": 11.97,
+        "share_of_draws_at_or_over_the_margin": 0.0,
+        "score_test_p": 0.00025,
+        "passes": true
+       }
+      },
+      "passes": true
      },
      "dev_right": 6550,
      "dev_groups": {
@@ -14856,8 +17357,49 @@
      "tune_right": 6513,
      "tune_changed_words": 3,
      "dev_paired_with_ship": {
-      "only_ship_right": 63,
-      "only_this_right": 46
+      "parts": {
+       "all": {
+        "cases": 6799,
+        "only_first_right": 63,
+        "only_second_right": 46,
+        "net_loss": 17,
+        "margin_in_cases": 33.99,
+        "share_of_draws_at_or_over_the_margin": 0.05728,
+        "score_test_p": 0.05558,
+        "passes": false
+       },
+       "letter_slips": {
+        "cases": 2100,
+        "only_first_right": 19,
+        "only_second_right": 10,
+        "net_loss": 9,
+        "margin_in_cases": 21.0,
+        "share_of_draws_at_or_over_the_margin": 0.01766,
+        "score_test_p": 0.02234,
+        "passes": true
+       },
+       "space_slips": {
+        "cases": 1500,
+        "only_first_right": 22,
+        "only_second_right": 13,
+        "net_loss": 9,
+        "margin_in_cases": 15.0,
+        "share_of_draws_at_or_over_the_margin": 0.17506,
+        "score_test_p": 0.16265,
+        "passes": false
+       },
+       "symbol_slips": {
+        "cases": 1197,
+        "only_first_right": 8,
+        "only_second_right": 3,
+        "net_loss": 5,
+        "margin_in_cases": 11.97,
+        "share_of_draws_at_or_over_the_margin": 0.02828,
+        "score_test_p": 0.0408,
+        "passes": true
+       }
+      },
+      "passes": false
      },
      "dev_right": 6527,
      "dev_groups": {
@@ -14981,8 +17523,49 @@
      "tune_right": 6513,
      "tune_changed_words": 3,
      "dev_paired_with_ship": {
-      "only_ship_right": 63,
-      "only_this_right": 46
+      "parts": {
+       "all": {
+        "cases": 6799,
+        "only_first_right": 63,
+        "only_second_right": 46,
+        "net_loss": 17,
+        "margin_in_cases": 33.99,
+        "share_of_draws_at_or_over_the_margin": 0.05728,
+        "score_test_p": 0.05558,
+        "passes": false
+       },
+       "letter_slips": {
+        "cases": 2100,
+        "only_first_right": 19,
+        "only_second_right": 10,
+        "net_loss": 9,
+        "margin_in_cases": 21.0,
+        "share_of_draws_at_or_over_the_margin": 0.01766,
+        "score_test_p": 0.02234,
+        "passes": true
+       },
+       "space_slips": {
+        "cases": 1500,
+        "only_first_right": 22,
+        "only_second_right": 13,
+        "net_loss": 9,
+        "margin_in_cases": 15.0,
+        "share_of_draws_at_or_over_the_margin": 0.17506,
+        "score_test_p": 0.16265,
+        "passes": false
+       },
+       "symbol_slips": {
+        "cases": 1197,
+        "only_first_right": 8,
+        "only_second_right": 3,
+        "net_loss": 5,
+        "margin_in_cases": 11.97,
+        "share_of_draws_at_or_over_the_margin": 0.02828,
+        "score_test_p": 0.0408,
+        "passes": true
+       }
+      },
+      "passes": false
      },
      "dev_right": 6527,
      "dev_groups": {
@@ -15106,8 +17689,49 @@
      "tune_right": 6513,
      "tune_changed_words": 3,
      "dev_paired_with_ship": {
-      "only_ship_right": 63,
-      "only_this_right": 46
+      "parts": {
+       "all": {
+        "cases": 6799,
+        "only_first_right": 63,
+        "only_second_right": 46,
+        "net_loss": 17,
+        "margin_in_cases": 33.99,
+        "share_of_draws_at_or_over_the_margin": 0.05728,
+        "score_test_p": 0.05558,
+        "passes": false
+       },
+       "letter_slips": {
+        "cases": 2100,
+        "only_first_right": 19,
+        "only_second_right": 10,
+        "net_loss": 9,
+        "margin_in_cases": 21.0,
+        "share_of_draws_at_or_over_the_margin": 0.01766,
+        "score_test_p": 0.02234,
+        "passes": true
+       },
+       "space_slips": {
+        "cases": 1500,
+        "only_first_right": 22,
+        "only_second_right": 13,
+        "net_loss": 9,
+        "margin_in_cases": 15.0,
+        "share_of_draws_at_or_over_the_margin": 0.17506,
+        "score_test_p": 0.16265,
+        "passes": false
+       },
+       "symbol_slips": {
+        "cases": 1197,
+        "only_first_right": 8,
+        "only_second_right": 3,
+        "net_loss": 5,
+        "margin_in_cases": 11.97,
+        "share_of_draws_at_or_over_the_margin": 0.02828,
+        "score_test_p": 0.0408,
+        "passes": true
+       }
+      },
+      "passes": false
      },
      "dev_right": 6527,
      "dev_groups": {
@@ -15711,8 +18335,49 @@
      "tune_right": 6507,
      "tune_changed_words": 8,
      "dev_paired_with_ship": {
-      "only_ship_right": 29,
-      "only_this_right": 35
+      "parts": {
+       "all": {
+        "cases": 6799,
+        "only_first_right": 29,
+        "only_second_right": 35,
+        "net_loss": -6,
+        "margin_in_cases": 33.99,
+        "share_of_draws_at_or_over_the_margin": 0.0,
+        "score_test_p": 0.0,
+        "passes": true
+       },
+       "letter_slips": {
+        "cases": 2100,
+        "only_first_right": 7,
+        "only_second_right": 7,
+        "net_loss": 0,
+        "margin_in_cases": 21.0,
+        "share_of_draws_at_or_over_the_margin": 0.0,
+        "score_test_p": 5e-05,
+        "passes": true
+       },
+       "space_slips": {
+        "cases": 1500,
+        "only_first_right": 9,
+        "only_second_right": 11,
+        "net_loss": -2,
+        "margin_in_cases": 15.0,
+        "share_of_draws_at_or_over_the_margin": 0.00012,
+        "score_test_p": 0.00074,
+        "passes": true
+       },
+       "symbol_slips": {
+        "cases": 1197,
+        "only_first_right": 4,
+        "only_second_right": 2,
+        "net_loss": 2,
+        "margin_in_cases": 11.97,
+        "share_of_draws_at_or_over_the_margin": 0.00022,
+        "score_test_p": 0.00406,
+        "passes": true
+       }
+      },
+      "passes": true
      },
      "dev_right": 6550,
      "dev_groups": {
@@ -15836,8 +18501,49 @@
      "tune_right": 6521,
      "tune_changed_words": 4,
      "dev_paired_with_ship": {
-      "only_ship_right": 48,
-      "only_this_right": 51
+      "parts": {
+       "all": {
+        "cases": 6799,
+        "only_first_right": 48,
+        "only_second_right": 51,
+        "net_loss": -3,
+        "margin_in_cases": 33.99,
+        "share_of_draws_at_or_over_the_margin": 0.00013,
+        "score_test_p": 0.00021,
+        "passes": true
+       },
+       "letter_slips": {
+        "cases": 2100,
+        "only_first_right": 11,
+        "only_second_right": 11,
+        "net_loss": 0,
+        "margin_in_cases": 21.0,
+        "share_of_draws_at_or_over_the_margin": 1e-05,
+        "score_test_p": 0.00017,
+        "passes": true
+       },
+       "space_slips": {
+        "cases": 1500,
+        "only_first_right": 17,
+        "only_second_right": 18,
+        "net_loss": -1,
+        "margin_in_cases": 15.0,
+        "share_of_draws_at_or_over_the_margin": 0.00444,
+        "score_test_p": 0.00602,
+        "passes": true
+       },
+       "symbol_slips": {
+        "cases": 1197,
+        "only_first_right": 5,
+        "only_second_right": 3,
+        "net_loss": 2,
+        "margin_in_cases": 11.97,
+        "share_of_draws_at_or_over_the_margin": 0.00078,
+        "score_test_p": 0.00565,
+        "passes": true
+       }
+      },
+      "passes": true
      },
      "dev_right": 6547,
      "dev_groups": {
@@ -15961,8 +18667,49 @@
      "tune_right": 6521,
      "tune_changed_words": 4,
      "dev_paired_with_ship": {
-      "only_ship_right": 48,
-      "only_this_right": 51
+      "parts": {
+       "all": {
+        "cases": 6799,
+        "only_first_right": 48,
+        "only_second_right": 51,
+        "net_loss": -3,
+        "margin_in_cases": 33.99,
+        "share_of_draws_at_or_over_the_margin": 0.00013,
+        "score_test_p": 0.00021,
+        "passes": true
+       },
+       "letter_slips": {
+        "cases": 2100,
+        "only_first_right": 11,
+        "only_second_right": 11,
+        "net_loss": 0,
+        "margin_in_cases": 21.0,
+        "share_of_draws_at_or_over_the_margin": 1e-05,
+        "score_test_p": 0.00017,
+        "passes": true
+       },
+       "space_slips": {
+        "cases": 1500,
+        "only_first_right": 17,
+        "only_second_right": 18,
+        "net_loss": -1,
+        "margin_in_cases": 15.0,
+        "share_of_draws_at_or_over_the_margin": 0.00444,
+        "score_test_p": 0.00602,
+        "passes": true
+       },
+       "symbol_slips": {
+        "cases": 1197,
+        "only_first_right": 5,
+        "only_second_right": 3,
+        "net_loss": 2,
+        "margin_in_cases": 11.97,
+        "share_of_draws_at_or_over_the_margin": 0.00078,
+        "score_test_p": 0.00565,
+        "passes": true
+       }
+      },
+      "passes": true
      },
      "dev_right": 6547,
      "dev_groups": {
@@ -16086,8 +18833,49 @@
      "tune_right": 6517,
      "tune_changed_words": 4,
      "dev_paired_with_ship": {
-      "only_ship_right": 47,
-      "only_this_right": 50
+      "parts": {
+       "all": {
+        "cases": 6799,
+        "only_first_right": 47,
+        "only_second_right": 50,
+        "net_loss": -3,
+        "margin_in_cases": 33.99,
+        "share_of_draws_at_or_over_the_margin": 0.00011,
+        "score_test_p": 0.00019,
+        "passes": true
+       },
+       "letter_slips": {
+        "cases": 2100,
+        "only_first_right": 11,
+        "only_second_right": 11,
+        "net_loss": 0,
+        "margin_in_cases": 21.0,
+        "share_of_draws_at_or_over_the_margin": 1e-05,
+        "score_test_p": 0.00017,
+        "passes": true
+       },
+       "space_slips": {
+        "cases": 1500,
+        "only_first_right": 17,
+        "only_second_right": 18,
+        "net_loss": -1,
+        "margin_in_cases": 15.0,
+        "share_of_draws_at_or_over_the_margin": 0.00444,
+        "score_test_p": 0.00602,
+        "passes": true
+       },
+       "symbol_slips": {
+        "cases": 1197,
+        "only_first_right": 6,
+        "only_second_right": 3,
+        "net_loss": 3,
+        "margin_in_cases": 11.97,
+        "share_of_draws_at_or_over_the_margin": 0.00351,
+        "score_test_p": 0.01168,
+        "passes": true
+       }
+      },
+      "passes": true
      },
      "dev_right": 6547,
      "dev_groups": {
@@ -16691,8 +19479,49 @@
      "tune_right": 6485,
      "tune_changed_words": 6,
      "dev_paired_with_ship": {
-      "only_ship_right": 39,
-      "only_this_right": 36
+      "parts": {
+       "all": {
+        "cases": 6799,
+        "only_first_right": 39,
+        "only_second_right": 36,
+        "net_loss": 3,
+        "margin_in_cases": 33.99,
+        "share_of_draws_at_or_over_the_margin": 0.00023,
+        "score_test_p": 0.00044,
+        "passes": true
+       },
+       "letter_slips": {
+        "cases": 2100,
+        "only_first_right": 8,
+        "only_second_right": 5,
+        "net_loss": 3,
+        "margin_in_cases": 21.0,
+        "share_of_draws_at_or_over_the_margin": 0.0,
+        "score_test_p": 0.00025,
+        "passes": true
+       },
+       "space_slips": {
+        "cases": 1500,
+        "only_first_right": 3,
+        "only_second_right": 13,
+        "net_loss": -10,
+        "margin_in_cases": 15.0,
+        "share_of_draws_at_or_over_the_margin": 0.0,
+        "score_test_p": 0.0,
+        "passes": true
+       },
+       "symbol_slips": {
+        "cases": 1197,
+        "only_first_right": 1,
+        "only_second_right": 2,
+        "net_loss": -1,
+        "margin_in_cases": 11.97,
+        "share_of_draws_at_or_over_the_margin": 0.0,
+        "score_test_p": 0.00025,
+        "passes": true
+       }
+      },
+      "passes": true
      },
      "dev_right": 6541,
      "dev_groups": {
@@ -16816,8 +19645,49 @@
      "tune_right": 6515,
      "tune_changed_words": 2,
      "dev_paired_with_ship": {
-      "only_ship_right": 47,
-      "only_this_right": 41
+      "parts": {
+       "all": {
+        "cases": 6799,
+        "only_first_right": 47,
+        "only_second_right": 41,
+        "net_loss": 6,
+        "margin_in_cases": 33.99,
+        "share_of_draws_at_or_over_the_margin": 0.00177,
+        "score_test_p": 0.00229,
+        "passes": true
+       },
+       "letter_slips": {
+        "cases": 2100,
+        "only_first_right": 12,
+        "only_second_right": 7,
+        "net_loss": 5,
+        "margin_in_cases": 21.0,
+        "share_of_draws_at_or_over_the_margin": 0.00032,
+        "score_test_p": 0.00171,
+        "passes": true
+       },
+       "space_slips": {
+        "cases": 1500,
+        "only_first_right": 14,
+        "only_second_right": 13,
+        "net_loss": 1,
+        "margin_in_cases": 15.0,
+        "share_of_draws_at_or_over_the_margin": 0.00491,
+        "score_test_p": 0.00745,
+        "passes": true
+       },
+       "symbol_slips": {
+        "cases": 1197,
+        "only_first_right": 3,
+        "only_second_right": 2,
+        "net_loss": 1,
+        "margin_in_cases": 11.97,
+        "share_of_draws_at_or_over_the_margin": 1e-05,
+        "score_test_p": 0.00174,
+        "passes": true
+       }
+      },
+      "passes": true
      },
      "dev_right": 6538,
      "dev_groups": {
@@ -16941,8 +19811,49 @@
      "tune_right": 6515,
      "tune_changed_words": 2,
      "dev_paired_with_ship": {
-      "only_ship_right": 47,
-      "only_this_right": 41
+      "parts": {
+       "all": {
+        "cases": 6799,
+        "only_first_right": 47,
+        "only_second_right": 41,
+        "net_loss": 6,
+        "margin_in_cases": 33.99,
+        "share_of_draws_at_or_over_the_margin": 0.00177,
+        "score_test_p": 0.00229,
+        "passes": true
+       },
+       "letter_slips": {
+        "cases": 2100,
+        "only_first_right": 12,
+        "only_second_right": 7,
+        "net_loss": 5,
+        "margin_in_cases": 21.0,
+        "share_of_draws_at_or_over_the_margin": 0.00032,
+        "score_test_p": 0.00171,
+        "passes": true
+       },
+       "space_slips": {
+        "cases": 1500,
+        "only_first_right": 14,
+        "only_second_right": 13,
+        "net_loss": 1,
+        "margin_in_cases": 15.0,
+        "share_of_draws_at_or_over_the_margin": 0.00491,
+        "score_test_p": 0.00745,
+        "passes": true
+       },
+       "symbol_slips": {
+        "cases": 1197,
+        "only_first_right": 3,
+        "only_second_right": 2,
+        "net_loss": 1,
+        "margin_in_cases": 11.97,
+        "share_of_draws_at_or_over_the_margin": 1e-05,
+        "score_test_p": 0.00174,
+        "passes": true
+       }
+      },
+      "passes": true
      },
      "dev_right": 6538,
      "dev_groups": {
@@ -17066,8 +19977,49 @@
      "tune_right": 6513,
      "tune_changed_words": 2,
      "dev_paired_with_ship": {
-      "only_ship_right": 50,
-      "only_this_right": 40
+      "parts": {
+       "all": {
+        "cases": 6799,
+        "only_first_right": 50,
+        "only_second_right": 40,
+        "net_loss": 10,
+        "margin_in_cases": 33.99,
+        "share_of_draws_at_or_over_the_margin": 0.00684,
+        "score_test_p": 0.00769,
+        "passes": true
+       },
+       "letter_slips": {
+        "cases": 2100,
+        "only_first_right": 13,
+        "only_second_right": 7,
+        "net_loss": 6,
+        "margin_in_cases": 21.0,
+        "share_of_draws_at_or_over_the_margin": 0.0009,
+        "score_test_p": 0.00313,
+        "passes": true
+       },
+       "space_slips": {
+        "cases": 1500,
+        "only_first_right": 16,
+        "only_second_right": 13,
+        "net_loss": 3,
+        "margin_in_cases": 15.0,
+        "share_of_draws_at_or_over_the_margin": 0.01684,
+        "score_test_p": 0.01983,
+        "passes": true
+       },
+       "symbol_slips": {
+        "cases": 1197,
+        "only_first_right": 4,
+        "only_second_right": 2,
+        "net_loss": 2,
+        "margin_in_cases": 11.97,
+        "share_of_draws_at_or_over_the_margin": 0.00022,
+        "score_test_p": 0.00406,
+        "passes": true
+       }
+      },
+      "passes": true
      },
      "dev_right": 6534,
      "dev_groups": {
@@ -17671,8 +20623,49 @@
      "tune_right": 6495,
      "tune_changed_words": 6,
      "dev_paired_with_ship": {
-      "only_ship_right": 52,
-      "only_this_right": 36
+      "parts": {
+       "all": {
+        "cases": 6799,
+        "only_first_right": 52,
+        "only_second_right": 36,
+        "net_loss": 16,
+        "margin_in_cases": 33.99,
+        "share_of_draws_at_or_over_the_margin": 0.03153,
+        "score_test_p": 0.03189,
+        "passes": true
+       },
+       "letter_slips": {
+        "cases": 2100,
+        "only_first_right": 13,
+        "only_second_right": 5,
+        "net_loss": 8,
+        "margin_in_cases": 21.0,
+        "share_of_draws_at_or_over_the_margin": 0.00242,
+        "score_test_p": 0.00664,
+        "passes": true
+       },
+       "space_slips": {
+        "cases": 1500,
+        "only_first_right": 12,
+        "only_second_right": 10,
+        "net_loss": 2,
+        "margin_in_cases": 15.0,
+        "share_of_draws_at_or_over_the_margin": 0.00422,
+        "score_test_p": 0.00749,
+        "passes": true
+       },
+       "symbol_slips": {
+        "cases": 1197,
+        "only_first_right": 3,
+        "only_second_right": 3,
+        "net_loss": 0,
+        "margin_in_cases": 11.97,
+        "share_of_draws_at_or_over_the_margin": 1e-05,
+        "score_test_p": 0.00107,
+        "passes": true
+       }
+      },
+      "passes": true
      },
      "dev_right": 6528,
      "dev_groups": {
@@ -17796,8 +20789,49 @@
      "tune_right": 6505,
      "tune_changed_words": 7,
      "dev_paired_with_ship": {
-      "only_ship_right": 48,
-      "only_this_right": 49
+      "parts": {
+       "all": {
+        "cases": 6799,
+        "only_first_right": 48,
+        "only_second_right": 49,
+        "net_loss": -1,
+        "margin_in_cases": 33.99,
+        "share_of_draws_at_or_over_the_margin": 0.00024,
+        "score_test_p": 0.00037,
+        "passes": true
+       },
+       "letter_slips": {
+        "cases": 2100,
+        "only_first_right": 10,
+        "only_second_right": 8,
+        "net_loss": 2,
+        "margin_in_cases": 21.0,
+        "share_of_draws_at_or_over_the_margin": 1e-05,
+        "score_test_p": 0.0003,
+        "passes": true
+       },
+       "space_slips": {
+        "cases": 1500,
+        "only_first_right": 16,
+        "only_second_right": 15,
+        "net_loss": 1,
+        "margin_in_cases": 15.0,
+        "share_of_draws_at_or_over_the_margin": 0.00787,
+        "score_test_p": 0.01022,
+        "passes": true
+       },
+       "symbol_slips": {
+        "cases": 1197,
+        "only_first_right": 2,
+        "only_second_right": 4,
+        "net_loss": -2,
+        "margin_in_cases": 11.97,
+        "share_of_draws_at_or_over_the_margin": 0.0,
+        "score_test_p": 0.00025,
+        "passes": true
+       }
+      },
+      "passes": true
      },
      "dev_right": 6545,
      "dev_groups": {
@@ -17921,8 +20955,49 @@
      "tune_right": 6505,
      "tune_changed_words": 7,
      "dev_paired_with_ship": {
-      "only_ship_right": 48,
-      "only_this_right": 49
+      "parts": {
+       "all": {
+        "cases": 6799,
+        "only_first_right": 48,
+        "only_second_right": 49,
+        "net_loss": -1,
+        "margin_in_cases": 33.99,
+        "share_of_draws_at_or_over_the_margin": 0.00024,
+        "score_test_p": 0.00037,
+        "passes": true
+       },
+       "letter_slips": {
+        "cases": 2100,
+        "only_first_right": 10,
+        "only_second_right": 8,
+        "net_loss": 2,
+        "margin_in_cases": 21.0,
+        "share_of_draws_at_or_over_the_margin": 1e-05,
+        "score_test_p": 0.0003,
+        "passes": true
+       },
+       "space_slips": {
+        "cases": 1500,
+        "only_first_right": 16,
+        "only_second_right": 15,
+        "net_loss": 1,
+        "margin_in_cases": 15.0,
+        "share_of_draws_at_or_over_the_margin": 0.00787,
+        "score_test_p": 0.01022,
+        "passes": true
+       },
+       "symbol_slips": {
+        "cases": 1197,
+        "only_first_right": 2,
+        "only_second_right": 4,
+        "net_loss": -2,
+        "margin_in_cases": 11.97,
+        "share_of_draws_at_or_over_the_margin": 0.0,
+        "score_test_p": 0.00025,
+        "passes": true
+       }
+      },
+      "passes": true
      },
      "dev_right": 6545,
      "dev_groups": {
@@ -18046,8 +21121,49 @@
      "tune_right": 6503,
      "tune_changed_words": 4,
      "dev_paired_with_ship": {
-      "only_ship_right": 51,
-      "only_this_right": 48
+      "parts": {
+       "all": {
+        "cases": 6799,
+        "only_first_right": 51,
+        "only_second_right": 48,
+        "net_loss": 3,
+        "margin_in_cases": 33.99,
+        "share_of_draws_at_or_over_the_margin": 0.00113,
+        "score_test_p": 0.00146,
+        "passes": true
+       },
+       "letter_slips": {
+        "cases": 2100,
+        "only_first_right": 11,
+        "only_second_right": 8,
+        "net_loss": 3,
+        "margin_in_cases": 21.0,
+        "share_of_draws_at_or_over_the_margin": 6e-05,
+        "score_test_p": 0.0006,
+        "passes": true
+       },
+       "space_slips": {
+        "cases": 1500,
+        "only_first_right": 16,
+        "only_second_right": 14,
+        "net_loss": 2,
+        "margin_in_cases": 15.0,
+        "share_of_draws_at_or_over_the_margin": 0.01157,
+        "score_test_p": 0.01428,
+        "passes": true
+       },
+       "symbol_slips": {
+        "cases": 1197,
+        "only_first_right": 4,
+        "only_second_right": 3,
+        "net_loss": 1,
+        "margin_in_cases": 11.97,
+        "share_of_draws_at_or_over_the_margin": 0.00011,
+        "score_test_p": 0.00254,
+        "passes": true
+       }
+      },
+      "passes": true
      },
      "dev_right": 6541,
      "dev_groups": {
@@ -18651,8 +21767,49 @@
      "tune_right": 6490,
      "tune_changed_words": 4,
      "dev_paired_with_ship": {
-      "only_ship_right": 48,
-      "only_this_right": 34
+      "parts": {
+       "all": {
+        "cases": 6799,
+        "only_first_right": 48,
+        "only_second_right": 34,
+        "net_loss": 14,
+        "margin_in_cases": 33.99,
+        "share_of_draws_at_or_over_the_margin": 0.01608,
+        "score_test_p": 0.0172,
+        "passes": true
+       },
+       "letter_slips": {
+        "cases": 2100,
+        "only_first_right": 11,
+        "only_second_right": 8,
+        "net_loss": 3,
+        "margin_in_cases": 21.0,
+        "share_of_draws_at_or_over_the_margin": 6e-05,
+        "score_test_p": 0.0006,
+        "passes": true
+       },
+       "space_slips": {
+        "cases": 1500,
+        "only_first_right": 7,
+        "only_second_right": 8,
+        "net_loss": -1,
+        "margin_in_cases": 15.0,
+        "share_of_draws_at_or_over_the_margin": 4e-05,
+        "score_test_p": 0.00061,
+        "passes": true
+       },
+       "symbol_slips": {
+        "cases": 1197,
+        "only_first_right": 3,
+        "only_second_right": 2,
+        "net_loss": 1,
+        "margin_in_cases": 11.97,
+        "share_of_draws_at_or_over_the_margin": 1e-05,
+        "score_test_p": 0.00174,
+        "passes": true
+       }
+      },
+      "passes": true
      },
      "dev_right": 6530,
      "dev_groups": {
@@ -18776,8 +21933,49 @@
      "tune_right": 6507,
      "tune_changed_words": 2,
      "dev_paired_with_ship": {
-      "only_ship_right": 55,
-      "only_this_right": 48
+      "parts": {
+       "all": {
+        "cases": 6799,
+        "only_first_right": 55,
+        "only_second_right": 48,
+        "net_loss": 7,
+        "margin_in_cases": 33.99,
+        "share_of_draws_at_or_over_the_margin": 0.00463,
+        "score_test_p": 0.00519,
+        "passes": true
+       },
+       "letter_slips": {
+        "cases": 2100,
+        "only_first_right": 15,
+        "only_second_right": 10,
+        "net_loss": 5,
+        "margin_in_cases": 21.0,
+        "share_of_draws_at_or_over_the_margin": 0.00123,
+        "score_test_p": 0.00319,
+        "passes": true
+       },
+       "space_slips": {
+        "cases": 1500,
+        "only_first_right": 19,
+        "only_second_right": 11,
+        "net_loss": 8,
+        "margin_in_cases": 15.0,
+        "share_of_draws_at_or_over_the_margin": 0.11737,
+        "score_test_p": 0.11139,
+        "passes": false
+       },
+       "symbol_slips": {
+        "cases": 1197,
+        "only_first_right": 5,
+        "only_second_right": 5,
+        "net_loss": 0,
+        "margin_in_cases": 11.97,
+        "share_of_draws_at_or_over_the_margin": 0.00021,
+        "score_test_p": 0.00228,
+        "passes": true
+       }
+      },
+      "passes": false
      },
      "dev_right": 6537,
      "dev_groups": {
@@ -18901,8 +22099,49 @@
      "tune_right": 6507,
      "tune_changed_words": 2,
      "dev_paired_with_ship": {
-      "only_ship_right": 55,
-      "only_this_right": 48
+      "parts": {
+       "all": {
+        "cases": 6799,
+        "only_first_right": 55,
+        "only_second_right": 48,
+        "net_loss": 7,
+        "margin_in_cases": 33.99,
+        "share_of_draws_at_or_over_the_margin": 0.00463,
+        "score_test_p": 0.00519,
+        "passes": true
+       },
+       "letter_slips": {
+        "cases": 2100,
+        "only_first_right": 15,
+        "only_second_right": 10,
+        "net_loss": 5,
+        "margin_in_cases": 21.0,
+        "share_of_draws_at_or_over_the_margin": 0.00123,
+        "score_test_p": 0.00319,
+        "passes": true
+       },
+       "space_slips": {
+        "cases": 1500,
+        "only_first_right": 19,
+        "only_second_right": 11,
+        "net_loss": 8,
+        "margin_in_cases": 15.0,
+        "share_of_draws_at_or_over_the_margin": 0.11737,
+        "score_test_p": 0.11139,
+        "passes": false
+       },
+       "symbol_slips": {
+        "cases": 1197,
+        "only_first_right": 5,
+        "only_second_right": 5,
+        "net_loss": 0,
+        "margin_in_cases": 11.97,
+        "share_of_draws_at_or_over_the_margin": 0.00021,
+        "score_test_p": 0.00228,
+        "passes": true
+       }
+      },
+      "passes": false
      },
      "dev_right": 6537,
      "dev_groups": {
@@ -19026,8 +22265,49 @@
      "tune_right": 6506,
      "tune_changed_words": 2,
      "dev_paired_with_ship": {
-      "only_ship_right": 55,
-      "only_this_right": 48
+      "parts": {
+       "all": {
+        "cases": 6799,
+        "only_first_right": 55,
+        "only_second_right": 48,
+        "net_loss": 7,
+        "margin_in_cases": 33.99,
+        "share_of_draws_at_or_over_the_margin": 0.00463,
+        "score_test_p": 0.00519,
+        "passes": true
+       },
+       "letter_slips": {
+        "cases": 2100,
+        "only_first_right": 15,
+        "only_second_right": 10,
+        "net_loss": 5,
+        "margin_in_cases": 21.0,
+        "share_of_draws_at_or_over_the_margin": 0.00123,
+        "score_test_p": 0.00319,
+        "passes": true
+       },
+       "space_slips": {
+        "cases": 1500,
+        "only_first_right": 19,
+        "only_second_right": 11,
+        "net_loss": 8,
+        "margin_in_cases": 15.0,
+        "share_of_draws_at_or_over_the_margin": 0.11737,
+        "score_test_p": 0.11139,
+        "passes": false
+       },
+       "symbol_slips": {
+        "cases": 1197,
+        "only_first_right": 6,
+        "only_second_right": 5,
+        "net_loss": 1,
+        "margin_in_cases": 11.97,
+        "share_of_draws_at_or_over_the_margin": 0.00106,
+        "score_test_p": 0.00491,
+        "passes": true
+       }
+      },
+      "passes": false
      },
      "dev_right": 6537,
      "dev_groups": {
@@ -20024,7 +23304,7 @@
      "3 real misspellings": false,
      "4 non-word slips": true,
      "5 real-word slips": true,
-     "6 pinned dev counts": false,
+     "6 paired dev comparison": true,
      "7 domain dev": false,
      "8 apostrophe words": true,
      "9 parity": true
@@ -20043,7 +23323,7 @@
      "3 real misspellings": false,
      "4 non-word slips": true,
      "5 real-word slips": true,
-     "6 pinned dev counts": false,
+     "6 paired dev comparison": false,
      "7 domain dev": false,
      "8 apostrophe words": true,
      "9 parity": true
@@ -20062,7 +23342,7 @@
      "3 real misspellings": true,
      "4 non-word slips": true,
      "5 real-word slips": true,
-     "6 pinned dev counts": false,
+     "6 paired dev comparison": true,
      "7 domain dev": true,
      "8 apostrophe words": false,
      "9 parity": true
@@ -20081,7 +23361,7 @@
      "3 real misspellings": true,
      "4 non-word slips": true,
      "5 real-word slips": true,
-     "6 pinned dev counts": false,
+     "6 paired dev comparison": true,
      "7 domain dev": false,
      "8 apostrophe words": false,
      "9 parity": true
@@ -20100,7 +23380,7 @@
      "3 real misspellings": true,
      "4 non-word slips": true,
      "5 real-word slips": true,
-     "6 pinned dev counts": false,
+     "6 paired dev comparison": true,
      "7 domain dev": false,
      "8 apostrophe words": false,
      "9 parity": true
@@ -20119,7 +23399,7 @@
      "3 real misspellings": true,
      "4 non-word slips": true,
      "5 real-word slips": true,
-     "6 pinned dev counts": false,
+     "6 paired dev comparison": true,
      "7 domain dev": false,
      "8 apostrophe words": false,
      "9 parity": true
@@ -20138,7 +23418,7 @@
      "3 real misspellings": false,
      "4 non-word slips": true,
      "5 real-word slips": true,
-     "6 pinned dev counts": false,
+     "6 paired dev comparison": true,
      "7 domain dev": false,
      "8 apostrophe words": false,
      "9 parity": true
@@ -20157,7 +23437,7 @@
      "3 real misspellings": false,
      "4 non-word slips": true,
      "5 real-word slips": true,
-     "6 pinned dev counts": false,
+     "6 paired dev comparison": true,
      "7 domain dev": false,
      "8 apostrophe words": false,
      "9 parity": true
@@ -20176,7 +23456,7 @@
      "3 real misspellings": true,
      "4 non-word slips": true,
      "5 real-word slips": true,
-     "6 pinned dev counts": true,
+     "6 paired dev comparison": true,
      "7 domain dev": true,
      "8 apostrophe words": true,
      "9 parity": true
@@ -20195,7 +23475,7 @@
      "3 real misspellings": false,
      "4 non-word slips": true,
      "5 real-word slips": true,
-     "6 pinned dev counts": false,
+     "6 paired dev comparison": true,
      "7 domain dev": true,
      "8 apostrophe words": false,
      "9 parity": true
@@ -20214,7 +23494,7 @@
      "3 real misspellings": false,
      "4 non-word slips": true,
      "5 real-word slips": true,
-     "6 pinned dev counts": false,
+     "6 paired dev comparison": true,
      "7 domain dev": true,
      "8 apostrophe words": false,
      "9 parity": true
@@ -20233,7 +23513,7 @@
      "3 real misspellings": true,
      "4 non-word slips": true,
      "5 real-word slips": true,
-     "6 pinned dev counts": false,
+     "6 paired dev comparison": true,
      "7 domain dev": false,
      "8 apostrophe words": false,
      "9 parity": true
@@ -20252,7 +23532,7 @@
      "3 real misspellings": true,
      "4 non-word slips": true,
      "5 real-word slips": true,
-     "6 pinned dev counts": false,
+     "6 paired dev comparison": true,
      "7 domain dev": false,
      "8 apostrophe words": true,
      "9 parity": true
@@ -20271,7 +23551,7 @@
      "3 real misspellings": true,
      "4 non-word slips": true,
      "5 real-word slips": true,
-     "6 pinned dev counts": true,
+     "6 paired dev comparison": true,
      "7 domain dev": true,
      "8 apostrophe words": false,
      "9 parity": true
@@ -20290,7 +23570,7 @@
      "3 real misspellings": true,
      "4 non-word slips": true,
      "5 real-word slips": true,
-     "6 pinned dev counts": false,
+     "6 paired dev comparison": true,
      "7 domain dev": false,
      "8 apostrophe words": false,
      "9 parity": true
@@ -20309,7 +23589,7 @@
      "3 real misspellings": true,
      "4 non-word slips": true,
      "5 real-word slips": true,
-     "6 pinned dev counts": true,
+     "6 paired dev comparison": true,
      "7 domain dev": true,
      "8 apostrophe words": false,
      "9 parity": true
@@ -20328,7 +23608,7 @@
      "3 real misspellings": true,
      "4 non-word slips": true,
      "5 real-word slips": true,
-     "6 pinned dev counts": true,
+     "6 paired dev comparison": true,
      "7 domain dev": true,
      "8 apostrophe words": true,
      "9 parity": true
@@ -20347,7 +23627,7 @@
      "3 real misspellings": true,
      "4 non-word slips": true,
      "5 real-word slips": true,
-     "6 pinned dev counts": true,
+     "6 paired dev comparison": true,
      "7 domain dev": true,
      "8 apostrophe words": true,
      "9 parity": true
@@ -20366,7 +23646,7 @@
      "3 real misspellings": true,
      "4 non-word slips": true,
      "5 real-word slips": true,
-     "6 pinned dev counts": false,
+     "6 paired dev comparison": true,
      "7 domain dev": false,
      "8 apostrophe words": true,
      "9 parity": true
@@ -20385,7 +23665,7 @@
      "3 real misspellings": false,
      "4 non-word slips": true,
      "5 real-word slips": true,
-     "6 pinned dev counts": false,
+     "6 paired dev comparison": true,
      "7 domain dev": false,
      "8 apostrophe words": true,
      "9 parity": true
@@ -20404,7 +23684,7 @@
      "3 real misspellings": false,
      "4 non-word slips": true,
      "5 real-word slips": true,
-     "6 pinned dev counts": false,
+     "6 paired dev comparison": true,
      "7 domain dev": false,
      "8 apostrophe words": true,
      "9 parity": true
@@ -20423,7 +23703,7 @@
      "3 real misspellings": true,
      "4 non-word slips": true,
      "5 real-word slips": true,
-     "6 pinned dev counts": false,
+     "6 paired dev comparison": true,
      "7 domain dev": true,
      "8 apostrophe words": false,
      "9 parity": true
@@ -20442,7 +23722,7 @@
      "3 real misspellings": false,
      "4 non-word slips": true,
      "5 real-word slips": true,
-     "6 pinned dev counts": false,
+     "6 paired dev comparison": true,
      "7 domain dev": false,
      "8 apostrophe words": true,
      "9 parity": true
@@ -20461,7 +23741,7 @@
      "3 real misspellings": false,
      "4 non-word slips": true,
      "5 real-word slips": true,
-     "6 pinned dev counts": false,
+     "6 paired dev comparison": true,
      "7 domain dev": false,
      "8 apostrophe words": true,
      "9 parity": true
@@ -20480,7 +23760,7 @@
      "3 real misspellings": true,
      "4 non-word slips": true,
      "5 real-word slips": true,
-     "6 pinned dev counts": false,
+     "6 paired dev comparison": true,
      "7 domain dev": true,
      "8 apostrophe words": false,
      "9 parity": true
@@ -20499,7 +23779,7 @@
      "3 real misspellings": true,
      "4 non-word slips": true,
      "5 real-word slips": true,
-     "6 pinned dev counts": false,
+     "6 paired dev comparison": true,
      "7 domain dev": false,
      "8 apostrophe words": false,
      "9 parity": true
@@ -20518,7 +23798,7 @@
      "3 real misspellings": true,
      "4 non-word slips": true,
      "5 real-word slips": true,
-     "6 pinned dev counts": false,
+     "6 paired dev comparison": true,
      "7 domain dev": false,
      "8 apostrophe words": false,
      "9 parity": true
@@ -20537,7 +23817,7 @@
      "3 real misspellings": true,
      "4 non-word slips": true,
      "5 real-word slips": true,
-     "6 pinned dev counts": false,
+     "6 paired dev comparison": true,
      "7 domain dev": true,
      "8 apostrophe words": false,
      "9 parity": true
@@ -20556,7 +23836,7 @@
      "3 real misspellings": true,
      "4 non-word slips": true,
      "5 real-word slips": true,
-     "6 pinned dev counts": false,
+     "6 paired dev comparison": true,
      "7 domain dev": true,
      "8 apostrophe words": false,
      "9 parity": true
@@ -20575,7 +23855,7 @@
      "3 real misspellings": true,
      "4 non-word slips": true,
      "5 real-word slips": true,
-     "6 pinned dev counts": false,
+     "6 paired dev comparison": true,
      "7 domain dev": true,
      "8 apostrophe words": false,
      "9 parity": true
@@ -20594,7 +23874,7 @@
      "3 real misspellings": true,
      "4 non-word slips": true,
      "5 real-word slips": true,
-     "6 pinned dev counts": false,
+     "6 paired dev comparison": true,
      "7 domain dev": false,
      "8 apostrophe words": false,
      "9 parity": true
@@ -20613,7 +23893,7 @@
      "3 real misspellings": false,
      "4 non-word slips": true,
      "5 real-word slips": true,
-     "6 pinned dev counts": false,
+     "6 paired dev comparison": true,
      "7 domain dev": false,
      "8 apostrophe words": false,
      "9 parity": true
@@ -20632,7 +23912,7 @@
      "3 real misspellings": false,
      "4 non-word slips": true,
      "5 real-word slips": true,
-     "6 pinned dev counts": false,
+     "6 paired dev comparison": true,
      "7 domain dev": false,
      "8 apostrophe words": false,
      "9 parity": true
@@ -20651,7 +23931,7 @@
      "3 real misspellings": false,
      "4 non-word slips": true,
      "5 real-word slips": true,
-     "6 pinned dev counts": false,
+     "6 paired dev comparison": true,
      "7 domain dev": false,
      "8 apostrophe words": false,
      "9 parity": true
@@ -20670,7 +23950,7 @@
      "3 real misspellings": false,
      "4 non-word slips": true,
      "5 real-word slips": true,
-     "6 pinned dev counts": false,
+     "6 paired dev comparison": true,
      "7 domain dev": false,
      "8 apostrophe words": false,
      "9 parity": true
@@ -20689,7 +23969,7 @@
      "3 real misspellings": false,
      "4 non-word slips": true,
      "5 real-word slips": true,
-     "6 pinned dev counts": false,
+     "6 paired dev comparison": true,
      "7 domain dev": false,
      "8 apostrophe words": false,
      "9 parity": true
@@ -20708,7 +23988,7 @@
      "3 real misspellings": true,
      "4 non-word slips": true,
      "5 real-word slips": true,
-     "6 pinned dev counts": false,
+     "6 paired dev comparison": true,
      "7 domain dev": false,
      "8 apostrophe words": false,
      "9 parity": true
@@ -20727,7 +24007,7 @@
      "3 real misspellings": false,
      "4 non-word slips": true,
      "5 real-word slips": true,
-     "6 pinned dev counts": false,
+     "6 paired dev comparison": true,
      "7 domain dev": false,
      "8 apostrophe words": false,
      "9 parity": true
@@ -20746,7 +24026,7 @@
      "3 real misspellings": false,
      "4 non-word slips": true,
      "5 real-word slips": true,
-     "6 pinned dev counts": false,
+     "6 paired dev comparison": true,
      "7 domain dev": false,
      "8 apostrophe words": false,
      "9 parity": true
@@ -20765,7 +24045,7 @@
      "3 real misspellings": false,
      "4 non-word slips": true,
      "5 real-word slips": true,
-     "6 pinned dev counts": true,
+     "6 paired dev comparison": true,
      "7 domain dev": false,
      "8 apostrophe words": false,
      "9 parity": true
@@ -20784,7 +24064,7 @@
      "3 real misspellings": false,
      "4 non-word slips": true,
      "5 real-word slips": true,
-     "6 pinned dev counts": true,
+     "6 paired dev comparison": true,
      "7 domain dev": false,
      "8 apostrophe words": false,
      "9 parity": true
@@ -20803,7 +24083,7 @@
      "3 real misspellings": false,
      "4 non-word slips": true,
      "5 real-word slips": true,
-     "6 pinned dev counts": true,
+     "6 paired dev comparison": true,
      "7 domain dev": false,
      "8 apostrophe words": false,
      "9 parity": true
@@ -20822,7 +24102,7 @@
      "3 real misspellings": true,
      "4 non-word slips": true,
      "5 real-word slips": true,
-     "6 pinned dev counts": false,
+     "6 paired dev comparison": true,
      "7 domain dev": true,
      "8 apostrophe words": false,
      "9 parity": true
@@ -20841,7 +24121,7 @@
      "3 real misspellings": false,
      "4 non-word slips": true,
      "5 real-word slips": true,
-     "6 pinned dev counts": false,
+     "6 paired dev comparison": false,
      "7 domain dev": true,
      "8 apostrophe words": false,
      "9 parity": true
@@ -20860,7 +24140,7 @@
      "3 real misspellings": false,
      "4 non-word slips": true,
      "5 real-word slips": true,
-     "6 pinned dev counts": false,
+     "6 paired dev comparison": false,
      "7 domain dev": true,
      "8 apostrophe words": false,
      "9 parity": true
@@ -20879,7 +24159,7 @@
      "3 real misspellings": true,
      "4 non-word slips": true,
      "5 real-word slips": true,
-     "6 pinned dev counts": false,
+     "6 paired dev comparison": true,
      "7 domain dev": true,
      "8 apostrophe words": false,
      "9 parity": true
@@ -20898,7 +24178,7 @@
      "3 real misspellings": true,
      "4 non-word slips": true,
      "5 real-word slips": true,
-     "6 pinned dev counts": false,
+     "6 paired dev comparison": true,
      "7 domain dev": true,
      "8 apostrophe words": false,
      "9 parity": true
@@ -20917,7 +24197,7 @@
      "3 real misspellings": true,
      "4 non-word slips": true,
      "5 real-word slips": true,
-     "6 pinned dev counts": false,
+     "6 paired dev comparison": true,
      "7 domain dev": true,
      "8 apostrophe words": false,
      "9 parity": true
@@ -20936,12 +24216,12 @@
      "3 real misspellings": true,
      "4 non-word slips": true,
      "5 real-word slips": true,
-     "6 pinned dev counts": false,
+     "6 paired dev comparison": true,
      "7 domain dev": true,
      "8 apostrophe words": true,
      "9 parity": true
     },
-    "qualifies": false,
+    "qualifies": true,
     "technical_written_changed": 38,
     "domain_dev_right": 6466,
     "stream_select_changed": 13
@@ -20955,7 +24235,7 @@
      "3 real misspellings": true,
      "4 non-word slips": true,
      "5 real-word slips": true,
-     "6 pinned dev counts": false,
+     "6 paired dev comparison": true,
      "7 domain dev": true,
      "8 apostrophe words": false,
      "9 parity": true
@@ -20974,7 +24254,7 @@
      "3 real misspellings": true,
      "4 non-word slips": true,
      "5 real-word slips": true,
-     "6 pinned dev counts": false,
+     "6 paired dev comparison": true,
      "7 domain dev": false,
      "8 apostrophe words": false,
      "9 parity": true
@@ -20993,7 +24273,7 @@
      "3 real misspellings": true,
      "4 non-word slips": true,
      "5 real-word slips": true,
-     "6 pinned dev counts": false,
+     "6 paired dev comparison": true,
      "7 domain dev": true,
      "8 apostrophe words": false,
      "9 parity": true
@@ -21012,7 +24292,7 @@
      "3 real misspellings": true,
      "4 non-word slips": true,
      "5 real-word slips": true,
-     "6 pinned dev counts": false,
+     "6 paired dev comparison": false,
      "7 domain dev": true,
      "8 apostrophe words": false,
      "9 parity": true
@@ -21024,7 +24304,7 @@
    }
   ],
   "candidate": {
-   "arm": "soup-mix",
+   "arm": "dom-s100-seed1",
    "rule": "ceiling-0.3",
    "conditions": {
     "1 select stream": true,
@@ -21032,15 +24312,15 @@
     "3 real misspellings": true,
     "4 non-word slips": true,
     "5 real-word slips": true,
-    "6 pinned dev counts": true,
+    "6 paired dev comparison": true,
     "7 domain dev": true,
     "8 apostrophe words": true,
     "9 parity": true
    },
    "qualifies": true,
-   "technical_written_changed": 140,
-   "domain_dev_right": 6224,
-   "stream_select_changed": 22
+   "technical_written_changed": 38,
+   "domain_dev_right": 6466,
+   "stream_select_changed": 13
   }
  },
  "third_wave": {

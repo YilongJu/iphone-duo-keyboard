@@ -23,10 +23,21 @@ Rules:
  9. A domain slip case has the typed and intended pair of no training case and of no dev or test
     case of the pack. A domain case equals no dev or test case of the pack.
 10. A word of a list-based clean category, and an open word of a stream, stands in no training sentence.
+11. For a later set (--earlier): the set shares no source with an earlier set of the builder. No
+    Tatoeba source, no sentence, no list word, no GitHub row, pair or commit, no Birkbeck pair, no
+    technical document, no stream sentence with the same letters, and no domain pair or case.
+    A GitHub case also shares no commit with a case of the select half or of round 2, and a
+    GitHub or Birkbeck pair is the pair of no real misspelling of round 2 in either list.
+12. For a set with a real-word file: each case names an article and a revision of the RWSE
+    Wikipedia Revision Dataset, and its pair is no pair of a GitHub case of the select half, of
+    round 2 or of an earlier set.
 
 Usage, from the repository root (needs wordfreq):
     uv run --with wordfreq python scripts/lm-domain/check_fresh_holdout.py --round1 ../lm-finetune \
         --round2 ../lm-finetune2 --data build/lm-domain/data
+    uv run --with wordfreq python scripts/lm-domain/check_fresh_holdout.py --round1 ../lm-finetune \\
+        --round2 ../lm-finetune2 --data build/lm-domain/data --set-folder confirm-holdout --label confirm \\
+        --earlier build/lm-domain/data/fresh-holdout
 """
 import argparse
 import hashlib
@@ -72,8 +83,12 @@ def main():
     parser.add_argument("--round1", type=Path, required=True)
     parser.add_argument("--round2", type=Path, required=True)
     parser.add_argument("--data", type=Path, required=True)
+    parser.add_argument("--set-folder", default="fresh-holdout", help="the folder of the set under --data")
+    parser.add_argument("--label", default="fresh", help="the name of the set in its ids and file names")
+    parser.add_argument("--earlier", type=Path, nargs="*", default=[], help="folders of earlier sets of the builder")
     arguments = parser.parse_args()
-    folder = arguments.data / "fresh-holdout"
+    folder = arguments.data / arguments.set_folder
+    set_label = arguments.label
     report = json.loads((folder / "report.json").read_text(encoding="utf-8"))
     files = {}
     for name, entry in report["files"].items():
@@ -83,9 +98,13 @@ def main():
         files[name] = read_jsonl(folder / name)
         if len({case["id"] for case in files[name]}) != len(files[name]) or len(files[name]) != entry["cases"]:
             stop(1, f"{name} holds an id twice or another count than report.json")
-    generated, stream = files["cases.generated.fresh.jsonl"], files["cases.stream.fresh.jsonl"]
-    github, birkbeck = files["cases.github.fresh.jsonl"], files["cases.birkbeck.fresh.jsonl"]
-    domain, domain_stream = files["cases.domain.fresh.jsonl"], files["cases.domain-stream.fresh.jsonl"]
+    generated, stream = files[f"cases.generated.{set_label}.jsonl"], files[f"cases.stream.{set_label}.jsonl"]
+    github, birkbeck = files[f"cases.github.{set_label}.jsonl"], files[f"cases.birkbeck.{set_label}.jsonl"]
+    domain, domain_stream = files[f"cases.domain.{set_label}.jsonl"], files[f"cases.domain-stream.{set_label}.jsonl"]
+    real_word = files.get(f"cases.real-word.{set_label}.jsonl")
+    expected = 6 if real_word is None else 7
+    if len(files) != expected or any(case["split"] != set_label or f"-{set_label}-" not in case["id"] for cases in files.values() for case in cases):
+        stop(1, f"the set does not hold {expected} files of the label {set_label}")
     counts: dict = {}
 
     # ---- Rules 2 to 5: the Tatoeba sources ----
@@ -132,9 +151,9 @@ def main():
     for case in generated + stream:
         if case.get("sentence") in training_texts:
             stop(4, "a sentence has the words of a training sentence")
-    if per_file["cases.generated.fresh.jsonl"] & per_file["cases.stream.fresh.jsonl"]:
+    if per_file[f"cases.generated.{set_label}.jsonl"] & per_file[f"cases.stream.{set_label}.jsonl"]:
         stop(5, "a generated case and a stream share a sentence")
-    if per_file["cases.domain.fresh.jsonl"] & (per_file["cases.generated.fresh.jsonl"] | per_file["cases.stream.fresh.jsonl"]):
+    if per_file[f"cases.domain.{set_label}.jsonl"] & (per_file[f"cases.generated.{set_label}.jsonl"] | per_file[f"cases.stream.{set_label}.jsonl"]):
         stop(5, "a domain case shares a sentence with a generated case or a stream")
 
     # ---- Rules 6 and 7: real misspellings ----
@@ -205,6 +224,55 @@ def main():
         stop(10, f"{len(open_words & training_words)} open words stand in a training sentence")
     counts["list_words"] = len(list_words)
     counts["open_words"] = len(open_words)
+
+    # ---- Rule 11: no source of an earlier set of the builder ----
+    if arguments.earlier:
+        earlier = [case for old in arguments.earlier for path in sorted(old.glob("cases.*.jsonl")) for case in read_jsonl(path)]
+        if not earlier:
+            stop(11, "a folder of --earlier holds no case file")
+        mine = [case for cases in files.values() for case in cases]
+        old_tatoeba = {tatoeba_id(case) for case in earlier} - {None}
+        shared = old_tatoeba & ({tatoeba_id(case) for case in mine} - {None})
+        if shared:
+            stop(11, f"{len(shared)} Tatoeba sources are sources of an earlier set")
+        if {case["sentence"] for case in earlier if "sentence" in case} & {case["sentence"] for case in mine if "sentence" in case}:
+            stop(11, "a sentence is a sentence of an earlier set")
+        if {case["intended"] for case in earlier if case.get("category") in LIST_CATEGORIES} & list_words:
+            stop(11, "a list word is a list word of an earlier set")
+        old_real = [case for case in earlier if case["source"].startswith(("github-typo-corpus:", "mitton:"))]
+        old_rows = {(case["category"], case["context"], case["typed"], case["intended"], case["source"]) for case in old_real}
+        # The pair of an earlier real misspelling stays out of both lists, whichever list held it.
+        old_pairs = {(case["typed"], case["intended"]) for case in old_real} | pick_pairs | {(case["typed"], case["intended"]) for case in mitton}
+        old_commits = {case["source"] for case in old_real if case["source"].startswith("github-typo-corpus:")}
+        # One commit can hold several edits, so the commits of the select half and of round 2 stay out too.
+        old_commits |= {row["source"] for row in picks} | {case["source"] for case in read_jsonl(everyday / "cases.github.select.jsonl")}
+        for case in github + birkbeck + (real_word or []):
+            if (case["category"], case["context"], case["typed"], case["intended"], case["source"]) in old_rows \
+                    or (case["typed"], case["intended"]) in old_pairs or case["source"] in old_commits:
+                stop(11, "a real misspelling has the row, the pair or the commit of an earlier set")
+        old_domain = [case for case in earlier if case["id"].startswith("endom-") or "stream" in case]
+        old_documents = {case["source"] for case in old_domain if case["source"].split(":", 1)[0] in ("arxiv", "stackexchange", "github")}
+        if old_documents & {case["source"] for case in domain + domain_stream}:
+            stop(11, "a technical document is a document of an earlier set")
+        if {letters_of(case["typed"]) for case in old_domain if "stream" in case} & {letters_of(case["typed"]) for case in domain_stream}:
+            stop(11, "a stream sentence has the letters of a stream sentence of an earlier set")
+        old_domain_pairs = {(case["typed"].lower(), case["intended"].lower()) for case in old_domain if case["typed"].lower() != case["intended"].lower()}
+        old_domain_texts = {(case["context"], case["typed"], case["intended"]) for case in old_domain}
+        for case in domain:
+            pair = (case["typed"].lower(), case["intended"].lower())
+            if (pair[0] != pair[1] and pair in old_domain_pairs) or (case["context"], case["typed"], case["intended"]) in old_domain_texts:
+                stop(11, "a domain case has the pair of an earlier set or equals one of its cases")
+        counts["earlier_cases_checked"] = len(earlier)
+
+    # ---- Rule 12: the real-word file ----
+    if real_word is not None:
+        earlier_pairs = pick_pairs | {(case["typed"], case["intended"]) for case in read_jsonl(everyday / "cases.github.select.jsonl")}
+        for case in real_word:
+            if not re.fullmatch(r"rwse-wikipedia:\d+:\d+", case["source"]) or case["category"] != "wikipedia_real_word":
+                stop(12, "a real-word case does not name an article and a revision")
+            if (case["typed"], case["intended"]) in earlier_pairs or case["typed"] == case["intended"]:
+                stop(12, "a real-word case has the pair of an earlier GitHub case")
+        counts["real_word"] = len(real_word)
     print(json.dumps({"passes": True, "counts": counts}))
 
 

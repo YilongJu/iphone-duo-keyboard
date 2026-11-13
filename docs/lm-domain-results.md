@@ -6,7 +6,7 @@ The shipped file stays. The one candidate of the pick did not pass the replaceme
 
 1. Keep `smollm2-lora-typed-seed1.Q4_K_M.gguf` at the shipped setting.
 2. Read Table 2: the arm `dom-s100-seed1` passes all seven held-out conditions, and it was not the candidate.
-3. Decide whether the pinned dev floors of pick condition 6 should stop an arm that misses them by 1 to 5 cases.
+3. Read "Confirmation round of `dom-s100-seed1`" in `docs/lm-domain-design.md`: that arm is the candidate of one read of a new set.
 4. Read `scripts/lm-domain/reports/select-tables.md` for every arm on every selection set and on the test half.
 
 This page does not settle the slip rate of the owner. Every number was measured on the symbol cases before the comma and period keys moved.
@@ -24,8 +24,8 @@ This page does not settle the slip rate of the owner. Every number was measured 
 
 ## Pick of one candidate on the selection sets
 
-The pick names `soup-mix` at its ceiling setting (weight 1.5, margins 1 / 8 / 2, lead 4). It is the only entry of 20 files that passes the nine conditions.
-Every `dom-s100` entry misses pick condition 6, the pinned dev floors. The entry `dom-s100-seed1` at its ceiling setting misses that condition alone.
+The first pick named `soup-mix` at its ceiling setting (weight 1.5, margins 1 / 8 / 2, lead 4). Its condition 6 was a set of fixed dev counts from another run, and `dom-s100-seed1` at its ceiling setting missed that condition alone.
+With the paired dev comparison as condition 6, three entries of 53 pass the nine conditions. The pick then names `dom-s100-seed1` at its ceiling setting (weight 1.5, margins 1 / 4 / 2, lead 0.5). It changes 38 technical and written dev words, against 140 for `soup-mix`.
 
 Table 1. Selection sets, work area on. A changed count is changed correct words.
 
@@ -92,5 +92,4 @@ Most remaining errors are label noise: a short context that fits both texts, or 
 
 - `dom-s100-seed1` was not the candidate, so its held-out counts are a report and no decision.
 - One seed of share 1.0 was read on the held-out set. Seeds 2 and 3 were scored on the selection sets only.
-- Pick condition 6 compares with floors from another run. `ship` itself has 6,544 dev cases in this harness.
 - The loss comparison has two seeds per loss.

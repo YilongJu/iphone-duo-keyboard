@@ -75,6 +75,10 @@ SEED = "lm-finetune-20261110"
 
 
 SPLITS = ("tune", "stop", "train")
+# How many times symbol_cases reads the sentences for one category. The first reading is the
+# reading of rounds 1 and 2. A later reading takes new word positions, for a set whose sentences
+# leave a category short after one reading (scripts/lm-domain/build_fresh_holdout.py).
+SENTENCE_READINGS = 1
 
 
 def bucket(key: str) -> int:
@@ -228,20 +232,22 @@ def symbol_cases(split: str, sentences, symbol_tokens: list[str]) -> list[dict]:
         rng = random.Random(f"{base.SEED}-{split}-{seed_name}")
         order = sentences[:]
         rng.shuffle(order)
-        made = 0
-        for sentence_id, words in order:
-            index = rng.randrange(len(words))
-            result = maker(words, index, rng)
-            if result is None:
-                continue
-            typed, intended = result
-            if repeats.get((category, typed), 0) >= repeats_limit:
-                continue
-            repeats[(category, typed)] = repeats.get((category, typed), 0) + 1
-            add(category, " ".join(words[:index]), typed, intended, f"tatoeba:{sentence_id}")
-            made += 1
-            if made == count:
-                return
+        made, taken = 0, set()
+        for _ in range(SENTENCE_READINGS):
+            for sentence_id, words in order:
+                index = rng.randrange(len(words))
+                result = maker(words, index, rng)
+                if result is None or (sentence_id, index) in taken:
+                    continue
+                typed, intended = result
+                if repeats.get((category, typed), 0) >= repeats_limit:
+                    continue
+                repeats[(category, typed)] = repeats.get((category, typed), 0) + 1
+                taken.add((sentence_id, index))
+                add(category, " ".join(words[:index]), typed, intended, f"tatoeba:{sentence_id}")
+                made += 1
+                if made == count:
+                    return
         raise SystemExit(f"{split}/{seed_name}: only {made} cases, wanted {count}")
 
     def per_symbol(category, maker, symbols):

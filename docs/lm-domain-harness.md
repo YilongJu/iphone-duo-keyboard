@@ -84,12 +84,14 @@ Table 3. Scripts in `scripts/lm-domain`, by their step.
 | `select_setting.py` | The setting rules |
 | `run_eval_queue.py`, `eval-queue.json` | The scoring of several model files at the same time |
 | `summarize3.py` | The tables, the pick and the rules of the third wave |
+| `paired_dev.py` | The paired dev comparison of pick condition 6, and the net loss between seeds of one recipe |
 | `dump_errors.py`, `label-rule.md` | The wrong cases of one arm with their readings, and the rule for their labels |
 | `collect_train_sentences.py`, `build_domain_train_cases.py`, `build_lists3.py` | The domain training lists |
 | `attribute_training.py`, `reports/domain-train-ATTRIBUTION.tsv` | The source, author and licence of each training document |
 | `train3.py`, `make_train_queue.py`, `run_train_queue.py`, `post_arm.sh` | The fit, its queue, and the conversion with the parity check |
 | `average_weights.py` | One model from the mean of the weights of several fine-tunes |
-| `build_fresh_holdout.py`, `check_fresh_holdout.py`, `read_fresh_holdout.py` | The fresh held-out set, its checks and its one read |
+| `build_fresh_holdout.py`, `check_fresh_holdout.py`, `read_fresh_holdout.py` | The fresh held-out set and the confirmation set, their checks, and the one read of each |
+| `make_holdout_plan.py`, `holdout-plan.json`, `confirm-plan.json` | The plan of a read: the files of the set, the arms, the settings and the candidate |
 | `detach.ps1`, `job.sh`, `jobs/` | Long jobs that outlive the shell that starts them |
 
 ## Files that one scoring run writes

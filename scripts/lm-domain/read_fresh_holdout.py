@@ -7,6 +7,16 @@ script checks every SHA-256 value, types the six files with the engine alone, wi
 chooser and with each arm, and applies the replacement rule of docs/lm-domain-design.md to the
 candidate. It refuses a folder that already holds a result, so the set is read once.
 
+A plan with the key `set` names a later set of the builder: its folder under --data and its
+label, as {"folder": "confirm-holdout", "label": "confirm"}. Such a set can hold a seventh file
+of real-word errors. That file is shown in the report, and no condition reads it. The report
+also gives the paired comparison of paired_dev.py on the generated cases, and no condition reads it.
+For such a set the script needs --plan-sha256, the value in the message of the commit that holds
+the plan. After it has checked the plan and the SHA-256 value of every file, and before any model
+types a case, it creates the file read-started.json in the folder of the set with that value and
+the output folder. From then on it refuses another plan and another output folder. Every start
+adds a line to read-attempts.jsonl in the same folder.
+
 A run that stops goes on from the stored answers of lm_score of each arm. The result file is
 written at the end only.
 
@@ -16,6 +26,7 @@ Usage, from the repository root, on Linux:
         --workers 6 --out build/lm-domain/holdout-read
 """
 import argparse
+import datetime
 import hashlib
 import json
 import math
@@ -27,22 +38,28 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts" / "lm-domain"))
 import harness  # noqa: E402
+import paired_dev  # noqa: E402
 import rerank  # noqa: E402
 import summarize3  # noqa: E402
 
-FILES = {"generated": ("generated", "cases.generated.fresh.jsonl"), "stream": ("stream", "cases.stream.fresh.jsonl"),
-         "github": ("listed", "cases.github.fresh.jsonl"), "birkbeck": ("listed", "cases.birkbeck.fresh.jsonl"),
-         "domain": ("domain", "cases.domain.fresh.jsonl"), "domain_stream": ("stream", "cases.domain-stream.fresh.jsonl")}
+KINDS = {"generated": ("generated", "generated"), "stream": ("stream", "stream"), "github": ("listed", "github"),
+         "birkbeck": ("listed", "birkbeck"), "domain": ("domain", "domain"), "domain_stream": ("stream", "domain-stream")}
+REAL_WORD = {"real_word": ("listed", "real-word")}
 BOOTSTRAP_DRAWS = 2000
 
 
-def load_sets(folder: Path) -> dict:
-    return {name: {"kind": kind, "cases": rerank.load_cases([folder / file])} for name, (kind, file) in FILES.items()}
+def files_of(label: str, with_real_word: bool) -> dict:
+    """The files of a set: {name of the set part: (kind, file name)}."""
+    return {name: (kind, f"cases.{part}.{label}.jsonl") for name, (kind, part) in {**KINDS, **(REAL_WORD if with_real_word else {})}.items()}
+
+
+def load_sets(folder: Path, files: dict) -> dict:
+    return {name: {"kind": kind, "cases": rerank.load_cases([folder / file])} for name, (kind, file) in files.items()}
 
 
 def type_arm(job: dict) -> dict:
     """Types the six files for one arm, in a process of its own."""
-    sets = load_sets(Path(job["folder"]))
+    sets = load_sets(Path(job["folder"]), job["files"])
     typist = harness.Typist(Path(job["shim"]), readings_file=Path(job["data"]) / "engine-readings.pickle")
     out = Path(job["out"])
     arm = job["arm"]
@@ -84,11 +101,15 @@ def measures(sets: dict, outputs: dict, requested: set[str]) -> dict:
     github = harness.summarize("listed", sets["github"]["cases"], outputs["github"])["categories"]
     birkbeck = harness.summarize("listed", sets["birkbeck"]["cases"], outputs["birkbeck"])
     domain = summarize3.domain_counts(sets["domain"]["cases"], outputs["domain"], requested, set())
-    return {"generated_right": generated["right"], "generated_groups": {name: value[0] for name, value in generated["groups"].items()},
+    # A later set has no GitHub real-word rows, and it can hold real-word errors of Wikipedia.
+    wikipedia = harness.summarize("listed", sets["real_word"]["cases"], outputs["real_word"]) if "real_word" in sets else None
+    return {"wikipedia_real_word": None if wikipedia is None else [wikipedia["right"], wikipedia["cases"]],
+            "generated_right": generated["right"], "generated_groups": {name: value[0] for name, value in generated["groups"].items()},
             "generated_categories": generated["categories"], "non_word_slips": generated["non_word_slips"],
             "everyday_stream": {name: entry["changed_words"] for name, entry in streams["streams"].items()},
             "everyday_stream_changed": streams["changed_words"], "everyday_stream_words": streams["words"],
-            "github_misspelling": github["github_misspelling"], "github_real_word": github["github_real_word"],
+            "github_misspelling": github["github_misspelling"],
+            "github_real_word": github["github_real_word"] if any(case["category"] == "github_real_word" for case in sets["github"]["cases"]) else None,
             "birkbeck": [birkbeck["right"], birkbeck["cases"]], "domain": domain,
             "domain_stream": {name: entry["changed_words"] for name, entry in domain_streams["streams"].items()},
             "technical_written_changed": domain_streams["changed_words"], "technical_written_words": domain_streams["words"]}
@@ -115,7 +136,15 @@ def compare(sets: dict, arm: dict, ship: dict, engine: dict, outputs: dict, ship
                 for case in sets[set_name]["cases"]]
 
     non_word = [category for group in harness.NON_WORD_SLIP_GROUPS for category in harness.GENERATED_GROUPS[group]]
+    by_document: dict[str, float] = {}
+    for case in sets["domain_stream"]["cases"]:
+        by_document[case["source"]] = by_document.get(case["source"], 0.0) + harness.changed_words(case, outputs["domain_stream"][case["id"]]) \
+            - harness.changed_words(case, ship_outputs["domain_stream"][case["id"]])
     intervals = {
+        "technical_written_changed_words_over_documents": interval(list(by_document.values()), f"{name}-1d"),
+        "generated_clean_right": interval(right_difference("generated", lambda case: case["category"] in harness.GENERATED_GROUPS["clean"]), f"{name}-3a"),
+        "generated_clean_symbols_right": interval(right_difference("generated", lambda case: case["category"] in harness.GENERATED_GROUPS["clean_symbols"]),
+                                                  f"{name}-3b"),
         "technical_written_changed_words": interval(changed_difference("domain_stream"), f"{name}-1"),
         "everyday_changed_words": interval(changed_difference("stream"), f"{name}-2"),
         "non_word_slips_right": interval(right_difference("generated", lambda case: case["category"] in non_word), f"{name}-4"),
@@ -143,6 +172,7 @@ def compare(sets: dict, arm: dict, ship: dict, engine: dict, outputs: dict, ship
         and arm["domain"]["slips"][0] >= ship["domain"]["slips"][0] - 0.005 * ship["domain"]["slips"][1],
     }
     return {"conditions": conditions, "passes": all(conditions.values()),
+            "paired_generated_cases_for_the_report": paired_dev.compare(sets["generated"]["cases"], ship_outputs["generated"], outputs["generated"]),
             "documents": {"all": len(documents), "fewer_changed_words": wins, "more_changed_words": losses, "p_one_sided": p_value},
             "intervals_of_the_difference_to_the_reference": intervals}
 
@@ -156,30 +186,49 @@ def main():
     parser.add_argument("--threads", type=int, default=1)
     parser.add_argument("--workers", type=int, required=True)
     parser.add_argument("--out", type=Path, required=True)
+    parser.add_argument("--plan-sha256", help="the SHA-256 value of the plan in the message of its commit")
     arguments = parser.parse_args()
     if (arguments.out / "result.json").exists():
         raise SystemExit(f"{arguments.out} already holds a result: the fresh held-out set is read once")
     plan_text = arguments.plan.read_bytes()
     plan = json.loads(plan_text)
-    folder = arguments.data / "fresh-holdout"
+    which = plan.get("set", {"folder": "fresh-holdout", "label": "fresh"})
+    folder = arguments.data / which["folder"]
+    files = files_of(which["label"], f"cases.real-word.{which['label']}.jsonl" in plan["files"])
+    plan_digest = hashlib.sha256(plan_text).hexdigest()
+    if "set" in plan and arguments.plan_sha256 != plan_digest:
+        raise SystemExit(f"the plan has the SHA-256 value {plan_digest}, and --plan-sha256 says {arguments.plan_sha256}")
     for name, digest in plan["files"].items():
         found = hashlib.sha256((folder / name).read_bytes()).hexdigest()
         if found != digest:
             raise SystemExit(f"{name} has the SHA-256 value {found}, and the plan says {digest}")
-    if set(plan["files"]) != {file for _, file in FILES.values()}:
-        raise SystemExit("the plan does not name the six files of the set")
+    if set(plan["files"]) != {file for _, file in files.values()}:
+        raise SystemExit("the plan does not name the files of the set")
     names = [arm["name"] for arm in plan["arms"]]
     if plan["reference"] not in names or (plan["candidate"] is not None and plan["candidate"] not in names):
         raise SystemExit("the plan names a reference or a candidate that is no arm of it")
+    if "set" in plan:
+        # The plan and the files are checked. The first start takes the set for this plan and this
+        # output folder, and a start with another plan or another folder stops here.
+        record = {"plan_sha256": plan_digest, "out": str(arguments.out.resolve())}
+        marker = folder / "read-started.json"
+        try:
+            with marker.open("x", encoding="utf-8") as file:
+                file.write(json.dumps(record) + "\n")
+        except FileExistsError:
+            if json.loads(marker.read_text(encoding="utf-8")) != record:
+                raise SystemExit(f"{marker} names another plan or another output folder: the set is read once, for one plan")
+        with (folder / "read-attempts.jsonl").open("a", encoding="utf-8") as file:
+            file.write(json.dumps({"started": datetime.datetime.now(datetime.timezone.utc).isoformat(), **record}) + "\n")
     arguments.out.mkdir(parents=True, exist_ok=True)
-    sets = load_sets(folder)
+    sets = load_sets(folder, files)
     requested = {line.split("\t")[0] for line in (ROOT / "scripts" / "domain-pack" / "pack" / "required-terms.tsv")
                  .read_text(encoding="utf-8").splitlines() if line.strip() and not line.startswith("#")} - {"word"}
     typist = harness.Typist(arguments.shim, readings_file=arguments.data / "engine-readings.pickle")
     outputs = {"engine": {name: typist.run(entry["cases"], rerank.engine_choice) for name, entry in sets.items()},
                "perfect": {name: typist.run_perfect(entry["cases"]) for name, entry in sets.items()}}
     typist.save_readings()
-    jobs = [{"arm": arm, "folder": str(folder), "shim": str(arguments.shim), "lm": str(arguments.lm), "data": str(arguments.data),
+    jobs = [{"arm": arm, "folder": str(folder), "files": files, "shim": str(arguments.shim), "lm": str(arguments.lm), "data": str(arguments.data),
              "out": str(arguments.out), "threads": arguments.threads} for arm in plan["arms"]]
     with multiprocessing.Pool(arguments.workers) as pool:
         for answer in pool.imap_unordered(type_arm, jobs):
