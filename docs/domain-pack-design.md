@@ -54,7 +54,7 @@ correct a slip after a hyphen, as in "fine-tunign".
 | clean case | A case typed without a slip. The keyboard must leave it as typed. |
 | slip | One typing error of `keyboard_noise.py`: a neighbour key, a missing, doubled or extra letter, two swapped letters, or a slip at the space bar. |
 | engine alone | The choice of `duo_correct_english`, as the keyboard types before its language model is ready. |
-| model | The SmolLM2-135M fine-tune that re-ranks the engine's readings, with the rule of `KeyboardLanguageModel.rule`. |
+| model | The SmolLM2-135M fine-tune `smollm2-lora-typed-seed1.Q4_K_M.gguf` at weight 1.0, margins 0 / 4 / 2 and lead 4. Every number with the model on this page was measured with that file. The app ships the file `smollm2-lora-domain-s100-seed1.Q4_K_M.gguf`, and `scripts/lm-domain/reports/select-tables.md` gives its counts on these cases. |
 | protection | The model may not change a typed new word. It chooses among the readings that keep the word. |
 
 ## Sources of the domain text
