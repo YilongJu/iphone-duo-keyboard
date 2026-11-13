@@ -1,0 +1,73 @@
+{
+ "arm": "dom-s100-seed1",
+ "release": "lm-domain-candidate-1",
+ "file": "smollm2-lora-domain-s100-seed1.Q4_K_M.gguf",
+ "url": "https://github.com/YilongJu/iphone-duo-keyboard/releases/download/lm-domain-candidate-1/smollm2-lora-domain-s100-seed1.Q4_K_M.gguf",
+ "sha256": "8c0835e0eeb4787b853b4223facc14612d4d1b6c4bd7e33f7ad1ff9fc167dec8",
+ "bytes": 105453504,
+ "setting": {
+  "weight": 1.5,
+  "margin_from_typed": 1.0,
+  "margin_to_typed": 4.0,
+  "margin_other": 2.0,
+  "space_after": 1
+ },
+ "apostrophe_lead": 0.5,
+ "harness_counts": {
+  "right": 6538,
+  "cases": 6799,
+  "groups": {
+   "clean": [
+    957,
+    973
+   ],
+   "letter_slips": [
+    2052,
+    2100
+   ],
+   "space_slips": [
+    1387,
+    1500
+   ],
+   "symbol_slips": [
+    1164,
+    1197
+   ],
+   "clean_symbols": [
+    429,
+    429
+   ]
+  },
+  "work_area_groups": {
+   "domain_clean": [
+    949,
+    950
+   ],
+   "domain_slips": [
+    698,
+    723
+   ],
+   "domain_phrases": [
+    1011,
+    1197
+   ],
+   "required": [
+    1176,
+    1207
+   ],
+   "neighbour_controls": [
+    1020,
+    1100
+   ],
+   "term_for_everyday_word": [
+    40,
+    206
+   ],
+   "capitals": [
+    1725,
+    1754
+   ]
+  },
+  "corrections_read_by_the_model": 14628
+ }
+}

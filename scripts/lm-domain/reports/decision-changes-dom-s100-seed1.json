@@ -1,0 +1,26 @@
+{
+ "runs": 4,
+ "groups": {
+  "six selection sets": {
+   "corrections": 46956,
+   "changed_with_the_apostrophe_step": 261,
+   "changed_without_the_apostrophe_step": 245,
+   "changed_by_the_step_alone": 16,
+   "corrections_where_the_step_changes_the_q4_choice": 21
+  },
+  "apostrophe words": {
+   "corrections": 2144,
+   "changed_with_the_apostrophe_step": 34,
+   "changed_without_the_apostrophe_step": 43,
+   "changed_by_the_step_alone": 18,
+   "corrections_where_the_step_changes_the_q4_choice": 348
+  },
+  "all eight sets": {
+   "corrections": 49100,
+   "changed_with_the_apostrophe_step": 295,
+   "changed_without_the_apostrophe_step": 288,
+   "changed_by_the_step_alone": 34,
+   "corrections_where_the_step_changes_the_q4_choice": 369
+  }
+ }
+}
