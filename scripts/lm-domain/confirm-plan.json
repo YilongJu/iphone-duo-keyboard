@@ -1,0 +1,117 @@
+{
+ "rule": "docs/lm-domain-design.md, section \"Confirmation round of `dom-s100-seed1`\"",
+ "files": {
+  "cases.generated.confirm.jsonl": "9d86dc662c5935d71c5c6e86f566fa7cbe81e46779fee6388866cd0bab15c9c3",
+  "cases.stream.confirm.jsonl": "daf96297dd04c48f87e50970da87031ba7554f604eb78e45ca99d3022517a7dc",
+  "cases.github.confirm.jsonl": "36a2f3c7fc21fbf62bd6ef6a9a3d8dd588ae727c15529d756e5647ccb5a3469c",
+  "cases.birkbeck.confirm.jsonl": "c6417d9cf35bebd462f9f35440def57e14fc0df463205715f6a0458133d99e82",
+  "cases.domain.confirm.jsonl": "980ec235e485fe2103ed9014ab0f0178dcf753941330d8a65d8af57c07d080a2",
+  "cases.domain-stream.confirm.jsonl": "f892589f24926f03c5c43f196e869b8dc5cd3af36bb7273bc550f7028705b3a7",
+  "cases.real-word.confirm.jsonl": "48dd3efd7fd4ac79b9c546bd4834fb8c45476e0834c23b8b0812c6aa546bf9e2"
+ },
+ "reference": "ship",
+ "candidate": "dom-s100-seed1@ceiling-0.3",
+ "arms": [
+  {
+   "name": "ship",
+   "arm": "ship",
+   "rule": "shipped",
+   "model": "~/lmft/models/smollm2-lora-seed1.Q4_K_M.gguf",
+   "model_sha256": "fe82c0b617bdf19cf72b92148edbf9406c7547396ca7fac477485884431c07bb",
+   "setting": {
+    "weight": 1.0,
+    "margin_from_typed": 0,
+    "margin_to_typed": 4,
+    "margin_other": 2,
+    "space_after": 1
+   },
+   "apostrophe_lead": 4.0
+  },
+  {
+   "name": "dom-s100-seed1@ceiling-0.3",
+   "arm": "dom-s100-seed1",
+   "rule": "ceiling-0.3",
+   "model": "~/lmdom/models/dom-s100-seed1.Q4_K_M.gguf",
+   "model_sha256": "8c0835e0eeb4787b853b4223facc14612d4d1b6c4bd7e33f7ad1ff9fc167dec8",
+   "setting": {
+    "weight": 1.5,
+    "margin_from_typed": 1,
+    "margin_to_typed": 4,
+    "margin_other": 2,
+    "space_after": 1
+   },
+   "apostrophe_lead": 0.5
+  },
+  {
+   "name": "dom-s100-seed1@shipped",
+   "arm": "dom-s100-seed1",
+   "rule": "shipped",
+   "model": "~/lmdom/models/dom-s100-seed1.Q4_K_M.gguf",
+   "model_sha256": "8c0835e0eeb4787b853b4223facc14612d4d1b6c4bd7e33f7ad1ff9fc167dec8",
+   "setting": {
+    "weight": 1.0,
+    "margin_from_typed": 0,
+    "margin_to_typed": 4,
+    "margin_other": 2,
+    "space_after": 1
+   },
+   "apostrophe_lead": 0.5
+  },
+  {
+   "name": "dom-s100-seed2@ceiling-0.3",
+   "arm": "dom-s100-seed2",
+   "rule": "ceiling-0.3",
+   "model": "~/lmdom/models/dom-s100-seed2.Q4_K_M.gguf",
+   "model_sha256": "a737e00216c12ceb9f592b24c83366d05aa8eddadefa889248878a0925b830fc",
+   "setting": {
+    "weight": 1.5,
+    "margin_from_typed": 0,
+    "margin_to_typed": 8,
+    "margin_other": 2,
+    "space_after": 1
+   },
+   "apostrophe_lead": 6.0
+  },
+  {
+   "name": "dom-s100-seed3@ceiling-0.3",
+   "arm": "dom-s100-seed3",
+   "rule": "ceiling-0.3",
+   "model": "~/lmdom/models/dom-s100-seed3.Q4_K_M.gguf",
+   "model_sha256": "5ee41847538ee945e61acfd4f89ac3aafec5d879336e0e6b619926fed8f7c2c8",
+   "setting": {
+    "weight": 1.5,
+    "margin_from_typed": 0,
+    "margin_to_typed": 4,
+    "margin_other": 2,
+    "space_after": 1
+   },
+   "apostrophe_lead": 0.5
+  },
+  {
+   "name": "soup-mix@ceiling-0.3",
+   "arm": "soup-mix",
+   "rule": "ceiling-0.3",
+   "model": "~/lmdom/models/soup-mix.Q4_K_M.gguf",
+   "model_sha256": "57e076e3911030e67eeaae6bd0ec0b0d404ddc056e542f5d96e3e089a7f0ebfc",
+   "setting": {
+    "weight": 1.5,
+    "margin_from_typed": 1,
+    "margin_to_typed": 8,
+    "margin_other": 2,
+    "space_after": 1
+   },
+   "apostrophe_lead": 4.0
+  }
+ ],
+ "pick": {
+  "qualified_entries": [
+   "soup-mix@ceiling-0.3",
+   "soup-mix@ceiling-0.2",
+   "dom-s100-seed1@ceiling-0.3"
+  ]
+ },
+ "set": {
+  "folder": "confirm-holdout",
+  "label": "confirm"
+ }
+}

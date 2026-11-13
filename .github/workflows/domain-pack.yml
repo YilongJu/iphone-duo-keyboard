@@ -132,7 +132,7 @@ jobs:
           variant="scripts/domain-pack/variants/share-${{ matrix.share }}"
           # The dev half also types the alternative that leaves the protection out.
           python3 scripts/lm-rerank/domain_pack.py --shim build/lm-rerank/libduo_shim.so --lm build/lm-rerank/lm_score \
-            --model Shared/smollm2-lora-typed-seed1.Q4_K_M.gguf --threads 4 --half dev --also-unprotected \
+            --model Shared/smollm2-lora-domain-s100-seed1.Q4_K_M.gguf --threads 4 --half dev --also-unprotected \
             --supplement "$variant/supplement-ai-software.bin" --table "$variant/supplement-ai-software.tsv" \
             --out build/lm-rerank/domain-pack/rerank
           python3 scripts/lm-rerank/domain_pack_table.py build/lm-rerank/domain-pack/rerank/result.dev.json \
@@ -167,7 +167,7 @@ jobs:
           test -n "$words"
           for word in $words; do
             python3 scripts/domain-pack/requested_frequency.py --shim build/lm-rerank/libduo_shim.so --lm build/lm-rerank/lm_score \
-              --model Shared/smollm2-lora-typed-seed1.Q4_K_M.gguf --threads 4 --word "$word" --out "$out/$word" \
+              --model Shared/smollm2-lora-domain-s100-seed1.Q4_K_M.gguf --threads 4 --word "$word" --out "$out/$word" \
               | tee "$out/requested-frequency-$word.md"
             cat "$out/requested-frequency-$word.md" >> "$GITHUB_STEP_SUMMARY"
           done
@@ -177,7 +177,7 @@ jobs:
           export LD_LIBRARY_PATH="$PWD/build/lm-rerank/llama/lib"
           out=build/lm-rerank/domain-pack/requested
           python3 scripts/domain-pack/requested_frequency.py --shim build/lm-rerank/libduo_shim.so --lm build/lm-rerank/lm_score \
-            --model Shared/smollm2-lora-typed-seed1.Q4_K_M.gguf --threads 4 --out "$out/all" \
+            --model Shared/smollm2-lora-domain-s100-seed1.Q4_K_M.gguf --threads 4 --out "$out/all" \
             | tee "$out/requested-frequency.md"
           cat "$out/requested-frequency.md" >> "$GITHUB_STEP_SUMMARY"
           rm -f "$out"/*/*.so "$out"/*/*.bin
@@ -209,7 +209,7 @@ jobs:
           mkdir -p build/lm-rerank/domain-pack/rerank
           lscpu | grep -E 'Model name' | tee build/lm-rerank/domain-pack/rerank/runner.txt
           python3 scripts/lm-rerank/domain_pack.py --shim build/lm-rerank/libduo_shim.so --lm build/lm-rerank/lm_score \
-            --model Shared/smollm2-lora-typed-seed1.Q4_K_M.gguf --threads 4 --half test \
+            --model Shared/smollm2-lora-domain-s100-seed1.Q4_K_M.gguf --threads 4 --half test \
             --out build/lm-rerank/domain-pack/rerank
           python3 scripts/lm-rerank/domain_pack_table.py build/lm-rerank/domain-pack/rerank/result.test.json \
             | tee build/lm-rerank/domain-pack/rerank/table.test.md >> "$GITHUB_STEP_SUMMARY"

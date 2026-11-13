@@ -8,7 +8,7 @@ set -euo pipefail
 cd "$(dirname "$0")/../../.."
 out="$1"
 mkdir -p "$out/bin"
-model=Shared/smollm2-lora-typed-seed1.Q4_K_M.gguf
+model=Shared/smollm2-lora-domain-s100-seed1.Q4_K_M.gguf
 fw="$PWD/Vendor/llama.xcframework/macos-arm64_x86_64"
 here=scripts/lm-keyboard/scorer-probe
 

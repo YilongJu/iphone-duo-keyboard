@@ -3,24 +3,39 @@ framework, built on the work of other projects.
 The repository does not hold either file. scripts/ci/fetch_language_model.sh downloads both
 before a build, each from a fixed address, and checks each against a fixed SHA-256 value.
 
-smollm2-lora-typed-seed1.Q4_K_M.gguf
+smollm2-lora-domain-s100-seed1.Q4_K_M.gguf
 
   SmolLM2-135M by Hugging Face, https://huggingface.co/HuggingFaceTB/SmolLM2-135M at commit
   93efa2f097d58c2a74874c7e644dbc9b0cee75a2, an English language model with 135 million weights,
   under the Apache License, Version 2.0 (http://www.apache.org/licenses/LICENSE-2.0).
 
   Changes: this project trained a LoRA fine-tune of the model to re-rank the typing engine's
-  readings (scripts/lm-finetune on the branch engine/lm-finetune), merged the fine-tune into the
-  weights, converted the result to the GGUF file format of llama.cpp and stored its weights with
-  about 4 bits each (the setting Q4_K_M). The file comes from the release
-  lm-finetune-smollm2-lora-v1 of https://github.com/YilongJu/iphone-duo-keyboard:
-  https://github.com/YilongJu/iphone-duo-keyboard/releases/download/lm-finetune-smollm2-lora-v1/smollm2-lora-typed-seed1.Q4_K_M.gguf
-  105,453,504 bytes, SHA-256: fe82c0b617bdf19cf72b92148edbf9406c7547396ca7fac477485884431c07bb
+  readings (scripts/lm-domain, the arm dom-s100-seed1 of docs/lm-domain-design.md), merged the
+  fine-tune into the weights, converted the result to the GGUF file format of llama.cpp and
+  stored its weights with about 4 bits each (the setting Q4_K_M). The file comes from the release
+  lm-domain-candidate-1 of https://github.com/YilongJu/iphone-duo-keyboard:
+  https://github.com/YilongJu/iphone-duo-keyboard/releases/download/lm-domain-candidate-1/smollm2-lora-domain-s100-seed1.Q4_K_M.gguf
+  105,453,504 bytes, SHA-256: 8c0835e0eeb4787b853b4223facc14612d4d1b6c4bd7e33f7ad1ff9fc167dec8
 
-  The training text comes from sentences of Tatoeba, https://tatoeba.org, under the Creative
-  Commons Attribution 2.0 France licence (CC BY 2.0 FR,
-  https://creativecommons.org/licenses/by/2.0/fr/). The project generated typing slips from
-  those sentences.
+  The project generated typing slips from the training text. The training text has two parts.
+
+  Everyday text: sentences of Tatoeba, https://tatoeba.org, under the Creative Commons
+  Attribution 2.0 France licence (CC BY 2.0 FR, https://creativecommons.org/licenses/by/2.0/fr/),
+  and the list of common misspellings of Wikipedia in the copy of Roger Mitton,
+  https://www.dcs.bbk.ac.uk/~ROGER/corpora.html, under a Creative Commons Attribution-ShareAlike
+  licence (CC BY-SA).
+
+  Text of the work area "AI and software": sentences of 16,701 documents.
+  - 6,061 arXiv abstracts. arXiv metadata, the abstract included, is under CC0 1.0.
+  - 6,809 posts and comments of Stack Exchange sites, under CC BY-SA 4.0, 3.0 or 2.5 by the date
+    of the post.
+  - 3,831 documentation pages of open-source projects, under CC BY 4.0, the MIT license or the
+    Apache License 2.0.
+  The file domain-train-ATTRIBUTION.tsv gives the address, the author, the date and the licence
+  of each document. The release lm-domain-candidate-1 holds that file:
+  https://github.com/YilongJu/iphone-duo-keyboard/releases/download/lm-domain-candidate-1/domain-train-ATTRIBUTION.tsv
+  SHA-256: c6964bf2f9c036478ee11bd604436386e6449a9b087b74d7303c4dee8be8c888
+  The repository holds the same file as scripts/lm-domain/reports/domain-train-ATTRIBUTION.tsv.
 
 llama.framework
 

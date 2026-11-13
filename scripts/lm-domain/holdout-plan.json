@@ -1,0 +1,141 @@
+{
+ "rule": "docs/lm-domain-design.md, section \"Replacement rule on the fresh held-out set\"",
+ "files": {
+  "cases.generated.fresh.jsonl": "a007ba5a778de100428b7eb0a514d2e26c712fc64e0e413be0afd13ef1f361ab",
+  "cases.stream.fresh.jsonl": "f98d881ab55565096cb66684637ec25406bdb88df2f7241a4980710d3f3f3a25",
+  "cases.github.fresh.jsonl": "b8d2271fbd7881b51a25979d4d19f34eb46dbd8683d87bbd1a647ef4582d7b58",
+  "cases.birkbeck.fresh.jsonl": "ef17868c95b9413c2dc34666e42eb4a3adfe2ca0d5367244852e38d3da3c2da0",
+  "cases.domain.fresh.jsonl": "eaea090e59e33f80815348ac03a8dd02cb07a45eb124a0ae0394943d128ce02a",
+  "cases.domain-stream.fresh.jsonl": "be13462dc1955256c4cd566ab7163b000165c7d78a7e1c206ee2f2a45201397f"
+ },
+ "reference": "ship",
+ "candidate": "soup-mix@ceiling-0.3",
+ "arms": [
+  {
+   "name": "ship",
+   "arm": "ship",
+   "rule": "shipped",
+   "model": "~/lmft/models/smollm2-lora-seed1.Q4_K_M.gguf",
+   "model_sha256": "fe82c0b617bdf19cf72b92148edbf9406c7547396ca7fac477485884431c07bb",
+   "setting": {
+    "weight": 1.0,
+    "margin_from_typed": 0,
+    "margin_to_typed": 4,
+    "margin_other": 2,
+    "space_after": 1
+   },
+   "apostrophe_lead": 4.0
+  },
+  {
+   "name": "soup-mix@ceiling-0.3",
+   "arm": "soup-mix",
+   "rule": "ceiling-0.3",
+   "model": "~/lmdom/models/soup-mix.Q4_K_M.gguf",
+   "model_sha256": "57e076e3911030e67eeaae6bd0ec0b0d404ddc056e542f5d96e3e089a7f0ebfc",
+   "setting": {
+    "weight": 1.5,
+    "margin_from_typed": 1,
+    "margin_to_typed": 8,
+    "margin_other": 2,
+    "space_after": 1
+   },
+   "apostrophe_lead": 4.0
+  },
+  {
+   "name": "ship@ceiling-0.3",
+   "arm": "ship",
+   "rule": "ceiling-0.3",
+   "model": "~/lmft/models/smollm2-lora-seed1.Q4_K_M.gguf",
+   "model_sha256": "fe82c0b617bdf19cf72b92148edbf9406c7547396ca7fac477485884431c07bb",
+   "setting": {
+    "weight": 1.5,
+    "margin_from_typed": 3,
+    "margin_to_typed": 2,
+    "margin_other": 2,
+    "space_after": 1
+   },
+   "apostrophe_lead": 4.0
+  },
+  {
+   "name": "full-mix-seed1@shipped",
+   "arm": "full-mix-seed1",
+   "rule": "shipped",
+   "model": "~/lmft2/models/smollm2-full-mix-seed1.Q4_K_M.gguf",
+   "model_sha256": "5c95fdeacfb4f53eb172e530b3c9e592c5766c63b5cdda35f72d05a92dbeb440",
+   "setting": {
+    "weight": 1.0,
+    "margin_from_typed": 0,
+    "margin_to_typed": 4,
+    "margin_other": 2,
+    "space_after": 1
+   },
+   "apostrophe_lead": 1.0
+  },
+  {
+   "name": "mix-hinge-seed1@shipped",
+   "arm": "mix-hinge-seed1",
+   "rule": "shipped",
+   "model": "~/lmft2/models/smollm2-lora-mix-hinge-seed1.Q4_K_M.gguf",
+   "model_sha256": "1ecc5d809d351806b9fa5685f354aa521b4f5d794b49e5a9dc46e969b0e7b029",
+   "setting": {
+    "weight": 1.0,
+    "margin_from_typed": 0,
+    "margin_to_typed": 4,
+    "margin_other": 2,
+    "space_after": 1
+   },
+   "apostrophe_lead": 0.5
+  },
+  {
+   "name": "dom-s100-seed1@ceiling-0.3",
+   "arm": "dom-s100-seed1",
+   "rule": "ceiling-0.3",
+   "model": "~/lmdom/models/dom-s100-seed1.Q4_K_M.gguf",
+   "model_sha256": "8c0835e0eeb4787b853b4223facc14612d4d1b6c4bd7e33f7ad1ff9fc167dec8",
+   "setting": {
+    "weight": 1.5,
+    "margin_from_typed": 1,
+    "margin_to_typed": 4,
+    "margin_other": 2,
+    "space_after": 1
+   },
+   "apostrophe_lead": 0.5
+  },
+  {
+   "name": "dom-s100-seed1@shipped",
+   "arm": "dom-s100-seed1",
+   "rule": "shipped",
+   "model": "~/lmdom/models/dom-s100-seed1.Q4_K_M.gguf",
+   "model_sha256": "8c0835e0eeb4787b853b4223facc14612d4d1b6c4bd7e33f7ad1ff9fc167dec8",
+   "setting": {
+    "weight": 1.0,
+    "margin_from_typed": 0,
+    "margin_to_typed": 4,
+    "margin_other": 2,
+    "space_after": 1
+   },
+   "apostrophe_lead": 0.5
+  },
+  {
+   "name": "dom-s40-seed1@shipped",
+   "arm": "dom-s40-seed1",
+   "rule": "shipped",
+   "model": "~/lmdom/models/dom-s40-seed1.Q4_K_M.gguf",
+   "model_sha256": "84607354b631370109e9bfcb1e32b2f104372ad3e0869ad3b2e25c9cb127b7b9",
+   "setting": {
+    "weight": 1.0,
+    "margin_from_typed": 0,
+    "margin_to_typed": 4,
+    "margin_other": 2,
+    "space_after": 1
+   },
+   "apostrophe_lead": 0.5
+  }
+ ],
+ "pick": {
+  "qualified_entries": [
+   "soup-mix@ceiling-0.3",
+   "soup-mix@ceiling-0.2"
+  ]
+ }
+}

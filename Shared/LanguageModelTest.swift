@@ -35,7 +35,7 @@ protocol LanguageModelMeasuring: AnyObject {
 final class BundledLanguageModelTest: LanguageModelMeasuring {
     /// Name of the model file in the bundle, without ".gguf". scripts/ci/fetch_language_model.sh
     /// downloads the file before the build.
-    static let modelResource = "smollm2-lora-typed-seed1.Q4_K_M"
+    static let modelResource = "smollm2-lora-domain-s100-seed1.Q4_K_M"
 
     /// Lines about the model that re-ranks the English corrections in this process. Without
     /// it the result holds the test's own lines only.

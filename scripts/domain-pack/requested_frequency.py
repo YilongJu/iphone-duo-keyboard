@@ -21,7 +21,7 @@ the model:
 
 Usage, from the repository root, on Linux:
     python3 scripts/domain-pack/requested_frequency.py --shim build/lm-rerank/libduo_shim.so \\
-        [--lm build/lm-rerank/lm_score --model Shared/smollm2-lora-typed-seed1.Q4_K_M.gguf] \\
+        [--lm build/lm-rerank/lm_score --model Shared/smollm2-lora-domain-s100-seed1.Q4_K_M.gguf] \\
         [--word todo] --out build/domain-pack/requested
 """
 import argparse

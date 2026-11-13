@@ -25,7 +25,7 @@ Without --lm and --model the script runs the two engine configurations only.
 Usage, from the repository root, on Linux:
     LD_LIBRARY_PATH=$PWD/build/lm-rerank/llama/lib python3 scripts/lm-rerank/domain_pack.py \
         --shim build/lm-rerank/libduo_shim.so --lm build/lm-rerank/lm_score \
-        --model Shared/smollm2-lora-typed-seed1.Q4_K_M.gguf --half dev --out build/lm-rerank/domain-pack
+        --model Shared/smollm2-lora-domain-s100-seed1.Q4_K_M.gguf --half dev --out build/lm-rerank/domain-pack
 """
 import argparse
 import json

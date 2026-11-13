@@ -10,7 +10,7 @@ cd "$(dirname "$0")/../../.."
 kind="$1"
 out="$2"
 mkdir -p "$out/bin"
-model=Shared/smollm2-lora-typed-seed1.Q4_K_M.gguf
+model=Shared/smollm2-lora-domain-s100-seed1.Q4_K_M.gguf
 python3 scripts/lm-keyboard/scorer-probe/probe.py requests "$out/requests.tsv"
 
 if [ "$kind" = mac ]; then

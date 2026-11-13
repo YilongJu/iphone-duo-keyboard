@@ -24,7 +24,7 @@ count or more. The test half is read only with --half test, for the one value --
 Usage, from the repository root, on Linux:
     LD_LIBRARY_PATH=$PWD/build/lm-rerank/llama/lib python3 scripts/lm-rerank/apostrophe_words.py \
         --shim build/lm-rerank/libduo_shim.so --lm build/lm-rerank/lm_score \
-        --model Shared/smollm2-lora-typed-seed1.Q4_K_M.gguf --base smollm2-typed --steps next-slips --half dev         --out build/lm-rerank/apostrophe-words
+        --model Shared/smollm2-lora-domain-s100-seed1.Q4_K_M.gguf --base smollm2-typed --steps next-slips --half dev         --out build/lm-rerank/apostrophe-words
 """
 import argparse
 import ctypes
@@ -46,11 +46,11 @@ GRID = [0.5, 1.0, 1.5, 2.0, 3.0, 4.0, 6.0, 8.0]
 STEPS = ([("all", "model", margin) for margin in GRID]
          + [("next", score, margin) for score in ("model", "slips", "slips_only") for margin in GRID])
 # The setting of each model and the input format it reads. distilgpt2 Q3_K_M: scripts/lm-rerank/README.md,
-# Table 2. The SmolLM2-135M LoRA fine-tune: the arm smollm2-lora-seed1 of scripts/lm-finetune/test-plan.json
-# on engine/lm-finetune, which the keyboard ships (KeyboardLanguageModel.rule).
+# Table 2. The SmolLM2-135M LoRA fine-tune that the keyboard ships: the setting of
+# scripts/lm-domain/candidate.json (KeyboardLanguageModel.rule).
 BASES = {
     "distilgpt2": (dict(weight=1.0, margin_from_typed=24, margin_to_typed=0, margin_other=2, space_after=1), "stock"),
-    "smollm2-typed": (dict(weight=1.0, margin_from_typed=0, margin_to_typed=4, margin_other=2, space_after=1), "typed"),
+    "smollm2-typed": (dict(weight=1.5, margin_from_typed=1, margin_to_typed=4, margin_other=2, space_after=1), "typed"),
 }
 TUNED: dict = {}
 
