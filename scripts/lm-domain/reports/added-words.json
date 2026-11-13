@@ -1,0 +1,758 @@
+[
+ {
+  "arm": "ce-c1-seed1",
+  "rule": "shipped",
+  "stream_select": {
+   "changed_words": 21,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  },
+  "domain_stream_dev": {
+   "changed_words": 140,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  }
+ },
+ {
+  "arm": "ce-c1-seed1",
+  "rule": "ceiling-0.3",
+  "stream_select": {
+   "changed_words": 15,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  },
+  "domain_stream_dev": {
+   "changed_words": 106,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  }
+ },
+ {
+  "arm": "ce-c1-seed1",
+  "rule": "ceiling-0.2",
+  "stream_select": {
+   "changed_words": 15,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  },
+  "domain_stream_dev": {
+   "changed_words": 106,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  }
+ },
+ {
+  "arm": "ce-c4-seed1",
+  "rule": "shipped",
+  "stream_select": {
+   "changed_words": 12,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  },
+  "domain_stream_dev": {
+   "changed_words": 105,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  }
+ },
+ {
+  "arm": "ce-c4-seed1",
+  "rule": "ceiling-0.3",
+  "stream_select": {
+   "changed_words": 10,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  },
+  "domain_stream_dev": {
+   "changed_words": 107,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  }
+ },
+ {
+  "arm": "ce-c4-seed1",
+  "rule": "ceiling-0.2",
+  "stream_select": {
+   "changed_words": 10,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  },
+  "domain_stream_dev": {
+   "changed_words": 107,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  }
+ },
+ {
+  "arm": "ce-c4-seed2",
+  "rule": "shipped",
+  "stream_select": {
+   "changed_words": 12,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  },
+  "domain_stream_dev": {
+   "changed_words": 116,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  }
+ },
+ {
+  "arm": "ce-c4-seed2",
+  "rule": "ceiling-0.3",
+  "stream_select": {
+   "changed_words": 12,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  },
+  "domain_stream_dev": {
+   "changed_words": 107,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  }
+ },
+ {
+  "arm": "ce-c4-seed2",
+  "rule": "ceiling-0.2",
+  "stream_select": {
+   "changed_words": 12,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  },
+  "domain_stream_dev": {
+   "changed_words": 107,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  }
+ },
+ {
+  "arm": "dom-s0-seed1",
+  "rule": "shipped",
+  "stream_select": {
+   "changed_words": 21,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  },
+  "domain_stream_dev": {
+   "changed_words": 148,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  }
+ },
+ {
+  "arm": "dom-s0-seed1",
+  "rule": "ceiling-0.3",
+  "stream_select": {
+   "changed_words": 21,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  },
+  "domain_stream_dev": {
+   "changed_words": 143,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  }
+ },
+ {
+  "arm": "dom-s0-seed1",
+  "rule": "ceiling-0.2",
+  "stream_select": {
+   "changed_words": 21,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  },
+  "domain_stream_dev": {
+   "changed_words": 143,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  }
+ },
+ {
+  "arm": "dom-s0-seed2",
+  "rule": "shipped",
+  "stream_select": {
+   "changed_words": 23,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  },
+  "domain_stream_dev": {
+   "changed_words": 133,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  }
+ },
+ {
+  "arm": "dom-s0-seed2",
+  "rule": "ceiling-0.3",
+  "stream_select": {
+   "changed_words": 23,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  },
+  "domain_stream_dev": {
+   "changed_words": 133,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  }
+ },
+ {
+  "arm": "dom-s0-seed2",
+  "rule": "ceiling-0.2",
+  "stream_select": {
+   "changed_words": 23,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  },
+  "domain_stream_dev": {
+   "changed_words": 133,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  }
+ },
+ {
+  "arm": "dom-s100-seed1",
+  "rule": "shipped",
+  "stream_select": {
+   "changed_words": 15,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  },
+  "domain_stream_dev": {
+   "changed_words": 52,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  }
+ },
+ {
+  "arm": "dom-s100-seed1",
+  "rule": "ceiling-0.3",
+  "stream_select": {
+   "changed_words": 5,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  },
+  "domain_stream_dev": {
+   "changed_words": 33,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  }
+ },
+ {
+  "arm": "dom-s100-seed1",
+  "rule": "ceiling-0.2",
+  "stream_select": {
+   "changed_words": 5,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  },
+  "domain_stream_dev": {
+   "changed_words": 33,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  }
+ },
+ {
+  "arm": "dom-s15-seed1",
+  "rule": "shipped",
+  "stream_select": {
+   "changed_words": 14,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  },
+  "domain_stream_dev": {
+   "changed_words": 99,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  }
+ },
+ {
+  "arm": "dom-s15-seed1",
+  "rule": "ceiling-0.3",
+  "stream_select": {
+   "changed_words": 6,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  },
+  "domain_stream_dev": {
+   "changed_words": 63,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  }
+ },
+ {
+  "arm": "dom-s15-seed1",
+  "rule": "ceiling-0.2",
+  "stream_select": {
+   "changed_words": 6,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  },
+  "domain_stream_dev": {
+   "changed_words": 63,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  }
+ },
+ {
+  "arm": "dom-s40-seed1",
+  "rule": "shipped",
+  "stream_select": {
+   "changed_words": 14,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  },
+  "domain_stream_dev": {
+   "changed_words": 80,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  }
+ },
+ {
+  "arm": "dom-s40-seed1",
+  "rule": "ceiling-0.3",
+  "stream_select": {
+   "changed_words": 14,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  },
+  "domain_stream_dev": {
+   "changed_words": 74,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  }
+ },
+ {
+  "arm": "dom-s40-seed1",
+  "rule": "ceiling-0.2",
+  "stream_select": {
+   "changed_words": 14,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  },
+  "domain_stream_dev": {
+   "changed_words": 74,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  }
+ },
+ {
+  "arm": "ec-c4-seed1",
+  "rule": "shipped",
+  "stream_select": {
+   "changed_words": 17,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  },
+  "domain_stream_dev": {
+   "changed_words": 104,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  }
+ },
+ {
+  "arm": "ec-c4-seed1",
+  "rule": "ceiling-0.3",
+  "stream_select": {
+   "changed_words": 11,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  },
+  "domain_stream_dev": {
+   "changed_words": 105,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  }
+ },
+ {
+  "arm": "ec-c4-seed1",
+  "rule": "ceiling-0.2",
+  "stream_select": {
+   "changed_words": 11,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  },
+  "domain_stream_dev": {
+   "changed_words": 105,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  }
+ },
+ {
+  "arm": "ec-c4-seed2",
+  "rule": "shipped",
+  "stream_select": {
+   "changed_words": 10,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  },
+  "domain_stream_dev": {
+   "changed_words": 80,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  }
+ },
+ {
+  "arm": "ec-c4-seed2",
+  "rule": "ceiling-0.3",
+  "stream_select": {
+   "changed_words": 10,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  },
+  "domain_stream_dev": {
+   "changed_words": 77,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  }
+ },
+ {
+  "arm": "ec-c4-seed2",
+  "rule": "ceiling-0.2",
+  "stream_select": {
+   "changed_words": 10,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  },
+  "domain_stream_dev": {
+   "changed_words": 77,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  }
+ },
+ {
+  "arm": "full-mix-seed1",
+  "rule": "shipped",
+  "stream_select": {
+   "changed_words": 13,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  },
+  "domain_stream_dev": {
+   "changed_words": 125,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  }
+ },
+ {
+  "arm": "full-mix-seed1",
+  "rule": "ceiling-0.3",
+  "stream_select": {
+   "changed_words": 12,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  },
+  "domain_stream_dev": {
+   "changed_words": 110,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  }
+ },
+ {
+  "arm": "full-mix-seed1",
+  "rule": "ceiling-0.2",
+  "stream_select": {
+   "changed_words": 12,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  },
+  "domain_stream_dev": {
+   "changed_words": 110,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  }
+ },
+ {
+  "arm": "mix-hinge-seed1",
+  "rule": "shipped",
+  "stream_select": {
+   "changed_words": 8,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  },
+  "domain_stream_dev": {
+   "changed_words": 81,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  }
+ },
+ {
+  "arm": "mix-hinge-seed1",
+  "rule": "ceiling-0.3",
+  "stream_select": {
+   "changed_words": 5,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  },
+  "domain_stream_dev": {
+   "changed_words": 70,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  }
+ },
+ {
+  "arm": "mix-hinge-seed1",
+  "rule": "ceiling-0.2",
+  "stream_select": {
+   "changed_words": 5,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  },
+  "domain_stream_dev": {
+   "changed_words": 70,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  }
+ },
+ {
+  "arm": "mix-seed1",
+  "rule": "shipped",
+  "stream_select": {
+   "changed_words": 27,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  },
+  "domain_stream_dev": {
+   "changed_words": 150,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  }
+ },
+ {
+  "arm": "mix-seed1",
+  "rule": "ceiling-0.3",
+  "stream_select": {
+   "changed_words": 20,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  },
+  "domain_stream_dev": {
+   "changed_words": 130,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  }
+ },
+ {
+  "arm": "mix-seed1",
+  "rule": "ceiling-0.2",
+  "stream_select": {
+   "changed_words": 20,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  },
+  "domain_stream_dev": {
+   "changed_words": 130,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  }
+ },
+ {
+  "arm": "mix-seed2",
+  "rule": "shipped",
+  "stream_select": {
+   "changed_words": 21,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  },
+  "domain_stream_dev": {
+   "changed_words": 150,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  }
+ },
+ {
+  "arm": "mix-seed2",
+  "rule": "ceiling-0.3",
+  "stream_select": {
+   "changed_words": 19,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  },
+  "domain_stream_dev": {
+   "changed_words": 144,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  }
+ },
+ {
+  "arm": "mix-seed2",
+  "rule": "ceiling-0.2",
+  "stream_select": {
+   "changed_words": 19,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  },
+  "domain_stream_dev": {
+   "changed_words": 144,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  }
+ },
+ {
+  "arm": "mix-seed3",
+  "rule": "shipped",
+  "stream_select": {
+   "changed_words": 36,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  },
+  "domain_stream_dev": {
+   "changed_words": 195,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  }
+ },
+ {
+  "arm": "mix-seed3",
+  "rule": "ceiling-0.3",
+  "stream_select": {
+   "changed_words": 23,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  },
+  "domain_stream_dev": {
+   "changed_words": 144,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  }
+ },
+ {
+  "arm": "mix-seed3",
+  "rule": "ceiling-0.2",
+  "stream_select": {
+   "changed_words": 23,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  },
+  "domain_stream_dev": {
+   "changed_words": 144,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  }
+ },
+ {
+  "arm": "ship",
+  "rule": "shipped",
+  "stream_select": {
+   "changed_words": 68,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  },
+  "domain_stream_dev": {
+   "changed_words": 263,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  }
+ },
+ {
+  "arm": "ship",
+  "rule": "ceiling-0.3",
+  "stream_select": {
+   "changed_words": 33,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  },
+  "domain_stream_dev": {
+   "changed_words": 146,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  }
+ },
+ {
+  "arm": "ship",
+  "rule": "ceiling-0.2",
+  "stream_select": {
+   "changed_words": 27,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  },
+  "domain_stream_dev": {
+   "changed_words": 130,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  }
+ },
+ {
+  "arm": "soup-mix",
+  "rule": "shipped",
+  "stream_select": {
+   "changed_words": 26,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  },
+  "domain_stream_dev": {
+   "changed_words": 158,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  }
+ },
+ {
+  "arm": "soup-mix",
+  "rule": "ceiling-0.3",
+  "stream_select": {
+   "changed_words": 22,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  },
+  "domain_stream_dev": {
+   "changed_words": 141,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  }
+ },
+ {
+  "arm": "soup-mix",
+  "rule": "ceiling-0.2",
+  "stream_select": {
+   "changed_words": 22,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  },
+  "domain_stream_dev": {
+   "changed_words": 141,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  }
+ },
+ {
+  "arm": "soup-r1",
+  "rule": "shipped",
+  "stream_select": {
+   "changed_words": 60,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  },
+  "domain_stream_dev": {
+   "changed_words": 247,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  }
+ },
+ {
+  "arm": "soup-r1",
+  "rule": "ceiling-0.3",
+  "stream_select": {
+   "changed_words": 32,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  },
+  "domain_stream_dev": {
+   "changed_words": 156,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  }
+ },
+ {
+  "arm": "soup-r1",
+  "rule": "ceiling-0.2",
+  "stream_select": {
+   "changed_words": 25,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  },
+  "domain_stream_dev": {
+   "changed_words": 131,
+   "repeated_words": 0,
+   "sentences_with_a_repeated_word": 0
+  }
+ }
+]
