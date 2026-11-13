@@ -37,12 +37,12 @@ It does not read the test half.
 
 ## Dev scores of the keyboard and the three harnesses
 
-Table 1. Right dev cases per group, from run 43187473727 at commit 835dc5f. The first six
+Table 1. Right dev cases per group, from run 43312412590 at commit 55b8aa5. The first six
 columns count the 6,799 cases of `english.dev.jsonl` and `english-symbols.dev.jsonl`.
 
 | Run | clean | letter slips | space slips | symbol slips | clean symbols | all 6,799 | work area, of 7,137 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| each harness and the keyboard, engine only | 961/973 | 1943/2100 | 1299/1500 | 1131/1197 | 427/429 | 6078 | 6357 |
+| each harness and the keyboard, engine only | 961/973 | 1943/2100 | 1299/1500 | 1132/1197 | 427/429 | 6079 | 6357 |
 | x86 harness, with the model | 953/973 | 2057/2100 | 1387/1500 | 1165/1197 | 429/429 | 6543 | 6349 |
 | ARM harness, with the model | 953/973 | 2055/2100 | 1388/1500 | 1166/1197 | 428/429 | 6541 | 6352 |
 | macOS harness, with the model | 953/973 | 2055/2100 | 1386/1500 | 1165/1197 | 427/429 | 6537 | 6350 |
