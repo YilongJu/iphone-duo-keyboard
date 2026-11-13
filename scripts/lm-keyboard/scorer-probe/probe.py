@@ -4,9 +4,9 @@ The keyboard's scorer reads a long context in calls of 31 tokens at most. llama.
 computes a call of one token with another routine than a call of two tokens or more, and on the
 macOS runner the two routines differ in the last bits of their sums. The scorer therefore
 splits a context into calls whose sizes differ by one token at most (call_size in
-LanguageModel/duo_lm_scorer.c). The context below has 32 tokens, one more than a call. With a
-last call of one token, the candidate " egg nns" gets -32.79410 on the macOS runner, and
-lm_score gives -33.07924. This script writes that request and nearby requests, and then
+LanguageModel/duo_lm_scorer.c). The context below has 32 tokens, one more than a call. With the
+shipped file, lm_score and the scorer both give the candidate " egg nns" -28.46739 on the macOS
+runner (run 43477574581). This script writes that request and nearby requests, and then
 compares the answers of several builds.
 
     probe.py requests OUT.tsv      writes the requests, one per line, and OUT.tsv.names with a

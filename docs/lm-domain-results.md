@@ -2,14 +2,15 @@
 
 ## Summary
 
-The candidate `dom-s100-seed1` at its ceiling setting passed all seven conditions in the one read of the confirmation set. The app still ships `smollm2-lora-typed-seed1.Q4_K_M.gguf`.
+The candidate `dom-s100-seed1` at its ceiling setting passed all seven conditions in the one read of the confirmation set. The app ships the file of the candidate, `smollm2-lora-domain-s100-seed1.Q4_K_M.gguf`, at the setting of the candidate.
 
-1. Decide whether the app takes the candidate file. It is the asset of the pre-release `lm-domain-candidate-1`, with weight 1.5, margins 1 / 4 / 2, space-after on and lead 0.5.
+1. Type on the iPhone Duo with a TestFlight build, then type `duo:lm` and a space. The `reranker` lines give the time per space press on the phone, which no run of this page measured.
+   The file is the asset of the pre-release `lm-domain-candidate-1`, with weight 1.5, margins 1 / 4 / 2, space-after on and lead 0.5.
 2. Read Table 2 for the counts of the read. Condition 3 holds by 1 case on the clean symbols: 417 against 416 of 419.
 3. Read Table 3 for the arms of the report. Two of the four miss a condition on clean text.
 4. Read `scripts/lm-domain/reports/select-tables.md` for every arm on every selection set and on the test half.
 
-This page does not settle the slip rate of the owner. Every number was measured on the symbol cases before the comma and period keys moved.
+This page does not settle the slip rate of the owner. Every number was measured on the symbol cases before the comma and period keys moved. `scripts/lm-keyboard/README.md` gives the dev numbers of the candidate file on the symbol cases after that move.
 
 ```mermaid
 xychart-beta
@@ -25,7 +26,8 @@ Figure 1. The candidate changes 47 correctly typed technical and written words, 
 
 | Term | Meaning |
 | --- | --- |
-| `ship` | The shipped file at the shipped setting: weight 1.0, margins 0 / 4 / 2, lead 4. |
+| `ship` | The reference of every comparison: the file `smollm2-lora-typed-seed1.Q4_K_M.gguf` of the release `lm-finetune-smollm2-lora-v1` at the shipped setting. |
+| shipped setting | The setting of `ship`: weight 1.0, margins 0 / 4 / 2, lead 4. |
 | `soup-mix` | The mean of the weights of the three `mix` seeds of round 2. |
 | `dom-s100` | A fine-tune of this round on everyday lists plus all 129,760 domain lists. |
 | candidate | `dom-s100-seed1` at its ceiling setting: weight 1.5, margins 1 / 4 / 2, lead 0.5. |
@@ -140,10 +142,9 @@ The candidate file is `dom-s100-seed1.Q4_K_M.gguf` of this round: 105,453,504 by
 - The same count for `ship` at the shipped setting is 271 of 46,950 corrections with the step and 270 without it. On the apostrophe words it is 69 of 2,144 with the step.
 - Harness of the keyboard workflow: `scripts/lm-keyboard/harness_trace.py` with the candidate file and its setting gets 6,538 of 6,799 dev cases right. The harness of this round gives the same count, and `scripts/lm-domain/candidate.json` holds the counts per group.
 - Run 43389818855 of the workflow "Domain candidate file in the Linux harness" passes. Its x86 job fetches the file of the pre-release and gets the same counts as the local run. The keyboard's scorer and `lm_score` give the same answers byte for byte on 13,930 requests.
-- The ARM job of that run gets 6,536 of 6,799 dev cases right, 2 fewer than the x86 job. The shipped file shows the same step in run 43258534212: 6,543 on x86 and 6,541 on ARM.
-- Run 43389818826 of the workflow "Language model in the keyboard" passes on the commit 4ba1043. That workflow types with the shipped file, on Linux and in the simulator.
+- The ARM job of that run gets 6,536 of 6,799 dev cases right, 2 fewer than the x86 job. The file of `ship` shows the same step in run 43258534212: 6,543 on x86 and 6,541 on ARM.
 
-## Remaining errors of the shipped file
+## Remaining errors of `ship`
 
 Table 5. Labels of 200 errors of `ship` per set, by `scripts/lm-domain/label-rule.md`.
 
@@ -158,7 +159,7 @@ Most remaining errors are label noise: a short context that fits both texts, or 
 
 - Setting selection under a ceiling: for `ship` the 0.3 percent ceiling halves the changed words and loses 181 domain slips and 77 GitHub misspellings on the selection sets. On the held-out set it misses two conditions.
 - Loss arms: the clean-weighted cross-entropy and the expected-cost loss both score below the base arm of their seed. The loss rule picks neither.
-- Apostrophe step: lead 4 fits the shipped file only. At its own lead every arm gets at least as many next-word cases right as `ship`, except `dom-s100-seed2`.
+- Apostrophe step: lead 4 fits the file of `ship` only. At its own lead every arm gets at least as many next-word cases right as `ship`, except `dom-s100-seed2`.
 - List builder of rounds 1 and 2: 200 of 54,759 clean running-text lists of round 2 have a target that adds the next word. No arm writes a repeated word on the selection streams, so the effect is not visible there.
 
 ## Limits of these results
@@ -166,6 +167,6 @@ Most remaining errors are label noise: a short context that fits both texts, or 
 - Condition 3 holds by 1 case on the clean symbols, and the 95 percent interval of that difference starts at 0. A condition that holds by one case can turn on chance.
 - The candidate was named after its counts on the fresh held-out set were seen. The margins of the paired dev comparison were written with the dev counts known. The confirmation set is its one independent test.
 - The group clean symbols of the confirmation set has 419 cases, and the domain slips are 1,838 against 1,955 in the fresh held-out set. Smaller parts give wider intervals.
-- The app does not hold the candidate file. No run types the cases through the keyboard's own code on the simulator with it.
+- No run measured the time or the memory of the candidate file on the phone.
 - The decision count compares the Q4_K_M file with the F32 file and a 32-bit cache. That reading is within 0.0003 nats of PyTorch float32 for every file.
 - The loss comparison has two seeds per loss.
