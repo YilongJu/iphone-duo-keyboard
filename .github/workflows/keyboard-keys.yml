@@ -5,7 +5,7 @@ name: Keyboard keys
 # workflow "Language model in the keyboard" runs every unit test, and takes more than three hours.
 on:
   push:
-    branches: [ui/swipe-punctuation, engine/domain-model]
+    branches: [ui/swipe-punctuation, engine/domain-model, ui/space-before-mark]
     paths:
       - 'Shared/keyboard-layout.json'
       - 'Shared/KeyboardLayout.swift'
@@ -17,6 +17,7 @@ on:
       - 'Shared/TypingEngine.swift'
       - 'Tests/SlideKey*.swift'
       - 'Tests/KeyboardTextControllerTests.swift'
+      - 'Tests/SpaceBeforeMarkTests.swift'
       - 'Tests/TypingEngineTests.swift'
       - 'scripts/keyboard-preview/**'
       - 'scripts/typing-evaluation/symbol_keys.py'
@@ -64,7 +65,8 @@ jobs:
           ')
           only=()
           for class in $(grep -h -o -E '^final class [A-Za-z]+: XCTestCase' \
-              Tests/SlideKey*.swift Tests/KeyboardTextControllerTests.swift Tests/TypingEngineTests.swift | awk '{ print $3 }' | tr -d ':'); do
+              Tests/SlideKey*.swift Tests/KeyboardTextControllerTests.swift Tests/SpaceBeforeMarkTests.swift \
+              Tests/TypingEngineTests.swift | awk '{ print $3 }' | tr -d ':'); do
             only+=("-only-testing:DuoKeyboardTests/$class")
           done
           test "${#only[@]}" -ge 5
