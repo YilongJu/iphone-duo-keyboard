@@ -173,8 +173,9 @@ The replay runs at 2 threads on the local PC (Intel i9-13900K, WSL). It uses the
    dev counts are the right cases of five groups and of all 6,799 cases of the first two case
    files. The five groups are clean, letter slips, space slips, symbol slips and clean symbols. The
    work area count is the right cases of the 7,137 cases of `english-domain.dev.jsonl`.
-2. Speed. The requests of A's replay go in order through each approach, one approach at a time,
-   with nothing else running. Per request the program records the window tokens and the kept
+2. Speed. The requests of every fourth document of A's replay go in order through each approach,
+   one approach at a time, with nothing else running. Every approach reads the same requests. Per
+   request the program records the window tokens and the kept
    tokens. It also records the time of the window calls, of the candidate calls and of the whole
    request. The results give the mean, the median and the 95th percentile.
 3. Numbers. The same pass gives each approach's numbers on A's requests, compared with A's numbers.

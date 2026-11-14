@@ -3,6 +3,10 @@ docs/kv-reuse-results.md, and the pick of the selection rule of docs/kv-reuse-de
 
 Usage: python3 scripts/kv-reuse/analyze.py --kv ~/kvreuse --out OUT
 Writes OUT/tables.md and OUT/summary.json.
+
+With --speed-requests FOLDER it writes the requests of the speed pass instead: the requests of
+every fourth document of A's replay, in order, as FOLDER/requests.tsv, with FOLDER/requests.meta
+and FOLDER/requests.index (each request's number in A's replay).
 """
 import argparse
 import json
@@ -26,6 +30,8 @@ APPROACHES = [("A", "no reuse"), ("B", "prefix, 1 slot"), ("C", "shift, 1 slot")
 FIRST_ROUND = ["C", "D", "BE", "CE", "DE"]
 GROUPS = ["clean", "letter_slips", "space_slips", "symbol_slips", "clean_symbols"]
 PARTS = ["dev", "work area dev", "everyday stream", "technical stream", "written stream"]
+# The speed pass reads the requests of every n-th document of A's replay.
+SPEED_EVERY = 4
 
 
 def percentile(values: list[float], fraction: float) -> float:
@@ -108,13 +114,36 @@ def call_cost(kv: Path, name: str) -> list[dict]:
             for count, values in sorted(by_count.items()) if count <= 31 and len(values) >= 20]
 
 
+def write_speed_requests(kv: Path, folder: Path) -> None:
+    meta = read_lines(kv / "accuracy" / "A" / "requests.meta")
+    requests = read_lines(kv / "accuracy" / "A" / "requests.tsv")
+    if len(meta) != len(requests):
+        raise SystemExit(f"A's replay has {len(requests)} requests and {len(meta)} lines of meta")
+    order = {document: index for index, document in enumerate(dict.fromkeys(line.split("\t")[0] for line in meta))}
+    kept = [i for i, line in enumerate(meta) if order[line.split("\t")[0]] % SPEED_EVERY == 0]
+    folder.mkdir(parents=True, exist_ok=True)
+    (folder / "requests.tsv").write_text("".join(requests[i] + "\n" for i in kept), encoding="utf-8")
+    (folder / "requests.meta").write_text("".join(meta[i] + "\n" for i in kept), encoding="utf-8")
+    (folder / "requests.index").write_text("".join(f"{i}\n" for i in kept), encoding="utf-8")
+    print(f"{len(kept)} of {len(requests)} requests of A's replay, from every {SPEED_EVERY}th document")
+
+
 class Mismatch(Exception):
     pass
 
 
 def open_loop_decisions(kv: Path, a_requests: list[str]) -> dict:
-    """Per approach: A's corrections chosen again with the approach's numbers of the speed pass."""
-    corrections = [json.loads(line) for line in read_lines(kv / "accuracy" / "A" / "corrections.jsonl")]
+    """Per approach: A's corrections of the speed pass chosen again with the approach's numbers."""
+    position = {int(line): row for row, line in enumerate(read_lines(kv / "speed" / "requests.index"))}
+    corrections = []
+    for correction in map(json.loads, read_lines(kv / "accuracy" / "A" / "corrections.jsonl")):
+        if correction["typed_request"] not in position:
+            continue
+        # The row of each of A's requests in the speed pass.
+        correction["typed_row"] = position[correction["typed_request"]]
+        stock = correction["stock_request"]
+        correction["stock_row"] = position[stock] if stock is not None else None
+        corrections.append(correction)
     result = {}
     for name, _ in APPROACHES[1:]:
         path = kv / "speed" / f"{name}.answers"
@@ -128,17 +157,16 @@ def open_loop_decisions(kv: Path, a_requests: list[str]) -> dict:
 
             class Model:
                 def reading_scores(self, context, readings_, typed):
-                    values = parse_answer(answers[correction["typed_request"]])
+                    values = parse_answer(answers[correction["typed_row"]])
                     return dict(zip([r["text"] for r in readings_], values))
 
                 def step_scores(self, context, texts, prompt):
-                    index = correction["stock_request"]
-                    if index is None:
+                    if correction["stock_row"] is None:
                         raise Mismatch()
-                    sent = a_requests[index].split("\t")[1:]
+                    sent = a_requests[correction["stock_request"]].split("\t")[1:]
                     if sent != [rerank.language_model_text(t, opens_field) for t in texts]:
                         raise Mismatch()
-                    return dict(zip(texts, parse_answer(answers[index])))
+                    return dict(zip(texts, parse_answer(answers[correction["stock_row"]])))
 
             try:
                 choice = rerank.choose(readings, correction["context"], SETTING, Model(), correction["typed"])
@@ -207,22 +235,28 @@ def select(closed: dict, speed: dict) -> dict:
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--kv", type=Path, required=True)
-    parser.add_argument("--out", type=Path, required=True)
+    parser.add_argument("--out", type=Path)
+    parser.add_argument("--speed-requests", type=Path, help="writes the requests of the speed pass to this folder")
     arguments = parser.parse_args()
     kv = arguments.kv
+    if arguments.speed_requests is not None:
+        write_speed_requests(kv, arguments.speed_requests)
+        return
+    if arguments.out is None:
+        raise SystemExit("--out is required")
     arguments.out.mkdir(parents=True, exist_ok=True)
-    meta = [line.split("\t") for line in read_lines(kv / "accuracy" / "A" / "requests.meta")]
+    meta = [line.split("\t") for line in read_lines(kv / "speed" / "requests.meta")]
     a_requests = read_lines(kv / "accuracy" / "A" / "requests.tsv")
     parts = {row["id"]: row["part"] for row in map(json.loads, read_lines(kv / "accuracy" / "A" / "outputs.jsonl"))}
     summary = {"speed": speed_table(kv, meta, parts), "numbers": numbers_table(kv),
                "open_loop": open_loop_decisions(kv, a_requests), "closed_loop": closed_loop(kv)}
-    summary["requests_per_part"] = {part: sum(1 for m in meta if parts[m[0]] == part) for part in PARTS}
+    summary["speed_requests_per_part"] = {part: sum(1 for m in meta if parts[m[0]] == part) for part in PARTS}
     summary["selection"] = select(summary["closed_loop"], summary["speed"])
     summary["call_cost_B"] = call_cost(kv, "B") if (kv / "speed" / "B.times").exists() else []
     (arguments.out / "summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
 
     names = dict(APPROACHES)
-    lines = ["Speed, all requests of A's replay, 2 threads.", "",
+    lines = ["Speed, the requests of every fourth document of A's replay, 2 threads.", "",
              "| Approach | mean ms | median ms | 95th pct ms | window mean ms | window median ms | candidates mean ms | reuse share |",
              "| --- | --- | --- | --- | --- | --- | --- | --- |"]
     for name, entry in summary["speed"].items():
@@ -236,7 +270,7 @@ def main():
         lines.append(f"| {name} | " + " | ".join(
             f"{entry[p]['total_ms']['mean']:.1f} ({100 * entry[p]['reuse_share']:.0f}%)" if p in entry else "none"
             for p in PARTS) + " |")
-    lines += ["", "Requests per part: " + json.dumps(summary["requests_per_part"]), "",
+    lines += ["", "Requests of the speed pass per part: " + json.dumps(summary["speed_requests_per_part"]), "",
               "Accuracy, each approach's own replay.", "",
               "| Approach | requests | corrections | changed decisions | share | " + " | ".join(GROUPS) + " | all 6,799 | work area |",
               "| --- |" + " --- |" * (len(GROUPS) + 6)]

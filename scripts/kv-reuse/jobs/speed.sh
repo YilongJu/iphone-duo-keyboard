@@ -1,16 +1,18 @@
 #!/usr/bin/env bash
-# Job: the speed pass of docs/kv-reuse-design.md. The requests of approach A's replay go in order
-# through each approach, one approach at a time, at 2 threads, without the check of the cache.
+# Job: the speed pass of docs/kv-reuse-design.md. The requests of every fourth document of
+# approach A's replay go in order through each approach, one approach at a time, at 2 threads,
+# without the check of the cache.
 # Run it alone on the machine. A finished approach (its .done file) is kept, so the job can start
 # again after a restart. Approach A runs first and again last, to show the drift of the machine.
 # Usage, from the repository root in WSL, after jobs/accuracy.sh: speed.sh
 set -euo pipefail
 kv="${KV:-$HOME/kvreuse}"
 export LD_LIBRARY_PATH="$HOME/lmft/llama/lib"
-requests="$kv/accuracy/A/requests.tsv"
 [ -f "$kv/accuracy/A/result.json" ] || { echo "the replay of A has not finished"; exit 1; }
 out="$kv/speed"
 mkdir -p "$out"
+requests="$out/requests.tsv"
+python3 scripts/kv-reuse/analyze.py --kv "$kv" --speed-requests "$out"
 run() {
   local name="$1" program="$2" mode="$3" slots="$4"
   if [ -f "$out/$name.done" ]; then echo "kept $name"; return 0; fi
