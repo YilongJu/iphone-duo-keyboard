@@ -53,10 +53,11 @@ columns count the 6,799 cases of `english.dev.jsonl` and `english-symbols.dev.js
 In the keyboard the model adds 460 right cases to the engine's 6,079, and 259 right cases of the
 work area to the engine's 6,357.
 
-The x86 harness of the run is an AMD EPYC 9V74 with AVX-512. The local x86 harness is the job
+The x86 harness of the run is an AMD EPYC 9V74 with AVX-512, on an ubuntu-24.04 runner.
+`compare.py` pins the numbers of this x86 harness. The local x86 harness is the job
 `scripts/lm-domain/jobs/shipped-harness.sh` on an Intel i9-13900K without AVX-512, at the same
-commit. `compare.py` pins the numbers of the local x86 harness. The comparison with the pinned
-numbers is a report, and it reads "different" for an x86 runner with AVX-512.
+commit. The comparison with the pinned numbers is a report. It reads "different" on a processor
+that computes other last digits, as the Intel i9-13900K does.
 
 The file `smollm2-lora-typed-seed1.Q4_K_M.gguf` at weight 1.0, margins 0, 4 and 2 and lead 4 is
 the reference of `docs/lm-domain-results.md`. On these cases the keyboard got 6,537 of 6,799 and

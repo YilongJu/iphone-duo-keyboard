@@ -64,6 +64,81 @@ enum KeyboardTextLogic {
         }
     }
 
+    // MARK: Space before a mark
+
+    /// The ASCII marks. A mark is a punctuation character that follows a word with no space
+    /// between the two. A quotation mark and a percent sign are not marks, because a quotation
+    /// mark after a space usually opens a quotation.
+    static let asciiMarks: Set<Character> = [",", ".", "?", "!", ";", ":", ")", "]", "}"]
+
+    /// The marks that Chinese mode types: the full-width comma, period, question mark,
+    /// exclamation mark, semicolon and colon, the list comma, and the closing forms of the
+    /// bracket, the title mark and the two quotation marks. The opening forms are not marks.
+    static let chineseMarks: Set<Character> = [
+        "\u{FF0C}", "\u{3002}", "\u{FF1F}", "\u{FF01}", "\u{FF1B}", "\u{FF1A}", "\u{3001}",
+        "\u{FF09}", "\u{300B}", "\u{201D}", "\u{2019}",
+    ]
+
+    static let marks: Set<Character> = asciiMarks.union(chineseMarks)
+
+    /// The closing characters that can stand between a word and the space before a mark.
+    static let closingCharacters: Set<Character> = [")", "]", "}", "\"", "'", "\u{201D}", "\u{2019}"]
+
+    /// The characters that make an emoticon right after a colon or a semicolon, as in ":)" and ";-)".
+    static let emoticonCharacters: Set<Character> = [")", "(", "-", "'", "/", "\\", "|", "*", "]"]
+
+    /// True for a letter or a digit of any script. An emoji is not one, also when it is built
+    /// on a letter or a digit, as the keycap of "1" is.
+    static func isLetterOrDigit(_ character: Character) -> Bool {
+        guard character.isLetter || character.isNumber else { return false }
+        return !character.unicodeScalars.contains { $0 == "\u{FE0F}" || $0 == "\u{20E3}" }
+    }
+
+    /// The two forms of space removal. Space removal deletes the one space between a word and
+    /// a mark as the mark is typed.
+    enum SpaceRemovalForm: Equatable {
+        /// The mark takes the place of the space: "word " and a comma give "word,".
+        case markOnly
+        /// The mark goes in front of the space, because a word follows the cursor: a comma
+        /// typed in "hello world" right before "world" gives "hello, world", with the cursor
+        /// after the space.
+        case markThenSpace
+    }
+
+    /// The form of space removal for the typed text `text`, or nil when `text` goes in as typed.
+    ///
+    /// Space removal needs all of these: `text` is one mark, the field allows autocorrection,
+    /// the text before the cursor ends with exactly one space (U+0020), and the character
+    /// before that space is a letter, a digit or a closing character. Two spaces, a tab and a
+    /// line break before the cursor keep the text as typed. A field without autocorrection
+    /// holds text such as code, an address or a number, and it also keeps the text as typed.
+    static func spaceRemoval(
+        typing text: String, before: String, after: String, allowsAutocorrection: Bool
+    ) -> SpaceRemovalForm? {
+        guard allowsAutocorrection, text.count == 1, let mark = text.first, marks.contains(mark) else { return nil }
+        guard before.last == " ", let previous = before.dropLast().last else { return nil }
+        guard isLetterOrDigit(previous) || closingCharacters.contains(previous) else { return nil }
+        if let next = after.first, isLetterOrDigit(next) { return .markThenSpace }
+        return .markOnly
+    }
+
+    /// True when the typed text `next`, right after a space removal in front of `mark`, shows
+    /// that the person wanted the space. The keyboard then puts the space back (space restore).
+    ///
+    /// A letter or a digit after an ASCII mark restores the space, as in ".env", ".5", ":D" and
+    /// "!important". The mark can also be a slip for the first letter of a word, as in ";ike"
+    /// for "like", and autocorrection reads such a word only after a space. The right single
+    /// quotation mark U+2019 is also an apostrophe, as in "’90s", so a letter or a digit
+    /// restores its space too. The other cases are an emoticon after a colon or a semicolon,
+    /// an equals sign after "!", ":" or "?", as in "!=", and a slash after a period, as in "./".
+    static func restoresSpace(beforeMark mark: String, typing next: String) -> Bool {
+        guard mark.count == 1, let mark = mark.first, next.count == 1, let next = next.first else { return false }
+        if isLetterOrDigit(next) { return asciiMarks.contains(mark) || mark == "\u{2019}" }
+        if mark == ":" || mark == ";", emoticonCharacters.contains(next) { return true }
+        if mark == "!" || mark == ":" || mark == "?", next == "=" { return true }
+        return mark == "." && next == "/"
+    }
+
     // MARK: Autocorrection
 
     /// A character that ends a word. Autocorrection looks at the word when one of these arrives.
