@@ -14,7 +14,7 @@ final class KeyboardViewController: UIInputViewController {
     private lazy var document = ProxyDocument(controller: self)
     /// The model that re-ranks the English corrections. It loads when the keyboard appears in
     /// English, and a memory warning frees it.
-    private let languageModel = KeyboardLanguageModel.bundled()
+    private let languageModel = KeyboardLanguageModel.bundled(cacheCheckTolerance: nil)
     private lazy var reranker = EnglishReranker(scorer: languageModel, rule: KeyboardLanguageModel.rule)
     private lazy var textController = KeyboardTextController(
         keyboardView: keyboardView, document: document, spellChecker: EngineSpellChecker.bundled(reranker: reranker),

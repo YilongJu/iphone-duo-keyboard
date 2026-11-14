@@ -29,6 +29,8 @@ protocol LanguageModelMeasuring: AnyObject {
 ///               the engine's choice because the model was not ready, because the text was
 ///               outside the model's limits, or because of a model error
 ///   reranker    the requests, the tokens the model read, and the tokens put in place of -1
+///   reranker    the context tokens that came from the cache of the request before, of all the
+///               context tokens of the requests, and the reuse mode of the cache
 ///   memory      the memory of the process with the keyboard's model, right before the test
 ///               frees that model and loads its own copy
 @MainActor

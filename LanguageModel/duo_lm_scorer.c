@@ -28,6 +28,13 @@
     Here the scorer walks the text along the tokens: each token must give back its own part of
     the text, and a -1 becomes the token of the one character at its place, a space or a line
     break. For a text without a line break this gives the tokens of lm_score.c.
+
+ With the reuse mode DUO_LM_REUSE_PREFIX the scorer keeps the cache of the last window. A new
+ request keeps the cached tokens of the longest start that its window shares with that window,
+ and the model reads the rest. Each kept token has the same token, position and tokens before it
+ as in a full read, so only the call boundaries change, and point 1 keeps the numbers. The model
+ reads at least the last two tokens of a window (MIN_UNREAD_TOKENS), so no call of a window holds
+ one token where a full read holds more. docs/kv-reuse-design.md describes the modes.
  */
 #if !defined(__APPLE__)
 /* Linux hides some POSIX functions from a C11 build without this line. */
@@ -41,6 +48,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #if defined(__APPLE__)
 #include <llama/llama.h>
@@ -56,9 +64,33 @@
 #ifndef CALL_TOKENS
 #define CALL_TOKENS 31
 #endif
+/* The fewest tokens of the window that a request with reuse reads, so the last call of its
+   window holds as many tokens and takes the same code as a full read (point 1 above). A build
+   may set 1, as scripts/kv-reuse does to measure calls of one token. */
+#ifndef MIN_UNREAD_TOKENS
+#define MIN_UNREAD_TOKENS 2
+#endif
 /* Size of the piece buffer of the vocabulary scan, as in lm_score.c. A token whose text is
    longer does not count as a token that starts with a space, in both programs. */
 #define SCAN_PIECE_SIZE 64
+
+/* One stored context in the cache. */
+struct slot {
+    /* The sequence of llama.cpp that holds the context. The candidates take the sequences 1 to
+       DUO_LM_MAX_CANDIDATES, so the slots take 0 and the sequences after the candidates. */
+    llama_seq_id sequence;
+    /* The window in the cache, at the positions 0 to count - 1: the start token, then the
+       tokens of the context from `window_start` on. A count of 0 is an empty slot. */
+    llama_token tokens[DUO_LM_MAX_CONTEXT_TOKENS + 1];
+    int count;
+    int window_start;
+    /* Every token of the context of the last request of this slot. */
+    llama_token *context;
+    int context_count;
+    int context_capacity;
+    /* The request count at the last use, to pick the slot that waited longest. */
+    long last_use;
+};
 
 struct duo_lm_scorer {
     struct llama_model *model;
@@ -71,6 +103,11 @@ struct duo_lm_scorer {
     llama_token line_break_token;
     /* 1 for each token whose text starts with a space. */
     unsigned char *space_first;
+    duo_lm_reuse reuse;
+    struct slot slots[DUO_LM_MAX_SLOTS];
+    /* The second state of the check, or NULL without the check. */
+    struct llama_context *check_context;
+    double check_tolerance;
     duo_lm_scorer_info info;
 };
 
@@ -230,15 +267,45 @@ static int tokenize(duo_lm_scorer *scorer, const char *text, llama_token **token
     return count;
 }
 
-duo_lm_scorer *duo_lm_scorer_open(const char *model_path, int threads, char *error, size_t error_size) {
+/* The settings of every llama.cpp state of the scorer: the scorer's own and the check's. */
+static struct llama_context_params state_settings(const duo_lm_scorer *scorer, int threads) {
+    struct llama_context_params context_settings = llama_context_default_params();
+    context_settings.n_ctx = CONTEXT_SIZE;
+    context_settings.n_batch = CALL_TOKENS;
+    context_settings.n_ubatch = CALL_TOKENS;
+    context_settings.n_seq_max = (uint32_t)(DUO_LM_MAX_CANDIDATES + scorer->reuse.slots);
+    context_settings.n_threads = threads;
+    context_settings.n_threads_batch = threads;
+    context_settings.offload_kqv = false;
+    context_settings.flash_attn = true;
+    context_settings.no_perf = true;
+    return context_settings;
+}
+
+duo_lm_scorer *duo_lm_scorer_open(const char *model_path, int threads, duo_lm_reuse reuse, char *error,
+                                  size_t error_size) {
     if (threads < 1) {
         set_error(error, error_size, "the thread count must be 1 or more");
+        return NULL;
+    }
+    if (reuse.mode != DUO_LM_REUSE_NONE && reuse.mode != DUO_LM_REUSE_PREFIX && reuse.mode != DUO_LM_REUSE_SHIFT
+        && reuse.mode != DUO_LM_REUSE_ANCHOR) {
+        set_error(error, error_size, "the reuse mode %d is not known", (int)reuse.mode);
+        return NULL;
+    }
+    if (reuse.slots < 1 || reuse.slots > DUO_LM_MAX_SLOTS || (reuse.mode == DUO_LM_REUSE_NONE && reuse.slots != 1)) {
+        set_error(error, error_size, "%d slots with the reuse mode %d: the mode without reuse takes 1, the others 1 to %d",
+                  reuse.slots, (int)reuse.mode, DUO_LM_MAX_SLOTS);
         return NULL;
     }
     duo_lm_scorer *scorer = (duo_lm_scorer *)calloc(1, sizeof(duo_lm_scorer));
     if (scorer == NULL) {
         set_error(error, error_size, "out of memory");
         return NULL;
+    }
+    scorer->reuse = reuse;
+    for (int index = 0; index < reuse.slots; index++) {
+        scorer->slots[index].sequence = index == 0 ? 0 : DUO_LM_MAX_CANDIDATES + index;
     }
     last_llama_error[0] = 0;
     llama_log_set(keep_last_error, NULL);
@@ -308,17 +375,7 @@ duo_lm_scorer *duo_lm_scorer_open(const char *model_path, int threads, char *err
         return NULL;
     }
 
-    struct llama_context_params context_settings = llama_context_default_params();
-    context_settings.n_ctx = CONTEXT_SIZE;
-    context_settings.n_batch = CALL_TOKENS;
-    context_settings.n_ubatch = CALL_TOKENS;
-    context_settings.n_seq_max = DUO_LM_MAX_CANDIDATES + 1;
-    context_settings.n_threads = threads;
-    context_settings.n_threads_batch = threads;
-    context_settings.offload_kqv = false;
-    context_settings.flash_attn = true;
-    context_settings.no_perf = true;
-    scorer->context = llama_init_from_model(scorer->model, context_settings);
+    scorer->context = llama_init_from_model(scorer->model, state_settings(scorer, threads));
     if (scorer->context == NULL) {
         set_error(error, error_size, "the model state did not set up: %s",
                   last_llama_error[0] != 0 ? last_llama_error : "llama.cpp gave no reason");
@@ -331,8 +388,32 @@ duo_lm_scorer *duo_lm_scorer_open(const char *model_path, int threads, char *err
         duo_lm_scorer_close(scorer);
         return NULL;
     }
+    if (reuse.mode == DUO_LM_REUSE_SHIFT && !llama_kv_cache_can_shift(scorer->context)) {
+        set_error(error, error_size, "llama.cpp cannot move the positions of this model's cache");
+        duo_lm_scorer_close(scorer);
+        return NULL;
+    }
     scorer->batch = llama_batch_init(CALL_TOKENS, 0, 1);
     return scorer;
+}
+
+int duo_lm_scorer_set_check(duo_lm_scorer *scorer, double tolerance, char *error, size_t error_size) {
+    if (scorer == NULL || !(tolerance >= 0)) {
+        set_error(error, error_size, "the check needs a scorer and a tolerance of 0 or more");
+        return 0;
+    }
+    if (scorer->check_context == NULL) {
+        int threads = (int)llama_n_threads(scorer->context);
+        last_llama_error[0] = 0;
+        scorer->check_context = llama_init_from_model(scorer->model, state_settings(scorer, threads));
+        if (scorer->check_context == NULL) {
+            set_error(error, error_size, "the state of the check did not set up: %s",
+                      last_llama_error[0] != 0 ? last_llama_error : "llama.cpp gave no reason");
+            return 0;
+        }
+    }
+    scorer->check_tolerance = tolerance;
+    return 1;
 }
 
 /* The size of call `call` of a part of `tokens` tokens: the calls of a part get sizes that
@@ -342,15 +423,207 @@ static int call_size(int tokens, int call) {
     return tokens / calls + (call < tokens % calls ? 1 : 0);
 }
 
-/* Reads the queued tokens of the batch. Returns 0 when the model did not run. */
-static int run_batch(duo_lm_scorer *scorer, char *error, size_t error_size) {
-    int result = llama_decode(scorer->context, scorer->batch);
+static double now_milliseconds(void) {
+    struct timespec now;
+    clock_gettime(CLOCK_MONOTONIC, &now);
+    return (double)now.tv_sec * 1000.0 + (double)now.tv_nsec / 1e6;
+}
+
+/* Reads the queued tokens of the batch in `state`. Returns 0 when the model did not run. The
+   reads of the check do not count in `tokens_read`. */
+static int run_batch(duo_lm_scorer *scorer, struct llama_context *state, char *error, size_t error_size) {
+    int result = llama_decode(state, scorer->batch);
     if (result != 0) {
         set_error(error, error_size, "llama_decode returned %d for %d tokens%s%s", result, scorer->batch.n_tokens,
                   last_llama_error[0] != 0 ? ": " : "", last_llama_error);
         return 0;
     }
-    scorer->info.tokens_read += scorer->batch.n_tokens;
+    if (state == scorer->context) scorer->info.tokens_read += scorer->batch.n_tokens;
+    return 1;
+}
+
+/* The tokens of the candidates of one request. */
+struct candidate_tokens {
+    llama_token tokens[DUO_LM_MAX_CANDIDATES][DUO_LM_MAX_CANDIDATE_TOKENS];
+    int lengths[DUO_LM_MAX_CANDIDATES];
+    int count;
+};
+
+/* Reads the window from token `kept` on into the sequence `sequence` of `state`, whose cache
+   holds the tokens before `kept` at their positions, and then reads the candidates and writes
+   their scores. The candidate sequences must be empty. */
+static int read_window_and_candidates(duo_lm_scorer *scorer, struct llama_context *state, llama_seq_id sequence,
+                                      const llama_token *window, int window_count, int kept,
+                                      const struct candidate_tokens *candidates, duo_lm_score *scores, char *error,
+                                      size_t error_size) {
+    /* The window after the kept tokens, in calls of at most CALL_TOKENS tokens. Only its last
+       token needs scores. */
+    int unread = window_count - kept;
+    int counts = state == scorer->context;
+    double started = now_milliseconds();
+    last_llama_error[0] = 0;
+    for (int first = 0, call = 0; first < unread; first += call_size(unread, call), call++) {
+        int end = first + call_size(unread, call);
+        scorer->batch.n_tokens = 0;
+        for (int index = kept + first; index < kept + end; index++) {
+            add_token(&scorer->batch, window[index], index, sequence, index == window_count - 1);
+        }
+        if (!run_batch(scorer, state, error, error_size)) return -1;
+    }
+    const float *after_context = llama_get_logits_ith(state, scorer->batch.n_tokens - 1);
+    if (after_context == NULL) {
+        set_error(error, error_size, "the model gave no scores after the context");
+        return -1;
+    }
+    double read_window = now_milliseconds();
+    if (counts) scorer->info.window_milliseconds += read_window - started;
+    int count = candidates->count;
+    double context_all = log_of_sum(after_context, scorer->vocabulary);
+    for (int candidate = 0; candidate < count; candidate++) {
+        scores[candidate].log_probability = (double)after_context[candidates->tokens[candidate][0]] - context_all;
+        scores[candidate].space_after = 0;
+        llama_kv_cache_seq_cp(state, sequence, candidate + 1, -1, -1);
+    }
+
+    /* The candidates, each in its own sequence after the context. Their tokens go in order, in
+       calls of the sizes of call_size, and the scores of each call are read before the
+       next call writes over them. Every token of a candidate needs scores: each token but the
+       last gives the probability of the next token, and the last token gives the probability
+       of a space after the candidate. */
+    int candidate_tokens_total = 0;
+    for (int index = 0; index < count; index++) candidate_tokens_total += candidates->lengths[index];
+    int candidate = 0, place = 0;
+    for (int call = 0; candidate < count; call++) {
+        int owners[CALL_TOKENS], places[CALL_TOKENS];
+        int size = call_size(candidate_tokens_total, call);
+        scorer->batch.n_tokens = 0;
+        while (candidate < count && scorer->batch.n_tokens < size) {
+            owners[scorer->batch.n_tokens] = candidate;
+            places[scorer->batch.n_tokens] = place;
+            add_token(&scorer->batch, candidates->tokens[candidate][place], window_count + place, candidate + 1, 1);
+            place++;
+            if (place == candidates->lengths[candidate]) {
+                candidate++;
+                place = 0;
+            }
+        }
+        if (!run_batch(scorer, state, error, error_size)) return -1;
+        for (int row = 0; row < scorer->batch.n_tokens; row++) {
+            const float *row_scores = llama_get_logits_ith(state, row);
+            if (row_scores == NULL) {
+                set_error(error, error_size, "the model gave no scores for a candidate token");
+                return -1;
+            }
+            int owner = owners[row], at = places[row];
+            double all = log_of_sum(row_scores, scorer->vocabulary);
+            if (at + 1 < candidates->lengths[owner]) {
+                scores[owner].log_probability += (double)row_scores[candidates->tokens[owner][at + 1]] - all;
+            } else {
+                scores[owner].space_after = log_of_marked(row_scores, scorer->vocabulary, scorer->space_first, all);
+            }
+        }
+    }
+    if (counts) scorer->info.candidate_milliseconds += now_milliseconds() - read_window;
+    return 1;
+}
+
+static int shared_start(const llama_token *first, int first_count, const llama_token *second, int second_count) {
+    int length = 0;
+    while (length < first_count && length < second_count && first[length] == second[length]) length++;
+    return length;
+}
+
+/* What one slot offers a request: the window of the request with this slot, the tokens of the
+   cache that the request keeps, and the positions that the kept tokens after the start token
+   move back by (the shift mode only). */
+struct plan {
+    int window_start;
+    int kept;
+    int shift;
+};
+
+static struct plan plan_for_slot(const duo_lm_scorer *scorer, const struct slot *slot, const llama_token *context_tokens,
+                                 int context_count) {
+    struct plan plan;
+    plan.shift = 0;
+    plan.window_start = context_count > DUO_LM_MAX_CONTEXT_TOKENS ? context_count - DUO_LM_MAX_CONTEXT_TOKENS : 0;
+    if (scorer->reuse.mode == DUO_LM_REUSE_ANCHOR && context_count > DUO_LM_MAX_CONTEXT_TOKENS) {
+        /* The window keeps the start of the slot while the context still holds the tokens up to
+           that start and one more, and the window fits. Otherwise it starts again at the last
+           DUO_LM_ANCHOR_REFILL_TOKENS tokens. */
+        int anchor = slot->window_start;
+        int same = shared_start(slot->context, slot->context_count, context_tokens, context_count);
+        int keeps = slot->count > 0 && same > anchor && context_count - anchor <= DUO_LM_MAX_CONTEXT_TOKENS;
+        plan.window_start = keeps ? anchor : context_count - DUO_LM_ANCHOR_REFILL_TOKENS;
+    }
+    plan.kept = 0;
+    if (slot->count == 0) return plan;
+    /* The window of the request: the start token, then the context from window_start on. The
+       cache holds the start token at position 0 and the slot's window after it. */
+    const llama_token *window = context_tokens + plan.window_start;
+    int window_count = context_count - plan.window_start;
+    int moved = plan.window_start - slot->window_start;
+    if (scorer->reuse.mode == DUO_LM_REUSE_SHIFT && moved > 0 && moved < slot->count - 1) {
+        int same = shared_start(slot->tokens + 1 + moved, slot->count - 1 - moved, window, window_count);
+        if (same > 0) {
+            plan.shift = moved;
+            plan.kept = 1 + same;
+            return plan;
+        }
+    }
+    /* The start token is always the same, and its keys and values do not depend on any other
+       token, so the slot keeps at least that one. */
+    plan.kept = 1 + shared_start(slot->tokens + 1, slot->count - 1, window, window_count);
+    return plan;
+}
+
+/* Marks every slot empty and clears the cache, after a read that did not finish. */
+static void forget_cache(duo_lm_scorer *scorer) {
+    for (int index = 0; index < scorer->reuse.slots; index++) scorer->slots[index].count = 0;
+    llama_kv_cache_clear(scorer->context);
+}
+
+static int remember_context(struct slot *slot, const llama_token *context_tokens, int context_count, char *error,
+                            size_t error_size) {
+    if (context_count > slot->context_capacity) {
+        llama_token *larger = (llama_token *)realloc(slot->context, sizeof(llama_token) * (size_t)context_count);
+        if (larger == NULL) {
+            set_error(error, error_size, "out of memory for the tokens of a slot");
+            return 0;
+        }
+        slot->context = larger;
+        slot->context_capacity = context_count;
+    }
+    if (context_count > 0) memcpy(slot->context, context_tokens, sizeof(llama_token) * (size_t)context_count);
+    slot->context_count = context_count;
+    return 1;
+}
+
+/* Reads the same window and candidates in the state of the check, from an empty cache, and
+   compares the numbers with `scores`. */
+static int check_scores(duo_lm_scorer *scorer, const llama_token *window, int window_count,
+                        const struct candidate_tokens *candidates, const duo_lm_score *scores, char *error,
+                        size_t error_size) {
+    duo_lm_score fresh[DUO_LM_MAX_CANDIDATES];
+    llama_kv_cache_clear(scorer->check_context);
+    if (read_window_and_candidates(scorer, scorer->check_context, 0, window, window_count, 0, candidates, fresh, error,
+                                   error_size) != 1) {
+        return -1;
+    }
+    scorer->info.checked_requests++;
+    for (int candidate = 0; candidate < candidates->count; candidate++) {
+        double pair[2][2] = {{scores[candidate].log_probability, fresh[candidate].log_probability},
+                             {scores[candidate].space_after, fresh[candidate].space_after}};
+        for (int number = 0; number < 2; number++) {
+            double difference = fabs(pair[number][0] - pair[number][1]);
+            if (difference > scorer->info.checked_widest) scorer->info.checked_widest = difference;
+            if (difference > scorer->check_tolerance) {
+                set_error(error, error_size, "the cache gave %.17g for the %s of candidate %d, a fresh read %.17g",
+                          pair[number][0], number == 0 ? "log probability" : "space after", candidate, pair[number][1]);
+                return -1;
+            }
+        }
+    }
     return 1;
 }
 
@@ -367,100 +640,109 @@ int duo_lm_scorer_score(duo_lm_scorer *scorer, const char *context, const char *
     }
     scorer->info.requests++;
 
-    /* The start token, then the last tokens of the context. */
-    llama_token context_tokens[DUO_LM_MAX_CONTEXT_TOKENS + 1];
-    int context_count = 1;
-    context_tokens[0] = scorer->start;
+    /* Every token of the context. The window is the start token and the last tokens of it. */
+    llama_token *context_tokens = NULL;
+    int context_count = 0;
     if (context[0] != 0) {
-        llama_token *tokens;
-        int found = tokenize(scorer, context, &tokens, error, error_size);
-        if (found < 0) return -1;
-        int first = found > DUO_LM_MAX_CONTEXT_TOKENS ? found - DUO_LM_MAX_CONTEXT_TOKENS : 0;
-        for (int index = first; index < found; index++) context_tokens[context_count++] = tokens[index];
-        free(tokens);
+        context_count = tokenize(scorer, context, &context_tokens, error, error_size);
+        if (context_count < 0) return -1;
     }
 
-    llama_token candidate_tokens[DUO_LM_MAX_CANDIDATES][DUO_LM_MAX_CANDIDATE_TOKENS];
-    int lengths[DUO_LM_MAX_CANDIDATES];
+    struct candidate_tokens candidate_tokens;
+    candidate_tokens.count = count;
     for (int candidate = 0; candidate < count; candidate++) {
         if (candidates[candidate] == NULL) {
+            free(context_tokens);
             set_error(error, error_size, "candidate %d is NULL", candidate);
             return -1;
         }
         llama_token *tokens;
         int found = tokenize(scorer, candidates[candidate], &tokens, error, error_size);
-        if (found < 0) return -1;
+        if (found < 0) {
+            free(context_tokens);
+            return -1;
+        }
         if (found < 1 || found > DUO_LM_MAX_CANDIDATE_TOKENS) {
             free(tokens);
+            free(context_tokens);
             set_error(error, error_size, "candidate %d gives %d tokens, and the limit is 1 to %d", candidate, found,
                       DUO_LM_MAX_CANDIDATE_TOKENS);
             return 0;
         }
-        memcpy(candidate_tokens[candidate], tokens, sizeof(llama_token) * (size_t)found);
-        lengths[candidate] = found;
+        memcpy(candidate_tokens.tokens[candidate], tokens, sizeof(llama_token) * (size_t)found);
+        candidate_tokens.lengths[candidate] = found;
         free(tokens);
     }
 
-    /* The context, in calls of at most CALL_TOKENS tokens. Only its last token needs scores. */
-    llama_kv_cache_clear(scorer->context);
-    last_llama_error[0] = 0;
-    for (int first = 0, call = 0; first < context_count; first += call_size(context_count, call), call++) {
-        int end = first + call_size(context_count, call);
-        scorer->batch.n_tokens = 0;
-        for (int index = first; index < end; index++) {
-            add_token(&scorer->batch, context_tokens[index], index, 0, index == context_count - 1);
+    /* The slot that keeps the most tokens of the cache. When no slot keeps more than the start
+       token, the slot that waited longest takes the request. */
+    int chosen = 0;
+    struct plan plan = plan_for_slot(scorer, &scorer->slots[0], context_tokens, context_count);
+    for (int index = 1; index < scorer->reuse.slots; index++) {
+        struct plan other = plan_for_slot(scorer, &scorer->slots[index], context_tokens, context_count);
+        if (other.kept > plan.kept
+            || (other.kept == plan.kept && plan.kept <= 1 && scorer->slots[index].last_use < scorer->slots[chosen].last_use)) {
+            chosen = index;
+            plan = other;
         }
-        if (!run_batch(scorer, error, error_size)) return -1;
     }
-    const float *after_context = llama_get_logits_ith(scorer->context, scorer->batch.n_tokens - 1);
-    if (after_context == NULL) {
-        set_error(error, error_size, "the model gave no scores after the context");
+    struct slot *slot = &scorer->slots[chosen];
+    llama_token window[DUO_LM_MAX_CONTEXT_TOKENS + 1];
+    window[0] = scorer->start;
+    int window_count = 1 + context_count - plan.window_start;
+    memcpy(window + 1, context_tokens + plan.window_start, sizeof(llama_token) * (size_t)(window_count - 1));
+
+    /* The model reads at least the last two tokens of the window, so its last call of the
+       context holds two tokens or more, as a full read does. A full read of a window of one
+       token, the start token alone, is one call of one token, as in lm_score.c. See point 1 at
+       the top of this file. */
+    int kept = plan.kept;
+    if (kept > window_count - MIN_UNREAD_TOKENS) kept = window_count - MIN_UNREAD_TOKENS;
+    if (kept < 0) kept = 0;
+    if (scorer->reuse.mode == DUO_LM_REUSE_NONE) kept = 0;
+
+    /* The cache keeps the first `kept` tokens of the slot and nothing of the candidates. */
+    if (scorer->reuse.mode == DUO_LM_REUSE_NONE) {
+        llama_kv_cache_clear(scorer->context);
+    } else {
+        int removed = 1;
+        for (int candidate = 1; candidate <= DUO_LM_MAX_CANDIDATES; candidate++) {
+            removed = removed && llama_kv_cache_seq_rm(scorer->context, candidate, -1, -1);
+        }
+        if (kept > 1 && plan.shift > 0) {
+            removed = removed && llama_kv_cache_seq_rm(scorer->context, slot->sequence, 1, 1 + plan.shift);
+            llama_kv_cache_seq_add(scorer->context, slot->sequence, 1 + plan.shift, -1, -plan.shift);
+        }
+        removed = removed && llama_kv_cache_seq_rm(scorer->context, slot->sequence, kept, -1);
+        if (!removed) {
+            free(context_tokens);
+            forget_cache(scorer);
+            set_error(error, error_size, "llama.cpp did not remove tokens from the cache");
+            return -1;
+        }
+    }
+    slot->count = 0;
+    int result = read_window_and_candidates(scorer, scorer->context, slot->sequence, window, window_count, kept,
+                                            &candidate_tokens, scores, error, error_size);
+    if (result != 1) {
+        free(context_tokens);
+        forget_cache(scorer);
+        return result;
+    }
+    scorer->info.window_tokens += window_count;
+    scorer->info.window_tokens_reused += kept;
+    memcpy(slot->tokens, window, sizeof(llama_token) * (size_t)window_count);
+    slot->count = window_count;
+    slot->window_start = plan.window_start;
+    slot->last_use = scorer->info.requests;
+    int remembered = remember_context(slot, context_tokens, context_count, error, error_size);
+    free(context_tokens);
+    if (!remembered) {
+        forget_cache(scorer);
         return -1;
     }
-    double context_all = log_of_sum(after_context, scorer->vocabulary);
-    for (int candidate = 0; candidate < count; candidate++) {
-        scores[candidate].log_probability = (double)after_context[candidate_tokens[candidate][0]] - context_all;
-        scores[candidate].space_after = 0;
-        llama_kv_cache_seq_cp(scorer->context, 0, candidate + 1, -1, -1);
-    }
-
-    /* The candidates, each in its own sequence after the context. Their tokens go in order, in
-       calls of the sizes of call_size, and the scores of each call are read before the
-       next call writes over them. Every token of a candidate needs scores: each token but the
-       last gives the probability of the next token, and the last token gives the probability
-       of a space after the candidate. */
-    int candidate_tokens_total = 0;
-    for (int index = 0; index < count; index++) candidate_tokens_total += lengths[index];
-    int candidate = 0, place = 0;
-    for (int call = 0; candidate < count; call++) {
-        int owners[CALL_TOKENS], places[CALL_TOKENS];
-        int size = call_size(candidate_tokens_total, call);
-        scorer->batch.n_tokens = 0;
-        while (candidate < count && scorer->batch.n_tokens < size) {
-            owners[scorer->batch.n_tokens] = candidate;
-            places[scorer->batch.n_tokens] = place;
-            add_token(&scorer->batch, candidate_tokens[candidate][place], context_count + place, candidate + 1, 1);
-            place++;
-            if (place == lengths[candidate]) {
-                candidate++;
-                place = 0;
-            }
-        }
-        if (!run_batch(scorer, error, error_size)) return -1;
-        for (int row = 0; row < scorer->batch.n_tokens; row++) {
-            const float *row_scores = llama_get_logits_ith(scorer->context, row);
-            if (row_scores == NULL) {
-                set_error(error, error_size, "the model gave no scores for a candidate token");
-                return -1;
-            }
-            int owner = owners[row], at = places[row];
-            double all = log_of_sum(row_scores, scorer->vocabulary);
-            if (at + 1 < lengths[owner]) {
-                scores[owner].log_probability += (double)row_scores[candidate_tokens[owner][at + 1]] - all;
-            } else {
-                scores[owner].space_after = log_of_marked(row_scores, scorer->vocabulary, scorer->space_first, all);
-            }
-        }
+    if (scorer->check_context != NULL) {
+        return check_scores(scorer, window, window_count, &candidate_tokens, scores, error, error_size);
     }
     return 1;
 }
@@ -474,7 +756,9 @@ duo_lm_scorer_info duo_lm_scorer_get_info(const duo_lm_scorer *scorer) {
 void duo_lm_scorer_close(duo_lm_scorer *scorer) {
     if (scorer == NULL) return;
     if (scorer->batch.token != NULL) llama_batch_free(scorer->batch);
+    if (scorer->check_context != NULL) llama_free(scorer->check_context);
     if (scorer->context != NULL) llama_free(scorer->context);
+    for (int index = 0; index < DUO_LM_MAX_SLOTS; index++) free(scorer->slots[index].context);
     if (scorer->model != NULL) llama_model_free(scorer->model);
     free(scorer->space_first);
     free(scorer);

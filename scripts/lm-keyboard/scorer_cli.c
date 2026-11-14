@@ -3,14 +3,17 @@
  scripts/lm-rerank/lm_score.c, so both programs can read the same requests on Linux and their
  answers can be compared byte for byte.
 
- Usage: scorer_cli MODEL.gguf THREADS < requests > answers
+ Usage: scorer_cli MODEL.gguf THREADS [full] [prefix] [check] < requests > answers
 
  Request line:  context <TAB> candidate 1 <TAB> candidate 2 ...
  Answer line:   log probability 1 <SPACE> space after 1 <TAB> ...
 
  As in lm_score.c, a candidate follows the context after one space, or right after the start
- token when the context is empty, and each number has 5 decimals. With a third argument "full"
- each number has 17 significant digits instead.
+ token when the context is empty, and each number has 5 decimals. With the word "full" each
+ number has 17 significant digits instead. Without the word "prefix" the scorer reads every
+ request from an empty cache. With it the scorer reuses the cache of the request before
+ (DUO_LM_REUSE_PREFIX of duo_lm_scorer.h, one slot). With the word "check" the scorer also reads
+ every request again from an empty cache and stops on any difference in the numbers.
  */
 #define _POSIX_C_SOURCE 200809L
 
@@ -23,14 +26,31 @@
 #define MAX_LINE 65536
 
 int main(int argc, char **argv) {
-    if (argc != 3 && !(argc == 4 && strcmp(argv[3], "full") == 0)) {
-        fprintf(stderr, "usage: scorer_cli MODEL.gguf THREADS [full]\n");
+    int full = 0, check = 0;
+    duo_lm_reuse reuse = {DUO_LM_REUSE_NONE, 1};
+    int valid = argc >= 3;
+    for (int index = 3; index < argc && valid; index++) {
+        if (strcmp(argv[index], "full") == 0) {
+            full = 1;
+        } else if (strcmp(argv[index], "prefix") == 0) {
+            reuse.mode = DUO_LM_REUSE_PREFIX;
+        } else if (strcmp(argv[index], "check") == 0) {
+            check = 1;
+        } else {
+            valid = 0;
+        }
+    }
+    if (!valid) {
+        fprintf(stderr, "usage: scorer_cli MODEL.gguf THREADS [full] [prefix] [check]\n");
         return 2;
     }
-    int full = argc == 4;
     char error[DUO_LM_ERROR_SIZE];
-    duo_lm_scorer *scorer = duo_lm_scorer_open(argv[1], atoi(argv[2]), error, sizeof error);
+    duo_lm_scorer *scorer = duo_lm_scorer_open(argv[1], atoi(argv[2]), reuse, error, sizeof error);
     if (scorer == NULL) {
+        fprintf(stderr, "scorer_cli: %s\n", error);
+        return 1;
+    }
+    if (check && !duo_lm_scorer_set_check(scorer, 0, error, sizeof error)) {
         fprintf(stderr, "scorer_cli: %s\n", error);
         return 1;
     }
@@ -91,6 +111,10 @@ int main(int argc, char **argv) {
     duo_lm_scorer_info info = duo_lm_scorer_get_info(scorer);
     fprintf(stderr, "scorer_cli: start token %d, %ld requests, %ld tokens read, %ld space and %ld line break tokens put in place of -1\n",
             info.start_token, info.requests, info.tokens_read, info.space_repairs, info.line_break_repairs);
+    if (reuse.mode != DUO_LM_REUSE_NONE || check) {
+        fprintf(stderr, "scorer_cli: %ld of %ld window tokens reused, %ld requests checked, widest difference %.17g\n",
+                info.window_tokens_reused, info.window_tokens, info.checked_requests, info.checked_widest);
+    }
     duo_lm_scorer_close(scorer);
     return 0;
 }
