@@ -34,7 +34,9 @@
  and the model reads the rest. Each kept token has the same token, position and tokens before it
  as in a full read, so only the call boundaries change, and point 1 keeps the numbers. The model
  reads at least the last two tokens of a window (MIN_UNREAD_TOKENS), so no call of a window holds
- one token where a full read holds more. docs/kv-reuse-design.md describes the modes.
+ one token where a full read holds more. The keyboard reads with DUO_LM_REUSE_ANCHOR and two
+ slots: the same reuse, with a window that keeps its first token while a long context grows, and
+ a second stored window for a second text. docs/kv-reuse-design.md describes the modes.
  */
 #if !defined(__APPLE__)
 /* Linux hides some POSIX functions from a C11 build without this line. */
@@ -784,6 +786,7 @@ int duo_lm_scorer_score(duo_lm_scorer *scorer, const char *context, const char *
     }
     scorer->info.window_tokens += window_count;
     scorer->info.window_tokens_reused += kept;
+    if (context_count > DUO_LM_MAX_CONTEXT_TOKENS) scorer->info.long_contexts++;
     memcpy(slot->tokens, window, sizeof(llama_token) * (size_t)window_count);
     /* A window of the start token alone was a call of one token. A full read of a longer window
        reads the start token in a call of more tokens, with other code (point 1 at the top), so

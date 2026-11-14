@@ -44,9 +44,20 @@ final class LanguageModelCacheTests: XCTestCase {
         LanguageModelPrompt.make(textBefore: before, typed: span, readings: readings)!
     }
 
-    func testTheKeyboardReusesTheCache() {
-        XCTAssertEqual(KeyboardLanguageModel.reuse.mode, DUO_LM_REUSE_PREFIX)
-        XCTAssertEqual(KeyboardLanguageModel.reuse.slots, 1)
+    func testTheKeyboardReusesTheCacheWithTheAnchoredWindowAndTwoSlots() {
+        XCTAssertEqual(KeyboardLanguageModel.reuse.mode, DUO_LM_REUSE_ANCHOR)
+        XCTAssertEqual(KeyboardLanguageModel.reuse.slots, 2)
+    }
+
+    func testTwoSlotsKeepTheWindowsOfTwoFields() throws {
+        let report = "The quarterly report shows that the sales of the new product grew in every region "
+        try scores(typed(report, "lsat", ["last", "lsat"]))
+        try scores(typed("Please remember to water the plants on the balcony while I am away next ", "wekk", ["week", "wekk"]))
+        let away = try info()
+        try scores(typed(report + "last ", "yaer", ["year", "yaer"]))
+        let back = try info()
+        XCTAssertGreaterThan(back.window_tokens_reused - away.window_tokens_reused, 15)
+        XCTAssertEqual(back.checked_widest, 0)
     }
 
     func testTheNextSpacePressReadsOnlyTheTokensAfterTheSharedStart() throws {

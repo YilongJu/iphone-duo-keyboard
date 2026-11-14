@@ -3,7 +3,7 @@
  scripts/lm-rerank/lm_score.c, so both programs can read the same requests on Linux and their
  answers can be compared byte for byte.
 
- Usage: scorer_cli MODEL.gguf THREADS [full] [prefix|shift|anchor] [slots2] [check] < requests > answers
+ Usage: scorer_cli MODEL.gguf THREADS [full] [prefix|shift|anchor] [slots2] [check] [long FILE] < requests > answers
 
  Request line:  context <TAB> candidate 1 <TAB> candidate 2 ...
  Answer line:   log probability 1 <SPACE> space after 1 <TAB> ...
@@ -14,7 +14,8 @@
  from an empty cache. The words "prefix", "shift" and "anchor" give the reuse modes of
  duo_lm_scorer.h, with one slot, or two slots with the word "slots2". With the word "check" the
  scorer also reads every request again from an empty cache and stops on any difference in the
- numbers.
+ numbers. With "long FILE" the program writes the line number of each request whose context holds
+ more than 96 tokens into FILE, one per line, counted from 1.
  */
 #define _POSIX_C_SOURCE 200809L
 
@@ -28,10 +29,17 @@
 
 int main(int argc, char **argv) {
     int full = 0, check = 0;
+    FILE *long_lines = NULL;
     duo_lm_reuse reuse = {DUO_LM_REUSE_NONE, 1};
     int valid = argc >= 3;
     for (int index = 3; index < argc && valid; index++) {
-        if (strcmp(argv[index], "full") == 0) {
+        if (strcmp(argv[index], "long") == 0 && index + 1 < argc && long_lines == NULL) {
+            long_lines = fopen(argv[++index], "w");
+            if (long_lines == NULL) {
+                fprintf(stderr, "scorer_cli: cannot write %s\n", argv[index]);
+                return 1;
+            }
+        } else if (strcmp(argv[index], "full") == 0) {
             full = 1;
         } else if (strcmp(argv[index], "prefix") == 0) {
             reuse.mode = DUO_LM_REUSE_PREFIX;
@@ -48,7 +56,7 @@ int main(int argc, char **argv) {
         }
     }
     if (!valid) {
-        fprintf(stderr, "usage: scorer_cli MODEL.gguf THREADS [full] [prefix|shift|anchor] [slots2] [check]\n");
+        fprintf(stderr, "usage: scorer_cli MODEL.gguf THREADS [full] [prefix|shift|anchor] [slots2] [check] [long FILE]\n");
         return 2;
     }
     char error[DUO_LM_ERROR_SIZE];
@@ -98,7 +106,11 @@ int main(int argc, char **argv) {
             candidates[candidate] = texts[candidate];
         }
         duo_lm_score scores[DUO_LM_MAX_CANDIDATES];
+        long long_before = duo_lm_scorer_get_info(scorer).long_contexts;
         int result = duo_lm_scorer_score(scorer, context, candidates, count, scores, error, sizeof error);
+        if (long_lines != NULL && duo_lm_scorer_get_info(scorer).long_contexts != long_before) {
+            fprintf(long_lines, "%ld\n", requests + 1);
+        }
         if (result != 1) {
             fprintf(stderr, "scorer_cli: request %ld gave %d: %s\n", requests + 1, result, error);
             return 1;
@@ -121,7 +133,10 @@ int main(int argc, char **argv) {
     if (reuse.mode != DUO_LM_REUSE_NONE || check) {
         fprintf(stderr, "scorer_cli: %ld of %ld window tokens reused, %ld requests checked, widest difference %.17g\n",
                 info.window_tokens_reused, info.window_tokens, info.checked_requests, info.checked_widest);
+        fprintf(stderr, "scorer_cli: %ld requests with a context of more than %d tokens\n", info.long_contexts,
+                DUO_LM_MAX_CONTEXT_TOKENS);
     }
+    if (long_lines != NULL) fclose(long_lines);
     duo_lm_scorer_close(scorer);
     return 0;
 }

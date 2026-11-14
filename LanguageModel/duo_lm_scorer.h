@@ -20,8 +20,11 @@
  tuned. This scorer follows that program in each step that sets a number: the start token, the
  last 96 tokens of the context, the token that takes the place of -1, and the sums over the
  vocabulary. duo_lm_scorer.c names the two steps that differ and why they leave the numbers alone.
- The reuse mode DUO_LM_REUSE_PREFIX changes only the calls in which the model reads the tokens,
- so it keeps those numbers as well (docs/kv-reuse-results.md).
+ The reuse modes DUO_LM_REUSE_PREFIX and DUO_LM_REUSE_ANCHOR change only the calls in which the
+ model reads the tokens, so a window gets the numbers of a full read of that window. The anchored
+ window of a context of more than 96 tokens holds other tokens than lm_score.c reads, and so its
+ numbers differ (docs/kv-reuse-results.md). The keyboard reads with DUO_LM_REUSE_ANCHOR and two
+ slots.
  */
 #ifndef DUO_LM_SCORER_H
 #define DUO_LM_SCORER_H
@@ -96,6 +99,10 @@ typedef struct {
        difference between a number of the cache and the number of the fresh read. */
     long checked_requests;
     double checked_widest;
+    /* Requests whose context held more than DUO_LM_MAX_CONTEXT_TOKENS tokens. Only their window
+       depends on the reuse mode: the anchored window of DUO_LM_REUSE_ANCHOR holds other tokens
+       than the last 96 of lm_score.c. */
+    long long_contexts;
     /* Time spent in the calls of the model that read windows, and that read candidates, in
        milliseconds of a monotonic clock. The check's reads do not count. */
     double window_milliseconds;

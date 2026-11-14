@@ -64,16 +64,16 @@ jobs:
             cat "$out/scorer_cli.log"
           } | tee "$out/scorer-check.txt"
           cmp "$out/lm_score.answers" "$out/scorer_cli.answers"
-      - name: Score the harness requests in order with the keyboard's scorer reusing its cache, against lm_score
+      - name: Score the harness requests in order with the prefix reuse of the cache, against lm_score
         run: |
           set -euo pipefail
           export LD_LIBRARY_PATH="$PWD/build/lm-rerank/llama/lib"
           out=build/lm-keyboard/harness
           model="$(cat build/lm-keyboard/model-path.txt)"
           # The requests in the order of the harness, so each request shares its start with the one
-          # before, as at the space presses of the keyboard. The scorer reuses its cache as the
-          # keyboard does (docs/kv-reuse-design.md), and its check reads every request again from
-          # an empty cache and stops on a difference in any bit.
+          # before, as at the space presses of the keyboard. The prefix reuse is the part of the
+          # keyboard's reuse that keeps every window of lm_score (docs/kv-reuse-design.md), and its
+          # check reads every request again from an empty cache and stops on a difference in any bit.
           build/lm-keyboard/scorer_cli "$model" 2 prefix check < "$out/requests.tsv" > "$out/scorer_cli_prefix.answers" 2> "$out/scorer_cli_prefix.log"
           {
             if cmp -s "$out/lm_score.answers" "$out/scorer_cli_prefix.answers"; then
@@ -84,6 +84,28 @@ jobs:
             cat "$out/scorer_cli_prefix.log"
           } | tee "$out/scorer-check-prefix.txt"
           cmp "$out/lm_score.answers" "$out/scorer_cli_prefix.answers"
+      - name: Score the harness requests in order with the keyboard's reuse of the cache, against a fresh read and lm_score
+        run: |
+          set -euo pipefail
+          export LD_LIBRARY_PATH="$PWD/build/lm-rerank/llama/lib"
+          out=build/lm-keyboard/harness
+          model="$(cat build/lm-keyboard/model-path.txt)"
+          # The keyboard's reuse (KeyboardLanguageModel.reuse): the anchored window and two slots. The
+          # check reads every request again from an empty cache and stops on a difference in any bit.
+          # A request whose context holds more than 96 tokens reads its anchored window, other tokens
+          # than lm_score reads, so only such a request may differ from lm_score.
+          build/lm-keyboard/scorer_cli "$model" 2 anchor slots2 check long "$out/long.lines" < "$out/requests.tsv" \
+            > "$out/scorer_cli_anchor.answers" 2> "$out/scorer_cli_anchor.log"
+          awk 'NR==FNR {a[FNR]=$0; next} a[FNR]!=$0 {print FNR}' "$out/lm_score.answers" "$out/scorer_cli_anchor.answers" \
+            > "$out/anchor-differing.lines"
+          outside=$(sort "$out/anchor-differing.lines" | comm -23 - <(sort "$out/long.lines") | wc -l | tr -d ' ')
+          {
+            echo "with the keyboard's reuse $(wc -l < "$out/anchor-differing.lines" | tr -d ' ') answers differ from lm_score," \
+              "$(wc -l < "$out/long.lines" | tr -d ' ') requests have a context of more than 96 tokens, and $outside differing answers have a shorter context"
+            cat "$out/scorer_cli_anchor.log"
+          } | tee "$out/scorer-check-anchor.txt"
+          [ "$(wc -l < "$out/scorer_cli_anchor.answers")" = "$(wc -l < "$out/requests.tsv")" ]
+          [ "$outside" = 0 ]
       - uses: actions/upload-artifact@v7
         if: always()
         with:
@@ -143,7 +165,7 @@ jobs:
           # A report only on this runner: its i8mm kernels pair the rows of one product, so the
           # split of a batch moves some answers in their last digits. The app's framework holds
           # no i8mm instruction, and the x86 and macOS jobs compare byte for byte.
-      - name: Score the harness requests in order with the keyboard's scorer reusing its cache, as a report
+      - name: Score the harness requests in order with the prefix reuse of the cache, as a report
         run: |
           set -euo pipefail
           export LD_LIBRARY_PATH="$PWD/build/lm-rerank/llama/lib"
@@ -161,6 +183,18 @@ jobs:
             done
             cat "$out/scorer_cli_prefix.log"
           } | tee "$out/scorer-check-prefix.txt"
+      - name: Score the harness requests in order with the keyboard's reuse of the cache, as a report
+        run: |
+          set -euo pipefail
+          export LD_LIBRARY_PATH="$PWD/build/lm-rerank/llama/lib"
+          out=build/lm-keyboard/harness
+          model="$(cat build/lm-keyboard/model-path.txt)"
+          build/lm-keyboard/scorer_cli "$model" 2 anchor slots2 long "$out/long.lines" < "$out/requests.tsv" \
+            > "$out/scorer_cli_anchor.answers" 2> "$out/scorer_cli_anchor.log"
+          {
+            echo "lm_score and scorer_cli_anchor: $(awk 'NR==FNR {a[FNR]=$0; next} a[FNR]!=$0' "$out/lm_score.answers" "$out/scorer_cli_anchor.answers" | wc -l | tr -d ' ') lines differ"
+            cat "$out/scorer_cli_anchor.log"
+          } | tee "$out/scorer-check-anchor.txt"
       - uses: actions/upload-artifact@v7
         if: always()
         with:
@@ -278,14 +312,14 @@ jobs:
             cat "$out/scorer_cli.log"
           } | tee "$out/scorer-check.txt"
           cmp "$out/lm_score.answers" "$out/scorer_cli.answers"
-      - name: Score the harness requests in order with the keyboard's scorer reusing its cache, on this machine
+      - name: Score the harness requests in order with the prefix reuse of the cache, on this machine
         if: always()
         run: |
           set -euo pipefail
           out=build/lm-keyboard/harness-mac
           model=Shared/smollm2-lora-domain-s100-seed1.Q4_K_M.gguf
-          # As in the x86 job: the requests in order, the reuse of the keyboard, and the check that
-          # stops on a difference in any bit from a read from an empty cache.
+          # As in the x86 job: the requests in order, the prefix reuse, and the check that stops on a
+          # difference in any bit from a read from an empty cache.
           build/lm-keyboard/scorer_cli "$model" 2 prefix check < "$out/requests.tsv" > "$out/scorer_cli_prefix.answers" 2> "$out/scorer_cli_prefix.log"
           {
             if cmp -s "$out/lm_score.answers" "$out/scorer_cli_prefix.answers"; then
@@ -296,6 +330,28 @@ jobs:
             cat "$out/scorer_cli_prefix.log"
           } | tee "$out/scorer-check-prefix.txt"
           cmp "$out/lm_score.answers" "$out/scorer_cli_prefix.answers"
+      - name: Score the harness requests in order with the keyboard's reuse of the cache, against a fresh read and lm_score
+        if: always()
+        run: |
+          set -euo pipefail
+          out=build/lm-keyboard/harness-mac
+          model=Shared/smollm2-lora-domain-s100-seed1.Q4_K_M.gguf
+          # The keyboard's reuse (KeyboardLanguageModel.reuse): the anchored window and two slots. The
+          # check reads every request again from an empty cache and stops on a difference in any bit.
+          # A request whose context holds more than 96 tokens reads its anchored window, other tokens
+          # than lm_score reads, so only such a request may differ from lm_score.
+          build/lm-keyboard/scorer_cli "$model" 2 anchor slots2 check long "$out/long.lines" < "$out/requests.tsv" \
+            > "$out/scorer_cli_anchor.answers" 2> "$out/scorer_cli_anchor.log"
+          awk 'NR==FNR {a[FNR]=$0; next} a[FNR]!=$0 {print FNR}' "$out/lm_score.answers" "$out/scorer_cli_anchor.answers" \
+            > "$out/anchor-differing.lines"
+          outside=$(sort "$out/anchor-differing.lines" | comm -23 - <(sort "$out/long.lines") | wc -l | tr -d ' ')
+          {
+            echo "with the keyboard's reuse $(wc -l < "$out/anchor-differing.lines" | tr -d ' ') answers differ from lm_score," \
+              "$(wc -l < "$out/long.lines" | tr -d ' ') requests have a context of more than 96 tokens, and $outside differing answers have a shorter context"
+            cat "$out/scorer_cli_anchor.log"
+          } | tee "$out/scorer-check-anchor.txt"
+          [ "$(wc -l < "$out/scorer_cli_anchor.answers")" = "$(wc -l < "$out/requests.tsv")" ]
+          [ "$outside" = 0 ]
       - uses: actions/upload-artifact@v7
         if: always()
         with:

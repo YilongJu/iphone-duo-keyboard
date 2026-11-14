@@ -149,8 +149,8 @@ final class KeyboardLanguageModel: CandidateScoring, LanguageModelLoading {
         apostrophe: RerankRule.ApostropheStep(scope: .firstWordOfSpan, score: .modelLessSlipCost, margin: 0.5, prompt: .stock))
 
     /// The reuse of the model's cache between requests, picked by the rule of
-    /// docs/kv-reuse-design.md (docs/kv-reuse-results.md).
-    nonisolated static let reuse = duo_lm_reuse(mode: DUO_LM_REUSE_PREFIX, slots: 1)
+    /// docs/kv-reuse-design.md: the anchored window with two slots (docs/kv-reuse-results.md).
+    nonisolated static let reuse = duo_lm_reuse(mode: DUO_LM_REUSE_ANCHOR, slots: 2)
 
     /// The name of the reuse mode in the report of the language model test.
     nonisolated static var reuseName: String {
