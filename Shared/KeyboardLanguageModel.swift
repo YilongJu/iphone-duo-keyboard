@@ -8,11 +8,18 @@ import os
 final class LanguageModelScorer: @unchecked Sendable {
     private let handle: OpaquePointer
 
-    /// Loads the model. The error holds the reason when the model does not load.
-    init(modelPath: String, threads: Int) throws {
+    /// Loads the model with the reuse mode `reuse` of the cache. With `checkTolerance` the scorer
+    /// also reads every request again from an empty cache and fails a request whose numbers
+    /// differ by more (`duo_lm_scorer_set_check`), for the tests. The error holds the reason
+    /// when the model does not load.
+    init(modelPath: String, threads: Int, reuse: duo_lm_reuse, checkTolerance: Double?) throws {
         let errorSize = Int(DUO_LM_ERROR_SIZE)
         var error = [CChar](repeating: 0, count: errorSize)
-        guard let opened = duo_lm_scorer_open(modelPath, Int32(threads), &error, errorSize) else {
+        guard let opened = duo_lm_scorer_open(modelPath, Int32(threads), reuse, &error, errorSize) else {
+            throw LanguageModelError(reason: String(cString: error))
+        }
+        if let checkTolerance, duo_lm_scorer_set_check(opened, checkTolerance, &error, errorSize) != 1 {
+            duo_lm_scorer_close(opened)
             throw LanguageModelError(reason: String(cString: error))
         }
         handle = opened
@@ -141,6 +148,21 @@ final class KeyboardLanguageModel: CandidateScoring, LanguageModelLoading {
         weight: 1.5, marginFromTyped: 1, marginToTyped: 4, marginOther: 2, usesSpaceAfter: true,
         apostrophe: RerankRule.ApostropheStep(scope: .firstWordOfSpan, score: .modelLessSlipCost, margin: 0.5, prompt: .stock))
 
+    /// The reuse of the model's cache between requests, picked by the rule of
+    /// docs/kv-reuse-design.md (docs/kv-reuse-results.md).
+    nonisolated static let reuse = duo_lm_reuse(mode: DUO_LM_REUSE_PREFIX, slots: 1)
+
+    /// The name of the reuse mode in the report of the language model test.
+    nonisolated static var reuseName: String {
+        switch reuse.mode {
+        case DUO_LM_REUSE_NONE: return "none"
+        case DUO_LM_REUSE_PREFIX: return "prefix"
+        case DUO_LM_REUSE_SHIFT: return "shift"
+        case DUO_LM_REUSE_ANCHOR: return "anchor"
+        default: preconditionFailure("an unknown reuse mode \(reuse.mode.rawValue)")
+        }
+    }
+
     enum State: Equatable {
         case notLoaded
         case loading
@@ -156,6 +178,8 @@ final class KeyboardLanguageModel: CandidateScoring, LanguageModelLoading {
     /// The model file, or nil when the bundle does not hold it.
     let modelPath: String?
     let modelName: String
+    /// The tolerance of the check of the cache, or nil without the check. Only tests set it.
+    let cacheCheckTolerance: Double?
     /// Receives each change of the model on the main thread.
     var onEvent: (LanguageModelEvent) -> Void = { _ in }
 
@@ -165,20 +189,22 @@ final class KeyboardLanguageModel: CandidateScoring, LanguageModelLoading {
     /// buffers for scores exist.
     private(set) var afterFirstScore: ProcessMemory?
 
-    init(modelPath: String?, modelName: String) {
+    init(modelPath: String?, modelName: String, cacheCheckTolerance: Double?) {
         self.modelPath = modelPath
         self.modelName = modelName
+        self.cacheCheckTolerance = cacheCheckTolerance
     }
 
     /// The model file of the bundle. scripts/ci/fetch_language_model.sh downloads it before the build.
-    static func bundled() -> KeyboardLanguageModel {
+    /// The keyboard passes nil: the check of the cache reads every request twice.
+    static func bundled(cacheCheckTolerance: Double?) -> KeyboardLanguageModel {
         let name = BundledLanguageModelTest.modelResource
         return KeyboardLanguageModel(
             modelPath: Bundle(for: KeyboardLanguageModel.self).path(forResource: name, ofType: "gguf"),
-            modelName: name)
+            modelName: name, cacheCheckTolerance: cacheCheckTolerance)
     }
 
-    private nonisolated static func open(path: String?, name: String) -> LanguageModelLoadOutcome {
+    private nonisolated static func open(path: String?, name: String, checkTolerance: Double?) -> LanguageModelLoadOutcome {
         let before = ProcessMemory.now()
         let started = ProcessInfo.processInfo.systemUptime
         guard let path else {
@@ -187,7 +213,8 @@ final class KeyboardLanguageModel: CandidateScoring, LanguageModelLoading {
                 measurement: LanguageModelLoadMeasurement(milliseconds: 0, before: before, after: before))
         }
         do {
-            let scorer = try LanguageModelScorer(modelPath: path, threads: threads)
+            let scorer = try LanguageModelScorer(
+                modelPath: path, threads: threads, reuse: reuse, checkTolerance: checkTolerance)
             let milliseconds = (ProcessInfo.processInfo.systemUptime - started) * 1000
             return LanguageModelLoadOutcome(
                 scorer: scorer, error: nil,
@@ -213,9 +240,10 @@ final class KeyboardLanguageModel: CandidateScoring, LanguageModelLoading {
         state = .loading
         let path = modelPath
         let name = modelName
+        let checkTolerance = cacheCheckTolerance
         // A new thread gets a stack of 512 KB, and llama.cpp gets 2 MB here, as in the test.
         let thread = Thread { @Sendable in
-            let outcome = KeyboardLanguageModel.open(path: path, name: name)
+            let outcome = KeyboardLanguageModel.open(path: path, name: name, checkTolerance: checkTolerance)
             Task { @MainActor in
                 self.finishLoad(outcome, generation: loadGeneration)
             }
@@ -232,7 +260,7 @@ final class KeyboardLanguageModel: CandidateScoring, LanguageModelLoading {
         if state == .ready { return }
         generation += 1
         state = .loading
-        let outcome = Self.open(path: modelPath, name: modelName)
+        let outcome = Self.open(path: modelPath, name: modelName, checkTolerance: cacheCheckTolerance)
         finishLoad(outcome, generation: generation)
         if let error = outcome.error {
             throw LanguageModelError(reason: error)
@@ -323,6 +351,11 @@ final class KeyboardLanguageModel: CandidateScoring, LanguageModelLoading {
             lines.append(
                 "reranker    start token \(info.start_token), \(info.requests) requests, \(info.tokens_read) tokens read, "
                     + "\(info.space_repairs) space and \(info.line_break_repairs) line break tokens put in place of -1")
+            let share = info.window_tokens > 0
+                ? String(format: "%.1f%%", 100 * Double(info.window_tokens_reused) / Double(info.window_tokens)) : "none"
+            lines.append(
+                "reranker    context tokens reused from the cache: \(info.window_tokens_reused) of \(info.window_tokens) "
+                    + "(\(share)), reuse mode \(Self.reuseName), \(Self.reuse.slots) slots")
         }
         if let problem = statistics.lastProblem {
             lines.append("reranker    last problem: \(problem)")

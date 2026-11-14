@@ -7,7 +7,7 @@ name: Language model in the keyboard
 # check. Only the dev half is typed and scored. Every unit test runs as well.
 on:
   push:
-    branches: [engine/lm-keyboard, engine/apostrophe-words, engine/domain-pack, ui/swipe-punctuation, engine/domain-model, ui/space-before-mark]
+    branches: [engine/lm-keyboard, engine/apostrophe-words, engine/domain-pack, ui/swipe-punctuation, engine/domain-model, ui/space-before-mark, engine/kv-reuse]
   workflow_dispatch:
 
 concurrency:
@@ -64,6 +64,26 @@ jobs:
             cat "$out/scorer_cli.log"
           } | tee "$out/scorer-check.txt"
           cmp "$out/lm_score.answers" "$out/scorer_cli.answers"
+      - name: Score the harness requests in order with the keyboard's scorer reusing its cache, against lm_score
+        run: |
+          set -euo pipefail
+          export LD_LIBRARY_PATH="$PWD/build/lm-rerank/llama/lib"
+          out=build/lm-keyboard/harness
+          model="$(cat build/lm-keyboard/model-path.txt)"
+          # The requests in the order of the harness, so each request shares its start with the one
+          # before, as at the space presses of the keyboard. The scorer reuses its cache as the
+          # keyboard does (docs/kv-reuse-design.md), and its check reads every request again from
+          # an empty cache and stops on a difference in any bit.
+          build/lm-keyboard/scorer_cli "$model" 2 prefix check < "$out/requests.tsv" > "$out/scorer_cli_prefix.answers" 2> "$out/scorer_cli_prefix.log"
+          {
+            if cmp -s "$out/lm_score.answers" "$out/scorer_cli_prefix.answers"; then
+              echo "with the reuse of the cache the answers are the same byte for byte, 5 decimals each"
+            else
+              echo "with the reuse of the cache the answers differ in $(diff "$out/lm_score.answers" "$out/scorer_cli_prefix.answers" | grep -c '^<') lines"
+            fi
+            cat "$out/scorer_cli_prefix.log"
+          } | tee "$out/scorer-check-prefix.txt"
+          cmp "$out/lm_score.answers" "$out/scorer_cli_prefix.answers"
       - uses: actions/upload-artifact@v7
         if: always()
         with:
@@ -123,6 +143,24 @@ jobs:
           # A report only on this runner: its i8mm kernels pair the rows of one product, so the
           # split of a batch moves some answers in their last digits. The app's framework holds
           # no i8mm instruction, and the x86 and macOS jobs compare byte for byte.
+      - name: Score the harness requests in order with the keyboard's scorer reusing its cache, as a report
+        run: |
+          set -euo pipefail
+          export LD_LIBRARY_PATH="$PWD/build/lm-rerank/llama/lib"
+          out=build/lm-keyboard/harness
+          model="$(cat build/lm-keyboard/model-path.txt)"
+          build/lm-keyboard/scorer_cli "$model" 2 prefix < "$out/requests.tsv" > "$out/scorer_cli_prefix.answers" 2> "$out/scorer_cli_prefix.log"
+          {
+            for pair in "lm_score scorer_cli_prefix" "scorer_cli scorer_cli_prefix"; do
+              set -- $pair
+              if cmp -s "$out/$1.answers" "$out/$2.answers"; then
+                echo "$1 and $2: the same byte for byte"
+              else
+                echo "$1 and $2: $(diff "$out/$1.answers" "$out/$2.answers" | grep -c '^<') lines differ"
+              fi
+            done
+            cat "$out/scorer_cli_prefix.log"
+          } | tee "$out/scorer-check-prefix.txt"
       - uses: actions/upload-artifact@v7
         if: always()
         with:
@@ -240,6 +278,24 @@ jobs:
             cat "$out/scorer_cli.log"
           } | tee "$out/scorer-check.txt"
           cmp "$out/lm_score.answers" "$out/scorer_cli.answers"
+      - name: Score the harness requests in order with the keyboard's scorer reusing its cache, on this machine
+        if: always()
+        run: |
+          set -euo pipefail
+          out=build/lm-keyboard/harness-mac
+          model=Shared/smollm2-lora-domain-s100-seed1.Q4_K_M.gguf
+          # As in the x86 job: the requests in order, the reuse of the keyboard, and the check that
+          # stops on a difference in any bit from a read from an empty cache.
+          build/lm-keyboard/scorer_cli "$model" 2 prefix check < "$out/requests.tsv" > "$out/scorer_cli_prefix.answers" 2> "$out/scorer_cli_prefix.log"
+          {
+            if cmp -s "$out/lm_score.answers" "$out/scorer_cli_prefix.answers"; then
+              echo "with the reuse of the cache the answers are the same byte for byte, 5 decimals each"
+            else
+              echo "with the reuse of the cache the answers differ in $(diff "$out/lm_score.answers" "$out/scorer_cli_prefix.answers" | grep -c '^<') lines"
+            fi
+            cat "$out/scorer_cli_prefix.log"
+          } | tee "$out/scorer-check-prefix.txt"
+          cmp "$out/lm_score.answers" "$out/scorer_cli_prefix.answers"
       - uses: actions/upload-artifact@v7
         if: always()
         with:

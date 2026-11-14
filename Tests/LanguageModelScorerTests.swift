@@ -10,7 +10,7 @@ final class LanguageModelScorerTests: XCTestCase {
 
     private func model() throws -> KeyboardLanguageModel {
         if let loaded = Self.loaded { return loaded }
-        let model = KeyboardLanguageModel.bundled()
+        let model = KeyboardLanguageModel.bundled(cacheCheckTolerance: nil)
         do {
             try model.loadNow()
         } catch let error as LanguageModelError {
@@ -123,7 +123,7 @@ final class LanguageModelScorerTests: XCTestCase {
     }
 
     func testAMemoryWarningFreesTheModelAndALaterLoadBringsItBack() throws {
-        let model = KeyboardLanguageModel.bundled()
+        let model = KeyboardLanguageModel.bundled(cacheCheckTolerance: nil)
         var events: [LanguageModelEvent] = []
         model.onEvent = { events.append($0) }
         try model.loadNow()

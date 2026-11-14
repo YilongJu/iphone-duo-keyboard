@@ -376,7 +376,7 @@ final class EnglishRerankingTests: XCTestCase {
 
     func testAModelThatDoesNotLoadIsNamedOnTheSpaceBar() {
         makeController(before: "", answer: FakeScorer.favoring("the"))
-        let model = KeyboardLanguageModel(modelPath: "/missing/model.gguf", modelName: "missing")
+        let model = KeyboardLanguageModel(modelPath: "/missing/model.gguf", modelName: "missing", cacheCheckTolerance: nil)
         let controller: KeyboardTextController = self.controller
         model.onEvent = { [weak controller] in controller?.show($0) }
         XCTAssertThrowsError(try model.loadNow()) { error in
@@ -397,7 +397,7 @@ final class EnglishRerankingTests: XCTestCase {
     }
 
     func testAModelFileMissingFromTheBundleIsNamed() {
-        let model = KeyboardLanguageModel(modelPath: nil, modelName: "absent")
+        let model = KeyboardLanguageModel(modelPath: nil, modelName: "absent", cacheCheckTolerance: nil)
         XCTAssertThrowsError(try model.loadNow()) { error in
             XCTAssertEqual(error as? LanguageModelError, LanguageModelError(reason: "absent.gguf is missing from the bundle"))
         }
