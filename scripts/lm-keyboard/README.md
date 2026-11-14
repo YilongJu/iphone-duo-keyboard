@@ -97,6 +97,10 @@ most 31 tokens. `lm_score` runs one call per batch. Both read start token 2.
 
 The local x86 harness gives the same bytes in its 13,928 requests as well.
 
+The keyboard reuses the model's cache between requests (`docs/kv-reuse-design.md`). Two more steps
+of the workflow read the requests in order with that reuse, and `docs/kv-reuse-results.md`,
+Table 7, gives their results. Table 3 is the comparison of full reads.
+
 The scorer gives the calls of a context sizes that differ by one token at most (`call_size`).
 The same rule holds for the calls of the candidates. llama.cpp b4846 computes a call of one
 token with another routine than a call of two or more tokens. On the macOS runner the two

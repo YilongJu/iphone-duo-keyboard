@@ -1,8 +1,8 @@
 # Replay and speed pass of the reuse of the model's cache
 
 These scripts measure the approaches of `docs/kv-reuse-design.md` on the local PC, and
-`docs/kv-reuse-results.md` holds their numbers. The keyboard reuses the cache with the prefix mode
-(approach B), one slot.
+`docs/kv-reuse-results.md` holds their numbers. The keyboard reuses the cache with the anchored
+window and two slots (approach DE).
 
 ## Files
 
@@ -14,7 +14,8 @@ These scripts measure the approaches of `docs/kv-reuse-design.md` on the local P
 | `cache_test.c` | Tests of the cache on Linux, the same cases as `Tests/LanguageModelCacheTests.swift` |
 | `jobs/build.sh` | Builds the engine shim, `kv_replay` and `kv_replay-min1` (calls of one token) |
 | `jobs/accuracy.sh` | One replay per approach, all at once, each at 2 threads, with the check of the cache |
-| `jobs/speed.sh` | The requests of approach A's replay through each approach, one at a time, at 2 threads |
+| `jobs/speed.sh` | The requests of every fourth document of approach A's replay through each approach, one at a time, at 2 threads |
+| `results/summary.json`, `results/tables.md` | The output of `analyze.py` for `docs/kv-reuse-results.md`, from the jobs on an Intel i9-13900K |
 
 ## Steps
 

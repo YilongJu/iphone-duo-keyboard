@@ -3,8 +3,8 @@
 ## Goal
 
 Each space press of an English correction asks the language model to score the engine's readings.
-Today the scorer reads the whole context again at every request. Most presses share a long start of
-text with the press before. This page defines four ways to keep the model's cache between requests.
+Without reuse the scorer reads the whole context again at every request. Most presses share a long
+start of text with the press before. This page defines four ways to keep the model's cache between requests.
 It also defines the replay that measures them and the rule that picks one for the keyboard. The rule
 was written and committed before the accuracy numbers of approaches C, D and E were read.
 
@@ -29,10 +29,10 @@ a faster approach ships only if it keeps the accuracy.
 | fresh read | A full read of the same window and candidates in a second llama.cpp state, for the check. |
 | replay | The typing of the replay documents through the keyboard's rules and the scorer, defined below. |
 
-## How the scorer reads a request today (approach A)
+## Approach A: a full read of every request
 
-`LanguageModel/duo_lm_scorer.c` tokenizes the context and keeps the start token and the last 96
-tokens. It clears the cache. It reads the window in calls of at most 31 tokens, with call sizes that
+Without reuse, `LanguageModel/duo_lm_scorer.c` tokenizes the context and keeps the start token and
+the last 96 tokens. It clears the cache. It reads the window in calls of at most 31 tokens, with call sizes that
 differ by one token at most (`call_size`). It copies sequence 0 to sequences 1 to 8 and reads the
 candidates, one sequence each.
 
@@ -190,7 +190,13 @@ them qualifies, pick B if it qualifies. If nothing qualifies, keep A and report.
 ## Agreement with lm_score
 
 The workflow "Language model in the keyboard" compares `scorer_cli` with `lm_score`, byte for byte.
-It does so on every distinct request of the harness, on the x86 and the macOS runners. That check
-stays as it is, for full reads. A second step runs `scorer_cli` with the chosen reuse mode on the
-same requests in order. Consecutive requests then share their starts. The step compares the answers
-with `lm_score` too.
+It does so on every distinct request of the harness, on the x86 and the macOS runners, for full
+reads. Two more steps read the same requests in order, so consecutive
+requests share their starts:
+
+1. The prefix reuse, with the check against a fresh read, must give the bytes of `lm_score`.
+2. The keyboard's mode, the anchored window with two slots, must give the numbers of a fresh read
+   of its window in every bit. Its answers may differ from `lm_score` only for a request whose
+   context holds more than 96 tokens, because there the anchored window holds other tokens.
+
+On the ARM runner both steps are reports, as the full-read comparison is.
