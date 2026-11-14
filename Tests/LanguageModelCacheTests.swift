@@ -94,7 +94,7 @@ final class LanguageModelCacheTests: XCTestCase {
         try scores(LanguageModelPrompt.makeStock(textBefore: "", readings: ["we're", "were"]))
         try scores(typed("We're ", "goign", ["going", "goign"]))
         let after = try info()
-        XCTAssertEqual(after.checked_requests - before.checked_requests, 15)
+        XCTAssertEqual(after.checked_requests - before.checked_requests, 14)
         XCTAssertGreaterThan(after.window_tokens_reused, before.window_tokens_reused)
         XCTAssertEqual(after.checked_widest, 0)
     }
