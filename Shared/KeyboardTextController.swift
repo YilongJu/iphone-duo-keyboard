@@ -755,15 +755,29 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
     // MARK: Space before a mark
 
     /// Types `text` into the field. A mark after a word and one space takes the place of that
-    /// space (space removal), by the rule of `KeyboardTextLogic.spaceRemoval`. With
-    /// `keepsSpace` the text goes in as typed, because the person just brought the space back.
+    /// space (space removal), by the rule of `KeyboardTextLogic.spaceRemoval`. A letter or a
+    /// digit after an opening quote and one space also takes the place of that space, by the
+    /// rule of `KeyboardTextLogic.removesSpaceAfterOpeningQuote`. With `keepsSpace` the text
+    /// goes in as typed, because the person just brought the space back.
     private func insertWithSpaceRemoval(_ text: String, keepsSpace: Bool) {
         // A typed character replaces a selection of the app, so the delete of the space would
         // delete the selected text.
-        guard !keepsSpace, document.selectedText == nil,
-            let form = KeyboardTextLogic.spaceRemoval(
-                typing: text, before: document.textBeforeCursor, after: document.textAfterCursor,
-                allowsAutocorrection: document.allowsAutocorrection)
+        guard !keepsSpace, document.selectedText == nil else {
+            document.insertText(text)
+            return
+        }
+        // A letter or a digit after an opening quote and one space takes the place of that
+        // space. A delete right after it deletes the letter alone, because the person usually
+        // fixes a typo there and wants the next letter right after the quote too.
+        if KeyboardTextLogic.removesSpaceAfterOpeningQuote(
+            typing: text, before: document.textBeforeCursor, allowsAutocorrection: document.allowsAutocorrection) {
+            document.deleteBackward()
+            document.insertText(text)
+            return
+        }
+        guard let form = KeyboardTextLogic.spaceRemoval(
+            typing: text, before: document.textBeforeCursor, after: document.textAfterCursor,
+            allowsAutocorrection: document.allowsAutocorrection)
         else {
             document.insertText(text)
             return

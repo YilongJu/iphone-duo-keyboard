@@ -151,9 +151,9 @@ enum KeyboardTextLogic {
     ///
     /// A single quote closes a quotation when the paragraph holds an open single quotation. An
     /// opening single quote has the paragraph start, a space, "(", "[", "{" or a double quote
-    /// right before it, and a letter or a digit right after it. A closing single quote has a
-    /// character other than a space before it, and the end or a character other than a letter
-    /// after it. A single quote between two letters is an apostrophe, as in "don't", and does
+    /// right before it, and a letter, a digit or a space right after it. A closing single quote
+    /// has a character other than a space before it, and the end or a character other than a
+    /// letter after it. A single quote between two letters is an apostrophe, as in "don't", and does
     /// not count. A year such as "'90s" looks like an opening quote, and the space restore
     /// after the next digit or letter puts the space back.
     static func closesQuotation(_ quote: Character, before text: Substring) -> Bool {
@@ -167,7 +167,7 @@ enum KeyboardTextLogic {
                 let previous: Character? = index > 0 ? characters[index - 1] : nil
                 let next: Character? = index + 1 < characters.count ? characters[index + 1] : nil
                 let opens = (previous.map { charactersBeforeAnOpeningSingleQuote.contains($0) } ?? true)
-                    && (next.map { isLetterOrDigit($0) } ?? false)
+                    && (next.map { isLetterOrDigit($0) || $0 == " " } ?? false)
                 let closes = (previous.map { $0 != " " } ?? false) && !(next?.isLetter ?? false)
                 if opens {
                     isOpen = true
@@ -178,6 +178,40 @@ enum KeyboardTextLogic {
             return isOpen
         default:
             preconditionFailure("closesQuotation reads only a straight quote, and got \(quote)")
+        }
+    }
+
+    /// The characters that can stand right before a double quote that opens a quotation.
+    static let charactersBeforeAnOpeningDoubleQuote: Set<Character> = [" ", "(", "[", "{"]
+
+    /// True when the typed text `text` takes the place of the one space after an opening
+    /// straight quote: `say "` with one space and a typed "h" give `say "h`.
+    ///
+    /// The rule needs all of these: `text` is one letter or digit, the field allows
+    /// autocorrection, and the text before the cursor ends with an opening quote and exactly
+    /// one space (U+0020). Only the paragraph of the quote counts. A double quote opens a
+    /// quotation when the paragraph start or one of `charactersBeforeAnOpeningDoubleQuote`
+    /// comes right before it, and the paragraph holds an odd count of double quotes, this one
+    /// included. A single quote opens a quotation when the paragraph start or one of
+    /// `charactersBeforeAnOpeningSingleQuote` comes right before it.
+    static func removesSpaceAfterOpeningQuote(
+        typing text: String, before: String, allowsAutocorrection: Bool
+    ) -> Bool {
+        guard allowsAutocorrection, text.count == 1, let typed = text.first, isLetterOrDigit(typed) else {
+            return false
+        }
+        guard before.last == " " else { return false }
+        let quoteParagraph = paragraph(of: before.dropLast())
+        guard let quote = quoteParagraph.last else { return false }
+        let beforeQuote = quoteParagraph.dropLast().last
+        switch quote {
+        case "\"":
+            guard beforeQuote.map({ charactersBeforeAnOpeningDoubleQuote.contains($0) }) ?? true else { return false }
+            return quoteParagraph.filter { $0 == "\"" }.count % 2 == 1
+        case "'":
+            return beforeQuote.map { charactersBeforeAnOpeningSingleQuote.contains($0) } ?? true
+        default:
+            return false
         }
     }
 
