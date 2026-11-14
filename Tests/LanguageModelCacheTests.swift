@@ -196,7 +196,8 @@ final class LanguageModelCacheTests: XCTestCase {
         let lines = model.reportLines(statistics: RerankStatistics())
         let line = try XCTUnwrap(lines.first { $0.contains("context tokens reused from the cache") }, "\(lines)")
         XCTAssertTrue(line.hasPrefix("reranker    "), line)
-        XCTAssertTrue(line.contains("reuse mode prefix, 1 slots"), line)
+        XCTAssertTrue(
+            line.contains("reuse mode \(KeyboardLanguageModel.reuseName), \(KeyboardLanguageModel.reuse.slots) slots"), line)
         XCTAssertTrue(line.contains("%)"), line)
     }
 }

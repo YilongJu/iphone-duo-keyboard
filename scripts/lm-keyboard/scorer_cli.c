@@ -3,17 +3,18 @@
  scripts/lm-rerank/lm_score.c, so both programs can read the same requests on Linux and their
  answers can be compared byte for byte.
 
- Usage: scorer_cli MODEL.gguf THREADS [full] [prefix] [check] < requests > answers
+ Usage: scorer_cli MODEL.gguf THREADS [full] [prefix|shift|anchor] [slots2] [check] < requests > answers
 
  Request line:  context <TAB> candidate 1 <TAB> candidate 2 ...
  Answer line:   log probability 1 <SPACE> space after 1 <TAB> ...
 
  As in lm_score.c, a candidate follows the context after one space, or right after the start
  token when the context is empty, and each number has 5 decimals. With the word "full" each
- number has 17 significant digits instead. Without the word "prefix" the scorer reads every
- request from an empty cache. With it the scorer reuses the cache of the request before
- (DUO_LM_REUSE_PREFIX of duo_lm_scorer.h, one slot). With the word "check" the scorer also reads
- every request again from an empty cache and stops on any difference in the numbers.
+ number has 17 significant digits instead. Without a reuse mode the scorer reads every request
+ from an empty cache. The words "prefix", "shift" and "anchor" give the reuse modes of
+ duo_lm_scorer.h, with one slot, or two slots with the word "slots2". With the word "check" the
+ scorer also reads every request again from an empty cache and stops on any difference in the
+ numbers.
  */
 #define _POSIX_C_SOURCE 200809L
 
@@ -34,6 +35,12 @@ int main(int argc, char **argv) {
             full = 1;
         } else if (strcmp(argv[index], "prefix") == 0) {
             reuse.mode = DUO_LM_REUSE_PREFIX;
+        } else if (strcmp(argv[index], "shift") == 0) {
+            reuse.mode = DUO_LM_REUSE_SHIFT;
+        } else if (strcmp(argv[index], "anchor") == 0) {
+            reuse.mode = DUO_LM_REUSE_ANCHOR;
+        } else if (strcmp(argv[index], "slots2") == 0) {
+            reuse.slots = 2;
         } else if (strcmp(argv[index], "check") == 0) {
             check = 1;
         } else {
@@ -41,7 +48,7 @@ int main(int argc, char **argv) {
         }
     }
     if (!valid) {
-        fprintf(stderr, "usage: scorer_cli MODEL.gguf THREADS [full] [prefix] [check]\n");
+        fprintf(stderr, "usage: scorer_cli MODEL.gguf THREADS [full] [prefix|shift|anchor] [slots2] [check]\n");
         return 2;
     }
     char error[DUO_LM_ERROR_SIZE];
