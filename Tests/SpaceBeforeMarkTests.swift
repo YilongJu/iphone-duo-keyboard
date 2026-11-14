@@ -233,9 +233,11 @@ final class SpaceBeforeMarkTests: XCTestCase {
         ]
         for (text, afterTheMark) in texts {
             makeController(before: "")
-            type(String(text.dropLast()))
+            // The typed text up to its mark is one character longer than the field after the mark.
+            let upToTheMark = String(text.prefix(afterTheMark.count + 1))
+            type(upToTheMark)
             XCTAssertEqual(document.text, afterTheMark, text)
-            type(String(text.suffix(1)))
+            type(String(text.dropFirst(upToTheMark.count)))
             XCTAssertEqual(document.text, text, text)
         }
     }
