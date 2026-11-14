@@ -89,8 +89,12 @@ final class LanguageModelCacheTests: XCTestCase {
         // An empty field.
         try scores(typed("", "helo", ["hello", "helo", "help"]))
         try scores(typed("Hello ", "tehre", ["there", "tehre"]))
+        // The stock prompt of an empty field: a window of the start token alone, which a call of
+        // one token reads, and then a longer window, which reads the start token again.
+        try scores(LanguageModelPrompt.makeStock(textBefore: "", readings: ["we're", "were"]))
+        try scores(typed("We're ", "goign", ["going", "goign"]))
         let after = try info()
-        XCTAssertEqual(after.checked_requests - before.checked_requests, 13)
+        XCTAssertEqual(after.checked_requests - before.checked_requests, 15)
         XCTAssertGreaterThan(after.window_tokens_reused, before.window_tokens_reused)
         XCTAssertEqual(after.checked_widest, 0)
     }
