@@ -57,7 +57,9 @@ The x86 harness of the run is an AMD EPYC 9V74 with AVX-512, on an ubuntu-24.04 
 `compare.py` pins the numbers of this x86 harness. The local x86 harness is the job
 `scripts/lm-domain/jobs/shipped-harness.sh` on an Intel i9-13900K without AVX-512, at the same
 commit. The comparison with the pinned numbers is a report. It reads "different" on a processor
-that computes other last digits, as the Intel i9-13900K does.
+that computes other last digits, as the Intel i9-13900K does. GitHub also runs the ubuntu-24.04
+job on an AMD EPYC 7763 without AVX-512, as in run 43551351295. That runner gives the numbers of
+the local x86 harness, so the comparison reads "different" there too.
 
 The file `smollm2-lora-typed-seed1.Q4_K_M.gguf` at weight 1.0, margins 0, 4 and 2 and lead 4 is
 the reference of `docs/lm-domain-results.md`. On these cases the keyboard got 6,537 of 6,799 and
