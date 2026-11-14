@@ -736,7 +736,7 @@ final class SpaceRemovalRuleTests: XCTestCase {
                     "\(mark)\(next)")
             }
         }
-        XCTAssertEqual(KeyboardTextLogic.emoticonCharacters, Set(")(-'/\|*]"))
+        XCTAssertEqual(KeyboardTextLogic.emoticonCharacters, Set(")(-'/\\|*]"))
     }
 
     func testAnEqualsSignRestoresTheSpaceOfThreeMarks() {
