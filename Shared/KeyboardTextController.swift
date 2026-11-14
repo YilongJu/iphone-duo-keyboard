@@ -186,6 +186,27 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
 
     private var recentWord: RecentWord?
 
+    /// The last space removal: a mark took the place of the one space between a word and the
+    /// mark. The key right after it can restore the space, and one delete right after it brings
+    /// the space back.
+    private struct SpaceRemoval {
+        /// The mark as the field holds it.
+        let mark: String
+        let form: KeyboardTextLogic.SpaceRemovalForm
+        /// The end of the text before the cursor right after the removal. The removal counts
+        /// only while the field still holds this text right before the cursor.
+        let context: String
+
+        /// The text that the removal typed in place of the space.
+        var typed: String { form == .markThenSpace ? mark + " " : mark }
+    }
+
+    private var lastSpaceRemoval: SpaceRemoval?
+
+    /// The end of the text before the cursor right after delete brought a space back. A mark
+    /// typed next at this place keeps the space.
+    private var keptSpaceContext: String?
+
     /// The owner hides the keyboard here.
     var onDismiss: @MainActor () -> Void = {}
 
@@ -318,6 +339,14 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
         if let allText, allText != currentText() {
             setAllText(nil)
         }
+        // A cursor move, a selection or a text change of the app ends the state of the last
+        // space removal.
+        if let removal = lastSpaceRemoval, !cursorSitsRightAfter(removal.context) {
+            lastSpaceRemoval = nil
+        }
+        if let context = keptSpaceContext, !cursorSitsRightAfter(context) {
+            keptSpaceContext = nil
+        }
         updateAutoShift()
     }
 
@@ -404,6 +433,7 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
         setAllText(nil)
         previousInsertWasSpace = false
         recentWord = nil
+        clearSpaceRemoval()
         let typedCharacters = typed.map { [$0] } ?? []
         guard !snapshot.after.isEmpty else {
             // The cursor is at the end of the text, so the delete needs no cursor move.
@@ -454,6 +484,7 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
             withTarget: self, selector: #selector(finishPendingReplacement), object: nil)
         pending = nil
         setAllText(nil)
+        clearSpaceRemoval()
         commitPinyinLetters()
     }
 
@@ -524,6 +555,7 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
         document.insertText(suggestion.corrected + String(repeating: " ", count: spaces))
         lastCorrection = nil
         recentWord = nil
+        clearSpaceRemoval()
         // The fixed sentence is not read again.
         proofreadSentence = suggestion.corrected
         updateAutoShift()
@@ -638,7 +670,8 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
 
     /// Handles a typed character while the keyboard types Chinese.
     /// Returns false when the character should go through the normal typing path.
-    private func handleChineseInput(_ text: String) -> Bool {
+    /// `keepsSpace` is the result of `takeKeptSpace()` for this key.
+    private func handleChineseInput(_ text: String, keepsSpace: Bool) -> Bool {
         if text == "'", !pinyinBuffer.isEmpty {
             // An apostrophe between Pinyin letters forces a syllable break, as in "xi'an".
             if !pinyinBuffer.hasSuffix("'") {
@@ -675,16 +708,16 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
             commitPinyinLetters()
         }
         if let chinese = Self.chinesePunctuation[text] {
-            document.insertText(chinese)
+            insertWithSpaceRemoval(chinese, keepsSpace: keepsSpace)
             return true
         }
         if text == "\"" {
-            document.insertText(doubleQuoteIsOpen ? "\u{201D}" : "\u{201C}")
+            insertWithSpaceRemoval(doubleQuoteIsOpen ? "\u{201D}" : "\u{201C}", keepsSpace: keepsSpace)
             doubleQuoteIsOpen.toggle()
             return true
         }
         if text == "'" {
-            document.insertText(singleQuoteIsOpen ? "\u{2019}" : "\u{2018}")
+            insertWithSpaceRemoval(singleQuoteIsOpen ? "\u{2019}" : "\u{2018}", keepsSpace: keepsSpace)
             singleQuoteIsOpen.toggle()
             return true
         }
@@ -710,16 +743,95 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
     /// Types one character from a key: through the Pinyin buffer while the keyboard types
     /// Chinese, and through the English typing rules otherwise.
     private func typeCharacter(_ text: String) {
-        if chineseMode, handleChineseInput(text) {
+        let keepsSpace = takeKeptSpace()
+        restoreSpace(beforeTyping: text)
+        if chineseMode, handleChineseInput(text, keepsSpace: keepsSpace) {
             updateAutoShift()
             return
         }
-        insert(text)
+        insert(text, keepsSpace: keepsSpace)
+    }
+
+    // MARK: Space before a mark
+
+    /// Types `text` into the field. A mark after a word and one space takes the place of that
+    /// space (space removal), by the rule of `KeyboardTextLogic.spaceRemoval`. With
+    /// `keepsSpace` the text goes in as typed, because the person just brought the space back.
+    private func insertWithSpaceRemoval(_ text: String, keepsSpace: Bool) {
+        // A typed character replaces a selection of the app, so the delete of the space would
+        // delete the selected text.
+        guard !keepsSpace, document.selectedText == nil,
+            let form = KeyboardTextLogic.spaceRemoval(
+                typing: text, before: document.textBeforeCursor, after: document.textAfterCursor,
+                allowsAutocorrection: document.allowsAutocorrection)
+        else {
+            document.insertText(text)
+            return
+        }
+        document.deleteBackward()
+        document.insertText(form == .markThenSpace ? text + " " : text)
+        lastSpaceRemoval = SpaceRemoval(mark: text, form: form, context: recentContext())
+    }
+
+    /// The end of the text before the cursor.
+    private func recentContext() -> String {
+        String(document.textBeforeCursor.suffix(Self.recentContextLength))
+    }
+
+    /// True while the field holds `context` right before the cursor, with no selection of the
+    /// app. A key or a delete acts on a selection first, so it then leaves the space alone.
+    private func cursorSitsRightAfter(_ context: String) -> Bool {
+        document.selectedText == nil && document.textBeforeCursor.hasSuffix(context)
+    }
+
+    /// The last space removal, when the cursor still sits right after its text.
+    /// The call ends the state of that removal, so only the key right after a removal sees it.
+    private func takeSpaceRemoval() -> SpaceRemoval? {
+        defer { lastSpaceRemoval = nil }
+        guard let removal = lastSpaceRemoval, cursorSitsRightAfter(removal.context) else { return nil }
+        return removal
+    }
+
+    /// True when delete brought a space back right before the cursor and no other key came
+    /// since. The call ends that state.
+    private func takeKeptSpace() -> Bool {
+        defer { keptSpaceContext = nil }
+        guard let context = keptSpaceContext else { return false }
+        return cursorSitsRightAfter(context)
+    }
+
+    private func clearSpaceRemoval() {
+        lastSpaceRemoval = nil
+        keptSpaceContext = nil
+    }
+
+    /// Puts the space back in front of the mark of the last space removal (space restore),
+    /// when the typed text `text` shows that the person wanted the space. The field then holds
+    /// the text as typed, as "open ." does before the "e" of ".env".
+    /// A mark in front of a kept space, as in "hello, world", gets no space restore. Chinese
+    /// mode gets none either, because its letters go into the Pinyin buffer.
+    private func restoreSpace(beforeTyping text: String) {
+        guard let removal = takeSpaceRemoval(), !chineseMode, removal.form == .markOnly,
+            KeyboardTextLogic.restoresSpace(beforeMark: removal.mark, typing: text)
+        else { return }
+        deleteBackward(count: removal.mark.count)
+        document.insertText(" " + removal.mark)
+    }
+
+    /// Takes the mark of the last space removal out and brings the space back, when the cursor
+    /// still sits right after that removal. The next mark typed at this place keeps the space.
+    private func undoSpaceRemoval() -> Bool {
+        guard let removal = takeSpaceRemoval() else { return false }
+        deleteBackward(count: removal.typed.count)
+        document.insertText(" ")
+        keptSpaceContext = recentContext()
+        showNotice("Kept the space")
+        return true
     }
 
     // MARK: Typing
 
-    private func insert(_ text: String) {
+    private func insert(_ text: String, keepsSpace: Bool) {
         if text == " ", startLanguageModelTest() {
             updateAutoShift()
             return
@@ -736,8 +848,11 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
             previousInsertWasSpace = false
             recentWord = nil
         } else {
+            // The correction reads the field before a space removal. A comma, period or
+            // semicolon after a space then keeps the word before ready, and a space restore
+            // gives back the same text, so the two words are still read together.
             correctLastWord(beforeTyping: text)
-            document.insertText(text)
+            insertWithSpaceRemoval(text, keepsSpace: keepsSpace)
             previousInsertWasSpace = text == " "
             lastSpaceTime = now
         }
@@ -900,6 +1015,7 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
 
     func keyboardView(_ keyboardView: KeyboardView, didSelectCandidateAt index: Int) {
         defer { proofreadAfterAPause() }
+        clearSpaceRemoval()
         if proofreadSuggestion != nil {
             applyProofreadSuggestion()
             return
@@ -911,6 +1027,7 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
         clearProofreadSuggestion()
         defer { proofreadAfterAPause() }
         guard pending == nil else { return }
+        keptSpaceContext = nil
         if !pinyinBuffer.isEmpty {
             pinyinBuffer.removeLast()
             refreshCandidates()
@@ -921,7 +1038,9 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
             return
         }
         previousInsertWasSpace = false
-        if !undoLastCorrection() {
+        // A mark that ended a word gives a correction and no space removal, so at most one of
+        // the two is there to bring back.
+        if !undoSpaceRemoval(), !undoLastCorrection() {
             document.deleteBackward()
         }
         recentWord = nil
@@ -940,6 +1059,7 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
         previousInsertWasSpace = false
         lastCorrection = nil
         recentWord = nil
+        clearSpaceRemoval()
         document.moveCursor(byUTF16Offset: utf16Offset(forCharacters: offset))
     }
 
@@ -949,6 +1069,7 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
         previousInsertWasSpace = false
         lastCorrection = nil
         recentWord = nil
+        clearSpaceRemoval()
         commitPinyinLetters()
         switch command {
         case .toggleLanguage:

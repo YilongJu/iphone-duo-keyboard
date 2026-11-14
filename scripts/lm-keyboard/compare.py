@@ -72,7 +72,10 @@ GROUPS = ["clean", "letter_slips", "space_slips", "symbol_slips", "clean_symbols
 # docs/apostrophe-words-design.md and the work area "AI and software" of
 # docs/domain-pack-design.md on. scripts/lm-keyboard/README.md names the run. Right cases per
 # group, then all dev cases of english.dev.jsonl and english-symbols.dev.jsonl.
-PUBLISHED = {"engine only": [961, 1943, 1299, 1132, 427, 6079], "with the model": [957, 2052, 1387, 1164, 429, 6538]}
+# The numbers with the model come from the ubuntu-24.04 runner of that run, an AMD EPYC 9V74
+# with AVX-512. llama.cpp computes other last digits on another processor family, and the
+# counts with the model can then differ by a few cases.
+PUBLISHED = {"engine only": [961, 1943, 1299, 1132, 427, 6079], "with the model": [957, 2053, 1388, 1164, 429, 6539]}
 TASKS = ["english", "english-symbols", "english-domain"]
 
 

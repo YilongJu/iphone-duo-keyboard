@@ -474,6 +474,34 @@ final class SpaceBeforeMarkTests: XCTestCase {
         XCTAssertEqual(document.text, "other")
     }
 
+    func testASelectionOfTheAppEndsTheStateOfTheSpaceRemoval() {
+        // Delete acts on the selection. The field in memory deletes one character.
+        makeController(before: "hello ", after: "world")
+        type(",")
+        XCTAssertEqual(document.text, "hello, world")
+        document.selectedText = "world"
+        delete()
+        XCTAssertEqual(document.text, "hello,world")
+        XCTAssertNil(keyboardView.spaceCaption)
+
+        makeController(before: "word ")
+        type(",")
+        document.selectedText = "x"
+        type("o")
+        XCTAssertEqual(document.text, "word,o")
+
+        makeController(before: "word ")
+        type(",")
+        delete()
+        XCTAssertEqual(document.text, "word ")
+        document.selectedText = "x"
+        controller.documentDidChange()
+        document.selectedText = nil
+        controller.documentDidChange()
+        type(",")
+        XCTAssertEqual(document.text, "word,")
+    }
+
     func testDeleteAfterACandidateChoiceIsAPlainDelete() {
         makeChineseController(before: "word ")
         type(",")
@@ -615,5 +643,145 @@ final class SpaceBeforeMarkTests: XCTestCase {
         XCTAssertEqual(document.text, "")
         type("word ,")
         XCTAssertEqual(document.text, "word,")
+    }
+}
+
+/// The pure rules of space removal and space restore in `KeyboardTextLogic`.
+final class SpaceRemovalRuleTests: XCTestCase {
+    private func removal(
+        _ text: String, before: String, after: String = "", allowsAutocorrection: Bool = true
+    ) -> KeyboardTextLogic.SpaceRemovalForm? {
+        KeyboardTextLogic.spaceRemoval(
+            typing: text, before: before, after: after, allowsAutocorrection: allowsAutocorrection)
+    }
+
+    func testTheMarkListHoldsTheClosingFormsAndNoOpeningForm() {
+        XCTAssertEqual(KeyboardTextLogic.asciiMarks, Set(",.?!;:)]}"))
+        XCTAssertEqual(
+            KeyboardTextLogic.chineseMarks,
+            Set("\u{FF0C}\u{3002}\u{FF1F}\u{FF01}\u{FF1B}\u{FF1A}\u{FF09}\u{3001}\u{300B}\u{201D}\u{2019}"))
+        XCTAssertEqual(KeyboardTextLogic.marks.count, 20)
+        for other in "\"'%([{<>-/@#&*=+_~\u{2026}\u{FF08}\u{300A}\u{201C}\u{2018} \n" {
+            XCTAssertFalse(KeyboardTextLogic.marks.contains(other), String(other))
+        }
+    }
+
+    func testEveryMarkAfterAWordAndOneSpaceGetsSpaceRemoval() {
+        for mark in KeyboardTextLogic.marks {
+            XCTAssertEqual(removal(String(mark), before: "word "), .markOnly, String(mark))
+            XCTAssertNil(removal(String(mark), before: "word"), String(mark))
+        }
+    }
+
+    func testTextThatIsNotOneMarkGetsNoSpaceRemoval() {
+        for text in ["\"", "'", "%", "(", "a", "5", " ", "\n", "", ",,", ", ", "\u{FF08}", "\u{201C}", "\u{2018}"] {
+            XCTAssertNil(removal(text, before: "word "), text.debugDescription)
+        }
+    }
+
+    func testTheTextBeforeTheCursorMustEndWithExactlyOneSpace() {
+        for before in ["word  ", "word\t", "word\n", "word\n ", "word\t ", "word \t", " ", "", "word\u{00A0}", "word\u{3000}"] {
+            XCTAssertNil(removal(",", before: before), before.debugDescription)
+        }
+    }
+
+    func testTheCharacterBeforeTheSpaceMustEndAWordOrCloseAGroup() {
+        for before in ["word ", "Word ", "caf\u{00E9} ", "\u{4F60}\u{597D} ", "room 5 ", "x\u{00B2} "] {
+            XCTAssertEqual(removal(",", before: before), .markOnly, before)
+        }
+        for before in ["a) ", "a] ", "a} ", "\"a\" ", "'a' ", "\u{201C}a\u{201D} ", "\u{2018}a\u{2019} "] {
+            XCTAssertEqual(removal(",", before: before), .markOnly, before)
+        }
+        let others = [
+            "( ", "[ ", "{ ", "\u{201C} ", "\u{2018} ", "end. ", "one, ", "what? ", "no! ", "a; ", "a: ", "a - ", "50% ",
+            "ok \u{1F600} ", "1\u{FE0F}\u{20E3} ", "\u{2139}\u{FE0F} ", "a\u{FF09} ", "a\u{3002} ", "a/ ", "a@ ",
+        ]
+        for before in others {
+            XCTAssertNil(removal(",", before: before), before)
+        }
+    }
+
+    func testAFieldWithoutAutocorrectionGetsNoSpaceRemoval() {
+        for mark in KeyboardTextLogic.marks {
+            XCTAssertNil(removal(String(mark), before: "word ", allowsAutocorrection: false), String(mark))
+        }
+    }
+
+    func testALetterOrADigitAfterTheCursorPutsTheSpaceAfterTheMark() {
+        for after in ["world", "World", "2nd", "\u{4E16}\u{754C}", "\u{00E9}t\u{00E9}", "a"] {
+            XCTAssertEqual(removal(",", before: "hello ", after: after), .markThenSpace, after)
+        }
+        for after in ["", " world", "\nworld", "\tworld", ")", ". Then", "\"word\"", "\u{1F600}", "1\u{FE0F}\u{20E3}", "-a"] {
+            XCTAssertEqual(removal(",", before: "hello ", after: after), .markOnly, after.debugDescription)
+        }
+        // The text after the cursor does not start a space removal by itself.
+        XCTAssertNil(removal(",", before: "hello", after: "world"))
+        XCTAssertNil(removal(",", before: "hello  ", after: "world"))
+    }
+
+    func testALetterOrADigitRestoresTheSpaceOfEveryASCIIMark() {
+        for mark in KeyboardTextLogic.asciiMarks {
+            for next in ["a", "Z", "0", "9", "\u{00E9}", "\u{03C0}"] {
+                XCTAssertTrue(KeyboardTextLogic.restoresSpace(beforeMark: String(mark), typing: next), "\(mark)\(next)")
+            }
+        }
+    }
+
+    func testAnEmoticonRestoresTheSpaceOfAColonAndASemicolonOnly() {
+        for next in KeyboardTextLogic.emoticonCharacters {
+            for mark in KeyboardTextLogic.asciiMarks {
+                let expected = mark == ":" || mark == ";" || (mark == "." && next == "/")
+                XCTAssertEqual(
+                    KeyboardTextLogic.restoresSpace(beforeMark: String(mark), typing: String(next)), expected,
+                    "\(mark)\(next)")
+            }
+        }
+        XCTAssertEqual(KeyboardTextLogic.emoticonCharacters, Set(")(-'/\|*]"))
+    }
+
+    func testAnEqualsSignRestoresTheSpaceOfThreeMarks() {
+        for mark in KeyboardTextLogic.asciiMarks {
+            XCTAssertEqual(
+                KeyboardTextLogic.restoresSpace(beforeMark: String(mark), typing: "="), "!:?".contains(mark),
+                String(mark))
+        }
+    }
+
+    func testASlashRestoresTheSpaceOfAPeriod() {
+        XCTAssertTrue(KeyboardTextLogic.restoresSpace(beforeMark: ".", typing: "/"))
+        for mark in [",", "?", "!", ")", "]", "}"] {
+            XCTAssertFalse(KeyboardTextLogic.restoresSpace(beforeMark: mark, typing: "/"), mark)
+        }
+    }
+
+    func testOtherKeysDoNotRestoreTheSpace() {
+        for mark in KeyboardTextLogic.asciiMarks {
+            for next in [" ", "\n", ".", ",", "!", "?", "\"", "%", "@", "#", "}", "\u{1F600}", "", "ab"] {
+                XCTAssertFalse(KeyboardTextLogic.restoresSpace(beforeMark: String(mark), typing: next), "\(mark)\(next)")
+            }
+        }
+        XCTAssertFalse(KeyboardTextLogic.restoresSpace(beforeMark: "", typing: "a"))
+        XCTAssertFalse(KeyboardTextLogic.restoresSpace(beforeMark: "..", typing: "a"))
+    }
+
+    func testAChineseMarkGetsNoSpaceRestoreExceptTheApostropheForm() {
+        for mark in KeyboardTextLogic.chineseMarks where mark != "\u{2019}" {
+            for next in ["a", "5", ")", "=", "/"] {
+                XCTAssertFalse(KeyboardTextLogic.restoresSpace(beforeMark: String(mark), typing: next), "\(mark)\(next)")
+            }
+        }
+        // U+2019 is also the apostrophe of "’90s" and "’n’".
+        XCTAssertTrue(KeyboardTextLogic.restoresSpace(beforeMark: "\u{2019}", typing: "9"))
+        XCTAssertTrue(KeyboardTextLogic.restoresSpace(beforeMark: "\u{2019}", typing: "n"))
+        XCTAssertFalse(KeyboardTextLogic.restoresSpace(beforeMark: "\u{2019}", typing: ")"))
+    }
+
+    func testLetterOrDigit() {
+        for character in "aZ5\u{00E9}\u{4F60}\u{03C0}\u{00BD}" {
+            XCTAssertTrue(KeyboardTextLogic.isLetterOrDigit(character), String(character))
+        }
+        for character in [" ", ".", ")", "\"", "\u{1F600}", "1\u{FE0F}\u{20E3}", "\u{2139}\u{FE0F}", "\n", "_"] as [Character] {
+            XCTAssertFalse(KeyboardTextLogic.isLetterOrDigit(character), String(character))
+        }
     }
 }
