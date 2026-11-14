@@ -5,7 +5,7 @@ name: Keyboard keys
 # workflow "Language model in the keyboard" runs every unit test, and takes more than three hours.
 on:
   push:
-    branches: [ui/swipe-punctuation, engine/domain-model, ui/space-before-mark]
+    branches: [ui/swipe-punctuation, engine/domain-model, ui/space-before-mark, ui/closing-quotes]
     paths:
       - 'Shared/keyboard-layout.json'
       - 'Shared/KeyboardLayout.swift'
