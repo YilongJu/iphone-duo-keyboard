@@ -684,6 +684,13 @@ int duo_lm_scorer_score(duo_lm_scorer *scorer, const char *context, const char *
     if (context[0] != 0) {
         context_count = tokenize(scorer, context, &context_tokens, error, error_size);
         if (context_count < 0) return -1;
+    } else {
+        /* An empty context still gets a buffer, so no step below works with a NULL pointer. */
+        context_tokens = (llama_token *)malloc(sizeof(llama_token));
+        if (context_tokens == NULL) {
+            set_error(error, error_size, "out of memory for the tokens");
+            return -1;
+        }
     }
 
     struct candidate_tokens candidate_tokens;

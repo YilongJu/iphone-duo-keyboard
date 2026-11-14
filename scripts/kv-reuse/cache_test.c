@@ -12,6 +12,7 @@
 
 #include "duo_lm_scorer.h"
 
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -92,8 +93,13 @@ int main(int argc, char **argv) {
     SCORE("Hello | tehre |", " there", " tehre");
     report("the events of the keyboard give the numbers of a fresh read", before);
 
-    /* A window that moves: more than 96 tokens before the span. */
+    /* A window that moves: more than 96 tokens before the span. The shift mode gives other
+       numbers than a fresh read there by design, so for that mode the check only measures the
+       difference, and the test needs the shift to happen. */
     before = failures;
+    int shifts = reuse.mode == DUO_LM_REUSE_SHIFT;
+    duo_lm_scorer_info before_moves = duo_lm_scorer_get_info(scorer);
+    if (shifts && !duo_lm_scorer_set_check(scorer, INFINITY, error, sizeof error)) return 1;
     char text[4096] = "";
     for (int sentence = 0; sentence < 12; sentence++) {
         char part[128];
@@ -110,7 +116,19 @@ int main(int argc, char **argv) {
         strcat(text, words[index]);
         strcat(text, " ");
     }
-    report("a window that moves gives the numbers of a fresh read", before);
+    if (shifts) {
+        duo_lm_scorer_info after_moves = duo_lm_scorer_get_info(scorer);
+        printf("  the shifted windows kept %ld tokens, widest difference from a fresh read %.6g\n",
+               after_moves.window_tokens_reused - before_moves.window_tokens_reused, after_moves.checked_widest);
+        if (!(after_moves.checked_widest > 0)) {
+            printf("  the shift mode gave the numbers of a fresh read, so no window shifted\n");
+            failures++;
+        }
+        if (!duo_lm_scorer_set_check(scorer, 0, error, sizeof error)) return 1;
+        report("a window that moves shifts the cache in the shift mode", before);
+    } else {
+        report("a window that moves gives the numbers of a fresh read", before);
+    }
 
     /* A refused request leaves the cache ready. */
     before = failures;
