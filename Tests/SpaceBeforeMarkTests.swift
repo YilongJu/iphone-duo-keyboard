@@ -683,7 +683,14 @@ final class SpaceBeforeMarkTests: XCTestCase {
             ("(see 'this ')", "(see 'this')"),
             ("\"'no '\"", "\"'no'\""),
             ("she said 'it's fine '", "she said 'it's fine'"),
+            ("say ' hi '", "say 'hi'"),
         ])
+        // An opening single quote may have a space after it.
+        for before in ["she said ' yes ", "' yes ", "(' no ", "\"' no "] {
+            makeController(before: before)
+            type("'")
+            XCTAssertEqual(document.text, String(before.dropLast()) + "'", before)
+        }
     }
 
     func testAStraightSingleQuoteWithoutAnOpenQuotationKeepsTheSpace() {
@@ -695,7 +702,6 @@ final class SpaceBeforeMarkTests: XCTestCase {
             ("I don't know '", "I don't know '"),
             ("it's '", "it's '"),
             ("she said 'yes' and '", "she said 'yes' and '"),
-            ("say ' hi '", "say ' hi '"),
         ])
     }
 
@@ -818,6 +824,140 @@ final class SpaceBeforeMarkTests: XCTestCase {
         makeChineseController(before: "'word ")
         type("'")
         XCTAssertEqual(document.text, "'word \u{2018}")
+    }
+
+    // MARK: The space after an opening quote
+
+    func testALetterOrADigitAfterAnOpeningQuoteAndOneSpaceTakesThePlaceOfTheSpace() {
+        assertTyped([
+            ("\" hello", "\"hello"),
+            ("he said \" hello", "he said \"hello"),
+            ("(\" hi", "(\"hi"),
+            ("[\" hi", "[\"hi"),
+            ("{\" hi", "{\"hi"),
+            ("x \" 5", "x \"5"),
+            ("\" caf\u{00E9}", "\"caf\u{00E9}"),
+            ("\"a\" and \" b", "\"a\" and \"b"),
+            ("' yes", "'yes"),
+            ("she said ' yes", "she said 'yes"),
+            ("(' no", "('no"),
+            ("[' no", "['no"),
+            ("{' no", "{'no"),
+            ("\"' no", "\"'no"),
+            ("in the ' 90s", "in the '90s"),
+        ])
+        // The quote opens the paragraph, after an earlier paragraph.
+        for (before, quote) in [("first line\n", "\""), ("first line\n", "'"), ("\"a\nb ", "\"")] {
+            makeController(before: before)
+            type(quote + " h")
+            XCTAssertEqual(document.text, before + quote + "h", before.debugDescription + quote)
+        }
+    }
+
+    func testTheSpaceAfterAQuoteThatDoesNotOpenAQuotationStays() {
+        // The text before the cursor, and the typed letter.
+        let cases = [
+            ("he said \"hello\" ", "w"), ("\"a \" ", "b"), ("word\" ", "x"), ("a.\" ", "b"), ("x-\" ", "y"),
+            ("5' ", "x"), ("don' ", "t"), ("the dogs' ", "b"), ("a.' ", "b"), ("x-' ", "y"),
+            ("\"a\nb\" ", "c"),
+        ]
+        for (before, letter) in cases {
+            makeController(before: before)
+            type(letter)
+            XCTAssertEqual(document.text, before + letter, before.debugDescription)
+        }
+    }
+
+    func testTheSpaceAfterAnOpeningQuoteStaysBeforeAKeyThatIsNotALetterOrADigit() {
+        for next in ["(", "-", "'", "@", "\u{1F600}", "1\u{FE0F}\u{20E3}", "\n"] {
+            makeController(before: "say \" ")
+            type(next)
+            XCTAssertEqual(document.text, "say \" " + next, next.debugDescription)
+        }
+        // Text of more than one character goes in as typed.
+        makeController(before: "say \" ")
+        controller.keyboardView(keyboardView, insert: "hi")
+        XCTAssertEqual(document.text, "say \" hi")
+    }
+
+    func testTheSpaceAfterAnOpeningQuoteNeedsTheOtherConditionsOfSpaceRemoval() {
+        for before in ["say \"  ", "say \"\t", "say \"\u{00A0}", "say \"\n", "say '  ", "say '\t"] {
+            makeController(before: before)
+            type("h")
+            XCTAssertEqual(document.text, before + "h", before.debugDescription)
+        }
+        for before in ["say \" ", "say ' "] {
+            makeController(before: before)
+            document.allowsAutocorrection = false
+            type("h")
+            XCTAssertEqual(document.text, before + "h", before)
+
+            makeController(before: before)
+            document.selectedText = "x"
+            type("h")
+            XCTAssertEqual(document.text, before + "h", before)
+        }
+    }
+
+    func testDeleteRightAfterTheRemovalOfTheSpaceAfterAnOpeningQuoteDeletesTheLetter() {
+        for quote in ["\"", "'"] {
+            makeController(before: "say " + quote + " ")
+            type("h")
+            XCTAssertEqual(document.text, "say " + quote + "h", quote)
+            delete()
+            XCTAssertEqual(document.text, "say " + quote, quote)
+            XCTAssertNil(keyboardView.spaceCaption, quote)
+            // The next delete is a plain delete too.
+            delete()
+            XCTAssertEqual(document.text, "say ", quote)
+
+            // A typo fix: the next letter also sits right after the quote.
+            makeController(before: "say " + quote + " ")
+            type("h")
+            delete()
+            type("w")
+            XCTAssertEqual(document.text, "say " + quote + "w", quote)
+        }
+    }
+
+    func testAClosingQuoteThatLostItsSpaceDoesNotCountAsAnOpeningQuote() {
+        makeController(before: "")
+        type("he said \"hello \"")
+        XCTAssertEqual(document.text, "he said \"hello\"")
+        type(" ")
+        XCTAssertEqual(document.text, "he said \"hello\" ")
+        type("w")
+        XCTAssertEqual(document.text, "he said \"hello\" w")
+    }
+
+    func testTheRemovalOfTheSpaceAfterAnOpeningQuoteGetsNoSpaceRestore() {
+        assertTyped([
+            ("say \" he", "say \"he"),
+            ("say \" h:", "say \"h:"),
+            ("say \" h ,", "say \"h,"),
+        ])
+    }
+
+    func testASpaceThatDeleteBroughtBackAfterAQuoteStays() {
+        // A comma after a quote and one space loses the space, and delete brings it back.
+        makeController(before: "say \" ")
+        type(",")
+        XCTAssertEqual(document.text, "say \",")
+        delete()
+        XCTAssertEqual(document.text, "say \" ")
+        type("h")
+        XCTAssertEqual(document.text, "say \" h")
+    }
+
+    func testTheSpaceAfterAnOpeningQuoteInChineseMode() {
+        // A digit goes into the field through space removal, as in English mode.
+        makeChineseController(before: "say \" ")
+        type("5")
+        XCTAssertEqual(document.text, "say \"5")
+        // A Pinyin candidate goes into the field without space removal, as after a mark.
+        makeChineseController(before: "say \" ")
+        type("wo ")
+        XCTAssertEqual(document.text, "say \" \u{6211}")
     }
 }
 
@@ -982,14 +1122,14 @@ final class SpaceRemovalRuleTests: XCTestCase {
     func testAStraightSingleQuoteGetsSpaceRemovalWhenTheParagraphHoldsAnOpenQuotation() {
         let open = [
             "she said 'yes ", "'yes ", "('no ", "['no ", "{'no ", "\"'no ", "she said 'it's fine ", "'a' and 'b ",
-            "x 'n' y 'z ", "'5 ", "'caf\u{00E9} ",
+            "x 'n' y 'z ", "'5 ", "'caf\u{00E9} ", "say ' hi ", "she said ' yes ", "' yes ", "(' no ", "\"' no ",
         ]
         for before in open {
             XCTAssertEqual(removal("'", before: before), .markOnly, before.debugDescription)
         }
         let notOpen = [
-            "word ", "the dogs ", "rock 'n' roll ", "I don't know ", "it's ", "she said 'yes' and ", "say ' hi ",
-            "'yes\nno ", "the dogs' bone ", "x'y ", "a.'b ",
+            "word ", "the dogs ", "rock 'n' roll ", "I don't know ", "it's ", "she said 'yes' and ", "say ' ",
+            "' ", "'yes\nno ", "the dogs' bone ", "x'y ", "a.'b ",
         ]
         for before in notOpen {
             XCTAssertNil(removal("'", before: before), before.debugDescription)
