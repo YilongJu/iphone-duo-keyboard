@@ -18,10 +18,13 @@ These scripts measure the approaches of `docs/kv-reuse-design.md` on the local P
 
 ## Steps
 
-Run these from the repository root. The jobs need WSL with the llama.cpp b4846 build of
-`$HOME/lmft/llama` (`scripts/lm-rerank/build_on_linux.sh llama`), the shipped file in `Shared/`
-(`scripts/ci/fetch_language_model.sh model`), and the folder of `cases.stream.select.jsonl` of
-`scripts/lm-domain` (`build/lm-domain/data/everyday`). The outputs go to `$HOME/kvreuse`.
+Run these from the repository root. The jobs need three things in WSL:
+
+- the llama.cpp b4846 build of `$HOME/lmft/llama` (`scripts/lm-rerank/build_on_linux.sh llama`)
+- the shipped file in `Shared/` (`scripts/ci/fetch_language_model.sh model`)
+- the folder of `cases.stream.select.jsonl` of `scripts/lm-domain` (`build/lm-domain/data/everyday`)
+
+The outputs go to `$HOME/kvreuse`.
 
 1. Start the accuracy job detached, so a restart of the session does not stop it:
    `powershell -File scripts/lm-domain/detach.ps1 -Name kv-accuracy -Where wsl -Script scripts/kv-reuse/jobs/accuracy.sh -Arguments "<everyday folder>"`
@@ -41,5 +44,5 @@ gcc -std=c11 -O2 -Wall -Wextra -Werror -I $HOME/lmft/llama/include -I LanguageMo
 LD_LIBRARY_PATH=$HOME/lmft/llama/lib ./cache_test Shared/smollm2-lora-domain-s100-seed1.Q4_K_M.gguf prefix 1
 ```
 
-With the mode `none`, which reads every request from an empty cache as the scorer did before the
-reuse, the two tests of the reuse fail. With `prefix` every test passes.
+The mode `none` reads every request from an empty cache, as the scorer did before the reuse. With
+it the two tests of the reuse fail. With `prefix` every test passes.
