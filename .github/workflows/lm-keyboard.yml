@@ -7,7 +7,7 @@ name: Language model in the keyboard
 # check. Only the dev half is typed and scored. Every unit test runs as well.
 on:
   push:
-    branches: [engine/lm-keyboard, engine/apostrophe-words, engine/domain-pack, ui/swipe-punctuation, engine/domain-model, ui/space-before-mark]
+    branches: [engine/lm-keyboard, engine/apostrophe-words, engine/domain-pack, ui/swipe-punctuation, engine/domain-model, ui/space-before-mark, ui/closing-quotes]
   workflow_dispatch:
 
 concurrency:
