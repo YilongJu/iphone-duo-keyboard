@@ -129,6 +129,69 @@ int main(int argc, char **argv) {
     }
     report("a refused request leaves the cache ready", before);
 
+    /* A window of the start token alone is a call of one token, so the next request reads the
+       start token again. */
+    before = failures;
+    const char *stock[] = {"We're", "Were"};
+    score("", stock, 2, 1);
+    duo_lm_scorer_info alone = duo_lm_scorer_get_info(scorer);
+    SCORE("We're | goign |", " going", " goign");
+    duo_lm_scorer_info after_alone = duo_lm_scorer_get_info(scorer);
+    /* With two slots the request may keep the start token of the other slot's window, which a
+       call of more tokens computed. The check covers that case. */
+    if (reuse.slots == 1 && after_alone.window_tokens_reused != alone.window_tokens_reused) {
+        printf("  %ld window tokens came from the cache after a window of the start token alone, expected 0\n",
+               after_alone.window_tokens_reused - alone.window_tokens_reused);
+        failures++;
+    }
+    report("a window of the start token alone stays out of the cache", before);
+
+    /* Two slots keep the windows of two fields: the field that comes back reuses its window. */
+    if (reuse.slots == 2) {
+        before = failures;
+        SCORE("The quarterly report shows that the sales of the new product grew in every region | lsat |", " last",
+              " lsat");
+        SCORE("Please remember to water the plants on the balcony while I am away next | wekk |", " week", " wekk");
+        duo_lm_scorer_info away = duo_lm_scorer_get_info(scorer);
+        SCORE("The quarterly report shows that the sales of the new product grew in every region last | yaer |",
+              " year", " yaer");
+        duo_lm_scorer_info back = duo_lm_scorer_get_info(scorer);
+        if (!(back.window_tokens_reused - away.window_tokens_reused > 15)) {
+            printf("  %ld window tokens came from the cache for the field that came back, expected more than 15\n",
+                   back.window_tokens_reused - away.window_tokens_reused);
+            failures++;
+        }
+        report("two slots keep the windows of two fields", before);
+    }
+
+    /* A request whose check fails leaves nothing in the cache. Only the shift mode gives numbers
+       that differ from a fresh read, after a window that moved. */
+    if (reuse.mode == DUO_LM_REUSE_SHIFT) {
+        before = failures;
+        char moved[4200];
+        duo_lm_score ignored[2];
+        snprintf(moved, sizeof moved, "%s| againx |", text);
+        const char *again[] = {" again", " againx"};
+        score(moved, again, 2, 1);
+        snprintf(moved, sizeof moved, "%sagain | andx |", text);
+        const char *and_[] = {" and", " andx"};
+        int result = duo_lm_scorer_score(scorer, moved, and_, 2, ignored, error, sizeof error);
+        duo_lm_scorer_info failed = duo_lm_scorer_get_info(scorer);
+        snprintf(moved, sizeof moved, "%sagain and | thenx |", text);
+        const char *then[] = {" then", " thenx"};
+        duo_lm_scorer_score(scorer, moved, then, 2, ignored, error, sizeof error);
+        duo_lm_scorer_info next = duo_lm_scorer_get_info(scorer);
+        if (result != -1) {
+            printf("  the moved window gave %d, expected the -1 of a failed check\n", result);
+            failures++;
+        } else if (next.window_tokens_reused != failed.window_tokens_reused) {
+            printf("  %ld window tokens came from the cache after a failed check, expected 0\n",
+                   next.window_tokens_reused - failed.window_tokens_reused);
+            failures++;
+        }
+        report("a failed check leaves nothing in the cache", before);
+    }
+
     duo_lm_scorer_info info = duo_lm_scorer_get_info(scorer);
     printf("%s, %d slots: %ld requests, %ld checked, widest difference %.17g, %ld of %ld window tokens reused\n",
            argv[2], reuse.slots, info.requests, info.checked_requests, info.checked_widest, info.window_tokens_reused,

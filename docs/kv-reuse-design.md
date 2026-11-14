@@ -85,17 +85,28 @@ window holds 64 to 96 tokens of context where A holds 96.
 
 ### E. Two slots
 
-The scorer keeps two stored windows in sequences 0 and 9. A request takes the slot that keeps the
-most tokens. When no slot keeps more than the start token, the slot that waited longer takes it.
-E combines with B, C or D. Two windows of 97 tokens and eight candidates of 32 tokens take 450
-cells, and `CONTEXT_SIZE` 512 holds them, so the memory of the cache stays the same.
+The scorer keeps two stored windows. A request takes the slot that keeps the most tokens. When no
+slot keeps more than the start token, the slot that waited longer takes it, an empty slot first.
+E combines with B, C or D.
+
+Only one window is in the cache at a time, in sequence 0. The other waits in memory as a copy of
+its keys and values (`llama_state_seq_get_data`). When a request takes the other slot, the scorer
+saves the window in the cache, clears the cache and puts the other window back
+(`llama_state_seq_set_data`). The cells of the window then come first and in the order of their
+positions, as after a full read. llama.cpp b4846 adds up the attention values over the cells in
+the order of the cells, in half precision. Two windows side by side in the cache put a candidate's
+cells before some cells of its window, and that gave numbers up to 0.094 away from a full read in
+`scripts/kv-reuse/cache_test.c`. A saved window of 97 tokens takes about 2.2 MB of memory, and the
+cache keeps its size of 512 cells (`CONTEXT_SIZE`).
 
 ### Calls of one token
 
 llama.cpp b4846 computes a call of one token with other code than a call of two or more tokens, and
 the two give other last bits. With reuse, the new part of a window is often a few tokens. So a
 request with reuse reads at least the last two tokens of its window (`MIN_UNREAD_TOKENS`). Its last
-window call then has two tokens or more, as in a full read. The replay also measures a build with
+window call then has two tokens or more, as in a full read. A window of the start token alone, the
+stock prompt of an empty field, is a call of one token in a full read too, so the slot keeps
+nothing of it. The replay also measures a build with
 `MIN_UNREAD_TOKENS` 1, to show the effect of calls of one token.
 
 A second way is to read the new window tokens and the candidates in one call. That needs calls of
