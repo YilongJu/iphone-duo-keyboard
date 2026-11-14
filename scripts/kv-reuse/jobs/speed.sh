@@ -13,6 +13,12 @@ out="$kv/speed"
 mkdir -p "$out"
 requests="$out/requests.tsv"
 python3 scripts/kv-reuse/analyze.py --kv "$kv" --speed-requests "$out"
+# A finished approach counts only for the same requests: other requests start every approach again.
+sha256sum "$requests" | cut -d ' ' -f 1 > "$out/requests.sha256.new"
+if ! cmp -s "$out/requests.sha256.new" "$out/requests.sha256" 2>/dev/null; then
+  rm -f "$out"/*.done "$out"/*.times "$out"/*.answers "$out"/*.log
+fi
+mv "$out/requests.sha256.new" "$out/requests.sha256"
 run() {
   local name="$1" program="$2" mode="$3" slots="$4"
   if [ -f "$out/$name.done" ]; then echo "kept $name"; return 0; fi
