@@ -67,8 +67,9 @@ enum KeyboardTextLogic {
     // MARK: Space before a mark
 
     /// The ASCII marks. A mark is a punctuation character that follows a word with no space
-    /// between the two. A quotation mark and a percent sign are not marks, because a quotation
-    /// mark after a space usually opens a quotation.
+    /// between the two. A percent sign is not a mark. A straight quotation mark is not in this
+    /// set, because one character opens and closes a quotation. `spaceRemoval` reads it as a
+    /// mark only when it closes a quotation.
     static let asciiMarks: Set<Character> = [",", ".", "?", "!", ";", ":", ")", "]", "}"]
 
     /// The marks that Chinese mode types: the full-width comma, period, question mark,
@@ -112,14 +113,72 @@ enum KeyboardTextLogic {
     /// before that space is a letter, a digit or a closing character. Two spaces, a tab and a
     /// line break before the cursor keep the text as typed. A field without autocorrection
     /// holds text such as code, an address or a number, and it also keeps the text as typed.
+    ///
+    /// A straight quote `"` or `'` is a mark only when it closes a quotation of the paragraph
+    /// before the space, by the rule of `closesQuotation(_:before:)`.
     static func spaceRemoval(
         typing text: String, before: String, after: String, allowsAutocorrection: Bool
     ) -> SpaceRemovalForm? {
-        guard allowsAutocorrection, text.count == 1, let mark = text.first, marks.contains(mark) else { return nil }
+        guard allowsAutocorrection, text.count == 1, let mark = text.first else { return nil }
         guard before.last == " ", let previous = before.dropLast().last else { return nil }
         guard isLetterOrDigit(previous) || closingCharacters.contains(previous) else { return nil }
+        if straightQuotes.contains(mark) {
+            guard closesQuotation(mark, before: before.dropLast()) else { return nil }
+        } else {
+            guard marks.contains(mark) else { return nil }
+        }
         if let next = after.first, isLetterOrDigit(next) { return .markThenSpace }
         return .markOnly
+    }
+
+    /// The straight quotes. The same character opens and closes a quotation, so each one is a
+    /// mark only when it closes a quotation.
+    static let straightQuotes: Set<Character> = ["\"", "'"]
+
+    /// The characters that can stand right before a single quote that opens a quotation.
+    static let charactersBeforeAnOpeningSingleQuote: Set<Character> = [" ", "(", "[", "{", "\""]
+
+    /// The paragraph of `text`: the part after the last line break.
+    static func paragraph(of text: Substring) -> Substring {
+        guard let lastBreak = text.lastIndex(where: { $0.isNewline }) else { return text }
+        return text[text.index(after: lastBreak)...]
+    }
+
+    /// True when the straight quote `quote`, typed after `text` and one space, closes a
+    /// quotation. `text` is the text before that space. Only its paragraph counts.
+    ///
+    /// A double quote closes a quotation when the paragraph holds an odd count of double quotes.
+    ///
+    /// A single quote closes a quotation when the paragraph holds an open single quotation. An
+    /// opening single quote has the paragraph start, a space, "(", "[", "{" or a double quote
+    /// right before it, and a letter or a digit right after it. A closing single quote has a
+    /// character other than a space before it, and the end or a character other than a letter
+    /// after it. A single quote between two letters is an apostrophe, as in "don't", and does
+    /// not count. A year such as "'90s" looks like an opening quote, and the space restore
+    /// after the next digit or letter puts the space back.
+    static func closesQuotation(_ quote: Character, before text: Substring) -> Bool {
+        let characters = Array(paragraph(of: text))
+        switch quote {
+        case "\"":
+            return characters.filter { $0 == "\"" }.count % 2 == 1
+        case "'":
+            var isOpen = false
+            for index in characters.indices where characters[index] == "'" {
+                let previous: Character? = index > 0 ? characters[index - 1] : nil
+                let next: Character? = index + 1 < characters.count ? characters[index + 1] : nil
+                let opens = (previous.map { charactersBeforeAnOpeningSingleQuote.contains($0) } ?? true)
+                    && (next.map { isLetterOrDigit($0) } ?? false)
+                let closes = (previous.map { $0 != " " } ?? false) && !(next?.isLetter ?? false)
+                if opens {
+                    isOpen = true
+                } else if closes {
+                    isOpen = false
+                }
+            }
+            return isOpen
+        default:
+            preconditionFailure("closesQuotation reads only a straight quote, and got \(quote)")
+        }
     }
 
     /// True when the typed text `next`, right after a space removal in front of `mark`, shows
@@ -129,11 +188,15 @@ enum KeyboardTextLogic {
     /// "!important". The mark can also be a slip for the first letter of a word, as in ";ike"
     /// for "like", and autocorrection reads such a word only after a space. The right single
     /// quotation mark U+2019 is also an apostrophe, as in "’90s", so a letter or a digit
-    /// restores its space too. The other cases are an emoticon after a colon or a semicolon,
+    /// restores its space too. A straight quote that lost its space can be a quote that opens a
+    /// quotation, when the count of quotes before it was wrong, so a letter or a digit restores
+    /// its space as well. The other cases are an emoticon after a colon or a semicolon,
     /// an equals sign after "!", ":" or "?", as in "!=", and a slash after a period, as in "./".
     static func restoresSpace(beforeMark mark: String, typing next: String) -> Bool {
         guard mark.count == 1, let mark = mark.first, next.count == 1, let next = next.first else { return false }
-        if isLetterOrDigit(next) { return asciiMarks.contains(mark) || mark == "\u{2019}" }
+        if isLetterOrDigit(next) {
+            return asciiMarks.contains(mark) || straightQuotes.contains(mark) || mark == "\u{2019}"
+        }
         if mark == ":" || mark == ";", emoticonCharacters.contains(next) { return true }
         if mark == "!" || mark == ":" || mark == "?", next == "=" { return true }
         return mark == "." && next == "/"
