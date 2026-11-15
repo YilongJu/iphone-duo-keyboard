@@ -70,7 +70,7 @@ A drift has a direction and an offset in key units:
   symbol key, as "=pw7e" for "plays", goes to the category `drift_onto_symbols`.
 
 The keyboard reads a word for correction only when the word holds one digit or symbol key at
-most (`correctableWord`, `Shared/KeyboardTextLogic.swift:215-264`). That key must be a digit or
+most (`correctableWord`, `Shared/KeyboardTextLogic.swift:227-268`). That key must be a digit or
 "[", or one of "-", ";", "," and "." in front of the word. A word as "=pw7e" never reaches the
 engine. Each `drift_onto_symbols` case records in `keyboard_reads_word` whether the keyboard
 reads it, by the Python copy of the rule (`rerank.correctable_word`).
