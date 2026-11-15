@@ -338,14 +338,17 @@ struct ModelSpeedRun {
         let units: MLComputeUnits = pair.runtime == .coreMLGPU ? .cpuAndGPU : .all
         let before = ProcessMemory.now()
         let started = Self.now()
-        let scorer = try CoreMLSpeedScorer(compiledModel: url, computeUnits: units)
+        // Core ML hands out Objective-C objects that stay alive until their autorelease pool
+        // drains. This thread has no pool of its own, so each step gets one, and the footprint
+        // shows only what the model keeps.
+        let scorer = try autoreleasepool { try CoreMLSpeedScorer(compiledModel: url, computeUnits: units) }
         emitLoad(milliseconds: Self.now() - started, before: before, after: ProcessMemory.now())
         var totals: [Double] = [], candidates: [Double] = [], windows: [Double] = []
         var highest = 0.0, leastAllowed = Double.greatestFiniteMagnitude, agreeing = 0
         var windowTokens = 0, keptTokens = 0
         for (index, request) in requests.enumerated() {
             let requestStarted = Self.now()
-            let result = try scorer.score(request)
+            let result = try autoreleasepool { try scorer.score(request) }
             totals.append(Self.now() - requestStarted)
             windows.append(result.windowMilliseconds)
             candidates.append(result.candidateMilliseconds)
