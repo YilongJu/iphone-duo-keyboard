@@ -25,6 +25,14 @@ on:
         description: Upload the compiled Core ML models to the release model-speed-1
         type: boolean
         default: false
+      models:
+        description: The models of the coreml job, as a JSON list
+        type: string
+        default: '["smollm2-135m", "smollm2-360m", "qwen2.5-0.5b", "qwen3-0.6b-base", "granite-4.0-350m-base"]'
+      coreml_only:
+        description: Run only the coreml job
+        type: boolean
+        default: false
 
 concurrency:
   group: model-speed-${{ github.ref }}
@@ -41,7 +49,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        model: [smollm2-135m, smollm2-360m, qwen2.5-0.5b, qwen3-0.6b-base, granite-4.0-350m-base]
+        model: ${{ fromJSON(inputs.models || '["smollm2-135m", "smollm2-360m", "qwen2.5-0.5b", "qwen3-0.6b-base", "granite-4.0-350m-base"]') }}
     env:
       MODEL: ${{ matrix.model }}
     steps:
@@ -67,17 +75,6 @@ jobs:
               "$out/$MODEL.$weights.mlpackage" --weights "$weights" 2>&1 | grep -v -E 'passes/s|ops/s'
           done
           du -sh "$out"/*.mlpackage
-      - name: Check and time each converted model against llama.cpp's answers at Q8_0
-        run: |
-          set -euo pipefail
-          out=build/model-speed/coreml
-          tokens="Shared/model-speed-tokens.$MODEL.tsv"
-          reference="scripts/model-speed/reference/$MODEL.Q8_0.answers"
-          for run in "int4 cpu" "int4 gpu" "fp16 cpu"; do
-            set -- $run
-            "$RUNNER_TEMP/venv/bin/python" scripts/model-speed/coreml/check_coreml.py "$out/$MODEL.$1.mlpackage" \
-              "$tokens" "$reference" "$out/$MODEL.coreml-$1-$2" --units "$2"
-          done
       - name: Compile the 4-bit model and list its files
         run: |
           set -euo pipefail
@@ -93,6 +90,19 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh release upload model-speed-1 build/model-speed/coreml/assets/* --clobber
+      # The check runs after the upload, so a crash of Core ML in the check does not keep a
+      # compiled model from the release. Python crashed in this check for Qwen2.5 on some runs.
+      - name: Check and time each converted model against llama.cpp's answers at Q8_0
+        run: |
+          set -euo pipefail
+          out=build/model-speed/coreml
+          tokens="Shared/model-speed-tokens.$MODEL.tsv"
+          reference="scripts/model-speed/reference/$MODEL.Q8_0.answers"
+          for run in "int4 cpu" "int4 gpu" "fp16 cpu"; do
+            set -- $run
+            "$RUNNER_TEMP/venv/bin/python" scripts/model-speed/coreml/check_coreml.py "$out/$MODEL.$1.mlpackage" \
+              "$tokens" "$reference" "$out/$MODEL.coreml-$1-$2" --units "$2"
+          done
       - uses: actions/upload-artifact@v7
         if: always()
         with:
@@ -108,6 +118,7 @@ jobs:
 
   llama-mac:
     name: llama.cpp b4846 and b12017 on the runner's processor
+    if: ${{ !inputs.coreml_only }}
     runs-on: xcode-27
     timeout-minutes: 180
     steps:
@@ -150,6 +161,7 @@ jobs:
 
   xcframework:
     name: llama.cpp b12017 for iOS, with ${{ matrix.arch }}
+    if: ${{ !inputs.coreml_only }}
     runs-on: xcode-27
     timeout-minutes: 120
     strategy:
@@ -198,6 +210,7 @@ jobs:
 
   archive:
     name: Archive with signing off, then sign ad hoc with the entitlements
+    if: ${{ !inputs.coreml_only }}
     runs-on: xcode-27
     timeout-minutes: 40
     steps:
