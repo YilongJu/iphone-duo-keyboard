@@ -642,7 +642,7 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
     private func selectCandidate(at index: Int) {
         guard pinyinCandidates.indices.contains(index) else { return }
         let candidate = pinyinCandidates[index]
-        document.insertText(candidate.word)
+        insertCommittedPinyin(candidate.word)
         pinyinEngine.learn(spelling: candidate.spelling, word: candidate.word)
         sessionPicks.append(candidate)
         pinyinBuffer.removeFirst(candidate.consumedLetters)
@@ -663,9 +663,21 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
     private func commitPinyinLetters() {
         sessionPicks = []
         guard !pinyinBuffer.isEmpty else { return }
-        document.insertText(pinyinBuffer)
+        insertCommittedPinyin(pinyinBuffer)
         pinyinBuffer = ""
         refreshCandidates()
+    }
+
+    /// Types committed Pinyin text, a candidate or the typed letters, into the field. Text
+    /// after a curly opening quote and one space takes the place of that space, by the rule of
+    /// `KeyboardTextLogic.removesSpaceAfterOpeningCurlyQuote`. As after a letter in English
+    /// mode, a delete right after it is a plain delete.
+    private func insertCommittedPinyin(_ text: String) {
+        if document.selectedText == nil, KeyboardTextLogic.removesSpaceAfterOpeningCurlyQuote(
+            committing: text, before: document.textBeforeCursor, allowsAutocorrection: document.allowsAutocorrection) {
+            document.deleteBackward()
+        }
+        document.insertText(text)
     }
 
     /// Handles a typed character while the keyboard types Chinese.
@@ -837,6 +849,10 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
     private func undoSpaceRemoval() -> Bool {
         guard let removal = takeSpaceRemoval() else { return false }
         deleteBackward(count: removal.typed.count)
+        // The quote key of Chinese mode types the closing quote that this delete took out
+        // again, as the straight quote of English mode does.
+        if removal.mark == "\u{201D}" { doubleQuoteIsOpen = true }
+        if removal.mark == "\u{2019}" { singleQuoteIsOpen = true }
         document.insertText(" ")
         keptSpaceContext = recentContext()
         showNotice("Kept the space")

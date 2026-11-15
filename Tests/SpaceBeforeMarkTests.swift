@@ -930,6 +930,44 @@ final class SpaceBeforeMarkTests: XCTestCase {
         XCTAssertEqual(document.text, "he said \"hello\" w")
     }
 
+    func testAClosingQuoteThatKeptItsSpaceDoesNotCountAsAnOpeningQuote() {
+        // Delete brings the space back, so the closing single quote keeps its space.
+        makeController(before: "she said 'yes ")
+        type("'")
+        delete()
+        type("'")
+        XCTAssertEqual(document.text, "she said 'yes '")
+        type(" and")
+        XCTAssertEqual(document.text, "she said 'yes ' and")
+        // The same text in the field before the cursor.
+        for before in ["she said 'yes ' ", "'yes ' ", "first\n'yes ' ", "she said 'yes' and 'no ' ", "(' no ' "] {
+            makeController(before: before)
+            type("a")
+            XCTAssertEqual(document.text, before + "a", before.debugDescription)
+        }
+        // A single quote after a closed quotation still opens a quotation, also when the
+        // closing quote kept its space.
+        for before in ["she said 'yes' and ' ", "she said 'yes ' and ' ", "she said ' yes ' and ' "] {
+            makeController(before: before)
+            type("n")
+            XCTAssertEqual(document.text, String(before.dropLast()) + "n", before)
+        }
+        makeController(before: "she said 'yes ' and ")
+        type("'")
+        XCTAssertEqual(document.text, "she said 'yes ' and '")
+        makeController(before: "she said 'yes ' and 'no ")
+        type("'")
+        XCTAssertEqual(document.text, "she said 'yes ' and 'no'")
+        // The count of double quotes already reads a closing double quote that kept its space.
+        makeController(before: "he said \"hello ")
+        type("\"")
+        delete()
+        type("\"")
+        XCTAssertEqual(document.text, "he said \"hello \"")
+        type(" and")
+        XCTAssertEqual(document.text, "he said \"hello \" and")
+    }
+
     func testTheRemovalOfTheSpaceAfterAnOpeningQuoteGetsNoSpaceRestore() {
         assertTyped([
             ("say \" he", "say \"he"),
@@ -958,6 +996,107 @@ final class SpaceBeforeMarkTests: XCTestCase {
         makeChineseController(before: "say \" ")
         type("wo ")
         XCTAssertEqual(document.text, "say \" \u{6211}")
+    }
+
+    // MARK: Curly quotes
+
+    func testALetterOrADigitAfterACurlyOpeningQuoteAndOneSpaceTakesThePlaceOfTheSpace() {
+        // A curly quote has a direction, so no count of quotes decides.
+        for quote in ["\u{201C}", "\u{2018}"] {
+            for before in ["say " + quote + " ", quote + " ", "\u{201C}a\u{201D} " + quote + " ", "x\n" + quote + " "] {
+                for letter in ["h", "5", "\u{00E9}"] {
+                    makeController(before: before)
+                    type(letter)
+                    XCTAssertEqual(document.text, String(before.dropLast()) + letter, before.debugDescription + letter)
+                }
+            }
+        }
+        // The other conditions of the rule stay: one letter or digit, exactly one space, and
+        // autocorrection.
+        for before in ["say \u{201C}  ", "say \u{201C}\t", "say \u{2018}\u{00A0}"] {
+            makeController(before: before)
+            type("h")
+            XCTAssertEqual(document.text, before + "h", before.debugDescription)
+        }
+        makeController(before: "say \u{201C} ")
+        type("(")
+        XCTAssertEqual(document.text, "say \u{201C} (")
+        makeController(before: "say \u{201C} ")
+        document.allowsAutocorrection = false
+        type("h")
+        XCTAssertEqual(document.text, "say \u{201C} h")
+    }
+
+    func testACommittedPinyinCandidateAfterACurlyOpeningQuoteAndOneSpaceTakesThePlaceOfTheSpace() {
+        // The quote key of Chinese mode types the curly quote, and the person types a space.
+        for (key, quote) in [("\"", "\u{201C}"), ("'", "\u{2018}")] {
+            makeChineseController(before: "say ")
+            type(key + " ")
+            XCTAssertEqual(document.text, "say " + quote + " ", key)
+            type("wo ")
+            XCTAssertEqual(document.text, "say " + quote + "\u{6211}", key)
+            // The next candidate goes in after the first one.
+            type("ni ")
+            XCTAssertEqual(document.text, "say " + quote + "\u{6211}\u{4F60}", key)
+        }
+        // A digit key picks a candidate, and a mark commits the best candidate first.
+        makeChineseController(before: "\u{201C} ")
+        type("wo1")
+        XCTAssertEqual(document.text, "\u{201C}\u{6211}")
+        makeChineseController(before: "\u{201C} ")
+        type("wo,")
+        XCTAssertEqual(document.text, "\u{201C}\u{6211}\u{FF0C}")
+        // A line break commits the typed letters, and they take the place of the space too.
+        makeChineseController(before: "\u{2018} ")
+        type("wo\n")
+        XCTAssertEqual(document.text, "\u{2018}wo")
+        // A digit without Pinyin letters goes in through the typing rules.
+        makeChineseController(before: "\u{201C} ")
+        type("5")
+        XCTAssertEqual(document.text, "\u{201C}5")
+        // A space that is not right after the quote stays.
+        makeChineseController(before: "\u{201C}  ")
+        type("wo ")
+        XCTAssertEqual(document.text, "\u{201C}  \u{6211}")
+        makeChineseController(before: "\u{201D} ")
+        type("wo ")
+        XCTAssertEqual(document.text, "\u{201D} \u{6211}")
+        makeChineseController(before: "\u{201C} ")
+        document.allowsAutocorrection = false
+        type("wo ")
+        XCTAssertEqual(document.text, "\u{201C} \u{6211}")
+    }
+
+    func testDeleteAfterACandidateThatTookThePlaceOfTheSpaceIsAPlainDelete() {
+        // As after a letter in English mode, delete deletes the text and not the removal.
+        makeChineseController(before: "say \u{201C} ")
+        type("wo ")
+        XCTAssertEqual(document.text, "say \u{201C}\u{6211}")
+        delete()
+        XCTAssertEqual(document.text, "say \u{201C}")
+        XCTAssertEqual(keyboardView.spaceCaption, "\u{62FC}\u{97F3}")
+        type("ni ")
+        XCTAssertEqual(document.text, "say \u{201C}\u{4F60}")
+    }
+
+    func testDeleteRightAfterACurlyClosingQuoteLostItsSpaceBringsTheSpaceBackAndTheSameQuoteComesNext() {
+        // The quote key of Chinese mode types the closing quote again after delete, as the
+        // straight quote of English mode does.
+        for (key, opening, closing) in [("\"", "\u{201C}", "\u{201D}"), ("'", "\u{2018}", "\u{2019}")] {
+            makeChineseController(before: "")
+            type(key + "wo ")
+            type(" ")
+            type(key)
+            XCTAssertEqual(document.text, opening + "\u{6211}" + closing, key)
+            delete()
+            XCTAssertEqual(document.text, opening + "\u{6211} ", key)
+            XCTAssertEqual(keyboardView.spaceCaption, "Kept the space", key)
+            type(key)
+            XCTAssertEqual(document.text, opening + "\u{6211} " + closing, key)
+            // The quote after that opens a quotation again.
+            type(key)
+            XCTAssertEqual(document.text, opening + "\u{6211} " + closing + opening, key)
+        }
     }
 }
 
