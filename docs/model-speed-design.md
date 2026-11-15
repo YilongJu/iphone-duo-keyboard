@@ -98,7 +98,7 @@ one count per shape, only to keep the counts apart. The fixed form makes the
 scores of the vocabulary in parts of 16,384 tokens, because the Neural Engine takes no axis
 longer than 16,384 ([an optimization guide](https://gist.github.com/antmikinka/715499ae63630575065b22e5cb6ad8dd "A practitioner's guide to the Neural Engine: it loads only tensors with no dimension above 16,384.")).
 The parts hold a second copy of the embedding, so the fixed form is larger than the flexible
-form: 89 MB against 74 MB for SmolLM2-135M at int4. On the requests of the speed test a window
+form: 93 MB against 77 MB for SmolLM2-135M at int4, and 356 MB against 279 MB for Qwen2.5-0.5B. On the requests of the speed test a window
 part reads 5 tokens in the median and 68 at most, and a candidate part 17 in the median and 41
 at most.
 
@@ -191,7 +191,7 @@ sequence of requests as in the keyboard:
    stopped goes on at the next `duo:speed`.
 3. The keyboard has no network code. It reads only the bundle and the shared container.
 
-Why a download: the files of the shortlist hold about 2.4 GB. In the bundle they would make every
+Why a download: the files of the test models hold about 4.2 GB. In the bundle they would make every
 TestFlight build that large. The download keeps the build small, and a person downloads only the
 models to measure.
 
