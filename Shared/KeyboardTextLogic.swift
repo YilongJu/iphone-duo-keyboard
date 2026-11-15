@@ -190,11 +190,36 @@ enum KeyboardTextLogic {
     static let charactersBeforeAnOpeningDoubleQuote: Set<Character> = [" ", "(", "[", "{"]
 
     /// True when the typed text `text` takes the place of the one space after an opening
-    /// straight quote: `say "` with one space and a typed "h" give `say "h`.
+    /// quote: `say "` with one space and a typed "h" give `say "h`.
     ///
     /// The rule needs all of these: `text` is one letter or digit, the field allows
     /// autocorrection, and the text before the cursor ends with an opening quote and exactly
-    /// one space (U+0020). Only the paragraph of the quote counts. A double quote opens a
+    /// one space, by the rule of `endsWithAnOpeningQuoteAndOneSpace`.
+    static func removesSpaceAfterOpeningQuote(
+        typing text: String, before: String, allowsAutocorrection: Bool
+    ) -> Bool {
+        guard allowsAutocorrection, text.count == 1, let typed = text.first, isLetterOrDigit(typed) else {
+            return false
+        }
+        return endsWithAnOpeningQuoteAndOneSpace(before)
+    }
+
+    /// True when the committed Pinyin text `text`, a candidate or the typed letters, takes the
+    /// place of the one space after an opening quote: `“` with one space and the candidate
+    /// "我" give `“我`.
+    ///
+    /// The rule needs all of these: `text` starts with a letter or a digit, the field allows
+    /// autocorrection, and the text before the cursor ends with an opening quote and exactly
+    /// one space, by the rule of `endsWithAnOpeningQuoteAndOneSpace`.
+    static func removesSpaceAfterOpeningQuote(
+        committing text: String, before: String, allowsAutocorrection: Bool
+    ) -> Bool {
+        guard allowsAutocorrection, let first = text.first, isLetterOrDigit(first) else { return false }
+        return endsWithAnOpeningQuoteAndOneSpace(before)
+    }
+
+    /// True when `before` ends with a quote that opens a quotation and exactly one space
+    /// (U+0020). Only the paragraph of the quote counts. A double quote opens a
     /// quotation when the paragraph start or one of `charactersBeforeAnOpeningDoubleQuote`
     /// comes right before it, and the paragraph holds an odd count of double quotes, this one
     /// included. A single quote opens a quotation when the paragraph start or one of
@@ -202,12 +227,7 @@ enum KeyboardTextLogic {
     /// open single quotation by the rule of `closesQuotation`. That rule reads the text before
     /// the quote, without its last space, so a closing quote that kept its space stays closing.
     /// A curly quote of `openingCurlyQuotes` always opens a quotation.
-    static func removesSpaceAfterOpeningQuote(
-        typing text: String, before: String, allowsAutocorrection: Bool
-    ) -> Bool {
-        guard allowsAutocorrection, text.count == 1, let typed = text.first, isLetterOrDigit(typed) else {
-            return false
-        }
+    static func endsWithAnOpeningQuoteAndOneSpace(_ before: String) -> Bool {
         guard before.last == " " else { return false }
         let quoteParagraph = paragraph(of: before.dropLast())
         guard let quote = quoteParagraph.last else { return false }
@@ -231,21 +251,6 @@ enum KeyboardTextLogic {
     /// The curly quotes that open a quotation. A curly quote has a direction, so the rules
     /// read no count of quotes for them.
     static let openingCurlyQuotes: Set<Character> = ["\u{201C}", "\u{2018}"]
-
-    /// True when the committed Pinyin text `text`, a candidate or the typed letters, takes the
-    /// place of the one space after a curly opening quote: `“` with one space and the
-    /// candidate "我" give `“我`.
-    ///
-    /// The rule needs all of these: `text` starts with a letter or a digit, the field allows
-    /// autocorrection, and the text before the cursor ends with a curly opening quote and
-    /// exactly one space (U+0020).
-    static func removesSpaceAfterOpeningCurlyQuote(
-        committing text: String, before: String, allowsAutocorrection: Bool
-    ) -> Bool {
-        guard allowsAutocorrection, let first = text.first, isLetterOrDigit(first) else { return false }
-        guard before.last == " ", let quote = before.dropLast().last else { return false }
-        return openingCurlyQuotes.contains(quote)
-    }
 
     /// True when the typed text `next`, right after a space removal in front of `mark`, shows
     /// that the person wanted the space. The keyboard then puts the space back (space restore).

@@ -669,11 +669,11 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
     }
 
     /// Types committed Pinyin text, a candidate or the typed letters, into the field. Text
-    /// after a curly opening quote and one space takes the place of that space, by the rule of
-    /// `KeyboardTextLogic.removesSpaceAfterOpeningCurlyQuote`. As after a letter in English
-    /// mode, a delete right after it is a plain delete.
+    /// after an opening quote and one space takes the place of that space, by the rule of
+    /// `KeyboardTextLogic.removesSpaceAfterOpeningQuote(committing:)`. As after a letter in
+    /// English mode, a delete right after it is a plain delete.
     private func insertCommittedPinyin(_ text: String) {
-        if document.selectedText == nil, KeyboardTextLogic.removesSpaceAfterOpeningCurlyQuote(
+        if document.selectedText == nil, KeyboardTextLogic.removesSpaceAfterOpeningQuote(
             committing: text, before: document.textBeforeCursor, allowsAutocorrection: document.allowsAutocorrection) {
             document.deleteBackward()
         }
