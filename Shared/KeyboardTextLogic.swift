@@ -196,6 +196,7 @@ enum KeyboardTextLogic {
     /// `charactersBeforeAnOpeningSingleQuote` comes right before it, and it does not close an
     /// open single quotation by the rule of `closesQuotation`. That rule reads the text before
     /// the quote, without its last space, so a closing quote that kept its space stays closing.
+    /// A curly quote of `openingCurlyQuotes` always opens a quotation.
     static func removesSpaceAfterOpeningQuote(
         typing text: String, before: String, allowsAutocorrection: Bool
     ) -> Bool {
@@ -215,9 +216,30 @@ enum KeyboardTextLogic {
             // A closing quote that kept its space, as in "'yes '", does not open a quotation.
             let textBeforeQuote = quoteParagraph.dropLast()
             return !closesQuotation("'", before: textBeforeQuote.last == " " ? textBeforeQuote.dropLast() : textBeforeQuote)
+        case _ where openingCurlyQuotes.contains(quote):
+            return true
         default:
             return false
         }
+    }
+
+    /// The curly quotes that open a quotation. A curly quote has a direction, so the rules
+    /// read no count of quotes for them.
+    static let openingCurlyQuotes: Set<Character> = ["\u{201C}", "\u{2018}"]
+
+    /// True when the committed Pinyin text `text`, a candidate or the typed letters, takes the
+    /// place of the one space after a curly opening quote: `“` with one space and the
+    /// candidate "我" give `“我`.
+    ///
+    /// The rule needs all of these: `text` starts with a letter or a digit, the field allows
+    /// autocorrection, and the text before the cursor ends with a curly opening quote and
+    /// exactly one space (U+0020).
+    static func removesSpaceAfterOpeningCurlyQuote(
+        committing text: String, before: String, allowsAutocorrection: Bool
+    ) -> Bool {
+        guard allowsAutocorrection, let first = text.first, isLetterOrDigit(first) else { return false }
+        guard before.last == " ", let quote = before.dropLast().last else { return false }
+        return openingCurlyQuotes.contains(quote)
     }
 
     /// True when the typed text `next`, right after a space removal in front of `mark`, shows
