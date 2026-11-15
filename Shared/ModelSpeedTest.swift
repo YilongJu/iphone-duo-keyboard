@@ -56,7 +56,11 @@ final class ModelSpeedTest: LanguageModelMeasuring {
             Self.logger.log("\(line, privacy: .public)")
             continuation.yield(line)
         }
-        emit("test        speed of the language models, \(Self.requestCount()) requests per pair")
+        do {
+            emit("test        speed of the language models, \(try ModelSpeedRun.textRequests().count) requests per pair")
+        } catch {
+            emit("test        speed of the language models, the requests did not load: \(error)")
+        }
         for line in keyboardLines?() ?? [] { emit(line) }
         onRunStart?()
         let folder = modelsFolder ?? ModelSpeedCatalog.sharedFolder()
@@ -82,10 +86,6 @@ final class ModelSpeedTest: LanguageModelMeasuring {
         thread.qualityOfService = .userInitiated
         thread.start()
         return stream
-    }
-
-    nonisolated static func requestCount() -> Int {
-        (try? ModelSpeedRun.textRequests().count) ?? 0
     }
 }
 
