@@ -50,7 +50,7 @@ to run it has the number of today's model beside the others.
 
 | Way | Where it runs | Reuse | Note |
 | --- | --- | --- | --- |
-| llama.cpp b4846, processor | the app's framework, 2 threads | yes | Today's way. b4846 cannot load Qwen3 or Granite 4.0, which came later. |
+| llama.cpp b4846, processor | the app's framework, 2 threads | yes | Today's way. b4846 has no architecture "qwen3", so it cannot load Qwen3. The attention-only Granite 4.0 converts to the architecture "granite", which b4846 loads. |
 | llama.cpp b4846, Metal | the app's framework, every layer on the GPU | yes | The framework holds the Metal code with its library source, so Metal compiles its kernels at the first load. |
 | llama.cpp b4846, Metal without residency | as above, with `GGML_METAL_NO_RESIDENCY=1` | yes | Checks whether the residency set of llama.cpp raises the footprint. |
 | Core ML, CPU and GPU | a stateful Core ML model of `scripts/model-speed/coreml` | yes | Every model of the shortlist. |

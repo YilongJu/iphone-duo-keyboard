@@ -23,9 +23,10 @@ import sys
 
 RELEASE = "model-speed-1"
 BASE = f"https://github.com/YilongJu/iphone-duo-keyboard/releases/download/{RELEASE}/"
-# The models of the shortlist that llama.cpp b4846, the app's framework, loads. Qwen3 and
-# Granite 4.0 came after b4846.
-LLAMA_ON_PHONE = ("smollm2-360m", "qwen2.5-0.5b")
+# The models of the shortlist that llama.cpp b4846, the app's framework, loads. b4846 has no
+# architecture "qwen3". The attention-only Granite 4.0 converts to the architecture "granite",
+# which b4846 has.
+LLAMA_ON_PHONE = ("smollm2-360m", "qwen2.5-0.5b", "granite-4.0-350m-base")
 TITLES = {
     "smollm2-135m": "SmolLM2-135M",
     "smollm2-360m": "SmolLM2-360M",

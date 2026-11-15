@@ -4,7 +4,7 @@
 #   WORK_DIR holds bin/speed_cli-b4846, bin/speed_cli-b12017 and gguf/*.gguf of the release.
 # Each run reads the 486 requests of Shared/model-speed-requests.tsv at 2 threads, as on the
 # desktop (scripts/model-speed/desktop/jobs/speed.sh). A run that fails writes its reason into
-# its .log file and the others go on: llama.cpp b4846 cannot load Qwen3 or Granite 4.0, and the
+# its .log file and the others go on: llama.cpp b4846 cannot load Qwen3, and the
 # GPU of the runner is a paravirtual device.
 set -euo pipefail
 work="$1"
