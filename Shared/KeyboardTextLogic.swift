@@ -153,7 +153,9 @@ enum KeyboardTextLogic {
     /// opening single quote has the paragraph start, a space, "(", "[", "{" or a double quote
     /// right before it, and a letter, a digit or a space right after it. A closing single quote
     /// has a character other than a space before it, and the end or a character other than a
-    /// letter after it. A single quote between two letters is an apostrophe, as in "don't", and does
+    /// letter after it. A single quote with a space on each side closes an open quotation, as
+    /// a closing quote that kept its space does, and opens one otherwise, as in "' yes". A
+    /// single quote between two letters is an apostrophe, as in "don't", and does
     /// not count. A year such as "'90s" looks like an opening quote, and the space restore
     /// after the next digit or letter puts the space back.
     static func closesQuotation(_ quote: Character, before text: Substring) -> Bool {
@@ -169,7 +171,10 @@ enum KeyboardTextLogic {
                 let opens = (previous.map { charactersBeforeAnOpeningSingleQuote.contains($0) } ?? true)
                     && (next.map { isLetterOrDigit($0) || $0 == " " } ?? false)
                 let closes = (previous.map { $0 != " " } ?? false) && !(next?.isLetter ?? false)
-                if opens {
+                if isOpen, previous == " ", next == " " {
+                    // A closing quote that kept its space, as in "'yes ' and".
+                    isOpen = false
+                } else if opens {
                     isOpen = true
                 } else if closes {
                     isOpen = false
