@@ -1,16 +1,18 @@
 {
   "seed": "typo-set-pinyin-20261114",
   "pool": {
-    "clauses": 52752,
-    "removed_existing_cases": 1291,
-    "dev": 26063,
-    "test": 25398
+    "clauses": 48799,
+    "uncertain_reading": 3954,
+    "removed_existing_cases": 2917,
+    "removed_other_half": 4697,
+    "dev": 20884,
+    "test": 20301
   },
   "halves": {
     "dev": {
-      "cases": 2222,
+      "cases": 2678,
       "categories": {
-        "pinyin_clean": 1102,
+        "pinyin_clean": 1318,
         "pinyin_neighbor": 150,
         "pinyin_omitted": 100,
         "pinyin_added": 100,
@@ -21,18 +23,26 @@
         "pinyin_fuzzy_c_ch": 50,
         "pinyin_fuzzy_s_sh": 50,
         "pinyin_fuzzy_n_l": 50,
+        "pinyin_fuzzy_f_h": 50,
+        "pinyin_fuzzy_r_l": 50,
         "pinyin_fuzzy_an_ang": 50,
+        "pinyin_fuzzy_ian_iang": 50,
+        "pinyin_fuzzy_uan_uang": 50,
         "pinyin_fuzzy_en_eng": 50,
         "pinyin_fuzzy_in_ing": 50,
-        "pinyin_split_apostrophe": 60,
-        "pinyin_split_plain": 60
+        "pinyin_fuzzy_u_v": 50,
+        "pinyin_fuzzy_and_neighbor": 50,
+        "pinyin_split_apostrophe": 60
       },
-      "shortfalls": {}
+      "shortfalls": {},
+      "skipped_as_a_repeated_case": 0,
+      "clean_cases_whose_longest_first_cut_differs": 93,
+      "slip_cases_whose_typed_letters_parse_exactly": 807
     },
     "test": {
-      "cases": 2215,
+      "cases": 2671,
       "categories": {
-        "pinyin_clean": 1095,
+        "pinyin_clean": 1311,
         "pinyin_neighbor": 150,
         "pinyin_omitted": 100,
         "pinyin_added": 100,
@@ -43,13 +53,21 @@
         "pinyin_fuzzy_c_ch": 50,
         "pinyin_fuzzy_s_sh": 50,
         "pinyin_fuzzy_n_l": 50,
+        "pinyin_fuzzy_f_h": 50,
+        "pinyin_fuzzy_r_l": 50,
         "pinyin_fuzzy_an_ang": 50,
+        "pinyin_fuzzy_ian_iang": 50,
+        "pinyin_fuzzy_uan_uang": 50,
         "pinyin_fuzzy_en_eng": 50,
         "pinyin_fuzzy_in_ing": 50,
-        "pinyin_split_apostrophe": 60,
-        "pinyin_split_plain": 60
+        "pinyin_fuzzy_u_v": 50,
+        "pinyin_fuzzy_and_neighbor": 50,
+        "pinyin_split_apostrophe": 60
       },
-      "shortfalls": {}
+      "shortfalls": {},
+      "skipped_as_a_repeated_case": 1,
+      "clean_cases_whose_longest_first_cut_differs": 91,
+      "slip_cases_whose_typed_letters_parse_exactly": 805
     }
   }
 }

@@ -4,56 +4,174 @@
     "files": {
       "lm-domain/everyday/cases.train.jsonl": {
         "sha256": "fe4eb1cbb7361a6b44729a8d7e5e512e7579ae3a3e21a6febda3e4d2437e3a14",
-        "cases": 107145
+        "cases": 107145,
+        "role": "model"
       },
       "lm-domain/everyday/cases2.train.jsonl": {
         "sha256": "fa5e8aba3343e9e3c70a381c9279b6c918a14553b16ee03d5983989eb0d76daf",
-        "cases": 11599
+        "cases": 11599,
+        "role": "model"
       },
       "lm-domain/everyday/cases.stop.jsonl": {
         "sha256": "730492e63c08539bae3792aee55a68b01c8217f128489f30f7baf5a0fc6fbcc7",
-        "cases": 6740
+        "cases": 6740,
+        "role": "model"
       },
       "lm-domain/everyday/cases2.stop.jsonl": {
         "sha256": "842cad14314965ec82ca3a17c35853274eb334c084808810649553a29641678b",
-        "cases": 712
+        "cases": 712,
+        "role": "model"
       },
       "lm-domain/everyday/cases.tune.jsonl": {
         "sha256": "59c2fe27a7a5078ca4b9185f3d5deeb2eb0823febdf921117a55402224d18efd",
-        "cases": 6748
+        "cases": 6748,
+        "role": "model"
       },
       "lm-domain/everyday/cases.stream.tune.jsonl": {
         "sha256": "a0a29066eef5a59932efe539a4bb52f351056e33c6654c22f4a7994c7b75ff59",
-        "cases": 1300
+        "cases": 1300,
+        "role": "model"
+      },
+      "lm-domain/everyday/cases.stream.select.jsonl": {
+        "sha256": "2d25e0b8c0109818ab739846965c383c2bc19e669ed0947de676dc878afb8f35",
+        "cases": 1300,
+        "role": "model"
+      },
+      "lm-domain/everyday/cases.github.select.jsonl": {
+        "sha256": "b5f6e56f1b00083566142fa4f94a2a655e3666e6d279a462f46d5d4a08f720ba",
+        "cases": 2500,
+        "role": "model"
+      },
+      "lm-domain/everyday/published.dev.jsonl": {
+        "sha256": "6a6f5abc522e98059122c5633f22be18333450c18e6424aaae1ac435a38b0817",
+        "cases": 751,
+        "role": "model"
       },
       "lm-domain/domain/cases.train.jsonl": {
         "sha256": "609c15312741e73806a759d9bbd9a3e7e18d47132c1693b1d69547b273ec36af",
-        "cases": 35727
+        "cases": 35727,
+        "role": "model"
       },
       "lm-domain/domain/cases.stop.jsonl": {
         "sha256": "ad0fd7810d35784b42b0ed0f2dc8a094a7de1d5fed9da5083870bd21ec8bd5a2",
-        "cases": 2042
+        "cases": 2042,
+        "role": "model"
+      },
+      "lm-domain/confirm-holdout/cases.birkbeck.confirm.jsonl": {
+        "sha256": "c6417d9cf35bebd462f9f35440def57e14fc0df463205715f6a0458133d99e82",
+        "cases": 600,
+        "role": "decision"
+      },
+      "lm-domain/confirm-holdout/cases.domain-stream.confirm.jsonl": {
+        "sha256": "f892589f24926f03c5c43f196e869b8dc5cd3af36bb7273bc550f7028705b3a7",
+        "cases": 1300,
+        "role": "decision"
+      },
+      "lm-domain/confirm-holdout/cases.domain.confirm.jsonl": {
+        "sha256": "980ec235e485fe2103ed9014ab0f0178dcf753941330d8a65d8af57c07d080a2",
+        "cases": 4480,
+        "role": "decision"
+      },
+      "lm-domain/confirm-holdout/cases.generated.confirm.jsonl": {
+        "sha256": "9d86dc662c5935d71c5c6e86f566fa7cbe81e46779fee6388866cd0bab15c9c3",
+        "cases": 6709,
+        "role": "decision"
+      },
+      "lm-domain/confirm-holdout/cases.github.confirm.jsonl": {
+        "sha256": "36a2f3c7fc21fbf62bd6ef6a9a3d8dd588ae727c15529d756e5647ccb5a3469c",
+        "cases": 1500,
+        "role": "decision"
+      },
+      "lm-domain/confirm-holdout/cases.real-word.confirm.jsonl": {
+        "sha256": "48dd3efd7fd4ac79b9c546bd4834fb8c45476e0834c23b8b0812c6aa546bf9e2",
+        "cases": 375,
+        "role": "decision"
+      },
+      "lm-domain/confirm-holdout/cases.stream.confirm.jsonl": {
+        "sha256": "daf96297dd04c48f87e50970da87031ba7554f604eb78e45ca99d3022517a7dc",
+        "cases": 4000,
+        "role": "decision"
+      },
+      "lm-domain/fresh-holdout/cases.birkbeck.fresh.jsonl": {
+        "sha256": "ef17868c95b9413c2dc34666e42eb4a3adfe2ca0d5367244852e38d3da3c2da0",
+        "cases": 600,
+        "role": "decision"
+      },
+      "lm-domain/fresh-holdout/cases.domain-stream.fresh.jsonl": {
+        "sha256": "be13462dc1955256c4cd566ab7163b000165c7d78a7e1c206ee2f2a45201397f",
+        "cases": 1300,
+        "role": "decision"
+      },
+      "lm-domain/fresh-holdout/cases.domain.fresh.jsonl": {
+        "sha256": "eaea090e59e33f80815348ac03a8dd02cb07a45eb124a0ae0394943d128ce02a",
+        "cases": 4611,
+        "role": "decision"
+      },
+      "lm-domain/fresh-holdout/cases.generated.fresh.jsonl": {
+        "sha256": "a007ba5a778de100428b7eb0a514d2e26c712fc64e0e413be0afd13ef1f361ab",
+        "cases": 6727,
+        "role": "decision"
+      },
+      "lm-domain/fresh-holdout/cases.github.fresh.jsonl": {
+        "sha256": "b8d2271fbd7881b51a25979d4d19f34eb46dbd8683d87bbd1a647ef4582d7b58",
+        "cases": 1958,
+        "role": "decision"
+      },
+      "lm-domain/fresh-holdout/cases.stream.fresh.jsonl": {
+        "sha256": "f98d881ab55565096cb66684637ec25406bdb88df2f7241a4980710d3f3f3a25",
+        "cases": 4000,
+        "role": "decision"
+      },
+      "lm-finetune2/cases.generated.holdout.jsonl": {
+        "sha256": "f139f6ac86ff0a6d287616fcc90d8d469a926ce02ace993e80ec5cb8a41c9a20",
+        "cases": 6745,
+        "role": "decision"
+      },
+      "lm-finetune2/cases.github.holdout.jsonl": {
+        "sha256": "155e480fd160c1f1ec734459ce512e23cc9bc0dc07a152beef87de514fd09cf1",
+        "cases": 2500,
+        "role": "decision"
+      },
+      "lm-finetune2/cases.mitton-remainder.holdout.jsonl": {
+        "sha256": "ab7a32e824e916033e0ecde199ce132e20cde2040520619fb672ee85db0cc935",
+        "cases": 721,
+        "role": "decision"
+      },
+      "lm-finetune2/cases.stream.holdout.jsonl": {
+        "sha256": "f2f793fb76ff97c450bbc6dd3968199e170ed10262cdef9cb89f9092a6382426",
+        "cases": 4000,
+        "role": "decision"
       },
       "lm-finetune2/pairs.wikipedia.train.jsonl": {
         "sha256": "65d5e585771aadb339b91925c2dd9403a97ca130609156cc3cd9887c0a5e9bf0",
-        "pairs": 1600
+        "pairs": 1600,
+        "role": "model pairs"
       }
     },
-    "tatoeba_sources": 123497,
-    "texts": 227512,
-    "pairs": 69955
+    "model_tatoeba_sources": 124797,
+    "model_texts": 231480,
+    "decision_tatoeba_sources": 32178,
+    "decision_texts": 59828,
+    "pairs": 72505
   },
   "tatoeba_export_sha256": "3b5b3ecfcac5037b09f81ef048fa16fedc4d24838db5b6fbeedca1dfab374cbf",
   "pool": {
     "passing_filter": 1631487,
-    "removed_training": 120891,
-    "removed_existing_cases": 19111,
-    "dev": 746979,
-    "test": 744506
+    "removed_existing_cases": 17302,
+    "removed_model_one_word": 120401,
+    "removed_decision_source": 23562,
+    "removed_decision_one_word": 16439,
+    "removed_model_source": 120501,
+    "removed_model_text": 1367,
+    "removed_decision_text": 118,
+    "dev": 666888,
+    "test": 664909
   },
+  "rounds": 5,
   "halves": {
     "dev": {
-      "cases": 2583,
+      "cases": 3147,
+      "capitals_cases": 747,
       "categories": {
         "drift_full_left": 60,
         "drift_partial_left": 60,
@@ -63,15 +181,22 @@
         "drift_partial_up": 60,
         "drift_full_down": 60,
         "drift_partial_down": 60,
+        "drift_end_two": 60,
         "drift_phrase": 60,
+        "drift_run_on": 60,
+        "drift_onto_symbols": 60,
         "short_word_neighbor": 150,
         "short_word_transposition": 100,
-        "short_word_listed": 150,
+        "short_word_listed": 147,
+        "short_word_listed_next": 147,
         "apostrophe_missing": 200,
+        "letter_neighbor": 120,
         "letter_omitted": 120,
         "letter_added": 120,
         "letter_doubled": 120,
         "letters_swapped": 120,
+        "drift_then_slip": 60,
+        "drift_and_omission": 60,
         "space_missing_common": 120,
         "space_extra": 120,
         "punctuation_after_slip": 120,
@@ -82,16 +207,32 @@
         "ambiguous_apostrophe_correct": 140
       },
       "shortfalls": {
+        "short_word_listed": {
+          "wanted": 150,
+          "made": 147
+        },
+        "short_word_listed_next": {
+          "wanted": 150,
+          "made": 147
+        },
         "ambiguous_apostrophe_keep shell/she'll": {
           "wanted": 20,
           "made": 13
         }
       },
-      "skipped_as_dev_cases": 0,
-      "slip_cases_whose_first_word_pair_a_training_case_holds": 838
+      "skipped": {
+        "start kept by the other half": 425,
+        "start is language-model text": 48,
+        "same case in this half": 33,
+        "rival word and no words around it": 25
+      },
+      "starts_given_to_the_other_half": 120,
+      "slip_cases_with_a_rival_word": 312,
+      "slip_cases_whose_first_word_pair_a_training_case_holds": 1052
     },
     "test": {
-      "cases": 2582,
+      "cases": 3144,
+      "capitals_cases": 744,
       "categories": {
         "drift_full_left": 60,
         "drift_partial_left": 60,
@@ -101,32 +242,54 @@
         "drift_partial_up": 60,
         "drift_full_down": 60,
         "drift_partial_down": 60,
+        "drift_end_two": 60,
         "drift_phrase": 60,
+        "drift_run_on": 60,
+        "drift_onto_symbols": 60,
         "short_word_neighbor": 150,
         "short_word_transposition": 100,
-        "short_word_listed": 150,
+        "short_word_listed": 147,
+        "short_word_listed_next": 147,
         "apostrophe_missing": 200,
+        "letter_neighbor": 120,
         "letter_omitted": 120,
         "letter_added": 120,
         "letter_doubled": 120,
         "letters_swapped": 120,
+        "drift_then_slip": 60,
+        "drift_and_omission": 60,
         "space_missing_common": 120,
         "space_extra": 120,
         "punctuation_after_slip": 120,
         "keep_near_common": 150,
         "keep_clean_short": 120,
         "keep_clean_punctuation": 80,
-        "ambiguous_apostrophe_keep": 112,
+        "ambiguous_apostrophe_keep": 110,
         "ambiguous_apostrophe_correct": 140
       },
       "shortfalls": {
+        "short_word_listed": {
+          "wanted": 150,
+          "made": 147
+        },
+        "short_word_listed_next": {
+          "wanted": 150,
+          "made": 147
+        },
         "ambiguous_apostrophe_keep shell/she'll": {
           "wanted": 20,
-          "made": 12
+          "made": 10
         }
       },
-      "skipped_as_dev_cases": 178,
-      "slip_cases_whose_first_word_pair_a_training_case_holds": 812
+      "skipped": {
+        "start kept by the other half": 384,
+        "start is language-model text": 43,
+        "same case in this half": 33,
+        "rival word and no words around it": 15
+      },
+      "starts_given_to_the_other_half": 108,
+      "slip_cases_with_a_rival_word": 308,
+      "slip_cases_whose_first_word_pair_a_training_case_holds": 1010
     }
   }
 }

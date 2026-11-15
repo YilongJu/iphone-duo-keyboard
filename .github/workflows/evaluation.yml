@@ -1,8 +1,8 @@
 name: Typing evaluation
 
 # Scores the Duo typing engine (Engine/duo_engine.c) on the typing test cases, on a Linux runner.
-# The steps after the first upload score the typo set of scripts/typing-evaluation/typo-set with
-# the engine alone, as new reports. They do not change the steps before them.
+# The job "Typo set, engine alone" scores the typo set of scripts/typing-evaluation/typo-set with
+# the engine alone, as new reports. It does not change the job before it.
 # Start it by hand, optionally with engine settings to try:
 #   gh workflow run "Typing evaluation" -f english_settings="margin_known=4 missing_space=4.5"
 on:
@@ -70,11 +70,20 @@ jobs:
           name: typing-evaluation-duo-engine
           path: build/typing-evaluation/duo-engine
           if-no-files-found: error
-      - name: Build the engine shim for the typo set
+
+  typo-set:
+    name: Typo set, engine alone
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - name: Build the engine's command-line program and the engine shim
         run: |
           set -euo pipefail
-          mkdir -p build/lm-rerank
-          gcc -std=c11 -O2 -Wall -Wextra -Werror -shared -fPIC -I Engine Engine/duo_engine.c scripts/lm-rerank/engine_shim.c             -lm -o build/lm-rerank/libduo_shim.so
+          mkdir -p build/engine build/lm-rerank
+          gcc -std=c11 -O2 -Wall -Wextra -Werror Engine/duo_engine.c Engine/duo_cli.c -lm -o build/engine/duo_cli
+          gcc -std=c11 -O2 -Wall -Wextra -Werror -shared -fPIC -I Engine Engine/duo_engine.c scripts/lm-rerank/engine_shim.c \
+            -lm -o build/lm-rerank/libduo_shim.so
       - name: Keep the real typing-error data between runs
         uses: actions/cache@v4
         with:
@@ -83,7 +92,8 @@ jobs:
       - name: Build the typo-set cases from real typing errors
         run: |
           set -euo pipefail
-          python3 -m pip install --quiet --break-system-packages gdown pypinyin zipfile-deflate64
+          python3 -m pip install --quiet --break-system-packages wordfreq==3.1.1 gdown==6.5.1 pypinyin==0.55.0 \
+            jieba==0.42.1 zipfile-deflate64==0.2.0
           bash scripts/typing-evaluation/typo-set/fetch_real_data.sh
           python3 scripts/typing-evaluation/typo-set/build_real_typos.py
       - name: Score the engine alone on the typo set
@@ -91,12 +101,48 @@ jobs:
           set -euo pipefail
           halves="${{ github.event.inputs.halves || 'dev' }}"
           for half in $halves; do
-            python3 scripts/typing-evaluation/typo-set/run_typos.py --shim build/lm-rerank/libduo_shim.so               --cli build/engine/duo_cli --half "$half" --out build/typo-set/engine
+            python3 scripts/typing-evaluation/typo-set/run_typos.py --shim build/lm-rerank/libduo_shim.so \
+              --cli build/engine/duo_cli --half "$half" --out build/typo-set/engine
           done
           cp build/typo-set/cases/typo-set-real-report.json build/typo-set/engine/
           cat build/typo-set/engine/*.summary.md >> "$GITHUB_STEP_SUMMARY"
+      - name: Remove the texts of the real-data cases, whose licences do not allow redistribution
+        run: python3 scripts/typing-evaluation/typo-set/redact_real.py --folder build/typo-set/engine --cases build/typo-set/cases
       - uses: actions/upload-artifact@v7
         with:
           name: typo-set-duo-engine
           path: build/typo-set/engine
+          if-no-files-found: error
+
+  typo-unchanged:
+    name: Typo set, the existing outputs against the reference run of the build 44 code
+    # The reference run 43577930323 typed commit 29b7427, the code of build 44. The check is for
+    # the branch of the typo set only.
+    if: github.ref == 'refs/heads/eval/typo-set'
+    needs: duo-engine
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      actions: read
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v7
+        with:
+          name: typing-evaluation-duo-engine
+          path: build/typo-set/unchanged/this/typing-evaluation-duo-engine
+      - name: Compare every existing output case by case
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh run download 43577930323 --repo "${{ github.repository }}" -D build/typo-set/unchanged/reference
+          python3 scripts/typing-evaluation/typo-set/check_unchanged.py --reference build/typo-set/unchanged/reference \
+            --other build/typo-set/unchanged/this --out build/typo-set/unchanged/report.md
+          cat build/typo-set/unchanged/report.md >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: typo-unchanged
+          path: build/typo-set/unchanged/report.md
           if-no-files-found: error

@@ -7,7 +7,11 @@ that the keyboard changed shows as a change. A Pinyin slip case with a `twin` al
 among the cases whose clean twin is right.
 
 Strata: the layout of the slip, whether the case types more words after the slip word
-(`follow`), the drift direction, and the pair of an apostrophe case.
+(`follow`), the drift direction, the pair of an apostrophe case, whether a word one slip from
+the typed word is at least as common as the intended word (`rival`), whether the keyboard reads
+a drifted word with a digit or symbol key (`keyboard_reads_word`), whether the typed letters of
+a Pinyin slip parse as standard syllables (`typed_parses_exactly`), and whether the
+longest-first cut of a clean Pinyin clause gives other syllables (`longest_first_cut_differs`).
 
 Usage:
     python3 scripts/typing-evaluation/typo-set/score_typos.py --task english --cases FILE [FILE ...] \
@@ -22,7 +26,10 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent))
 from score import edit_distance, normalize  # noqa: E402
 
-STRATA = ("layout", "follow", "direction", "pair")
+STRATA = ("layout", "follow", "direction", "pair", "rival", "keyboard_reads_word", "typed_parses_exactly",
+          "longest_first_cut_differs")
+# Strata that every case of a file has, present or not: the field's presence is the value.
+PRESENCE_STRATA = {"rival"}
 
 
 def read_jsonl(path: Path) -> list[dict]:
@@ -69,11 +76,17 @@ def score(task: str, cases: list[dict], outputs: dict[str, str]) -> dict:
     for field in STRATA:
         values: dict[str, list] = {}
         for row in rows.values():
-            if field in row["case"]:
+            if field in PRESENCE_STRATA:
+                if row["case"]["expected"] != "correct" or not any(field in r["case"] for r in rows.values()):
+                    continue
+                value = "a rival word" if field in row["case"] else "no rival word"
+            elif field in row["case"]:
                 value = row["case"][field]
                 if field == "follow":
                     value = "next words typed" if value else "slip word alone"
-                values.setdefault(str(value), []).append(row)
+            else:
+                continue
+            values.setdefault(str(value), []).append(row)
         if values:
             summary["strata"][field] = {k: tally(v) for k, v in sorted(values.items())}
     return summary

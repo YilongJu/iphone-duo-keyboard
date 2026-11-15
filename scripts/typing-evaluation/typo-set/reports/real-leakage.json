@@ -3,50 +3,995 @@
     "files": {
       "lm-domain/everyday/cases.train.jsonl": {
         "sha256": "fe4eb1cbb7361a6b44729a8d7e5e512e7579ae3a3e21a6febda3e4d2437e3a14",
-        "cases": 107145
+        "cases": 107145,
+        "role": "model"
       },
       "lm-domain/everyday/cases2.train.jsonl": {
         "sha256": "fa5e8aba3343e9e3c70a381c9279b6c918a14553b16ee03d5983989eb0d76daf",
-        "cases": 11599
+        "cases": 11599,
+        "role": "model"
       },
       "lm-domain/everyday/cases.stop.jsonl": {
         "sha256": "730492e63c08539bae3792aee55a68b01c8217f128489f30f7baf5a0fc6fbcc7",
-        "cases": 6740
+        "cases": 6740,
+        "role": "model"
       },
       "lm-domain/everyday/cases2.stop.jsonl": {
         "sha256": "842cad14314965ec82ca3a17c35853274eb334c084808810649553a29641678b",
-        "cases": 712
+        "cases": 712,
+        "role": "model"
       },
       "lm-domain/everyday/cases.tune.jsonl": {
         "sha256": "59c2fe27a7a5078ca4b9185f3d5deeb2eb0823febdf921117a55402224d18efd",
-        "cases": 6748
+        "cases": 6748,
+        "role": "model"
       },
       "lm-domain/everyday/cases.stream.tune.jsonl": {
         "sha256": "a0a29066eef5a59932efe539a4bb52f351056e33c6654c22f4a7994c7b75ff59",
-        "cases": 1300
+        "cases": 1300,
+        "role": "model"
+      },
+      "lm-domain/everyday/cases.stream.select.jsonl": {
+        "sha256": "2d25e0b8c0109818ab739846965c383c2bc19e669ed0947de676dc878afb8f35",
+        "cases": 1300,
+        "role": "model"
+      },
+      "lm-domain/everyday/cases.github.select.jsonl": {
+        "sha256": "b5f6e56f1b00083566142fa4f94a2a655e3666e6d279a462f46d5d4a08f720ba",
+        "cases": 2500,
+        "role": "model"
+      },
+      "lm-domain/everyday/published.dev.jsonl": {
+        "sha256": "6a6f5abc522e98059122c5633f22be18333450c18e6424aaae1ac435a38b0817",
+        "cases": 751,
+        "role": "model"
       },
       "lm-domain/domain/cases.train.jsonl": {
         "sha256": "609c15312741e73806a759d9bbd9a3e7e18d47132c1693b1d69547b273ec36af",
-        "cases": 35727
+        "cases": 35727,
+        "role": "model"
       },
       "lm-domain/domain/cases.stop.jsonl": {
         "sha256": "ad0fd7810d35784b42b0ed0f2dc8a094a7de1d5fed9da5083870bd21ec8bd5a2",
-        "cases": 2042
+        "cases": 2042,
+        "role": "model"
+      },
+      "lm-domain/confirm-holdout/cases.birkbeck.confirm.jsonl": {
+        "sha256": "c6417d9cf35bebd462f9f35440def57e14fc0df463205715f6a0458133d99e82",
+        "cases": 600,
+        "role": "decision"
+      },
+      "lm-domain/confirm-holdout/cases.domain-stream.confirm.jsonl": {
+        "sha256": "f892589f24926f03c5c43f196e869b8dc5cd3af36bb7273bc550f7028705b3a7",
+        "cases": 1300,
+        "role": "decision"
+      },
+      "lm-domain/confirm-holdout/cases.domain.confirm.jsonl": {
+        "sha256": "980ec235e485fe2103ed9014ab0f0178dcf753941330d8a65d8af57c07d080a2",
+        "cases": 4480,
+        "role": "decision"
+      },
+      "lm-domain/confirm-holdout/cases.generated.confirm.jsonl": {
+        "sha256": "9d86dc662c5935d71c5c6e86f566fa7cbe81e46779fee6388866cd0bab15c9c3",
+        "cases": 6709,
+        "role": "decision"
+      },
+      "lm-domain/confirm-holdout/cases.github.confirm.jsonl": {
+        "sha256": "36a2f3c7fc21fbf62bd6ef6a9a3d8dd588ae727c15529d756e5647ccb5a3469c",
+        "cases": 1500,
+        "role": "decision"
+      },
+      "lm-domain/confirm-holdout/cases.real-word.confirm.jsonl": {
+        "sha256": "48dd3efd7fd4ac79b9c546bd4834fb8c45476e0834c23b8b0812c6aa546bf9e2",
+        "cases": 375,
+        "role": "decision"
+      },
+      "lm-domain/confirm-holdout/cases.stream.confirm.jsonl": {
+        "sha256": "daf96297dd04c48f87e50970da87031ba7554f604eb78e45ca99d3022517a7dc",
+        "cases": 4000,
+        "role": "decision"
+      },
+      "lm-domain/fresh-holdout/cases.birkbeck.fresh.jsonl": {
+        "sha256": "ef17868c95b9413c2dc34666e42eb4a3adfe2ca0d5367244852e38d3da3c2da0",
+        "cases": 600,
+        "role": "decision"
+      },
+      "lm-domain/fresh-holdout/cases.domain-stream.fresh.jsonl": {
+        "sha256": "be13462dc1955256c4cd566ab7163b000165c7d78a7e1c206ee2f2a45201397f",
+        "cases": 1300,
+        "role": "decision"
+      },
+      "lm-domain/fresh-holdout/cases.domain.fresh.jsonl": {
+        "sha256": "eaea090e59e33f80815348ac03a8dd02cb07a45eb124a0ae0394943d128ce02a",
+        "cases": 4611,
+        "role": "decision"
+      },
+      "lm-domain/fresh-holdout/cases.generated.fresh.jsonl": {
+        "sha256": "a007ba5a778de100428b7eb0a514d2e26c712fc64e0e413be0afd13ef1f361ab",
+        "cases": 6727,
+        "role": "decision"
+      },
+      "lm-domain/fresh-holdout/cases.github.fresh.jsonl": {
+        "sha256": "b8d2271fbd7881b51a25979d4d19f34eb46dbd8683d87bbd1a647ef4582d7b58",
+        "cases": 1958,
+        "role": "decision"
+      },
+      "lm-domain/fresh-holdout/cases.stream.fresh.jsonl": {
+        "sha256": "f98d881ab55565096cb66684637ec25406bdb88df2f7241a4980710d3f3f3a25",
+        "cases": 4000,
+        "role": "decision"
+      },
+      "lm-finetune2/cases.generated.holdout.jsonl": {
+        "sha256": "f139f6ac86ff0a6d287616fcc90d8d469a926ce02ace993e80ec5cb8a41c9a20",
+        "cases": 6745,
+        "role": "decision"
+      },
+      "lm-finetune2/cases.github.holdout.jsonl": {
+        "sha256": "155e480fd160c1f1ec734459ce512e23cc9bc0dc07a152beef87de514fd09cf1",
+        "cases": 2500,
+        "role": "decision"
+      },
+      "lm-finetune2/cases.mitton-remainder.holdout.jsonl": {
+        "sha256": "ab7a32e824e916033e0ecde199ce132e20cde2040520619fb672ee85db0cc935",
+        "cases": 721,
+        "role": "decision"
+      },
+      "lm-finetune2/cases.stream.holdout.jsonl": {
+        "sha256": "f2f793fb76ff97c450bbc6dd3968199e170ed10262cdef9cb89f9092a6382426",
+        "cases": 4000,
+        "role": "decision"
       },
       "lm-finetune2/pairs.wikipedia.train.jsonl": {
         "sha256": "65d5e585771aadb339b91925c2dd9403a97ca130609156cc3cd9887c0a5e9bf0",
-        "pairs": 1600
+        "pairs": 1600,
+        "role": "model pairs"
       }
     },
-    "tatoeba_sources": 123497,
-    "texts": 227512,
-    "pairs": 69955
+    "model_tatoeba_sources": 124797,
+    "model_texts": 231480,
+    "decision_tatoeba_sources": 32178,
+    "decision_texts": 59828,
+    "pairs": 72505
   },
   "aalto_sentences": 1525,
   "aalto_sentence_ids": [
+    50,
+    140,
+    196,
+    220,
+    256,
+    264,
+    266,
+    280,
     305,
+    327,
     348,
+    380,
+    449,
+    459,
+    468,
+    501,
+    551,
     562,
-    791
+    601,
+    628,
+    644,
+    760,
+    784,
+    791,
+    809,
+    811,
+    818,
+    821,
+    835,
+    842,
+    848,
+    858,
+    859,
+    860,
+    863,
+    869,
+    881,
+    912,
+    922,
+    930,
+    935,
+    940,
+    941,
+    943,
+    946,
+    956,
+    972,
+    995,
+    1034,
+    1035,
+    1039,
+    1043,
+    1046,
+    1048,
+    1068,
+    1083,
+    1088,
+    1101,
+    1105,
+    1106,
+    1114,
+    1116,
+    1122,
+    1177,
+    1489
+  ],
+  "aalto_sentence_reasons": {
+    "50": "model one word",
+    "140": "model one word",
+    "196": "model one word",
+    "220": "model one word",
+    "256": "model one word",
+    "264": "model one word",
+    "266": "model one word",
+    "280": "model one word",
+    "305": "model text",
+    "327": "model one word",
+    "348": "model text",
+    "380": "model one word",
+    "449": "decision one word",
+    "459": "model one word",
+    "468": "model one word",
+    "501": "model one word",
+    "551": "model one word",
+    "562": "model text",
+    "601": "model one word",
+    "628": "model one word",
+    "644": "model one word",
+    "760": "decision one word",
+    "784": "model one word",
+    "791": "model text",
+    "809": "model one word",
+    "811": "model one word",
+    "818": "model one word",
+    "821": "model one word",
+    "835": "model one word",
+    "842": "model one word",
+    "848": "model one word",
+    "858": "model one word",
+    "859": "model one word",
+    "860": "model one word",
+    "863": "model one word",
+    "869": "model one word",
+    "881": "model one word",
+    "912": "model one word",
+    "922": "model one word",
+    "930": "model one word",
+    "935": "model one word",
+    "940": "model one word",
+    "941": "decision one word",
+    "943": "model one word",
+    "946": "model one word",
+    "956": "decision one word",
+    "972": "model one word",
+    "995": "decision one word",
+    "1034": "model one word",
+    "1035": "model one word",
+    "1039": "model one word",
+    "1043": "model one word",
+    "1046": "model one word",
+    "1048": "model one word",
+    "1068": "model one word",
+    "1083": "model one word",
+    "1088": "model one word",
+    "1101": "model one word",
+    "1105": "model one word",
+    "1106": "model one word",
+    "1114": "model one word",
+    "1116": "model one word",
+    "1122": "model one word",
+    "1177": "model one word",
+    "1489": "model one word"
+  },
+  "aalto_model_starts": [
+    [
+      18,
+      2
+    ],
+    [
+      27,
+      2
+    ],
+    [
+      30,
+      2
+    ],
+    [
+      31,
+      2
+    ],
+    [
+      43,
+      2
+    ],
+    [
+      44,
+      2
+    ],
+    [
+      50,
+      2
+    ],
+    [
+      55,
+      2
+    ],
+    [
+      76,
+      3
+    ],
+    [
+      82,
+      2
+    ],
+    [
+      105,
+      2
+    ],
+    [
+      110,
+      2
+    ],
+    [
+      132,
+      2
+    ],
+    [
+      132,
+      3
+    ],
+    [
+      136,
+      2
+    ],
+    [
+      140,
+      2
+    ],
+    [
+      148,
+      2
+    ],
+    [
+      151,
+      2
+    ],
+    [
+      153,
+      2
+    ],
+    [
+      153,
+      3
+    ],
+    [
+      153,
+      4
+    ],
+    [
+      157,
+      2
+    ],
+    [
+      165,
+      2
+    ],
+    [
+      171,
+      2
+    ],
+    [
+      182,
+      2
+    ],
+    [
+      183,
+      2
+    ],
+    [
+      251,
+      2
+    ],
+    [
+      255,
+      2
+    ],
+    [
+      264,
+      2
+    ],
+    [
+      277,
+      2
+    ],
+    [
+      282,
+      2
+    ],
+    [
+      305,
+      2
+    ],
+    [
+      305,
+      3
+    ],
+    [
+      306,
+      2
+    ],
+    [
+      307,
+      2
+    ],
+    [
+      308,
+      2
+    ],
+    [
+      313,
+      2
+    ],
+    [
+      313,
+      3
+    ],
+    [
+      337,
+      2
+    ],
+    [
+      338,
+      2
+    ],
+    [
+      346,
+      2
+    ],
+    [
+      348,
+      3
+    ],
+    [
+      367,
+      2
+    ],
+    [
+      380,
+      2
+    ],
+    [
+      389,
+      2
+    ],
+    [
+      404,
+      2
+    ],
+    [
+      414,
+      2
+    ],
+    [
+      416,
+      2
+    ],
+    [
+      429,
+      2
+    ],
+    [
+      438,
+      2
+    ],
+    [
+      438,
+      3
+    ],
+    [
+      441,
+      2
+    ],
+    [
+      451,
+      2
+    ],
+    [
+      459,
+      2
+    ],
+    [
+      459,
+      3
+    ],
+    [
+      468,
+      2
+    ],
+    [
+      470,
+      3
+    ],
+    [
+      477,
+      2
+    ],
+    [
+      484,
+      3
+    ],
+    [
+      492,
+      2
+    ],
+    [
+      499,
+      2
+    ],
+    [
+      501,
+      2
+    ],
+    [
+      503,
+      2
+    ],
+    [
+      514,
+      2
+    ],
+    [
+      514,
+      3
+    ],
+    [
+      523,
+      2
+    ],
+    [
+      524,
+      2
+    ],
+    [
+      533,
+      2
+    ],
+    [
+      550,
+      2
+    ],
+    [
+      554,
+      2
+    ],
+    [
+      557,
+      2
+    ],
+    [
+      561,
+      2
+    ],
+    [
+      562,
+      2
+    ],
+    [
+      562,
+      4
+    ],
+    [
+      562,
+      5
+    ],
+    [
+      563,
+      2
+    ],
+    [
+      577,
+      2
+    ],
+    [
+      581,
+      2
+    ],
+    [
+      582,
+      3
+    ],
+    [
+      583,
+      2
+    ],
+    [
+      584,
+      2
+    ],
+    [
+      587,
+      2
+    ],
+    [
+      587,
+      3
+    ],
+    [
+      588,
+      3
+    ],
+    [
+      591,
+      2
+    ],
+    [
+      595,
+      2
+    ],
+    [
+      595,
+      3
+    ],
+    [
+      618,
+      2
+    ],
+    [
+      643,
+      2
+    ],
+    [
+      644,
+      2
+    ],
+    [
+      672,
+      3
+    ],
+    [
+      674,
+      2
+    ],
+    [
+      679,
+      2
+    ],
+    [
+      697,
+      2
+    ],
+    [
+      707,
+      2
+    ],
+    [
+      709,
+      2
+    ],
+    [
+      709,
+      3
+    ],
+    [
+      712,
+      3
+    ],
+    [
+      717,
+      2
+    ],
+    [
+      723,
+      2
+    ],
+    [
+      743,
+      2
+    ],
+    [
+      747,
+      2
+    ],
+    [
+      751,
+      2
+    ],
+    [
+      753,
+      2
+    ],
+    [
+      771,
+      2
+    ],
+    [
+      784,
+      2
+    ],
+    [
+      791,
+      2
+    ],
+    [
+      791,
+      3
+    ],
+    [
+      809,
+      2
+    ],
+    [
+      809,
+      3
+    ],
+    [
+      819,
+      2
+    ],
+    [
+      830,
+      2
+    ],
+    [
+      835,
+      2
+    ],
+    [
+      842,
+      2
+    ],
+    [
+      846,
+      2
+    ],
+    [
+      858,
+      2
+    ],
+    [
+      860,
+      2
+    ],
+    [
+      863,
+      2
+    ],
+    [
+      864,
+      2
+    ],
+    [
+      869,
+      2
+    ],
+    [
+      874,
+      2
+    ],
+    [
+      881,
+      2
+    ],
+    [
+      922,
+      2
+    ],
+    [
+      937,
+      2
+    ],
+    [
+      938,
+      2
+    ],
+    [
+      972,
+      2
+    ],
+    [
+      986,
+      2
+    ],
+    [
+      1021,
+      2
+    ],
+    [
+      1021,
+      3
+    ],
+    [
+      1023,
+      2
+    ],
+    [
+      1029,
+      2
+    ],
+    [
+      1034,
+      2
+    ],
+    [
+      1034,
+      3
+    ],
+    [
+      1035,
+      2
+    ],
+    [
+      1039,
+      2
+    ],
+    [
+      1039,
+      3
+    ],
+    [
+      1043,
+      2
+    ],
+    [
+      1045,
+      2
+    ],
+    [
+      1045,
+      4
+    ],
+    [
+      1066,
+      2
+    ],
+    [
+      1068,
+      2
+    ],
+    [
+      1068,
+      3
+    ],
+    [
+      1074,
+      2
+    ],
+    [
+      1077,
+      2
+    ],
+    [
+      1088,
+      2
+    ],
+    [
+      1105,
+      2
+    ],
+    [
+      1111,
+      3
+    ],
+    [
+      1115,
+      3
+    ],
+    [
+      1121,
+      2
+    ],
+    [
+      1122,
+      2
+    ],
+    [
+      1123,
+      2
+    ],
+    [
+      1134,
+      2
+    ],
+    [
+      1147,
+      2
+    ],
+    [
+      1167,
+      2
+    ],
+    [
+      1168,
+      2
+    ],
+    [
+      1201,
+      2
+    ],
+    [
+      1220,
+      2
+    ],
+    [
+      1266,
+      2
+    ],
+    [
+      1279,
+      2
+    ],
+    [
+      1307,
+      2
+    ],
+    [
+      1307,
+      3
+    ],
+    [
+      1310,
+      2
+    ],
+    [
+      1314,
+      2
+    ],
+    [
+      1319,
+      2
+    ],
+    [
+      1338,
+      2
+    ],
+    [
+      1341,
+      2
+    ],
+    [
+      1366,
+      2
+    ],
+    [
+      1368,
+      2
+    ],
+    [
+      1413,
+      2
+    ],
+    [
+      1413,
+      3
+    ],
+    [
+      1419,
+      2
+    ],
+    [
+      1428,
+      2
+    ],
+    [
+      1451,
+      2
+    ],
+    [
+      1489,
+      2
+    ],
+    [
+      1489,
+      3
+    ],
+    [
+      1524,
+      2
+    ]
   ]
 }

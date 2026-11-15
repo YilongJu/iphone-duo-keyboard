@@ -163,9 +163,10 @@ not change. `docs/domain-pack-design.md` describes the pack, the groups and the 
 `typo-set/` builds and scores a further set of English and Pinyin cases: the hand one key off
 for a whole word or part of it, slips of common short words, missing apostrophes, fuzzy Pinyin
 and syllable breaks, and real typing errors from the Aalto mobile study and from CSCD-NS. The
-generated cases are `cases/english-typos.*.jsonl` and `cases/pinyin-typos.*.jsonl`. The cases
-from real data are built on each run into `build/typo-set/cases/`, because their licences do
-not allow redistribution. The other case files do not change. `docs/typo-set-design.md`
+generated cases are `cases/english-typos.*.jsonl`, `cases/english-typos-capitals.*.jsonl` (in
+sentence case) and `cases/pinyin-typos.*.jsonl`. The cases from real data are built on each run
+into `build/typo-set/cases/`, because their licences do not allow redistribution, and no
+workflow artifact holds their texts. The other case files do not change. `docs/typo-set-design.md`
 describes the rules and `docs/typo-set-results.md` the baseline.
 
 ## Paired Pinyin cases

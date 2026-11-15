@@ -10,14 +10,17 @@ written to a trace for compare_typos.py.
 Pinyin: each case goes through Engine/duo_cli.c in the Pinyin mode, as
 scripts/typing-evaluation/run_duo_engine.py does: the engine's first reading of all the letters.
 
-Case files: cases/english-typos.HALF.jsonl and cases/pinyin-typos.HALF.jsonl, and the cases from
-real data in build/typo-set/cases/ that build_real_typos.py writes (english-typos-aalto and
-pinyin-typos-cscd). A missing real-data file stops the script, unless --generated-only is given.
+Case files: cases/english-typos.HALF.jsonl, cases/english-typos-capitals.HALF.jsonl and
+cases/pinyin-typos.HALF.jsonl, and the cases from real data in build/typo-set/cases/ that
+build_real_typos.py writes (english-typos-aalto and pinyin-typos-cscd). A missing real-data file
+stops the script, unless --generated-only is given. The sentence-case file types its capitals as
+they stand, as the keyboard does in a field that capitalizes sentences.
 
 Outputs in --out, for each case file NAME:
     NAME.HALF.engine-only.jsonl, and with the model NAME.HALF.jsonl and NAME.HALF.trace.jsonl
     NAME.HALF[.engine-only].summary.json and summary.md, from score_typos.py
-    requests.tsv, result.json (with the model)
+    requests.tsv and requests-real.tsv (the requests of the real-data cases), result.json (with the model)
+redact_real.py removes the texts of the real-data cases before a workflow uploads the folder.
 
 Usage, from the repository root, on Linux:
     python3 scripts/typing-evaluation/typo-set/run_typos.py --shim build/lm-rerank/libduo_shim.so \
@@ -43,7 +46,7 @@ from harness_trace import PROMPT_FORMAT, TUNED  # noqa: E402
 
 CASES = ROOT / "scripts" / "typing-evaluation" / "cases"
 REAL = ROOT / "build" / "typo-set" / "cases"
-ENGLISH = [("english-typos", CASES), ("english-typos-aalto", REAL)]
+ENGLISH = [("english-typos", CASES), ("english-typos-capitals", CASES), ("english-typos-aalto", REAL)]
 PINYIN = [("pinyin-typos", CASES), ("pinyin-typos-cscd", REAL)]
 
 
@@ -99,8 +102,9 @@ def main():
         model = rerank.LanguageModel(arguments.lm, arguments.model, arguments.threads, no_context=False,
                                      prompt_format=PROMPT_FORMAT)
     result = {"half": half, "files": {}}
-    requests: dict[str, None] = {}
+    requests: dict[bool, dict[str, None]] = {False: {}, True: {}}
     for name, path in english:
+        real = path.parent == REAL
         cases = score_typos.read_jsonl(path)
         if any(case["split"] != half for case in cases):
             raise SystemExit(f"{path} holds a case of another half")
@@ -125,7 +129,7 @@ def main():
                         step_lm = model.step_scores(context, [r["text"] for r in readings], TUNED.apostrophe_prompt) if has_twin else {}
                         opens_field = not context
                         lm_context = rerank.language_model_prompt(context, typed, PROMPT_FORMAT)
-                        requests["\t".join([lm_context, *[rerank.language_model_text(t, opens_field)
+                        requests[real]["\t".join([lm_context, *[rerank.language_model_text(t, opens_field)
                                                           for t in sorted(r["text"] for r in readings)]])] = None
                         trace.append({
                             "id": case["id"], "step": step, "text_before": text_before, "context": lm_context,
@@ -162,10 +166,11 @@ def main():
         result["files"][name] = {"engine only": summarize("pinyin", name, cases, outputs,
                                                           arguments.out / f"{name}.{half}.engine-only", f"{name} {half}, engine only")}
     if model is not None:
-        (arguments.out / "requests.tsv").write_text("".join(r + "\n" for r in requests), encoding="utf-8")
+        (arguments.out / "requests.tsv").write_text("".join(r + "\n" for r in requests[False]), encoding="utf-8")
+        (arguments.out / "requests-real.tsv").write_text("".join(r + "\n" for r in requests[True]), encoding="utf-8")
         result["setting"] = TUNED.__dict__
         result["lm_ready"] = model.ready
-        result["distinct_requests"] = len(requests)
+        result["distinct_requests"] = {"generated": len(requests[False]), "real data": len(requests[True])}
         result["lm_report"] = model.close()
     (arguments.out / "result.json").write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 

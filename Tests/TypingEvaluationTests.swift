@@ -325,8 +325,12 @@ final class TypingEvaluationTests: XCTestCase {
     // MARK: The typo set
 
     /// The English case files of the typo set (scripts/typing-evaluation/typo-set): the generated
-    /// cases and the cases from the Aalto mobile typing study.
-    private static let typoSetEnglishFiles = ["english-typos", "english-typos-aalto"]
+    /// cases, the generated cases in sentence case, and the cases from the Aalto mobile typing
+    /// study. The sentence-case cases go into a field that capitalizes sentences, as most fields
+    /// do, and the others into a field without automatic capitals.
+    private static let typoSetEnglishFiles: [(name: String, autocapitalization: UITextAutocapitalizationType)] = [
+        ("english-typos", .none), ("english-typos-capitals", .sentences), ("english-typos-aalto", .none),
+    ]
     /// The Pinyin case files of the typo set: the generated cases and the cases from CSCD-NS.
     private static let typoSetPinyinFiles = ["pinyin-typos", "pinyin-typos-cscd"]
 
@@ -339,7 +343,7 @@ final class TypingEvaluationTests: XCTestCase {
         }
         let folder = URL(fileURLWithPath: path)
         for half in try halves() {
-            for name in Self.typoSetEnglishFiles + Self.typoSetPinyinFiles {
+            for name in Self.typoSetEnglishFiles.map(\.name) + Self.typoSetPinyinFiles {
                 let file = folder.appendingPathComponent("\(name).\(half).jsonl")
                 guard FileManager.default.fileExists(atPath: file.path) else {
                     XCTFail("\(file.path) is missing")
@@ -354,8 +358,8 @@ final class TypingEvaluationTests: XCTestCase {
     /// with the engine alone.
     func testTypoSetEnglishCasesThroughTheTypingController() throws {
         let folder = try typoSetFolder()
-        for name in Self.typoSetEnglishFiles {
-            try typeEnglishCases(named: name, casesFolderOverride: folder)
+        for file in Self.typoSetEnglishFiles {
+            try typeEnglishCases(named: file.name, autocapitalization: file.autocapitalization, casesFolderOverride: folder)
         }
     }
 
