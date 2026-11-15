@@ -9,7 +9,7 @@ Each request makes two calls of the flexible form of the model:
                   token is scored.
   candidate call  every token of every candidate in one call. Each candidate attends to the
                   window and to its own earlier tokens only, through the attention mask.
-The fixed form pads each call to the smallest of its sizes that holds the tokens, and splits a
+The fixed form pads each call to the smallest of its shapes that holds the tokens, and splits a
 part that is longer than its largest size into several calls.
 
 The tokens come from `speed_cli tokens` (scripts/model-speed/speed_cli.c), so every runtime
@@ -99,13 +99,15 @@ class Row:
 
 
 class Driver:
-    """`sizes` is None for the flexible form of scoring_model.py. For the fixed form it holds the
-    token counts Q of its shapes, from small to large: a call takes the smallest size that holds
-    its tokens, and a part longer than the largest size goes in several calls."""
+    """`shapes` is None for the flexible form of scoring_model.py. For the fixed form it holds the
+    (Q, R) pairs of its shapes: the window shapes have R < Q and the candidate shapes R = Q. A call
+    takes the smallest shape of its kind that holds its tokens, and a part longer than the largest
+    shape of its kind goes in several calls."""
 
-    def __init__(self, call: ModelCall, make_state: Callable[[], object], sizes: list[int] | None = None):
+    def __init__(self, call: ModelCall, make_state: Callable[[], object],
+                 shapes: list[tuple[int, int]] | None = None):
         self.call = call
-        self.sizes = sizes
+        self.shapes = shapes
         self.slots = [Slot(state=make_state()) for _ in range(SLOTS)]
         self.requests = 0
         self.window_tokens = 0
@@ -117,21 +119,22 @@ class Driver:
     def run(self, state, rows: list[Row], first_ids: list[int], scored_all: bool):
         """Reads `rows` in calls. With `scored_all` every row is scored; otherwise only the last row
         of the last call. Gives the outputs of each call, and the rows of each call."""
-        if self.sizes is None:
+        if self.shapes is None:
             groups = [rows]
         else:
-            largest = self.sizes[-1]
+            kind = sorted(shape for shape in self.shapes if (shape[1] == shape[0]) == scored_all)
+            largest = kind[-1][0]
             groups = [rows[begin : begin + largest] for begin in range(0, len(rows), largest)]
         results = []
         first = np.zeros((1, FIRST_TOKENS), dtype=np.int32)
         first[0, : len(first_ids)] = first_ids
         for number, group in enumerate(groups):
             count = len(group)
-            if self.sizes is None:
-                size = count
+            if self.shapes is None:
+                size, scored_count = count, (count if scored_all else 1)
                 cells = max(row.cell for row in group) + 1
             else:
-                size = next(size for size in self.sizes if size >= count)
+                size, scored_count = next(shape for shape in kind if shape[0] >= count)
                 cells = CACHE_CELLS
             ids = np.zeros((1, size), dtype=np.int32)
             positions = np.zeros((1, size), dtype=np.int32)
@@ -150,14 +153,15 @@ class Driver:
                 scored = list(range(size))
                 targets = [row.target or 0 for row in group] + [0] * (size - count)
             else:
-                scored = [count - 1]
-                targets = [0]
+                # The last token, as often as the shape asks.
+                scored = [count - 1] * scored_count
+                targets = [0] * scored_count
             inputs = {
                 "input_ids": ids, "position_ids": positions, "attention_mask": mask,
                 "score_rows": np.array([scored], dtype=np.int32), "target_ids": np.array([targets], dtype=np.int32),
                 "first_ids": first,
             }
-            if self.sizes is not None:
+            if self.shapes is not None:
                 inputs["write_cells"] = write
             results.append((self.call(state, inputs), group))
             self.calls.append(("candidates" if scored_all else "window", count, size))

@@ -21,7 +21,7 @@ import torch
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
 from request_driver import Driver, read_tokens  # noqa: E402
-from scoring_model import FIXED_SIZES, ScoringModel, space_first_tokens  # noqa: E402
+from scoring_model import FIXED_SHAPES, ScoringModel, space_first_tokens  # noqa: E402
 
 
 def main():
@@ -58,7 +58,7 @@ def main():
         reference.append([tuple(float(number) for number in field.split(" ")) for field in line.split("\t")])
     if arguments.limit:
         requests = requests[: arguments.limit]
-    driver = Driver(call, make_state, sizes=list(FIXED_SIZES) if arguments.fixed else None)
+    driver = Driver(call, make_state, shapes=list(FIXED_SHAPES) if arguments.fixed else None)
     differences, same = [], 0
     for index, request in enumerate(requests):
         mine = driver.score(request)

@@ -48,7 +48,7 @@ import os
 ///
 /// With a progress file, a run that stopped before its end (iOS stopped the keyboard, or the
 /// keyboard crashed) goes on at the next "duo:speed": the pairs that ended in the stopped run
-/// give one line that says so, and the pair that was running when the run stopped is skipped.
+/// give one line that says so, and each pair that was running when a run stopped is skipped.
 @MainActor
 final class ModelSpeedTest: LanguageModelMeasuring {
     /// Threads of llama.cpp, as the keyboard's model uses.
@@ -242,9 +242,11 @@ struct ModelSpeedProgress {
     let file: URL
     let signature: String
 
-    /// The pairs that ended, and the pair that was running, in the last run when that run
-    /// stopped before its end with the same pairs. Nil when the next run starts at the first pair.
-    func stoppedRun() throws -> (ended: Set<Int>, running: Int?)? {
+    /// The pairs that ended, and the pairs that started without an end, in the runs since the
+    /// last "run" line, when those runs stopped before their end with the same pairs. A pair that
+    /// stopped one run stays skipped in every later run, so two pairs that stop the keyboard
+    /// cannot keep the rest from running. Nil when the next run starts at the first pair.
+    func stoppedRun() throws -> (ended: Set<Int>, stopped: Set<Int>)? {
         guard FileManager.default.fileExists(atPath: file.path) else { return nil }
         let lines = try String(contentsOf: file, encoding: .utf8).split(separator: "\n").map(String.init)
         guard lines.first == "run \(signature)", !lines.contains("done") else { return nil }
@@ -256,7 +258,7 @@ struct ModelSpeedProgress {
             }
             if parts[0] == "start" { started.insert(index) } else if parts[0] == "end" { ended.insert(index) }
         }
-        return (ended, started.subtracting(ended).max())
+        return (ended, started.subtracting(ended))
     }
 
     func begin() throws {
@@ -332,35 +334,36 @@ struct ModelSpeedRun {
         emit("Core ML     devices of this machine: \(CoreMLComputePlan.availableDevices())")
         let pairs = catalog.pairs.filter { runtimes?.contains($0.runtime) ?? true }
         var progress: ModelSpeedProgress?
-        var stopped: (ended: Set<Int>, running: Int?)?
+        var resumed: (ended: Set<Int>, stopped: Set<Int>)?
         do {
             if let progressFile {
                 let record = ModelSpeedProgress(
                     file: progressFile, signature: ModelSpeedProgress.signature(of: pairs, requests: requests.count))
-                stopped = try record.stoppedRun()
-                if stopped == nil { try record.begin() }
+                resumed = try record.stoppedRun()
+                if resumed == nil { try record.begin() }
                 progress = record
             }
         } catch {
             emit("done        failed before the first pair: the progress file: \(error)")
             return
         }
-        if let stopped {
-            emit("resume      the last run stopped during pair \(stopped.running.map { String($0 + 1) } ?? "none"), "
-                 + "after \(stopped.ended.count) pairs ended. This run goes on after it.")
+        if let resumed {
+            let stoppedPairs = resumed.stopped.sorted().map { String($0 + 1) }.joined(separator: ", ")
+            emit("resume      the last run stopped before its end. \(resumed.ended.count) pairs ended, and the run "
+                 + "stopped during pair \(stoppedPairs.isEmpty ? "none" : stoppedPairs). This run goes on after them.")
         }
         let sampler = FootprintSampler()
         defer { sampler.stop() }
         var ran = 0, missing = 0, failed = 0, earlier = 0
         for (index, pair) in pairs.enumerated() {
             let title = "pair        \(index + 1)/\(pairs.count) \(pair.name), \(pair.model), \(pair.runtime.rawValue)"
-            if let stopped, stopped.ended.contains(index) {
+            if let resumed, resumed.ended.contains(index) {
                 emit("\(title): ended in the last run")
                 earlier += 1
                 continue
             }
-            if let stopped, stopped.running == index {
-                emit("\(title): skipped: the last run stopped during this pair")
+            if let resumed, resumed.stopped.contains(index) {
+                emit("\(title): skipped: an earlier run stopped during this pair")
                 earlier += 1
                 continue
             }
@@ -434,7 +437,7 @@ struct ModelSpeedRun {
             emit("failed      the progress file: \(error)")
         }
         emit("done        \(ran) pairs ran, \(missing) not downloaded, \(failed) failed"
-             + (earlier > 0 ? ", \(earlier) ended or stopped in the last run" : ""))
+             + (earlier > 0 ? ", \(earlier) ended or stopped in earlier runs" : ""))
     }
 
     /// True when every file of the model is in place with its size. The app checked each SHA-256
@@ -561,8 +564,9 @@ struct ModelSpeedRun {
         let before = ProcessMemory.now()
         _ = sampler.take()
         var started = Self.now()
-        duo_lm_scorer_close(try open())
+        let firstScorer = try open()
         let first = Self.now() - started
+        duo_lm_scorer_close(firstScorer)
         started = Self.now()
         let scorer = try open()
         let again = Self.now() - started
@@ -625,8 +629,12 @@ struct ModelSpeedRun {
         // drains. This thread has no pool of its own, so each step gets one, and the footprint
         // shows only what the model keeps.
         var started = Self.now()
-        try autoreleasepool { _ = try CoreMLSpeedScorer(compiledModel: url, computeUnits: units) }
-        let first = Self.now() - started
+        var first = 0.0
+        try autoreleasepool {
+            let firstScorer = try CoreMLSpeedScorer(compiledModel: url, computeUnits: units)
+            first = Self.now() - started
+            withExtendedLifetime(firstScorer) {}
+        }
         started = Self.now()
         let scorer = try autoreleasepool { try CoreMLSpeedScorer(compiledModel: url, computeUnits: units) }
         let again = Self.now() - started

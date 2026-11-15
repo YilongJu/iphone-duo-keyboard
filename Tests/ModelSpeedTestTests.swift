@@ -107,7 +107,12 @@ final class ModelSpeedTestTests: XCTestCase {
         for line in ["start 0", "end 0", "start 1", "end 1", "start 2"] { try progress.append(line) }
         let stopped = try XCTUnwrap(try progress.stoppedRun())
         XCTAssertEqual(stopped.ended, [0, 1])
-        XCTAssertEqual(stopped.running, 2)
+        XCTAssertEqual(stopped.stopped, [2])
+        // A second run that skipped pair 2 and stopped during pair 4 skips both next time.
+        for line in ["start 3", "end 3", "start 4"] { try progress.append(line) }
+        let again = try XCTUnwrap(try progress.stoppedRun())
+        XCTAssertEqual(again.ended, [0, 1, 3])
+        XCTAssertEqual(again.stopped, [2, 4])
         XCTAssertNil(try ModelSpeedProgress(file: file, signature: "other").stoppedRun())
         try progress.append("done")
         XCTAssertNil(try progress.stoppedRun())
@@ -143,8 +148,9 @@ final class ModelSpeedTestTests: XCTestCase {
         }
         let flexible = try CoreMLSpeedScorer(compiledModel: flexibleURL, computeUnits: .cpuOnly)
         let fixed = try CoreMLSpeedScorer(compiledModel: fixedURL, computeUnits: .cpuOnly)
-        XCTAssertNil(flexible.fixedSizes)
-        XCTAssertEqual(fixed.fixedSizes, [8, 16, 32, 64])
+        XCTAssertNil(flexible.fixedShapes)
+        XCTAssertEqual(fixed.fixedShapes?.map { [$0.tokens, $0.scored] },
+                       [[8, 1], [12, 12], [16, 2], [24, 24], [32, 3], [40, 40], [56, 56], [64, 4]])
         let text = try String(contentsOf: ModelSpeedRun.resource("model-speed-tokens.smollm2-135m", "tsv"), encoding: .utf8)
         let requests = Array(try TokenRequest.read(text).prefix(100))
         var same = 0, widest = 0.0

@@ -165,9 +165,16 @@ final class CoreMLSpeedScorer {
     private let model: MLModel
     private let states: [MLState]
     private var planner = AnchoredWindowPlanner()
-    /// The token counts of the calls of the fixed form, from small to large, or nil for the
-    /// flexible form.
-    let fixedSizes: [Int]?
+    /// One shape of the fixed form: the tokens of a call and its scored tokens. A window shape
+    /// scores fewer tokens than it reads, and a candidate shape scores every token.
+    struct Shape: Equatable, Sendable {
+        let tokens: Int
+        let scored: Int
+        var isWindow: Bool { scored < tokens }
+    }
+
+    /// The shapes of the fixed form, from small to large, or nil for the flexible form.
+    let fixedShapes: [Shape]?
 
     init(compiledModel url: URL, computeUnits: MLComputeUnits) throws {
         let configuration = MLModelConfiguration()
@@ -175,22 +182,27 @@ final class CoreMLSpeedScorer {
         model = try MLModel(contentsOf: url, configuration: configuration)
         let inputs = model.modelDescription.inputDescriptionsByName
         if inputs["write_cells"] != nil {
-            guard let shapes = inputs["input_ids"]?.multiArrayConstraint?.shapeConstraint.enumeratedShapes,
-                !shapes.isEmpty
+            // Core ML matches the listed shapes of the inputs by their place in the lists.
+            guard let tokens = inputs["input_ids"]?.multiArrayConstraint?.shapeConstraint.enumeratedShapes,
+                let scored = inputs["score_rows"]?.multiArrayConstraint?.shapeConstraint.enumeratedShapes,
+                !tokens.isEmpty, tokens.count == scored.count
             else {
-                throw ModelSpeedError("the fixed Core ML model lists no shapes of input_ids")
+                throw ModelSpeedError("the fixed Core ML model lists no matching shapes of input_ids and score_rows")
             }
-            fixedSizes = Set(shapes.map { $0[1].intValue }).sorted()
+            fixedShapes = zip(tokens, scored).map { Shape(tokens: $0[1].intValue, scored: $1[1].intValue) }
+                .sorted { $0.tokens < $1.tokens }
         } else {
-            fixedSizes = nil
+            fixedShapes = nil
         }
         states = [model.makeState(), model.makeState()]
     }
 
-    /// "flexible" or "fixed" with the sizes, for the result lines.
+    /// "flexible shapes" or the fixed shapes, for the result lines.
     var formDescription: String {
-        guard let fixedSizes else { return "flexible shapes" }
-        return "fixed shapes of \(fixedSizes.map(String.init).joined(separator: ", ")) tokens"
+        guard let fixedShapes else { return "flexible shapes" }
+        let window = fixedShapes.filter(\.isWindow).map { String($0.tokens) }.joined(separator: ", ")
+        let candidates = fixedShapes.filter { !$0.isWindow }.map { String($0.tokens) }.joined(separator: ", ")
+        return "fixed shapes of \(window) window tokens and \(candidates) candidate tokens"
     }
 
     private static func now() -> Double { ProcessInfo.processInfo.systemUptime * 1000 }
@@ -248,7 +260,11 @@ final class CoreMLSpeedScorer {
         -> [CallOutput]
     {
         var groups: [ArraySlice<Row>] = []
-        if let largest = fixedSizes?.last {
+        let kind = fixedShapes?.filter { $0.isWindow != scoreAll }
+        if let kind {
+            guard let largest = kind.last?.tokens else {
+                throw ModelSpeedError("the fixed Core ML model has no shape for this part")
+            }
             var begin = 0
             while begin < rows.count {
                 groups.append(rows[begin..<min(begin + largest, rows.count)])
@@ -263,15 +279,17 @@ final class CoreMLSpeedScorer {
         for group in groups {
             let rows = Array(group)
             let count = rows.count
-            let size: Int, cells: Int
-            if let fixedSizes {
-                guard let fitting = fixedSizes.first(where: { $0 >= count }) else {
-                    throw ModelSpeedError("a call of \(count) tokens fits no size of the model")
+            let size: Int, scoredCount: Int, cells: Int
+            if let kind {
+                guard let fitting = kind.first(where: { $0.tokens >= count }) else {
+                    throw ModelSpeedError("a call of \(count) tokens fits no shape of the model")
                 }
-                size = fitting
+                size = fitting.tokens
+                scoredCount = fitting.scored
                 cells = Self.cacheCells
             } else {
                 size = count
+                scoredCount = scoreAll ? count : 1
                 cells = rows.map(\.cell).max()! + 1
             }
             guard let highest = rows.map(\.cell).max(), highest < Self.cacheCells else {
@@ -289,7 +307,7 @@ final class CoreMLSpeedScorer {
                 "attention_mask": MLFeatureValue(multiArray: mask),
                 "first_ids": MLFeatureValue(multiArray: try Self.int32Array(first)),
             ]
-            if fixedSizes != nil {
+            if kind != nil {
                 dictionary["write_cells"] = MLFeatureValue(multiArray: try Self.grid(
                     shape: [1, size, cells], fill: 0, value: Self.oneBits
                 ) { row in row < count ? [rows[row].cell..<(rows[row].cell + 1)] : [] })
@@ -298,8 +316,11 @@ final class CoreMLSpeedScorer {
                 dictionary["score_rows"] = MLFeatureValue(multiArray: try Self.int32Array((0..<size).map { Int32($0) }))
                 dictionary["target_ids"] = MLFeatureValue(multiArray: try Self.int32Array(padding(rows.map(\.target), 0)))
             } else {
-                dictionary["score_rows"] = MLFeatureValue(multiArray: try Self.int32Array([Int32(count - 1)]))
-                dictionary["target_ids"] = MLFeatureValue(multiArray: try Self.int32Array([0]))
+                // The last token, as often as the shape asks.
+                dictionary["score_rows"] = MLFeatureValue(multiArray: try Self.int32Array(
+                    [Int32](repeating: Int32(count - 1), count: scoredCount)))
+                dictionary["target_ids"] = MLFeatureValue(multiArray: try Self.int32Array(
+                    [Int32](repeating: 0, count: scoredCount)))
             }
             let result = try model.prediction(from: try MLDictionaryFeatureProvider(dictionary: dictionary), using: state)
             outputs.append(CallOutput(

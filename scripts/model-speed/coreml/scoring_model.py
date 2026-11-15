@@ -56,10 +56,16 @@ MASKED = -30000.0
 FIRST_TOKENS = 8
 # The longest part of the vocabulary in one product of the fixed form.
 VOCABULARY_PART = 16384
-# The token counts Q of the shapes of the fixed form. On the requests of the speed test a window
-# call reads 5 tokens in the median and 68 at most, and a candidate call 17 in the median and 41
-# at most. A call takes the smallest size that holds its tokens.
-FIXED_SIZES = (8, 16, 32, 64)
+# The shapes of the fixed form: (Q, R), the tokens of a call and its scored tokens. Core ML
+# matches the listed shapes of the inputs by their place in the list, and it refuses a model in
+# which one input lists the same shape twice. So every Q and every R differs from the others.
+# A window call scores one token and passes it R times; R grows with Q only to keep each R
+# different. A candidate call scores every token, so R = Q. On the requests of the speed test a
+# window call reads 5 tokens in the median and 68 at most, and a candidate call 17 in the median
+# and 41 at most. A call takes the smallest shape of its kind that holds its tokens.
+WINDOW_SHAPES = ((8, 1), (16, 2), (32, 3), (64, 4))
+CANDIDATE_SHAPES = ((12, 12), (24, 24), (40, 40), (56, 56))
+FIXED_SHAPES = WINDOW_SHAPES + CANDIDATE_SHAPES
 
 
 class Settings:

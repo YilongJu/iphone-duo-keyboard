@@ -9,10 +9,11 @@ Usage: python convert.py HF_FOLDER OUT.mlpackage --weights fp16|int4 --form flex
             scored tokens (R) 1 to 288 and the cells of the attention mask (E) 1 to 512, so one
             model serves the window call and the candidate call.
   fixed     for the Neural Engine. The Neural Engine runs only shapes that the model lists in
-            advance (coremltools "enumerated shapes"). This form lists Q in FIXED_SIZES of
-            scoring_model.py, with R = 1 for a window call and R = Q for a candidate call, and E
-            is always 512. From iOS 18 on, several inputs may list shapes, and Core ML matches
-            them by their place in the list.
+            advance (coremltools "enumerated shapes"). This form lists the (Q, R) pairs of
+            FIXED_SHAPES of scoring_model.py, and E is always 512. From iOS 18 on, several inputs
+            may list shapes, and Core ML matches them by their place in the list. Core ML
+            refuses a model in which one input lists the same shape twice ("unequal number of
+            enumerated shapes"), so every Q and every R of the list differs.
 
 The model is the one of scoring_model.py. Its inputs and outputs are named there.
 """
@@ -26,7 +27,7 @@ import numpy as np
 import torch
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from scoring_model import CACHE_CELLS, FIRST_TOKENS, FIXED_SIZES, ScoringModel, space_first_tokens  # noqa: E402
+from scoring_model import CACHE_CELLS, FIRST_TOKENS, FIXED_SHAPES, ScoringModel, space_first_tokens  # noqa: E402
 
 MAX_CALL_TOKENS = 288
 
@@ -45,14 +46,8 @@ def flexible_inputs():
     ]
 
 
-def fixed_shapes():
-    """The (Q, R) pairs of the fixed form: each size once for a window call and once for a
-    candidate call."""
-    return [(size, 1) for size in FIXED_SIZES] + [(size, size) for size in FIXED_SIZES]
-
-
 def fixed_inputs():
-    shapes = fixed_shapes()
+    shapes = list(FIXED_SHAPES)
     # The default is the shape of the trace, the largest candidate call.
     default = len(shapes) - 1
 
@@ -81,7 +76,7 @@ def example(fixed: bool):
         mask = torch.zeros((1, 1, 3, 5), dtype=torch.float32)
         rows = torch.tensor([[0, 1, 2]], dtype=torch.int32)
         return ids, positions, mask, rows, torch.zeros((1, 3), dtype=torch.int32), first
-    size = FIXED_SIZES[-1]
+    size = FIXED_SHAPES[-1][0]
     ids = torch.arange(1, size + 1, dtype=torch.int32)[None, :]
     positions = torch.arange(2, size + 2, dtype=torch.int32)[None, :]
     mask = torch.zeros((1, 1, size, CACHE_CELLS), dtype=torch.float32)

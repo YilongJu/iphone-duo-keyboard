@@ -64,14 +64,15 @@ def main():
     model = ct.models.MLModel(arguments.model, compute_units=UNITS[arguments.units])
     load_ms = (time.perf_counter() - started) * 1000
     times = []
-    # The fixed form of convert.py has the input write_cells and lists the token counts of its
-    # calls as the shapes of input_ids.
+    # The fixed form of convert.py has the input write_cells and lists the (Q, R) pairs of its
+    # calls as the shapes of input_ids and score_rows, matched by their place in the lists.
     inputs = {entry.name: entry for entry in model.get_spec().description.input}
-    sizes = None
+    shapes = None
     if "write_cells" in inputs:
-        listed = inputs["input_ids"].type.multiArrayType.enumeratedShapes.shapes
-        sizes = sorted({int(shape.shape[1]) for shape in listed})
-    print(f"form {'fixed with sizes ' + str(sizes) if sizes else 'flexible'}")
+        tokens = inputs["input_ids"].type.multiArrayType.enumeratedShapes.shapes
+        scored = inputs["score_rows"].type.multiArrayType.enumeratedShapes.shapes
+        shapes = sorted({(int(q.shape[1]), int(r.shape[1])) for q, r in zip(tokens, scored)})
+    print(f"form {'fixed with shapes ' + str(shapes) if shapes else 'flexible'}")
 
     def call(state, values):
         began = time.perf_counter()
@@ -80,7 +81,7 @@ def main():
         return tuple(np.asarray(outputs[name]).reshape(-1)
                      for name in ("target_logit", "log_norm", "space_log_mass", "first_logit"))
 
-    driver = Driver(call, model.make_state, sizes=sizes)
+    driver = Driver(call, model.make_state, shapes=shapes)
     reference = []
     for line in pathlib.Path(arguments.reference).read_text().splitlines():
         reference.append([tuple(float(number) for number in field.split(" ")) for field in line.split("\t")])
@@ -116,7 +117,7 @@ def main():
         f"tokens_read {driver.tokens_read}", f"window_tokens {driver.window_tokens}",
         f"window_tokens_reused {driver.window_tokens_reused}"]) + "\n")
     check = {
-        "form": "fixed" if sizes else "flexible",
+        "form": "fixed" if shapes else "flexible",
         "compute_plan": compute_plan(model, UNITS[arguments.units]),
         "requests": len(requests),
         "agreement": round(same / len(requests), 4),
