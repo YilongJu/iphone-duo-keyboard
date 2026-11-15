@@ -6,11 +6,11 @@ stay as they are.
 The two folders hold the downloaded artifacts of the two runs, one folder per artifact
 (`gh run download RUN_ID -D FOLDER`). For each file that both folders hold:
 - a file of outputs (`*.jsonl` with `id` and `output` on each line): the outputs of each case,
-- a trace (`*.trace.jsonl`): each correction without its time in milliseconds,
+- a trace (`*.trace.jsonl` and `trace.*.jsonl`): each correction without its time in milliseconds,
 - a summary (`*.summary.json`): the whole file,
 - a list of requests or answers (`requests.tsv`, `*.answers`): every byte.
 Files that hold times or machine names (logs, `runner.txt`, `*.reranker.txt`, `result.json`,
-`report.md`, `differences.json`, `scorer-check.txt`) are not compared, and the report names them.
+`report.md`, `differences.json`, `scorer-check.txt`, `language-model-test-simulator.txt`) are not compared, and the report names them.
 
 The script stops with exit code 1 when a compared file differs.
 
@@ -21,7 +21,8 @@ import argparse
 import json
 from pathlib import Path
 
-NOT_COMPARED = {"runner.txt", "result.json", "report.md", "differences.json", "scorer-check.txt"}
+NOT_COMPARED = {"runner.txt", "result.json", "report.md", "differences.json", "scorer-check.txt",
+                "language-model-test-simulator.txt"}
 
 
 def outputs(path: Path) -> dict[str, str]:
@@ -47,7 +48,7 @@ def compare_file(a: Path, b: Path) -> tuple[str, str]:
     name = a.name
     if name in NOT_COMPARED or name.endswith((".log", ".reranker.txt")):
         return "not compared", "holds times or machine names"
-    if name.endswith(".trace.jsonl"):
+    if name.endswith(".trace.jsonl") or name.startswith("trace."):
         ta, tb = trace(a), trace(b)
         differ = sum(1 for x, y in zip(ta, tb) if x != y) + abs(len(ta) - len(tb))
         return ("same" if differ == 0 else "differs"), f"{len(ta)} corrections, {differ} differ"
