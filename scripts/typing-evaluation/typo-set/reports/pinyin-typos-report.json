@@ -1,0 +1,55 @@
+{
+  "seed": "typo-set-pinyin-20261114",
+  "pool": {
+    "clauses": 52752,
+    "removed_existing_cases": 1291,
+    "dev": 26063,
+    "test": 25398
+  },
+  "halves": {
+    "dev": {
+      "cases": 2222,
+      "categories": {
+        "pinyin_clean": 1102,
+        "pinyin_neighbor": 150,
+        "pinyin_omitted": 100,
+        "pinyin_added": 100,
+        "pinyin_swapped": 100,
+        "pinyin_drift_word": 100,
+        "pinyin_drift_partial": 100,
+        "pinyin_fuzzy_z_zh": 50,
+        "pinyin_fuzzy_c_ch": 50,
+        "pinyin_fuzzy_s_sh": 50,
+        "pinyin_fuzzy_n_l": 50,
+        "pinyin_fuzzy_an_ang": 50,
+        "pinyin_fuzzy_en_eng": 50,
+        "pinyin_fuzzy_in_ing": 50,
+        "pinyin_split_apostrophe": 60,
+        "pinyin_split_plain": 60
+      },
+      "shortfalls": {}
+    },
+    "test": {
+      "cases": 2215,
+      "categories": {
+        "pinyin_clean": 1095,
+        "pinyin_neighbor": 150,
+        "pinyin_omitted": 100,
+        "pinyin_added": 100,
+        "pinyin_swapped": 100,
+        "pinyin_drift_word": 100,
+        "pinyin_drift_partial": 100,
+        "pinyin_fuzzy_z_zh": 50,
+        "pinyin_fuzzy_c_ch": 50,
+        "pinyin_fuzzy_s_sh": 50,
+        "pinyin_fuzzy_n_l": 50,
+        "pinyin_fuzzy_an_ang": 50,
+        "pinyin_fuzzy_en_eng": 50,
+        "pinyin_fuzzy_in_ing": 50,
+        "pinyin_split_apostrophe": 60,
+        "pinyin_split_plain": 60
+      },
+      "shortfalls": {}
+    }
+  }
+}

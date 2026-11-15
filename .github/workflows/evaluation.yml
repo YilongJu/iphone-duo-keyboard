@@ -1,11 +1,13 @@
 name: Typing evaluation
 
 # Scores the Duo typing engine (Engine/duo_engine.c) on the typing test cases, on a Linux runner.
+# The steps after the first upload score the typo set of scripts/typing-evaluation/typo-set with
+# the engine alone, as new reports. They do not change the steps before them.
 # Start it by hand, optionally with engine settings to try:
 #   gh workflow run "Typing evaluation" -f english_settings="margin_known=4 missing_space=4.5"
 on:
   push:
-    branches: [main]
+    branches: [main, eval/typo-set]
     paths:
       - 'Engine/**'
       - 'Shared/lexicon-*.bin'
@@ -67,4 +69,34 @@ jobs:
         with:
           name: typing-evaluation-duo-engine
           path: build/typing-evaluation/duo-engine
+          if-no-files-found: error
+      - name: Build the engine shim for the typo set
+        run: |
+          set -euo pipefail
+          mkdir -p build/lm-rerank
+          gcc -std=c11 -O2 -Wall -Wextra -Werror -shared -fPIC -I Engine Engine/duo_engine.c scripts/lm-rerank/engine_shim.c             -lm -o build/lm-rerank/libduo_shim.so
+      - name: Keep the real typing-error data between runs
+        uses: actions/cache@v4
+        with:
+          path: build/typo-set/download
+          key: typo-set-real-data-${{ hashFiles('scripts/typing-evaluation/typo-set/fetch_real_data.sh') }}
+      - name: Build the typo-set cases from real typing errors
+        run: |
+          set -euo pipefail
+          python3 -m pip install --quiet --break-system-packages gdown pypinyin zipfile-deflate64
+          bash scripts/typing-evaluation/typo-set/fetch_real_data.sh
+          python3 scripts/typing-evaluation/typo-set/build_real_typos.py
+      - name: Score the engine alone on the typo set
+        run: |
+          set -euo pipefail
+          halves="${{ github.event.inputs.halves || 'dev' }}"
+          for half in $halves; do
+            python3 scripts/typing-evaluation/typo-set/run_typos.py --shim build/lm-rerank/libduo_shim.so               --cli build/engine/duo_cli --half "$half" --out build/typo-set/engine
+          done
+          cp build/typo-set/cases/typo-set-real-report.json build/typo-set/engine/
+          cat build/typo-set/engine/*.summary.md >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: typo-set-duo-engine
+          path: build/typo-set/engine
           if-no-files-found: error

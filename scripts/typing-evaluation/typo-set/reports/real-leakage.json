@@ -1,0 +1,52 @@
+{
+  "training": {
+    "files": {
+      "lm-domain/everyday/cases.train.jsonl": {
+        "sha256": "fe4eb1cbb7361a6b44729a8d7e5e512e7579ae3a3e21a6febda3e4d2437e3a14",
+        "cases": 107145
+      },
+      "lm-domain/everyday/cases2.train.jsonl": {
+        "sha256": "fa5e8aba3343e9e3c70a381c9279b6c918a14553b16ee03d5983989eb0d76daf",
+        "cases": 11599
+      },
+      "lm-domain/everyday/cases.stop.jsonl": {
+        "sha256": "730492e63c08539bae3792aee55a68b01c8217f128489f30f7baf5a0fc6fbcc7",
+        "cases": 6740
+      },
+      "lm-domain/everyday/cases2.stop.jsonl": {
+        "sha256": "842cad14314965ec82ca3a17c35853274eb334c084808810649553a29641678b",
+        "cases": 712
+      },
+      "lm-domain/everyday/cases.tune.jsonl": {
+        "sha256": "59c2fe27a7a5078ca4b9185f3d5deeb2eb0823febdf921117a55402224d18efd",
+        "cases": 6748
+      },
+      "lm-domain/everyday/cases.stream.tune.jsonl": {
+        "sha256": "a0a29066eef5a59932efe539a4bb52f351056e33c6654c22f4a7994c7b75ff59",
+        "cases": 1300
+      },
+      "lm-domain/domain/cases.train.jsonl": {
+        "sha256": "609c15312741e73806a759d9bbd9a3e7e18d47132c1693b1d69547b273ec36af",
+        "cases": 35727
+      },
+      "lm-domain/domain/cases.stop.jsonl": {
+        "sha256": "ad0fd7810d35784b42b0ed0f2dc8a094a7de1d5fed9da5083870bd21ec8bd5a2",
+        "cases": 2042
+      },
+      "lm-finetune2/pairs.wikipedia.train.jsonl": {
+        "sha256": "65d5e585771aadb339b91925c2dd9403a97ca130609156cc3cd9887c0a5e9bf0",
+        "pairs": 1600
+      }
+    },
+    "tatoeba_sources": 123497,
+    "texts": 227512,
+    "pairs": 69955
+  },
+  "aalto_sentences": 1525,
+  "aalto_sentence_ids": [
+    305,
+    348,
+    562,
+    791
+  ]
+}

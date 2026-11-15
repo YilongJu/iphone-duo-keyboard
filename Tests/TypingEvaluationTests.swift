@@ -211,8 +211,13 @@ final class TypingEvaluationTests: XCTestCase {
         }
     }
 
-    private func typeEnglishCases(named name: String, autocapitalization: UITextAutocapitalizationType = .none) throws {
-        let (casesFolder, outputFolder) = try folders()
+    /// `casesFolderOverride` reads the case files from another folder than `TYPING_CASES_DIR`, as
+    /// the typo set does.
+    private func typeEnglishCases(
+        named name: String, autocapitalization: UITextAutocapitalizationType = .none, casesFolderOverride: URL? = nil
+    ) throws {
+        let (defaultCasesFolder, outputFolder) = try folders()
+        let casesFolder = casesFolderOverride ?? defaultCasesFolder
         let halves = try halves()
         let model = try loadedModel()
         let engine = EnglishTypingEngine(lexicon: TypingLexicon(resource: "lexicon-english", fullCheck: false))
@@ -314,6 +319,72 @@ final class TypingEvaluationTests: XCTestCase {
                 outputs.append(Output(id: item.id, output: produced))
             }
             try write(outputs, to: outputFolder.appendingPathComponent("pinyin.\(half).jsonl"))
+        }
+    }
+
+    // MARK: The typo set
+
+    /// The English case files of the typo set (scripts/typing-evaluation/typo-set): the generated
+    /// cases and the cases from the Aalto mobile typing study.
+    private static let typoSetEnglishFiles = ["english-typos", "english-typos-aalto"]
+    /// The Pinyin case files of the typo set: the generated cases and the cases from CSCD-NS.
+    private static let typoSetPinyinFiles = ["pinyin-typos", "pinyin-typos-cscd"]
+
+    /// The folder of the typo set's case files. The typo set runs only when `TYPING_TYPO_CASES_DIR`
+    /// names it, so a run without it types the other case files alone, as before. The folder must
+    /// hold every file of the typo set for each half that the run types.
+    private func typoSetFolder() throws -> URL {
+        guard let path = ProcessInfo.processInfo.environment["TYPING_TYPO_CASES_DIR"] else {
+            throw XCTSkip("TYPING_TYPO_CASES_DIR is not set")
+        }
+        let folder = URL(fileURLWithPath: path)
+        for half in try halves() {
+            for name in Self.typoSetEnglishFiles + Self.typoSetPinyinFiles {
+                let file = folder.appendingPathComponent("\(name).\(half).jsonl")
+                guard FileManager.default.fileExists(atPath: file.path) else {
+                    XCTFail("\(file.path) is missing")
+                    throw CocoaError(.fileNoSuchFile)
+                }
+            }
+        }
+        return folder
+    }
+
+    /// Types the English cases of the typo set as the other English cases: with the model, and
+    /// with the engine alone.
+    func testTypoSetEnglishCasesThroughTheTypingController() throws {
+        let folder = try typoSetFolder()
+        for name in Self.typoSetEnglishFiles {
+            try typeEnglishCases(named: name, casesFolderOverride: folder)
+        }
+    }
+
+    /// Types the Pinyin cases of the typo set as testPinyinCasesThroughThePinyinEngine types the
+    /// Pinyin cases: the first candidate again and again until every typed letter is used.
+    func testTypoSetPinyinCasesThroughThePinyinEngine() throws {
+        let folder = try typoSetFolder()
+        let (_, outputFolder) = try folders()
+        let engine = PinyinEngine.bundled()
+        for half in try halves() {
+            for name in Self.typoSetPinyinFiles {
+                let cases = try loadCases(PinyinCase.self, from: folder.appendingPathComponent("\(name).\(half).jsonl"))
+                var outputs: [Output] = []
+                for item in cases {
+                    var letters = item.typed
+                    var produced = ""
+                    while !letters.isEmpty {
+                        guard let first = engine.candidates(for: letters).first, first.consumedLetters > 0 else {
+                            // The engine has no candidate, so the letters go in as plain letters.
+                            produced += letters
+                            break
+                        }
+                        produced += first.word
+                        letters.removeFirst(first.consumedLetters)
+                    }
+                    outputs.append(Output(id: item.id, output: produced))
+                }
+                try write(outputs, to: outputFolder.appendingPathComponent("\(name).\(half).jsonl"))
+            }
         }
     }
 }

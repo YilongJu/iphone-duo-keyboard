@@ -5,9 +5,11 @@ name: Language model in the keyboard
 # an ARM Linux runner and the macOS runner of the simulator, and compares them case by case and
 # correction by correction. scripts/lm-keyboard/README.md describes the
 # check. Only the dev half is typed and scored. Every unit test runs as well.
+# The jobs whose names start with "Typo set" type the typo set of scripts/typing-evaluation/typo-set
+# in the same ways, as new reports. The jobs before them do not read the typo set.
 on:
   push:
-    branches: [engine/lm-keyboard, engine/apostrophe-words, engine/domain-pack, ui/swipe-punctuation, engine/domain-model, ui/space-before-mark, ui/closing-quotes]
+    branches: [engine/lm-keyboard, engine/apostrophe-words, engine/domain-pack, ui/swipe-punctuation, engine/domain-model, ui/space-before-mark, ui/closing-quotes, eval/typo-set]
   workflow_dispatch:
 
 concurrency:
@@ -311,4 +313,206 @@ jobs:
         with:
           name: compare
           path: build/lm-keyboard/compare
+          if-no-files-found: error
+
+  typo-cases:
+    name: Typo set, the cases from real typing errors
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - name: Keep the real typing-error data between runs
+        uses: actions/cache@v4
+        with:
+          path: build/typo-set/download
+          key: typo-set-real-data-${{ hashFiles('scripts/typing-evaluation/typo-set/fetch_real_data.sh') }}
+      - name: Build the cases
+        run: |
+          set -euo pipefail
+          python3 -m pip install --quiet --break-system-packages gdown wordfreq pypinyin zipfile-deflate64
+          bash scripts/typing-evaluation/typo-set/fetch_real_data.sh
+          python3 scripts/typing-evaluation/typo-set/build_real_typos.py
+          # Only the dev half leaves this job. The test half is for decisions only.
+          mkdir -p build/typo-set/dev-cases
+          cp build/typo-set/cases/*.dev.jsonl build/typo-set/cases/typo-set-real-report.json build/typo-set/dev-cases/
+      - uses: actions/upload-artifact@v7
+        with:
+          name: typo-cases
+          path: build/typo-set/dev-cases
+          if-no-files-found: error
+
+  typo-harness:
+    name: Typo set, Linux harness with the tuned rule
+    needs: typo-cases
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v7
+        with:
+          name: typo-cases
+          path: build/typo-set/cases
+      - name: Build llama.cpp b4846, lm_score, the engine shim and the engine's command-line program
+        run: |
+          set -euo pipefail
+          bash scripts/lm-rerank/build_on_linux.sh llama
+          mkdir -p build/engine
+          gcc -std=c11 -O2 -Wall -Wextra -Werror Engine/duo_engine.c Engine/duo_cli.c -lm -o build/engine/duo_cli
+      - name: Fetch the SmolLM2 fine-tune and check its SHA-256 value
+        run: bash scripts/ci/fetch_language_model.sh model
+      - name: Type the dev cases of the typo set with the engine alone and with the tuned rule
+        run: |
+          set -euo pipefail
+          export LD_LIBRARY_PATH="$PWD/build/lm-rerank/llama/lib"
+          mkdir -p build/typo-set/harness
+          lscpu | grep -E 'Model name|Flags' | tee build/typo-set/harness/runner.txt
+          python3 scripts/typing-evaluation/typo-set/run_typos.py --shim build/lm-rerank/libduo_shim.so \
+            --cli build/engine/duo_cli --lm build/lm-rerank/lm_score \
+            --model Shared/smollm2-lora-domain-s100-seed1.Q4_K_M.gguf --half dev --out build/typo-set/harness
+          cat build/typo-set/harness/*.summary.md >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: typo-harness
+          path: build/typo-set/harness
+          if-no-files-found: error
+
+  typo-keyboard:
+    name: Typo set, the keyboard code with the model, and the harness on the same machine
+    needs: typo-cases
+    runs-on: xcode-27
+    timeout-minutes: 240
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v7
+        with:
+          name: typo-cases
+          path: build/typo-set/cases
+      - name: Install XcodeGen
+        run: brew install xcodegen
+      - name: Fetch the llama.cpp framework and the language model
+        run: bash scripts/ci/fetch_language_model.sh
+      - name: Generate the Xcode project
+        run: xcodegen generate
+      - name: Type the dev cases of the typo set through the keyboard code in a simulator
+        env:
+          # xcodebuild hands a variable to the test process when its name starts with TEST_RUNNER_.
+          TEST_RUNNER_TYPING_CASES_DIR: ${{ github.workspace }}/build/typo-set/all-cases
+          TEST_RUNNER_TYPING_TYPO_CASES_DIR: ${{ github.workspace }}/build/typo-set/all-cases
+          TEST_RUNNER_TYPING_OUTPUT_DIR: ${{ github.workspace }}/build/typo-set/keyboard
+          TEST_RUNNER_TYPING_HALVES: dev
+        run: |
+          set -o pipefail
+          mkdir -p build/typo-set/all-cases
+          cp scripts/typing-evaluation/cases/english-typos.dev.jsonl scripts/typing-evaluation/cases/pinyin-typos.dev.jsonl \
+            build/typo-set/cases/*.dev.jsonl build/typo-set/all-cases/
+          udid=$(xcrun simctl list devices available -j | python3 -c '
+          import json, sys
+          devices = json.load(sys.stdin)["devices"]
+          for runtime in sorted(devices, reverse=True):
+              for device in devices[runtime]:
+                  if device["name"].startswith("iPhone 17"):
+                      print(device["udid"])
+                      sys.exit(0)
+          sys.exit("simulator not found: iPhone 17")
+          ')
+          xcodebuild test \
+            -project DuoKeyboard.xcodeproj \
+            -scheme DuoKeyboard \
+            -destination "platform=iOS Simulator,id=$udid" \
+            -derivedDataPath build-test \
+            -only-testing:DuoKeyboardTests/TypingEvaluationTests/testTypoSetEnglishCasesThroughTheTypingController \
+            -only-testing:DuoKeyboardTests/TypingEvaluationTests/testTypoSetPinyinCasesThroughThePinyinEngine | xcbeautify
+      - name: Check that only dev-half files exist, and score the keyboard outputs
+        if: always()
+        run: |
+          set -euo pipefail
+          out=build/typo-set/keyboard
+          ls -l "$out"
+          if ls "$out" | grep -q '\.test\.'; then
+            echo "error: the evaluation wrote test-half files" >&2
+            exit 1
+          fi
+          cases=build/typo-set/all-cases
+          for name in english-typos english-typos-aalto; do
+            for run in "" ".engine-only"; do
+              python3 scripts/typing-evaluation/typo-set/score_typos.py --task english --cases "$cases/$name.dev.jsonl" \
+                --predictions "$out/$name.dev$run.jsonl" --name "keyboard, $name dev$run" \
+                --json "$out/$name.dev$run.summary.json" --markdown "$out/$name.dev$run.summary.md"
+            done
+          done
+          for name in pinyin-typos pinyin-typos-cscd; do
+            python3 scripts/typing-evaluation/typo-set/score_typos.py --task pinyin --cases "$cases/$name.dev.jsonl" \
+              --predictions "$out/$name.dev.jsonl" --name "keyboard, $name dev" \
+              --json "$out/$name.dev.summary.json" --markdown "$out/$name.dev.summary.md"
+          done
+          cat "$out"/*.summary.md >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: typo-keyboard
+          path: build/typo-set/keyboard
+          if-no-files-found: error
+      # The harness on this same machine, as in the job "keyboard" above.
+      - name: Build the engine shim, lm_score and the engine's command-line program against the framework
+        if: always()
+        run: |
+          set -euo pipefail
+          mkdir -p build/lm-rerank build/engine build/typo-set/harness-mac
+          fw="$PWD/Vendor/llama.xcframework/macos-arm64_x86_64"
+          clang -std=c11 -O2 -Wall -Wextra -shared -fPIC -I Engine Engine/duo_engine.c scripts/lm-rerank/engine_shim.c \
+            -o build/lm-rerank/libduo_shim.so
+          clang -std=c11 -O2 -Wall -Wextra -I "$fw/llama.framework/Headers" scripts/lm-rerank/lm_score.c \
+            -F "$fw" -framework llama -Wl,-rpath,"$fw" -o build/lm-rerank/lm_score
+          clang -std=c11 -O2 -Wall -Wextra Engine/duo_engine.c Engine/duo_cli.c -lm -o build/engine/duo_cli
+          { sysctl -n machdep.cpu.brand_string; sysctl hw.optional | grep -E 'arm|neon|fp16|i8mm|dotprod' || true; } \
+            | tee build/typo-set/harness-mac/runner.txt
+      - name: Type the dev cases of the typo set through the harness, on this machine
+        if: always()
+        run: |
+          set -euo pipefail
+          # 2 threads of lm_score, as the runner has 3 cores.
+          python3 scripts/typing-evaluation/typo-set/run_typos.py --shim build/lm-rerank/libduo_shim.so \
+            --cli build/engine/duo_cli --lm build/lm-rerank/lm_score \
+            --model Shared/smollm2-lora-domain-s100-seed1.Q4_K_M.gguf --threads 2 --half dev --out build/typo-set/harness-mac
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: typo-harness-mac
+          path: build/typo-set/harness-mac
+          if-no-files-found: error
+
+  typo-compare:
+    name: Typo set, keyboard against the harness on its own machine, and the Linux harness as a report
+    needs: [typo-harness, typo-keyboard]
+    if: always()
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v7
+        with:
+          pattern: typo-*
+          path: build/typo-set/artifacts
+      - name: Compare
+        run: |
+          set -euo pipefail
+          a=build/typo-set/artifacts
+          out=build/typo-set/compare
+          # The keyboard must agree case by case with the harness on its own machine. llama.cpp
+          # gives other numbers on another machine, so the Linux comparison is a report only.
+          status=0
+          python3 scripts/typing-evaluation/typo-set/compare_typos.py --reference "$a/typo-harness-mac" \
+            --reference-name "macOS harness" --other "$a/typo-keyboard" --other-name keyboard --half dev \
+            --out "$out/macos-harness-keyboard" --strict || status=1
+          python3 scripts/typing-evaluation/typo-set/compare_typos.py --reference "$a/typo-harness" \
+            --reference-name "x86 harness" --other "$a/typo-keyboard" --other-name keyboard --half dev \
+            --out "$out/x86-harness-keyboard" || true
+          cat "$out/macos-harness-keyboard/report.md" "$out/x86-harness-keyboard/report.md" >> "$GITHUB_STEP_SUMMARY"
+          exit $status
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: typo-compare
+          path: build/typo-set/compare
           if-no-files-found: error
