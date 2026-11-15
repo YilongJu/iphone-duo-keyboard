@@ -52,6 +52,8 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.yilongju.duokeyboard
         PRODUCT_NAME: DuoKeyboard
+        # The app group shares the folder of the speed test models with the keyboard.
+        CODE_SIGN_ENTITLEMENTS: App/DuoKeyboard.entitlements
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         SWIFT_OBJC_BRIDGING_HEADER: Engine/DuoEngine-Bridging-Header.h
     dependencies:
@@ -92,6 +94,7 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.yilongju.duokeyboard.keyboard
         PRODUCT_NAME: DuoKeyboardExtension
+        CODE_SIGN_ENTITLEMENTS: Keyboard/DuoKeyboardExtension.entitlements
         SWIFT_OBJC_BRIDGING_HEADER: Engine/DuoEngine-Bridging-Header.h
     dependencies:
       # The extension links llama.cpp and finds it at run time in the Frameworks folder of the app.

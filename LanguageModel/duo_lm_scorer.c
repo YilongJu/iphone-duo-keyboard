@@ -52,10 +52,45 @@
 #include <string.h>
 #include <time.h>
 
-#if defined(__APPLE__)
+/* The app includes the header of the framework. A command-line build on a Mac against an install
+   of llama.cpp defines DUO_LLAMA_PLAIN_INCLUDE and names the folder of llama.h. */
+#if defined(__APPLE__) && !defined(DUO_LLAMA_PLAIN_INCLUDE)
 #include <llama/llama.h>
 #else
 #include "llama.h"
+#endif
+
+/* The calls on the cache. llama.cpp b4846, the release of the app's framework, names them
+   llama_kv_cache_*. Later releases replaced them with llama_memory_* on the memory of a state,
+   and a build against such a release defines DUO_LLAMA_MEMORY_API (scripts/model-speed). Each
+   function below makes the one call of its release, so a build against b4846 makes the same
+   calls as before. */
+#if defined(DUO_LLAMA_MEMORY_API)
+static void cache_clear(struct llama_context *state) { llama_memory_clear(llama_get_memory(state), true); }
+static int cache_seq_rm(struct llama_context *state, llama_seq_id sequence, llama_pos first, llama_pos end) {
+    return llama_memory_seq_rm(llama_get_memory(state), sequence, first, end);
+}
+static void cache_seq_cp(struct llama_context *state, llama_seq_id from, llama_seq_id to) {
+    llama_memory_seq_cp(llama_get_memory(state), from, to, -1, -1);
+}
+static void cache_seq_add(struct llama_context *state, llama_seq_id sequence, llama_pos first, llama_pos end,
+                          llama_pos delta) {
+    llama_memory_seq_add(llama_get_memory(state), sequence, first, end, delta);
+}
+static int cache_can_shift(struct llama_context *state) { return llama_memory_can_shift(llama_get_memory(state)); }
+#else
+static void cache_clear(struct llama_context *state) { llama_kv_cache_clear(state); }
+static int cache_seq_rm(struct llama_context *state, llama_seq_id sequence, llama_pos first, llama_pos end) {
+    return llama_kv_cache_seq_rm(state, sequence, first, end);
+}
+static void cache_seq_cp(struct llama_context *state, llama_seq_id from, llama_seq_id to) {
+    llama_kv_cache_seq_cp(state, from, to, -1, -1);
+}
+static void cache_seq_add(struct llama_context *state, llama_seq_id sequence, llama_pos first, llama_pos end,
+                          llama_pos delta) {
+    llama_kv_cache_seq_add(state, sequence, first, end, delta);
+}
+static int cache_can_shift(struct llama_context *state) { return llama_kv_cache_can_shift(state); }
 #endif
 
 /* Room for the start token, the context and 8 candidates of 32 tokens is 353 tokens. llama.cpp
@@ -112,6 +147,7 @@ struct duo_lm_scorer {
     /* 1 for each token whose text starts with a space. */
     unsigned char *space_first;
     duo_lm_reuse reuse;
+    duo_lm_device device;
     struct slot slots[DUO_LM_MAX_SLOTS];
     /* The second state of the check, or NULL without the check. */
     struct llama_context *check_context;
@@ -276,7 +312,7 @@ static int tokenize(duo_lm_scorer *scorer, const char *text, llama_token **token
 }
 
 /* The settings of every llama.cpp state of the scorer: the scorer's own and the check's. */
-static struct llama_context_params state_settings(int threads) {
+static struct llama_context_params state_settings(int threads, duo_lm_device device) {
     struct llama_context_params context_settings = llama_context_default_params();
     context_settings.n_ctx = CONTEXT_SIZE;
     context_settings.n_batch = CALL_TOKENS;
@@ -284,14 +320,31 @@ static struct llama_context_params state_settings(int threads) {
     context_settings.n_seq_max = DUO_LM_MAX_CANDIDATES + 1;
     context_settings.n_threads = threads;
     context_settings.n_threads_batch = threads;
-    context_settings.offload_kqv = false;
+    /* On the GPU the cache and the attention stay on the GPU too. */
+    context_settings.offload_kqv = device == DUO_LM_DEVICE_GPU;
+#if defined(DUO_LLAMA_MEMORY_API)
+    context_settings.flash_attn_type = LLAMA_FLASH_ATTN_TYPE_ENABLED;
+    /* The candidates share the cells of the context, so every sequence must live in one cache.
+       Later releases give each sequence a cache of its own unless this is set. */
+    context_settings.kv_unified = true;
+#else
     context_settings.flash_attn = true;
+#endif
     context_settings.no_perf = true;
     return context_settings;
 }
 
 duo_lm_scorer *duo_lm_scorer_open(const char *model_path, int threads, duo_lm_reuse reuse, char *error,
                                   size_t error_size) {
+    return duo_lm_scorer_open_on(model_path, threads, reuse, DUO_LM_DEVICE_CPU, error, error_size);
+}
+
+duo_lm_scorer *duo_lm_scorer_open_on(const char *model_path, int threads, duo_lm_reuse reuse, duo_lm_device device,
+                                     char *error, size_t error_size) {
+    if (device != DUO_LM_DEVICE_CPU && device != DUO_LM_DEVICE_GPU) {
+        set_error(error, error_size, "the device %d is not known", (int)device);
+        return NULL;
+    }
     if (threads < 1) {
         set_error(error, error_size, "the thread count must be 1 or more");
         return NULL;
@@ -316,21 +369,36 @@ duo_lm_scorer *duo_lm_scorer_open(const char *model_path, int threads, duo_lm_re
     llama_log_set(keep_last_error, NULL);
     llama_backend_init();
 
-    /* The processor is the only device, as in LanguageModel/duo_lm_probe.c. */
-    ggml_backend_dev_t devices[2] = {ggml_backend_dev_by_type(GGML_BACKEND_DEVICE_TYPE_CPU), NULL};
+    /* The processor is the only device, as in LanguageModel/duo_lm_probe.c. With the GPU the
+       GPU device is the only device of the model, and llama.cpp keeps the processor for the
+       operations that the GPU device refuses. */
+    enum ggml_backend_dev_type device_type =
+        device == DUO_LM_DEVICE_GPU ? GGML_BACKEND_DEVICE_TYPE_GPU : GGML_BACKEND_DEVICE_TYPE_CPU;
+    ggml_backend_dev_t devices[2] = {ggml_backend_dev_by_type(device_type), NULL};
     if (devices[0] == NULL) {
-        set_error(error, error_size, "llama.cpp does not offer the processor as a device");
+        set_error(error, error_size, "llama.cpp does not offer the %s as a device",
+                  device == DUO_LM_DEVICE_GPU ? "GPU" : "processor");
         free(scorer);
         return NULL;
     }
+    scorer->device = device;
     struct llama_model_params model_settings = llama_model_default_params();
     model_settings.devices = devices;
-    model_settings.n_gpu_layers = 0;
+    model_settings.n_gpu_layers = device == DUO_LM_DEVICE_GPU ? 999 : 0;
     model_settings.split_mode = LLAMA_SPLIT_MODE_NONE;
     /* The weights stay in the file. Pages that iOS reads from a file and that nobody changed do
        not count against the memory limit of the keyboard. */
+#if defined(DUO_LLAMA_MEMORY_API)
+    model_settings.load_mode = LLAMA_LOAD_MODE_MMAP;
+    /* Later releases repack the weights into buffers of their own for faster products. The speed
+       test measures both: DUO_LM_NO_REPACK=1 in the environment keeps the weights as they are in
+       the file. */
+    const char *no_repack = getenv("DUO_LM_NO_REPACK");
+    model_settings.use_extra_bufts = !(no_repack != NULL && strcmp(no_repack, "1") == 0);
+#else
     model_settings.use_mmap = true;
     model_settings.use_mlock = false;
+#endif
     scorer->model = llama_model_load_from_file(model_path, model_settings);
     if (scorer->model == NULL) {
         set_error(error, error_size, "the model did not load: %s",
@@ -380,7 +448,7 @@ duo_lm_scorer *duo_lm_scorer_open(const char *model_path, int threads, duo_lm_re
         return NULL;
     }
 
-    scorer->context = llama_init_from_model(scorer->model, state_settings(threads));
+    scorer->context = llama_init_from_model(scorer->model, state_settings(threads, scorer->device));
     if (scorer->context == NULL) {
         set_error(error, error_size, "the model state did not set up: %s",
                   last_llama_error[0] != 0 ? last_llama_error : "llama.cpp gave no reason");
@@ -393,7 +461,7 @@ duo_lm_scorer *duo_lm_scorer_open(const char *model_path, int threads, duo_lm_re
         duo_lm_scorer_close(scorer);
         return NULL;
     }
-    if (reuse.mode == DUO_LM_REUSE_SHIFT && !llama_kv_cache_can_shift(scorer->context)) {
+    if (reuse.mode == DUO_LM_REUSE_SHIFT && !cache_can_shift(scorer->context)) {
         set_error(error, error_size, "llama.cpp cannot move the positions of this model's cache");
         duo_lm_scorer_close(scorer);
         return NULL;
@@ -410,7 +478,7 @@ int duo_lm_scorer_set_check(duo_lm_scorer *scorer, double tolerance, char *error
     if (scorer->check_context == NULL) {
         int threads = (int)llama_n_threads(scorer->context);
         last_llama_error[0] = 0;
-        scorer->check_context = llama_init_from_model(scorer->model, state_settings(threads));
+        scorer->check_context = llama_init_from_model(scorer->model, state_settings(threads, scorer->device));
         if (scorer->check_context == NULL) {
             set_error(error, error_size, "the state of the check did not set up: %s",
                       last_llama_error[0] != 0 ? last_llama_error : "llama.cpp gave no reason");
@@ -487,7 +555,7 @@ static int read_window_and_candidates(duo_lm_scorer *scorer, struct llama_contex
     for (int candidate = 0; candidate < count; candidate++) {
         scores[candidate].log_probability = (double)after_context[candidates->tokens[candidate][0]] - context_all;
         scores[candidate].space_after = 0;
-        llama_kv_cache_seq_cp(state, sequence, candidate + 1, -1, -1);
+        cache_seq_cp(state, sequence, candidate + 1);
     }
 
     /* The candidates, each in its own sequence after the context. Their tokens go in order, in
@@ -604,7 +672,7 @@ static int trade_slots(duo_lm_scorer *scorer, char *error, size_t error_size) {
         }
     }
     live->saved_size = size;
-    llama_kv_cache_clear(scorer->context);
+    cache_clear(scorer->context);
     if (waiting->count > 0 && llama_state_seq_set_data(scorer->context, waiting->saved, waiting->saved_size, 0)
                                   != waiting->saved_size) {
         set_error(error, error_size, "llama.cpp did not restore the window of a slot%s%s",
@@ -620,7 +688,7 @@ static int trade_slots(duo_lm_scorer *scorer, char *error, size_t error_size) {
 /* Marks every slot empty and clears the cache, after a read that did not finish. */
 static void forget_cache(duo_lm_scorer *scorer) {
     for (int index = 0; index < scorer->reuse.slots; index++) scorer->slots[index].count = 0;
-    llama_kv_cache_clear(scorer->context);
+    cache_clear(scorer->context);
 }
 
 static int remember_context(struct slot *slot, const llama_token *context_tokens, int context_count, char *error,
@@ -645,7 +713,7 @@ static int check_scores(duo_lm_scorer *scorer, const llama_token *window, int wi
                         const struct candidate_tokens *candidates, const duo_lm_score *scores, char *error,
                         size_t error_size) {
     duo_lm_score fresh[DUO_LM_MAX_CANDIDATES];
-    llama_kv_cache_clear(scorer->check_context);
+    cache_clear(scorer->check_context);
     if (read_window_and_candidates(scorer, scorer->check_context, 0, window, window_count, 0, candidates, fresh, error,
                                    error_size) != 1) {
         return -1;
@@ -730,7 +798,7 @@ int duo_lm_scorer_score(duo_lm_scorer *scorer, const char *context, const char *
         int theirs = other.kept > 1 ? other.kept : 0;
         if (theirs > mine || (theirs == mine && mine == 0 && scorer->slots[1].last_use < scorer->slots[0].last_use)) {
             for (int candidate = 1; candidate <= DUO_LM_MAX_CANDIDATES; candidate++) {
-                llama_kv_cache_seq_rm(scorer->context, candidate, -1, -1);
+                cache_seq_rm(scorer->context, candidate, -1, -1);
             }
             last_llama_error[0] = 0;
             if (!trade_slots(scorer, error, error_size)) {
@@ -758,17 +826,17 @@ int duo_lm_scorer_score(duo_lm_scorer *scorer, const char *context, const char *
 
     /* The cache keeps the first `kept` tokens of the slot and nothing of the candidates. */
     if (scorer->reuse.mode == DUO_LM_REUSE_NONE) {
-        llama_kv_cache_clear(scorer->context);
+        cache_clear(scorer->context);
     } else {
         int removed = 1;
         for (int candidate = 1; candidate <= DUO_LM_MAX_CANDIDATES; candidate++) {
-            removed = removed && llama_kv_cache_seq_rm(scorer->context, candidate, -1, -1);
+            removed = removed && cache_seq_rm(scorer->context, candidate, -1, -1);
         }
         if (kept > 1 && plan.shift > 0) {
-            removed = removed && llama_kv_cache_seq_rm(scorer->context, 0, 1, 1 + plan.shift);
-            llama_kv_cache_seq_add(scorer->context, 0, 1 + plan.shift, -1, -plan.shift);
+            removed = removed && cache_seq_rm(scorer->context, 0, 1, 1 + plan.shift);
+            cache_seq_add(scorer->context, 0, 1 + plan.shift, -1, -plan.shift);
         }
-        removed = removed && llama_kv_cache_seq_rm(scorer->context, 0, kept, -1);
+        removed = removed && cache_seq_rm(scorer->context, 0, kept, -1);
         if (!removed) {
             free(context_tokens);
             forget_cache(scorer);
@@ -809,6 +877,28 @@ int duo_lm_scorer_score(duo_lm_scorer *scorer, const char *context, const char *
     }
     return 1;
 }
+
+int duo_lm_scorer_tokenize(duo_lm_scorer *scorer, const char *text, int *tokens, int capacity, char *error,
+                           size_t error_size) {
+    if (scorer == NULL || text == NULL || tokens == NULL || capacity < 0) {
+        set_error(error, error_size, "the tokenizer needs a scorer, a text and room for the tokens");
+        return -1;
+    }
+    if (text[0] == 0) return 0;
+    llama_token *found;
+    int count = tokenize(scorer, text, &found, error, error_size);
+    if (count < 0) return -1;
+    if (count > capacity) {
+        free(found);
+        set_error(error, error_size, "the text gives %d tokens, and the room holds %d", count, capacity);
+        return -1;
+    }
+    for (int index = 0; index < count; index++) tokens[index] = (int)found[index];
+    free(found);
+    return count;
+}
+
+int duo_lm_scorer_start_token(const duo_lm_scorer *scorer) { return scorer != NULL ? (int)scorer->start : -1; }
 
 duo_lm_scorer_info duo_lm_scorer_get_info(const duo_lm_scorer *scorer) {
     duo_lm_scorer_info empty;

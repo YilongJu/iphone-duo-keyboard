@@ -192,6 +192,45 @@ final class KeyboardTextControllerTests: XCTestCase {
         XCTAssertEqual(measurer.runs, 2)
     }
 
+    func testTheSpeedTriggerRunsTheSpeedTestAndNotTheLanguageModelTest() async {
+        let measurer = makeMeasuringController(before: "")
+        let speed = FakeLanguageModelMeasurer()
+        speed.lines = ["pair        fake", "done        1 pairs ran"]
+        controller.speedTestMeasurer = speed
+        type("duo:speed ")
+        await controller.languageModelTask?.value
+        XCTAssertEqual(speed.runs, 1)
+        XCTAssertEqual(measurer.runs, 0)
+        XCTAssertEqual(document.text, "duo:speed \npair        fake\ndone        1 pairs ran")
+        type("\nDuo:speed ")
+        await controller.languageModelTask?.value
+        XCTAssertEqual(speed.runs, 2)
+    }
+
+    func testOtherTextDoesNotRunTheSpeedTest() {
+        for text in ["duo:speed", "duo:speedx ", "xduo:speed ", "/duo:speed "] {
+            makeController(before: "")
+            let speed = FakeLanguageModelMeasurer()
+            controller.speedTestMeasurer = speed
+            type(text)
+            XCTAssertEqual(speed.runs, 0, text)
+            XCTAssertEqual(document.text, text)
+        }
+    }
+
+    func testTheSpeedTestDoesNotStartWhileTheLanguageModelTestRuns() async {
+        let measurer = makeMeasuringController(before: "")
+        measurer.staysOpen = true
+        let speed = FakeLanguageModelMeasurer()
+        controller.speedTestMeasurer = speed
+        type("duo:lm ")
+        type("duo:speed ")
+        XCTAssertEqual(speed.runs, 0)
+        let run = controller.languageModelTask
+        measurer.finish()
+        await run?.value
+    }
+
     private func makeProofreadingController(before: String, answers: [String: String]) -> FakeProofreader {
         makeController(before: before)
         let proofreader = FakeProofreader()

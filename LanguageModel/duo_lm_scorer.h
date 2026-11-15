@@ -109,11 +109,34 @@ typedef struct {
     double candidate_milliseconds;
 } duo_lm_scorer_info;
 
-/* Loads the model at `model_path` with `threads` threads and the reuse mode `reuse`. Returns
-   NULL when the model does not load or `reuse` is not valid, and then writes the reason into
-   `error`. */
+/* Loads the model at `model_path` with `threads` threads and the reuse mode `reuse`, on the
+   processor only. Returns NULL when the model does not load or `reuse` is not valid, and then
+   writes the reason into `error`. The keyboard opens its model with this function. */
 duo_lm_scorer *duo_lm_scorer_open(const char *model_path, int threads, duo_lm_reuse reuse, char *error,
                                   size_t error_size);
+
+/* The device that runs the products of the model, for the speed test of docs/model-speed-design.md.
+   DUO_LM_DEVICE_CPU    the processor only, the settings of duo_lm_scorer_open
+   DUO_LM_DEVICE_GPU    llama.cpp's GPU device (Metal on Apple devices) runs every layer and the
+                        attention. The processor runs only what the GPU device refuses. */
+typedef enum {
+    DUO_LM_DEVICE_CPU = 0,
+    DUO_LM_DEVICE_GPU = 1,
+} duo_lm_device;
+
+/* duo_lm_scorer_open with a choice of device. With DUO_LM_DEVICE_CPU it is duo_lm_scorer_open. */
+duo_lm_scorer *duo_lm_scorer_open_on(const char *model_path, int threads, duo_lm_reuse reuse, duo_lm_device device,
+                                     char *error, size_t error_size);
+
+/* Tokenizes `text` the way a request does, with the repair of -1 of duo_lm_scorer.c, and writes
+   at most `capacity` tokens into `tokens`. Returns the count of tokens, or -1 with the reason in
+   `error`, also when the text needs more than `capacity` tokens. The speed test writes the tokens
+   of each request with it, for the runtimes that have no tokenizer of their own. */
+int duo_lm_scorer_tokenize(duo_lm_scorer *scorer, const char *text, int *tokens, int capacity, char *error,
+                           size_t error_size);
+
+/* The start token of the model, which every window begins with. */
+int duo_lm_scorer_start_token(const duo_lm_scorer *scorer);
 
 /* Turns on the check of the cache, for tests and the replay of scripts/kv-reuse: after each
    request the scorer reads the same window and candidates again in a second llama.cpp state,

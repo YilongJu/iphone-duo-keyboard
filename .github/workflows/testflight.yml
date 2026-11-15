@@ -57,6 +57,11 @@ jobs:
             DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
             CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
             CURRENT_PROJECT_VERSION="${{ github.run_number }}" | xcbeautify
+      # The export takes the entitlements from the signatures of the archive, and the unsigned
+      # archive has none. This step gives the app and the keyboard the app group of the speed
+      # test models. The App IDs need the same app group on developer.apple.com.
+      - name: Sign the app and the keyboard ad hoc with their entitlements
+        run: bash scripts/ci/sign_with_entitlements.sh build/DuoKeyboard.xcarchive
       - name: Export and upload to App Store Connect
         run: |
           set -euo pipefail

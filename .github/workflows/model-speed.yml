@@ -1,0 +1,220 @@
+name: Model speed
+
+# The parts of the speed test of docs/model-speed-design.md that run on a macOS runner:
+#   coreml       converts each model of the shortlist to Core ML, checks the converted model
+#                against llama.cpp's answers on the same model, and times it on the runner
+#   llama-mac    times llama.cpp b4846 (the app's framework) and b12017 on the runner's processor
+#   xcframework  builds llama.cpp b12017 for iOS with and without the dot-product and i8mm flags,
+#                and runs the macOS part of each build on 50 requests
+#   archive      archives the app with signing off, signs it ad hoc with the entitlements, and
+#                checks the app group, the step that the TestFlight workflow adds before its export
+# The runner is a virtual Mac: its GPU is a paravirtual device and it has no Neural Engine, so
+# its times rank the models and nothing more. docs/model-speed-results.md says what each number
+# shows.
+on:
+  push:
+    branches: [engine/model-speed]
+    paths:
+      - scripts/model-speed/**
+      - scripts/ci/sign_with_entitlements.sh
+      - .github/workflows/model-speed.yml
+      - LanguageModel/duo_lm_scorer.*
+  workflow_dispatch:
+    inputs:
+      upload:
+        description: Upload the compiled Core ML models to the release model-speed-1
+        type: boolean
+        default: false
+
+concurrency:
+  group: model-speed-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  coreml:
+    name: Core ML conversion and check of ${{ matrix.model }}
+    runs-on: xcode-27
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        model: [smollm2-135m, smollm2-360m, qwen2.5-0.5b, qwen3-0.6b-base, granite-4.0-350m-base]
+    env:
+      MODEL: ${{ matrix.model }}
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install uv and the Python packages
+        run: |
+          set -euo pipefail
+          brew install uv
+          uv venv --python 3.12 "$RUNNER_TEMP/venv"
+          VIRTUAL_ENV="$RUNNER_TEMP/venv" uv pip install torch==2.11.0 coremltools==9.0 safetensors==0.6.2 numpy==2.2.6
+          "$RUNNER_TEMP/venv/bin/python" -c "import coremltools, torch; print('coremltools', coremltools.__version__, 'torch', torch.__version__)"
+          { sw_vers; sysctl -n machdep.cpu.brand_string; system_profiler SPDisplaysDataType | grep -E 'Chipset|Metal' || true; } \
+            | tee "$RUNNER_TEMP/runner.txt"
+      - name: Fetch the model
+        run: bash scripts/model-speed/desktop/fetch_models.sh build/model-speed "$MODEL"
+      - name: Convert with 4-bit and with 16-bit weights
+        run: |
+          set -euo pipefail
+          out=build/model-speed/coreml
+          mkdir -p "$out"
+          for weights in int4 fp16; do
+            "$RUNNER_TEMP/venv/bin/python" scripts/model-speed/coreml/convert.py "build/model-speed/hf/$MODEL" \
+              "$out/$MODEL.$weights.mlpackage" --weights "$weights" 2>&1 | grep -v -E 'passes/s|ops/s'
+          done
+          du -sh "$out"/*.mlpackage
+      - name: Check and time each converted model against llama.cpp's answers at Q8_0
+        run: |
+          set -euo pipefail
+          out=build/model-speed/coreml
+          tokens="Shared/model-speed-tokens.$MODEL.tsv"
+          reference="scripts/model-speed/reference/$MODEL.Q8_0.answers"
+          for run in "int4 cpu" "int4 gpu" "fp16 cpu"; do
+            set -- $run
+            "$RUNNER_TEMP/venv/bin/python" scripts/model-speed/coreml/check_coreml.py "$out/$MODEL.$1.mlpackage" \
+              "$tokens" "$reference" "$out/$MODEL.coreml-$1-$2" --units "$2"
+          done
+      - name: Compile the 4-bit model and list its files
+        run: |
+          set -euo pipefail
+          out=build/model-speed/coreml
+          mkdir -p "$out/compiled"
+          xcrun coremlcompiler compile "$out/$MODEL.int4.mlpackage" "$out/compiled"
+          mv "$out/compiled/$MODEL.int4.mlmodelc" "$out/compiled/model.mlmodelc"
+          python3 scripts/model-speed/coreml_manifest.py "$out/compiled" "$MODEL.coreml-int4" "$out/$MODEL.manifest.json" \
+            "$out/assets"
+          cp "$RUNNER_TEMP/runner.txt" "$out/runner.txt"
+      - name: Upload the compiled model to the release model-speed-1
+        if: github.event_name == 'workflow_dispatch' && inputs.upload
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload model-speed-1 build/model-speed/coreml/assets/* --clobber
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: coreml-${{ matrix.model }}
+          path: |
+            build/model-speed/coreml/*.summary
+            build/model-speed/coreml/*.times
+            build/model-speed/coreml/*.answers
+            build/model-speed/coreml/*.check.json
+            build/model-speed/coreml/*.manifest.json
+            build/model-speed/coreml/runner.txt
+          if-no-files-found: error
+
+  llama-mac:
+    name: llama.cpp b4846 and b12017 on the runner's processor
+    runs-on: xcode-27
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v7
+      - name: Fetch the app's framework and the keyboard's model, and the GGUF files of the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          bash scripts/ci/fetch_language_model.sh
+          mkdir -p build/model-speed/gguf
+          gh release download model-speed-1 --pattern '*.gguf' --dir build/model-speed/gguf --clobber
+          (cd build/model-speed/gguf && shasum -a 256 *.gguf) | tee build/model-speed/gguf/sha256.txt
+          diff <(sort -k2 build/model-speed/gguf/sha256.txt | awk '{print $1"  "$2}') \
+            <(sort -k2 scripts/model-speed/gguf-sha256.txt | awk '{print $1"  "$2}')
+      - name: Build the speed program against the app's framework and against b12017
+        run: |
+          set -euo pipefail
+          mkdir -p build/model-speed/bin
+          fw="$PWD/Vendor/llama.xcframework/macos-arm64_x86_64"
+          clang -std=c11 -O2 -Wall -Wextra -Werror -I LanguageModel -F "$fw" LanguageModel/duo_lm_scorer.c \
+            scripts/model-speed/speed_cli.c -framework llama -Wl,-rpath,"$fw" -o build/model-speed/bin/speed_cli-b4846
+          bash scripts/model-speed/desktop/build_llama.sh b12017 "$RUNNER_TEMP/llama"
+          new="$RUNNER_TEMP/llama/llama-b12017"
+          clang -std=c11 -O2 -Wall -Wextra -Werror -DDUO_LLAMA_MEMORY_API -DDUO_LLAMA_PLAIN_INCLUDE -I "$new/include" \
+            -I LanguageModel LanguageModel/duo_lm_scorer.c scripts/model-speed/speed_cli.c -L "$new/lib" \
+            -lllama -lggml -lggml-base -Wl,-rpath,"$new/lib" -o build/model-speed/bin/speed_cli-b12017
+          { sysctl -n machdep.cpu.brand_string; sysctl hw.optional | grep -E 'dotprod|i8mm|fp16' || true; } \
+            | tee build/model-speed/runner.txt
+      - name: Time every pair on the processor, and the GPU runs as a report
+        run: bash scripts/model-speed/mac/speed.sh build/model-speed
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: llama-mac
+          path: |
+            build/model-speed/out
+            build/model-speed/runner.txt
+          if-no-files-found: error
+
+  xcframework:
+    name: llama.cpp b12017 for iOS, with ${{ matrix.arch }}
+    runs-on: xcode-27
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [plain, armv8.6-a+dotprod+i8mm]
+    steps:
+      - uses: actions/checkout@v7
+      - name: Build the xcframework
+        run: |
+          set -euo pipefail
+          brew list cmake >/dev/null 2>&1 || brew install cmake
+          bash scripts/model-speed/ios/build_llama_xcframework.sh b12017 "$RUNNER_TEMP/xc" "${{ matrix.arch }}"
+          mkdir -p build/model-speed/xcframework
+          cp "$RUNNER_TEMP/xc/llama-b12017-${{ matrix.arch }}.xcframework.zip" build/model-speed/xcframework/
+      - name: Check the parts of the xcframework and run its macOS part on 50 requests
+        run: |
+          set -euo pipefail
+          out=build/model-speed/xcframework
+          cd "$out" && unzip -q -o "llama-b12017-${{ matrix.arch }}.xcframework.zip" && cd -
+          xc="$out/llama.xcframework"
+          ls "$xc" | tee "$out/parts.txt"
+          device=$(find "$xc" -path '*ios-arm64/llama.framework/llama' | head -n 1)
+          lipo -info "$device" | tee -a "$out/parts.txt"
+          # The kernels of the dot-product and i8mm instructions, by their instruction names.
+          for instruction in sdot smmla; do
+            echo "$instruction in the device part: $(otool -tv "$device" | grep -c -w "$instruction")" | tee -a "$out/parts.txt"
+          done
+          bash scripts/ci/fetch_language_model.sh model
+          mac=$(find "$xc" -maxdepth 1 -name 'macos-*')
+          clang -std=c11 -O2 -Wall -Wextra -Werror -DDUO_LLAMA_MEMORY_API -I LanguageModel -F "$mac" \
+            LanguageModel/duo_lm_scorer.c scripts/model-speed/speed_cli.c -framework llama -Wl,-rpath,"$mac" \
+            -o "$out/speed_cli"
+          head -n 50 Shared/model-speed-requests.tsv > "$out/requests50.tsv"
+          "$out/speed_cli" Shared/smollm2-lora-domain-s100-seed1.Q4_K_M.gguf 2 cpu "$out/requests50.tsv" "$out/smoke"
+          cat "$out/smoke.summary"
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: xcframework-${{ strategy.job-index }}
+          path: |
+            build/model-speed/xcframework/*.zip
+            build/model-speed/xcframework/parts.txt
+            build/model-speed/xcframework/smoke.*
+          if-no-files-found: error
+
+  archive:
+    name: Archive with signing off, then sign ad hoc with the entitlements
+    runs-on: xcode-27
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install XcodeGen
+        run: brew install xcodegen
+      - name: Fetch the llama.cpp framework and the language model
+        run: bash scripts/ci/fetch_language_model.sh
+      - name: Generate the Xcode project
+        run: xcodegen generate
+      - name: Archive with signing off, as the TestFlight workflow does
+        run: |
+          set -o pipefail
+          xcodebuild archive -project DuoKeyboard.xcodeproj -scheme DuoKeyboard -configuration Release \
+            -destination 'generic/platform=iOS' -archivePath build/DuoKeyboard.xcarchive \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" | xcbeautify
+      - name: Sign ad hoc with the entitlements and check the app group
+        run: bash scripts/ci/sign_with_entitlements.sh build/DuoKeyboard.xcarchive
+      - name: Report the size of the app
+        run: du -sh build/DuoKeyboard.xcarchive/Products/Applications/DuoKeyboard.app

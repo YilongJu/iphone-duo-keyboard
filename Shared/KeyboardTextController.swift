@@ -256,9 +256,15 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
     /// The text that turns the work area on or off when a space follows it.
     static let workAreaTrigger = "duo:work"
 
+    /// The text that starts the speed test of the language models when a space follows it.
+    static let speedTestTrigger = "duo:speed"
+
     /// Runs the language model test. Without a measurer the trigger text is typed as any
     /// other text, and the test does not load a model.
     var languageModelMeasurer: LanguageModelMeasuring?
+    /// Runs the speed test of the language models (Shared/ModelSpeedTest.swift), in the same
+    /// way. The speed test and the language model test never run at the same time.
+    var speedTestMeasurer: LanguageModelMeasuring?
     /// The run of the test that is under way now. The tests wait for it.
     private(set) var languageModelTask: Task<Void, Never>?
 
@@ -578,11 +584,29 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
     /// A capital first letter also counts, because the keyboard capitalizes the start of a
     /// sentence. Returns false when the space should be typed by the normal rules.
     private func startLanguageModelTest() -> Bool {
-        guard let languageModelMeasurer, languageModelTask == nil else { return false }
+        if let languageModelMeasurer,
+            startTest(trigger: Self.languageModelTrigger, measurer: languageModelMeasurer,
+                      notice: "Language model test is running")
+        {
+            return true
+        }
+        if let speedTestMeasurer,
+            startTest(trigger: Self.speedTestTrigger, measurer: speedTestMeasurer, notice: "Speed test is running")
+        {
+            return true
+        }
+        return false
+    }
+
+    /// Starts `measurer` when `trigger` stands right before the cursor as a word of its own.
+    private func startTest(trigger: String, measurer languageModelMeasurer: LanguageModelMeasuring, notice: String)
+        -> Bool
+    {
+        guard languageModelTask == nil else { return false }
         let before = document.textBeforeCursor
-        guard before.lowercased().hasSuffix(Self.languageModelTrigger) else { return false }
+        guard before.lowercased().hasSuffix(trigger) else { return false }
         // A letter or another sign right before the trigger makes it part of a longer text.
-        if let preceding = before.dropLast(Self.languageModelTrigger.count).last, !preceding.isWhitespace {
+        if let preceding = before.dropLast(trigger.count).last, !preceding.isWhitespace {
             return false
         }
         // The trigger is a command and not a word of prose, so the space after it does not
@@ -591,7 +615,7 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
         recentWord = nil
         previousInsertWasSpace = false
         document.insertText(" ")
-        showNotice("Language model test is running")
+        showNotice(notice)
         // The run starts here, before the task below gets its turn on the main thread.
         let lines = languageModelMeasurer.resultLines()
         languageModelTask = Task { [weak self] in

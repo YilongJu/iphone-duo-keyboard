@@ -39,6 +39,19 @@ final class KeyboardViewController: UIInputViewController {
             self?.textController.keyboardWillAppear()
         }
         textController.languageModelMeasurer = languageModelTest
+        // The speed test of the language models (docs/model-speed-design.md) starts with
+        // "duo:speed" and a space. It frees the keyboard's model for the run, as the test above.
+        let speedTest = ModelSpeedTest()
+        speedTest.keyboardLines = { [languageModel, reranker] in
+            languageModel.reportLines(statistics: reranker.statistics)
+        }
+        speedTest.onRunStart = { [languageModel] in
+            languageModel.unload(reason: "the speed test runs")
+        }
+        speedTest.onRunEnd = { [weak self] in
+            self?.textController.keyboardWillAppear()
+        }
+        textController.speedTestMeasurer = speedTest
         textController.languageModelLoader = languageModel
         languageModel.onEvent = { [weak self] event in
             self?.textController.show(event)

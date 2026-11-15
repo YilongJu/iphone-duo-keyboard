@@ -1,0 +1,486 @@
+dev cases	en-dev-clean_common-0000	0	typed
+dev cases	en-dev-clean_common-0080	0	typed
+dev cases	en-dev-clean_common-0160	0	typed
+dev cases	en-dev-clean_common-0240	0	typed
+dev cases	en-dev-clean_rare-0020	0	typed
+dev cases	en-dev-clean_rare-0100	0	typed
+dev cases	en-dev-clean_rare-0180	0	typed
+dev cases	en-dev-clean_rare-0260	0	typed
+dev cases	en-dev-clean_names_and_terms-0041	0	typed
+dev cases	en-dev-clean_two_words-0051	0	typed
+dev cases	en-dev-clean_two_words-0051	1	typed
+dev cases	en-dev-clean_two_words-0131	0	typed
+dev cases	en-dev-clean_two_words-0131	1	typed
+dev cases	en-dev-clean_two_words-0211	0	typed
+dev cases	en-dev-clean_two_words-0211	1	typed
+dev cases	en-dev-clean_two_words-0291	0	typed
+dev cases	en-dev-clean_two_words-0291	1	typed
+dev cases	en-dev-substitution_adjacent-0071	0	typed
+dev cases	en-dev-substitution_adjacent-0151	0	typed
+dev cases	en-dev-substitution_adjacent-0231	0	typed
+dev cases	en-dev-deletion-0011	0	typed
+dev cases	en-dev-deletion-0091	0	typed
+dev cases	en-dev-deletion-0171	0	typed
+dev cases	en-dev-deletion-0251	0	typed
+dev cases	en-dev-double_letter-0031	0	typed
+dev cases	en-dev-double_letter-0111	0	typed
+dev cases	en-dev-double_letter-0191	0	typed
+dev cases	en-dev-double_letter-0271	0	typed
+dev cases	en-dev-extra_adjacent-0051	0	typed
+dev cases	en-dev-extra_adjacent-0131	0	typed
+dev cases	en-dev-extra_adjacent-0211	0	typed
+dev cases	en-dev-extra_adjacent-0291	0	typed
+dev cases	en-dev-transposition-0071	0	typed
+dev cases	en-dev-transposition-0151	0	typed
+dev cases	en-dev-transposition-0231	0	typed
+dev cases	en-dev-two_errors-0011	0	typed
+dev cases	en-dev-two_errors-0091	0	typed
+dev cases	en-dev-two_errors-0171	0	typed
+dev cases	en-dev-two_errors-0251	0	typed
+dev cases	en-dev-short_word_slip-0031	0	typed
+dev cases	en-dev-short_word_slip-0111	0	typed
+dev cases	en-dev-short_word_slip-0191	0	typed
+dev cases	en-dev-short_word_slip-0271	0	typed
+dev cases	en-dev-space_missing-0051	0	typed
+dev cases	en-dev-space_missing-0131	0	typed
+dev cases	en-dev-space_missing-0211	0	typed
+dev cases	en-dev-space_missing-0291	0	typed
+dev cases	en-dev-space_to_letter-0071	0	typed
+dev cases	en-dev-space_to_letter-0151	0	typed
+dev cases	en-dev-space_to_letter-0231	0	typed
+dev cases	en-dev-space_transposed-0011	0	typed
+dev cases	en-dev-space_transposed-0011	1	typed
+dev cases	en-dev-space_transposed-0091	0	typed
+dev cases	en-dev-space_transposed-0091	1	typed
+dev cases	en-dev-space_transposed-0171	0	typed
+dev cases	en-dev-space_transposed-0171	1	typed
+dev cases	en-dev-space_transposed-0251	0	typed
+dev cases	en-dev-space_transposed-0251	1	typed
+dev cases	en-dev-space_extra-0031	0	typed
+dev cases	en-dev-space_extra-0031	1	typed
+dev cases	en-dev-space_extra-0111	0	typed
+dev cases	en-dev-space_extra-0111	1	typed
+dev cases	en-dev-space_extra-0191	0	typed
+dev cases	en-dev-space_extra-0191	1	typed
+dev cases	en-dev-space_extra-0271	0	typed
+dev cases	en-dev-space_extra-0271	1	typed
+dev cases	en-dev-letter_to_space-0051	0	typed
+dev cases	en-dev-letter_to_space-0051	1	typed
+dev cases	en-dev-letter_to_space-0131	0	typed
+dev cases	en-dev-letter_to_space-0131	1	typed
+dev cases	en-dev-letter_to_space-0211	0	typed
+dev cases	en-dev-letter_to_space-0211	1	typed
+dev cases	en-dev-letter_to_space-0291	0	typed
+dev cases	en-dev-letter_to_space-0291	1	typed
+dev cases	en-dev-apostrophe_missing-0071	0	typed
+dev cases	en-dev-apostrophe_missing-0151	0	typed
+dev cases	en-dev-apostrophe_missing-0231	0	typed
+dev cases	en-dev-real_word_slip-0011	0	typed
+dev cases	en-dev-real_word_slip-0091	0	typed
+dev cases	en-dev-real_word_slip-0171	0	typed
+dev cases	en-dev-real_word_slip-0251	0	typed
+dev cases	ensym-dev-symbol_first_letter-0031	0	typed
+dev cases	ensym-dev-symbol_first_letter-0111	0	typed
+dev cases	ensym-dev-symbol_first_letter-0191	0	typed
+dev cases	ensym-dev-symbol_first_letter-0271	0	typed
+dev cases	ensym-dev-symbol_inner_letter-0051	0	typed
+dev cases	ensym-dev-symbol_inner_letter-0131	0	typed
+dev cases	ensym-dev-symbol_inner_letter-0211	0	typed
+dev cases	ensym-dev-symbol_inner_letter-0291	0	typed
+dev cases	ensym-dev-symbol_first_letter_two_words-0074	0	typed
+dev cases	ensym-dev-symbol_first_letter_two_words-0074	1	typed
+dev cases	ensym-dev-symbol_first_letter_two_words-0154	0	typed
+dev cases	ensym-dev-symbol_first_letter_two_words-0154	1	typed
+dev cases	ensym-dev-symbol_first_letter_two_words-0234	0	typed
+dev cases	ensym-dev-symbol_first_letter_two_words-0234	1	typed
+dev cases	ensym-dev-symbol_plus_letter_slip-0014	0	typed
+dev cases	ensym-dev-symbol_plus_letter_slip-0094	0	typed
+dev cases	ensym-dev-symbol_plus_letter_slip-0174	0	typed
+dev cases	ensym-dev-symbol_plus_letter_slip-0254	0	typed
+dev cases	ensym-dev-clean_symbol_token-0052	0	typed
+dev cases	ensym-dev-clean_bracket_or_dot_word-0059	0	typed
+dev cases	ensym-dev-clean_bracket_or_dot_word-0143	0	typed
+dev cases	ensym-dev-clean_bracket_or_dot_word-0225	0	typed
+work area cases	endom-dev-domain_clean_new-0006	0	typed
+work area cases	endom-dev-domain_clean_new-0291	0	typed
+work area cases	endom-dev-domain_clean_raised-0040	0	typed
+work area cases	endom-dev-domain_clean_raised-0104	0	typed
+work area cases	endom-dev-domain_clean_raised-0168	0	typed
+work area cases	endom-dev-domain_clean_raised-0232	0	typed
+work area cases	endom-dev-domain_clean_raised-0296	0	typed
+work area cases	endom-dev-domain_clean_raised-0360	0	typed
+work area cases	endom-dev-domain_slip_new-0024	0	typed
+work area cases	endom-dev-domain_slip_new-0088	0	typed
+work area cases	endom-dev-domain_slip_new-0152	0	typed
+work area cases	endom-dev-domain_slip_new-0216	0	typed
+work area cases	endom-dev-domain_slip_new-0280	0	typed
+work area cases	endom-dev-domain_slip_raised-0001	0	typed
+work area cases	endom-dev-domain_slip_raised-0065	0	typed
+work area cases	endom-dev-domain_slip_raised-0129	0	typed
+work area cases	endom-dev-domain_slip_raised-0193	0	typed
+work area cases	endom-dev-domain_slip_raised-0257	0	typed
+work area cases	endom-dev-domain_slip_raised-0321	0	typed
+work area cases	endom-dev-phrase_clean-0005	0	typed
+work area cases	endom-dev-phrase_clean-0005	1	typed
+work area cases	endom-dev-phrase_clean-0069	0	typed
+work area cases	endom-dev-phrase_clean-0069	1	typed
+work area cases	endom-dev-phrase_clean-0133	0	typed
+work area cases	endom-dev-phrase_clean-0133	1	typed
+work area cases	endom-dev-phrase_clean-0197	0	typed
+work area cases	endom-dev-phrase_clean-0197	1	typed
+work area cases	endom-dev-phrase_clean-0261	0	typed
+work area cases	endom-dev-phrase_clean-0261	1	typed
+work area cases	endom-dev-phrase_space_missing-0025	0	typed
+work area cases	endom-dev-phrase_space_missing-0089	0	typed
+work area cases	endom-dev-phrase_space_to_letter-0003	0	typed
+work area cases	endom-dev-phrase_space_to_letter-0067	0	typed
+work area cases	endom-dev-phrase_space_to_letter-0131	0	typed
+work area cases	endom-dev-phrase_space_transposed-0045	0	typed
+work area cases	endom-dev-phrase_space_transposed-0045	1	typed
+work area cases	endom-dev-phrase_space_transposed-0109	0	typed
+work area cases	endom-dev-phrase_space_transposed-0109	1	typed
+work area cases	endom-dev-term_space_extra-0023	0	typed
+work area cases	endom-dev-term_space_extra-0023	1	typed
+work area cases	endom-dev-term_space_extra-0088	0	typed
+work area cases	endom-dev-term_letter_to_space-0002	0	typed
+work area cases	endom-dev-term_letter_to_space-0002	1	typed
+work area cases	endom-dev-term_letter_to_space-0066	0	typed
+work area cases	endom-dev-term_letter_to_space-0130	0	typed
+work area cases	endom-dev-term_letter_to_space-0130	1	typed
+work area cases	endom-dev-required_clean-0064	0	typed
+work area cases	endom-dev-required_clean_next_word-0050	0	typed
+work area cases	endom-dev-required_clean_next_word-0114	0	typed
+work area cases	endom-dev-required_clean_next_word-0114	1	typed
+work area cases	endom-dev-required_clean_next_word-0178	0	typed
+work area cases	endom-dev-required_clean_next_word-0178	1	typed
+work area cases	endom-dev-required_clean_next_word-0242	0	typed
+work area cases	endom-dev-required_clean_next_word-0307	0	typed
+work area cases	endom-dev-required_slip-0032	0	typed
+work area cases	endom-dev-required_slip-0096	0	typed
+work area cases	endom-dev-required_slip-0160	0	typed
+work area cases	endom-dev-required_slip-0224	0	typed
+work area cases	endom-dev-required_slip-0288	0	typed
+work area cases	endom-dev-required_slip-0352	0	typed
+work area cases	endom-dev-required_slip-0416	0	typed
+work area cases	endom-dev-required_slip-0480	0	typed
+work area cases	endom-dev-required_slip-0544	0	typed
+work area cases	endom-dev-required_slip-0608	0	typed
+work area cases	endom-dev-required_slip-0672	0	typed
+work area cases	endom-dev-required_control-0062	0	typed
+work area cases	endom-dev-neighbour_clean-0043	0	typed
+work area cases	endom-dev-neighbour_clean-0107	0	typed
+work area cases	endom-dev-neighbour_clean-0171	0	typed
+work area cases	endom-dev-neighbour_clean-0235	0	typed
+work area cases	endom-dev-neighbour_clean-0299	0	typed
+work area cases	endom-dev-neighbour_clean-0363	0	typed
+work area cases	endom-dev-neighbour_slip-0027	0	typed
+work area cases	endom-dev-neighbour_slip-0091	0	typed
+work area cases	endom-dev-neighbour_slip-0155	0	typed
+work area cases	endom-dev-neighbour_slip-0219	0	typed
+work area cases	endom-dev-neighbour_slip-0283	0	typed
+work area cases	endom-dev-neighbour_slip-0347	0	typed
+work area cases	endom-dev-neighbour_slip_between-0011	0	typed
+work area cases	endom-dev-neighbour_slip_between-0075	0	typed
+work area cases	endom-dev-neighbour_slip_between-0139	0	typed
+work area cases	endom-dev-neighbour_slip_between-0203	0	typed
+work area cases	endom-dev-neighbour_slip_between-0267	0	typed
+work area cases	endom-dev-requested_term_for_everyday_word-0038	0	typed
+work area cases	endom-dev-capital_lower_stays-0105	0	typed
+work area cases	endom-dev-capital_deliberate-0079	0	typed
+work area cases	endom-dev-capital_sentence_start-0083	0	typed
+work area cases	endom-dev-capital_slip_lower-0020	0	typed
+work area cases	endom-dev-capital_slip_lower-0084	0	typed
+work area cases	endom-dev-capital_slip_lower-0148	0	typed
+work area cases	endom-dev-capital_slip_deliberate-0062	0	typed
+work area cases	endom-dev-capital_slip_deliberate-0126	0	typed
+work area cases	endom-dev-capital_slip_sentence_start-0040	0	typed
+work area cases	endom-dev-capital_plain_word_keeps_capital-0018	0	typed
+work area cases	endom-dev-capital_plain_word_keeps_capital-0093	0	typed
+work area cases	endom-dev-capital_symbol_first-0051	0	typed
+work area cases	endom-dev-capital_symbol_first-0115	0	typed
+work area cases	endom-dev-capital_control_ordinary_word-0037	0	typed
+work area cases	endom-dev-capital_control_ordinary_word-0101	0	typed
+work area cases	endom-dev-capital_control_collision_lower-0015	0	typed
+work area cases	endom-dev-capital_requested-0031	0	typed
+everyday	everyday-field-0001	0	typed
+everyday	everyday-field-0001	1	typed
+everyday	everyday-field-0001	2	typed
+everyday	everyday-field-0001	3	typed
+everyday	everyday-field-0001	4	typed
+everyday	everyday-field-0001	5	typed
+everyday	everyday-field-0001	6	typed
+everyday	everyday-field-0001	7	typed
+everyday	everyday-field-0001	8	typed
+everyday	everyday-field-0001	9	typed
+everyday	everyday-field-0001	10	typed
+everyday	everyday-field-0001	11	typed
+everyday	everyday-field-0001	12	typed
+everyday	everyday-field-0001	13	typed
+everyday	everyday-field-0001	14	typed
+everyday	everyday-field-0001	15	typed
+everyday	everyday-field-0001	16	typed
+everyday	everyday-field-0001	17	typed
+everyday	everyday-field-0001	18	typed
+everyday	everyday-field-0001	19	typed
+everyday	everyday-field-0001	20	typed
+everyday	everyday-field-0001	21	typed
+everyday	everyday-field-0001	22	typed
+everyday	everyday-field-0001	22	stock
+everyday	everyday-field-0001	23	typed
+everyday	everyday-field-0001	24	typed
+everyday	everyday-field-0001	24	stock
+everyday	everyday-field-0001	25	typed
+everyday	everyday-field-0001	26	typed
+everyday	everyday-field-0001	27	typed
+everyday	everyday-field-0001	28	typed
+everyday	everyday-field-0001	29	typed
+everyday	everyday-field-0001	30	typed
+everyday	everyday-field-0001	31	typed
+everyday	everyday-field-0001	32	typed
+everyday	everyday-field-0001	32	stock
+everyday	everyday-field-0001	33	typed
+everyday	everyday-field-0001	34	typed
+everyday	everyday-field-0001	35	typed
+everyday	everyday-field-0001	36	typed
+everyday	everyday-field-0001	37	typed
+everyday	everyday-field-0001	38	typed
+everyday	everyday-field-0001	39	typed
+everyday	everyday-field-0001	40	typed
+everyday	everyday-field-0001	41	typed
+everyday	everyday-field-0001	42	typed
+everyday	everyday-field-0001	43	typed
+everyday	everyday-field-0001	44	typed
+everyday	everyday-field-0001	45	typed
+everyday	everyday-field-0001	46	typed
+everyday	everyday-field-0001	47	typed
+everyday	everyday-field-0001	47	stock
+everyday	everyday-field-0001	48	typed
+everyday	everyday-field-0001	49	typed
+everyday	everyday-field-0001	50	typed
+everyday	everyday-field-0001	51	typed
+everyday	everyday-field-0001	52	typed
+everyday	everyday-field-0001	53	typed
+everyday	everyday-field-0001	54	typed
+everyday	everyday-field-0001	55	typed
+everyday	everyday-field-0001	56	typed
+everyday	everyday-field-0001	56	stock
+everyday	everyday-field-0001	57	typed
+everyday	everyday-field-0001	58	typed
+everyday	everyday-field-0001	59	typed
+everyday	everyday-field-0001	60	typed
+everyday	everyday-field-0001	61	typed
+everyday	everyday-field-0001	62	typed
+everyday	everyday-field-0001	63	typed
+everyday	everyday-field-0001	64	typed
+everyday	everyday-field-0001	65	typed
+everyday	everyday-field-0001	66	typed
+everyday	everyday-field-0001	66	stock
+everyday	everyday-field-0001	67	typed
+technical	technical-field-0007	0	typed
+technical	technical-field-0007	1	typed
+technical	technical-field-0007	1	stock
+technical	technical-field-0007	2	typed
+technical	technical-field-0007	3	typed
+technical	technical-field-0007	4	typed
+technical	technical-field-0007	5	typed
+technical	technical-field-0007	6	typed
+technical	technical-field-0007	7	typed
+technical	technical-field-0007	8	typed
+technical	technical-field-0007	9	typed
+technical	technical-field-0007	10	typed
+technical	technical-field-0007	11	typed
+technical	technical-field-0007	12	typed
+technical	technical-field-0007	13	typed
+technical	technical-field-0007	14	typed
+technical	technical-field-0007	15	typed
+technical	technical-field-0007	16	typed
+technical	technical-field-0007	17	typed
+technical	technical-field-0007	18	typed
+technical	technical-field-0007	19	typed
+technical	technical-field-0007	20	typed
+technical	technical-field-0007	21	typed
+technical	technical-field-0007	22	typed
+technical	technical-field-0007	23	typed
+technical	technical-field-0007	24	typed
+technical	technical-field-0007	25	typed
+technical	technical-field-0007	26	typed
+technical	technical-field-0007	27	typed
+technical	technical-field-0007	28	typed
+technical	technical-field-0007	29	typed
+technical	technical-field-0007	30	typed
+technical	technical-field-0007	31	typed
+technical	technical-field-0007	32	typed
+technical	technical-field-0007	33	typed
+technical	technical-field-0007	34	typed
+technical	technical-field-0007	35	typed
+technical	technical-field-0007	36	typed
+technical	technical-field-0007	37	typed
+technical	technical-field-0007	38	typed
+technical	technical-field-0007	39	typed
+technical	technical-field-0007	40	typed
+technical	technical-field-0007	41	typed
+technical	technical-field-0007	42	typed
+technical	technical-field-0007	43	typed
+technical	technical-field-0007	44	typed
+technical	technical-field-0007	45	typed
+technical	technical-field-0007	46	typed
+technical	technical-field-0007	47	typed
+technical	technical-field-0007	48	typed
+technical	technical-field-0007	49	typed
+technical	technical-field-0007	50	typed
+technical	technical-field-0007	51	typed
+technical	technical-field-0007	52	typed
+technical	technical-field-0007	53	typed
+technical	technical-field-0007	54	typed
+technical	technical-field-0007	55	typed
+technical	technical-field-0007	56	typed
+technical	technical-field-0007	57	typed
+technical	technical-field-0007	58	typed
+technical	technical-field-0007	59	typed
+technical	technical-field-0007	60	typed
+technical	technical-field-0007	61	typed
+technical	technical-field-0007	62	typed
+technical	technical-field-0007	63	typed
+technical	technical-field-0007	64	typed
+technical	technical-field-0007	65	typed
+technical	technical-field-0007	66	typed
+technical	technical-field-0007	67	typed
+technical	technical-field-0007	68	typed
+technical	technical-field-0007	69	typed
+technical	technical-field-0007	70	typed
+technical	technical-field-0007	71	typed
+technical	technical-field-0007	72	typed
+technical	technical-field-0007	73	typed
+technical	technical-field-0007	74	typed
+technical	technical-field-0007	75	typed
+technical	technical-field-0007	76	typed
+technical	technical-field-0007	77	typed
+technical	technical-field-0007	78	typed
+technical	technical-field-0007	79	typed
+technical	technical-field-0007	80	typed
+technical	technical-field-0007	81	typed
+technical	technical-field-0007	82	typed
+technical	technical-field-0007	83	typed
+technical	technical-field-0007	84	typed
+technical	technical-field-0007	85	typed
+technical	technical-field-0007	86	typed
+technical	technical-field-0007	87	typed
+technical	technical-field-0007	88	typed
+technical	technical-field-0007	89	typed
+technical	technical-field-0007	90	typed
+technical	technical-field-0007	91	typed
+technical	technical-field-0007	92	typed
+technical	technical-field-0007	93	typed
+technical	technical-field-0007	94	typed
+technical	technical-field-0007	95	typed
+technical	technical-field-0007	96	typed
+technical	technical-field-0007	97	typed
+written	written-field-0011	0	typed
+written	written-field-0011	1	typed
+written	written-field-0011	2	typed
+written	written-field-0011	3	typed
+written	written-field-0011	4	typed
+written	written-field-0011	5	typed
+written	written-field-0011	6	typed
+written	written-field-0011	7	typed
+written	written-field-0011	8	typed
+written	written-field-0011	9	typed
+written	written-field-0011	10	typed
+written	written-field-0011	11	typed
+written	written-field-0011	12	typed
+written	written-field-0011	13	typed
+written	written-field-0011	14	typed
+written	written-field-0011	15	typed
+written	written-field-0011	16	typed
+written	written-field-0011	17	typed
+written	written-field-0011	18	typed
+written	written-field-0011	19	typed
+written	written-field-0011	20	typed
+written	written-field-0011	21	typed
+written	written-field-0011	22	typed
+written	written-field-0011	23	typed
+written	written-field-0011	24	typed
+written	written-field-0011	25	typed
+written	written-field-0011	26	typed
+written	written-field-0011	27	typed
+written	written-field-0011	28	typed
+written	written-field-0011	29	typed
+written	written-field-0011	30	typed
+written	written-field-0011	31	typed
+written	written-field-0011	32	typed
+written	written-field-0011	33	typed
+written	written-field-0011	34	typed
+written	written-field-0011	35	typed
+written	written-field-0011	36	typed
+written	written-field-0011	37	typed
+written	written-field-0011	38	typed
+written	written-field-0011	39	typed
+written	written-field-0011	40	typed
+written	written-field-0011	41	typed
+written	written-field-0011	42	typed
+written	written-field-0011	43	typed
+written	written-field-0011	44	typed
+written	written-field-0011	45	typed
+written	written-field-0011	46	typed
+written	written-field-0011	47	typed
+written	written-field-0011	48	typed
+written	written-field-0011	49	typed
+written	written-field-0011	50	typed
+written	written-field-0011	51	typed
+written	written-field-0011	52	typed
+written	written-field-0011	53	typed
+written	written-field-0011	54	typed
+written	written-field-0011	55	typed
+written	written-field-0011	56	typed
+written	written-field-0011	57	typed
+written	written-field-0011	58	typed
+written	written-field-0011	59	typed
+written	written-field-0011	60	typed
+written	written-field-0011	61	typed
+written	written-field-0011	62	typed
+written	written-field-0011	63	typed
+written	written-field-0011	64	typed
+written	written-field-0011	65	typed
+written	written-field-0011	66	typed
+written	written-field-0011	67	typed
+written	written-field-0011	68	typed
+written	written-field-0011	69	typed
+written	written-field-0011	70	typed
+written	written-field-0011	71	typed
+written	written-field-0011	72	typed
+written	written-field-0011	73	typed
+written	written-field-0011	74	typed
+written	written-field-0011	75	typed
+written	written-field-0011	76	typed
+written	written-field-0011	77	typed
+written	written-field-0011	78	typed
+written	written-field-0011	79	typed
+written	written-field-0011	80	typed
+written	written-field-0011	81	typed
+written	written-field-0011	82	typed
+written	written-field-0011	83	typed
+written	written-field-0011	84	typed
+written	written-field-0011	85	typed
+written	written-field-0011	86	typed
+written	written-field-0011	87	typed
+written	written-field-0011	88	typed
+written	written-field-0011	89	typed
+written	written-field-0011	90	typed
+written	written-field-0011	91	typed
+written	written-field-0011	92	typed
+written	written-field-0011	93	typed
+written	written-field-0011	94	typed
+written	written-field-0011	95	typed
+written	written-field-0011	96	typed
+written	written-field-0011	97	typed
+written	written-field-0011	98	typed
+written	written-field-0011	99	typed
+written	written-field-0011	100	typed
+written	written-field-0011	101	typed
+written	written-field-0011	102	typed
+written	written-field-0011	102	stock
+written	written-field-0011	103	typed
+written	written-field-0011	104	typed
+written	written-field-0011	105	typed
+written	written-field-0011	106	typed
+written	written-field-0011	107	typed

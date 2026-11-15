@@ -10,6 +10,8 @@ final class SetupViewController: UIViewController, UITextViewDelegate {
     private let languageModelButton = UIButton(type: .system)
     private let languageModelResults = UITextView()
     private let languageModelTest = BundledLanguageModelTest()
+    private let speedModelStatus = UITextView()
+    private var speedModelButtons: [UIButton] = []
     private let systemField = UITextView()
     private let previewField = UITextView()
     private let previewKeyboard = KeyboardView()
@@ -95,6 +97,7 @@ final class SetupViewController: UIViewController, UITextViewDelegate {
         languageModelResults.text = "The test runs in this app. For the keyboard's own numbers, "
             + "type duo:lm and a space with Duo Keyboard in the Notes app."
         stack.addArrangedSubview(languageModelResults)
+        addSpeedModelSection()
 
         textController.proofreader = SystemModelProofreader()
         textController.languageModelLoader = languageModel
@@ -225,6 +228,82 @@ final class SetupViewController: UIViewController, UITextViewDelegate {
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
         languageModel.unload(reason: "memory warning")
+    }
+
+    // MARK: Speed test models
+
+    /// One button per test model of the speed test (docs/model-speed-design.md). A tap downloads
+    /// the model into the shared container of the app group. The keyboard then runs it when the
+    /// person types duo:speed and a space.
+    private func addSpeedModelSection() {
+        stack.addArrangedSubview(makeLabel("Speed test models", style: .headline))
+        speedModelStatus.isEditable = false
+        speedModelStatus.isScrollEnabled = false
+        speedModelStatus.font = .monospacedSystemFont(ofSize: 13, weight: .regular)
+        speedModelStatus.backgroundColor = .clear
+        speedModelStatus.textContainerInset = .zero
+        speedModelStatus.textContainer.lineFragmentPadding = 0
+        speedModelStatus.accessibilityIdentifier = "speedModelStatus"
+        let catalog: ModelSpeedCatalog
+        do {
+            catalog = try ModelSpeedCatalog.bundled()
+        } catch {
+            speedModelStatus.text = "The catalog did not load: \(error)"
+            stack.addArrangedSubview(speedModelStatus)
+            return
+        }
+        guard let folder = ModelSpeedCatalog.sharedFolder() else {
+            speedModelStatus.text = "This build has no access to the app group \(ModelSpeedCatalog.appGroup)."
+            stack.addArrangedSubview(speedModelStatus)
+            return
+        }
+        let downloader = ModelSpeedDownloader(session: .shared, folder: folder)
+        for model in catalog.models {
+            var configuration = UIButton.Configuration.bordered()
+            configuration.title = String(format: "Download %@ (%.0f MB)", model.title, Double(model.bytes) / 1_048_576)
+            let button = UIButton(configuration: configuration, primaryAction: UIAction { [weak self] _ in
+                self?.download(model, with: downloader)
+            })
+            button.accessibilityIdentifier = "download-\(model.id)"
+            speedModelButtons.append(button)
+            stack.addArrangedSubview(button)
+        }
+        var removeConfiguration = UIButton.Configuration.bordered()
+        removeConfiguration.title = "Remove every speed test model"
+        let removeButton = UIButton(configuration: removeConfiguration, primaryAction: UIAction { [weak self] _ in
+            guard let self else { return }
+            do {
+                for model in catalog.models { try downloader.remove(model) }
+                self.speedModelStatus.text = "Every speed test model is removed."
+            } catch {
+                self.speedModelStatus.text = "The removal failed: \(error)"
+            }
+        })
+        speedModelButtons.append(removeButton)
+        stack.addArrangedSubview(removeButton)
+        speedModelStatus.text = "Tap a model to download it. Then type duo:speed and a space with Duo Keyboard "
+            + "in the Notes app. The keyboard runs every model that is in place."
+        stack.addArrangedSubview(speedModelStatus)
+    }
+
+    private func download(_ model: ModelSpeedCatalog.Model, with downloader: ModelSpeedDownloader) {
+        speedModelButtons.forEach { $0.isEnabled = false }
+        speedModelStatus.text = ""
+        Task { [weak self] in
+            do {
+                try await downloader.download(model) { line in
+                    Task { @MainActor in self?.appendSpeedStatus(line) }
+                }
+            } catch {
+                self?.appendSpeedStatus("\(model.title): failed: \(error)")
+            }
+            self?.speedModelButtons.forEach { $0.isEnabled = true }
+        }
+    }
+
+    private func appendSpeedStatus(_ line: String) {
+        speedModelStatus.text = (speedModelStatus.text ?? "") + line + "
+"
     }
 
     // MARK: UITextViewDelegate

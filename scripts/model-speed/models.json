@@ -1,0 +1,85 @@
+{
+  "comment": "The shortlist of docs/model-speed-design.md. Each model is a stock base model at a fixed revision of Hugging Face. scripts/model-speed/desktop/fetch_models.sh downloads these files.",
+  "models": [
+    {
+      "name": "smollm2-135m",
+      "repo": "HuggingFaceTB/SmolLM2-135M",
+      "revision": "93efa2f097d58c2a74874c7e644dbc9b0cee75a2",
+      "license": "apache-2.0",
+      "files": [
+        "config.json",
+        "generation_config.json",
+        "merges.txt",
+        "model.safetensors",
+        "tokenizer.json",
+        "tokenizer_config.json",
+        "vocab.json",
+        "special_tokens_map.json"
+      ]
+    },
+    {
+      "name": "smollm2-360m",
+      "repo": "HuggingFaceTB/SmolLM2-360M",
+      "revision": "f8027fd0eaeea54caa13c31d31b9fdc459c38b49",
+      "license": "apache-2.0",
+      "files": [
+        "config.json",
+        "generation_config.json",
+        "merges.txt",
+        "model.safetensors",
+        "tokenizer.json",
+        "tokenizer_config.json",
+        "vocab.json",
+        "special_tokens_map.json"
+      ]
+    },
+    {
+      "name": "qwen2.5-0.5b",
+      "repo": "Qwen/Qwen2.5-0.5B",
+      "revision": "060db6499f32faf8b98477b0a26969ef7d8b9987",
+      "license": "apache-2.0",
+      "files": [
+        "config.json",
+        "generation_config.json",
+        "merges.txt",
+        "model.safetensors",
+        "tokenizer.json",
+        "tokenizer_config.json",
+        "vocab.json",
+        "LICENSE"
+      ]
+    },
+    {
+      "name": "qwen3-0.6b-base",
+      "repo": "Qwen/Qwen3-0.6B-Base",
+      "revision": "da87bfb608c14b7cf20ba1ce41287e8de496c0cd",
+      "license": "apache-2.0",
+      "files": [
+        "config.json",
+        "generation_config.json",
+        "merges.txt",
+        "model.safetensors",
+        "tokenizer.json",
+        "tokenizer_config.json",
+        "vocab.json",
+        "LICENSE"
+      ]
+    },
+    {
+      "name": "granite-4.0-350m-base",
+      "repo": "ibm-granite/granite-4.0-350m-base",
+      "revision": "a50b46cef21c8a86b15f0496cb794487a78a910b",
+      "license": "apache-2.0",
+      "files": [
+        "config.json",
+        "generation_config.json",
+        "merges.txt",
+        "model.safetensors",
+        "tokenizer.json",
+        "tokenizer_config.json",
+        "vocab.json",
+        "special_tokens_map.json"
+      ]
+    }
+  ]
+}
