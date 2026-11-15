@@ -87,6 +87,7 @@
           "made": 13
         }
       },
+      "skipped_as_dev_cases": 0,
       "slip_cases_whose_first_word_pair_a_training_case_holds": 838
     },
     "test": {
@@ -124,7 +125,8 @@
           "made": 12
         }
       },
-      "slip_cases_whose_first_word_pair_a_training_case_holds": 808
+      "skipped_as_dev_cases": 178,
+      "slip_cases_whose_first_word_pair_a_training_case_holds": 812
     }
   }
 }

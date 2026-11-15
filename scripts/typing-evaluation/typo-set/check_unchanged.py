@@ -12,6 +12,8 @@ The two folders hold the downloaded artifacts of the two runs, one folder per ar
 Files that hold times or machine names (logs, `runner.txt`, `*.reranker.txt`, `result.json`,
 `report.md`, `differences.json`, `scorer-check.txt`) are not compared, and the report names them.
 
+The script stops with exit code 1 when a compared file differs.
+
 Usage:
     python3 scripts/typing-evaluation/typo-set/check_unchanged.py --reference DIR --other DIR --out REPORT.md
 """
@@ -84,6 +86,8 @@ def main():
     arguments.out.parent.mkdir(parents=True, exist_ok=True)
     arguments.out.write_text(text, encoding="utf-8")
     print(text)
+    if counts["differs"]:
+        raise SystemExit(f"{counts['differs']} files differ")
 
 
 if __name__ == "__main__":

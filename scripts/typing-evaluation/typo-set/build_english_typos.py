@@ -254,10 +254,14 @@ def one_slip_variants(word: str, layout: layout_keys.Layout) -> set[str]:
 
 
 class Builder:
-    def __init__(self, half: str, pool: list, layouts: dict[str, layout_keys.Layout]):
+    def __init__(self, half: str, pool: list, layouts: dict[str, layout_keys.Layout], excluded: frozenset = frozenset()):
+        """`excluded` holds the (context, typed, intended) triples of the dev half. Two sentences
+        can give the same case, and the test half must not repeat a dev case."""
         self.half = half
         self.pool = pool
         self.layouts = layouts
+        self.excluded = excluded
+        self.skipped_as_dev_cases = 0
         self.cases: list[dict] = []
         self.shortfalls: dict[str, dict] = {}
 
@@ -306,6 +310,9 @@ class Builder:
             typed_text = " ".join([typed] + follow)
             intended_text = " ".join([intended] + follow)
             context = " ".join(word for word, _ in tokens[:start])
+            if (context, typed_text, intended_text) in self.excluded:
+                self.skipped_as_dev_cases += 1
+                continue
             repeats[typed] = repeats.get(typed, 0) + 1
             self.add(category, number, source, context, typed_text, intended_text, expected,
                      layout=layout.name, follow=len(follow), **fields)
@@ -493,8 +500,8 @@ def ambiguous_maker(plain_word: str, contraction: str, direction: str):
     return maker
 
 
-def build_half(half: str, pool: list, layouts) -> tuple[list[dict], dict]:
-    builder = Builder(half, pool, layouts)
+def build_half(half: str, pool: list, layouts, excluded: frozenset = frozenset()) -> tuple[list[dict], dict, int]:
+    builder = Builder(half, pool, layouts, excluded)
     for direction in layout_keys.DIRECTIONS:
         builder.run(f"drift_full_{direction}", QUOTAS[f"drift_full_{direction}"], drift_maker(direction, False), "correct")
         builder.run(f"drift_partial_{direction}", QUOTAS[f"drift_partial_{direction}"], drift_maker(direction, True), "correct")
@@ -519,16 +526,17 @@ def build_half(half: str, pool: list, layouts) -> tuple[list[dict], dict]:
             # with "wont" hold a slip of "won't". So "wont" gets no keep case.
             if direction == "keep" and plain_word == "wont":
                 continue
-            sub = Builder(half, pool, layouts)
+            sub = Builder(half, pool, layouts, excluded)
             sub.run(category, AMBIGUOUS_PER_PAIR, ambiguous_maker(plain_word, contraction, direction), direction,
                     APOSTROPHE_REPEATS)
             for case in sub.cases:
                 builder.cases.append(case)
+            builder.skipped_as_dev_cases += sub.skipped_as_dev_cases
             if sub.shortfalls:
                 builder.shortfalls[f"{category} {plain_word}/{contraction}"] = sub.shortfalls[category]
         for number, case in enumerate(builder.cases[start:]):
             case["id"] = f"entypo-{half}-{category}-{number:04d}"
-    return builder.cases, builder.shortfalls
+    return builder.cases, builder.shortfalls, builder.skipped_as_dev_cases
 
 
 def main():
@@ -541,8 +549,11 @@ def main():
     pool = load_pool(training, report)
     layouts = layout_keys.both()
     report["halves"] = {}
+    dev_cases: frozenset = frozenset()
     for half in ("dev", "test"):
-        cases, shortfalls = build_half(half, pool[half], layouts)
+        cases, shortfalls, skipped = build_half(half, pool[half], layouts, dev_cases)
+        if half == "dev":
+            dev_cases = frozenset((c["context"], c["typed"], c["intended"]) for c in cases)
         ids = [case["id"] for case in cases]
         if len(ids) != len(set(ids)):
             raise SystemExit(f"{half}: two cases share an id")
@@ -555,6 +566,7 @@ def main():
                            and (case["typed"].split(" ")[0].strip(PUNCTUATION), case["intended"].split(" ")[0].strip(PUNCTUATION))
                            in training.pairs)
         report["halves"][half] = {"cases": len(cases), "categories": counts, "shortfalls": shortfalls,
+                                  "skipped_as_dev_cases": skipped,
                                   "slip_cases_whose_first_word_pair_a_training_case_holds": pair_overlap}
         print(f"wrote {path.relative_to(ROOT)}: {len(cases)} cases")
         for category, count in counts.items():

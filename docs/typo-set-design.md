@@ -19,7 +19,7 @@ Table 1. The four case files of the typo set.
 | File | Language | Source | In git | Dev cases | Test cases |
 | --- | --- | --- | --- | --- | --- |
 | `cases/english-typos.{dev,test}.jsonl` | English | Generated from Tatoeba sentences | yes | 2,583 | 2,582 |
-| `english-typos-aalto.{dev,test}.jsonl` | English | Aalto mobile typing study, real errors | no, built by script | 1,593 | 1,619 |
+| `english-typos-aalto.{dev,test}.jsonl` | English | Aalto mobile typing study, real errors | no, built by script | 1,593 | 1,577 |
 | `cases/pinyin-typos.{dev,test}.jsonl` | Pinyin | Generated from Tatoeba clauses | yes | 2,222 | 2,215 |
 | `pinyin-typos-cscd.{dev,test}.jsonl` | Pinyin | CSCD-NS, real errors with inferred keys | no, built by script | 597 | 599 |
 
@@ -225,6 +225,12 @@ Table 4. The split rule of each file.
 | `pinyin-typos` | Tatoeba sentence id: even to dev, odd to test |
 | `pinyin-typos-cscd` | SHA-256 of the corrected sentence: even first byte to dev |
 
+Two sentences can give the same case, as "dont" with an empty context. So each builder makes the
+dev half first, and the test half leaves out every case whose context, typed text and intended
+text equal those of a dev case. CSCD-NS test cases also leave out every clause of the dev half.
+The rule skipped 48 Aalto test cases and 10 CSCD-NS test clauses. The English generator skipped
+178 test draws and drew other sentences in their place. No case of a test half repeats a dev case.
+
 The test half is for decisions only. The workflows check that no test-half output exists, as the
 existing evaluation does.
 
@@ -260,10 +266,12 @@ Table 5. Sentences and cases that the leakage check removed.
 | CSCD-NS | not checked: the model reads no Chinese | 0 | none |
 
 The check runs on the pool, so no case of the committed English file comes from a training
-sentence. The training lists also hold typed and intended pairs. A common real slip such as "teh" for
+sentence. A case's context and intended text can still equal the start of a training case, as
+"there is", because many sentences start alike. The check keeps such a case, because its
+sentence differs from every training sentence. The training lists also hold typed and intended pairs. A common real slip such as "teh" for
 "the" is in the lists and in every typing log, so the pairs stay in the set.
 `english-typos-report.json` counts the slip cases whose first-word pair a training case holds:
-838 dev and 808 test cases.
+838 dev and 812 test cases.
 
 The training files are not in git. `build_real_typos.py` writes the 4 leaking Aalto sentence ids
 to `reports/real-leakage.json` when it gets the training files, and the workflows read that file.

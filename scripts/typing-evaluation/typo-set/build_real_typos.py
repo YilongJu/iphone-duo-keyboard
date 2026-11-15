@@ -231,10 +231,15 @@ def build_aalto(arguments, layouts) -> dict:
             break
     report["sections_kept"] = kept
     report["halves"] = {}
-    for half, by_category in found.items():
+    # Two volunteers can make the same error on the same shown words, and two sentences can begin
+    # alike. The test half never repeats a dev case, so the dev half comes first.
+    dev_cases: set[tuple[str, str, str]] = set()
+    for half in ("dev", "test"):
+        by_category = found[half]
         rng = random.Random(f"{SEED}-{half}-aalto")
         cases = []
         counts = {}
+        skipped = 0
         for category in sorted(by_category):
             pool = sorted(by_category[category], key=lambda c: c["source"])
             rng.shuffle(pool)
@@ -248,6 +253,10 @@ def build_aalto(arguments, layouts) -> dict:
                 per_pair[key] = per_pair.get(key, 0) + 1
                 # Half the cases also type the next words, as the volunteer typed them right.
                 follow = item["follow"][:rng.choice((1, 2))] if item["follow"] and rng.random() < 0.5 else []
+                triple = (item["context"], " ".join([item["typed"]] + follow), " ".join([item["intended"]] + follow))
+                if half == "test" and triple in dev_cases:
+                    skipped += 1
+                    continue
                 cases.append({"id": f"enaalto-{half}-{category}-{number:04d}", "split": half, "category": category,
                               "group": ENGLISH_GROUP[category], "expected": "correct", "context": item["context"],
                               "typed": " ".join([item["typed"]] + follow), "intended": " ".join([item["intended"]] + follow),
@@ -257,7 +266,9 @@ def build_aalto(arguments, layouts) -> dict:
                     break
             counts[category] = {"found": len(pool), "cases": number}
         write(EXTERNAL / f"english-typos-aalto.{half}.jsonl", cases)
-        report["halves"][half] = counts
+        if half == "dev":
+            dev_cases = {(c["context"], c["typed"], c["intended"]) for c in cases}
+        report["halves"][half] = counts | {"skipped_as_dev_cases": skipped}
     return report
 
 
@@ -317,10 +328,17 @@ def build_cscd(layouts) -> dict:
         found[half].append({"kind": kind, "clause": clause, "syllables": syllables, "typed": typed,
                             "context": right_text[:start], "source": f"cscd-ns:{name}:{hashlib.sha256(right_text.encode()).hexdigest()[:16]}",
                             "wrong": wrong_text[place], "wrong_syllable": wrong_syllable})
-    for half, items in found.items():
+    # One clause can stand in two sentences of the data, so a test case never holds a clause of
+    # the dev half. The dev half comes first.
+    dev_clauses: set[str] = set()
+    for half in ("dev", "test"):
+        items = found[half]
         rng = random.Random(f"{SEED}-{half}-cscd")
         items.sort(key=lambda c: (c["source"], c["clause"]))
         rng.shuffle(items)
+        before = len(items)
+        items = [item for item in items if item["clause"] not in dev_clauses]
+        skipped = before - len(items)
         cases, clean_of, numbers = [], {}, {}
         for item in items[:PINYIN_SLIPS_PER_HALF]:
             if item["clause"] not in clean_of:
@@ -338,7 +356,10 @@ def build_cscd(layouts) -> dict:
                           "source": item["source"], "twin": clean_of[item["clause"]], "wrong_character": item["wrong"],
                           "wrong_syllable": item["wrong_syllable"]})
         write(EXTERNAL / f"pinyin-typos-cscd.{half}.jsonl", cases)
-        report["halves"][half] = {"found": len(items), "slip_cases": sum(numbers.values()), "categories": numbers}
+        if half == "dev":
+            dev_clauses = {case["intended"] for case in cases}
+        report["halves"][half] = {"found": len(items), "slip_cases": sum(numbers.values()), "categories": numbers,
+                                  "skipped_as_dev_clauses": skipped}
     return report
 
 
