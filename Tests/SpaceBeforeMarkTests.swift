@@ -930,6 +930,35 @@ final class SpaceBeforeMarkTests: XCTestCase {
         XCTAssertEqual(document.text, "he said \"hello\" w")
     }
 
+    func testAClosingQuoteThatKeptItsSpaceDoesNotCountAsAnOpeningQuote() {
+        // Delete brings the space back, so the closing single quote keeps its space.
+        makeController(before: "she said 'yes ")
+        type("'")
+        delete()
+        type("'")
+        XCTAssertEqual(document.text, "she said 'yes '")
+        type(" and")
+        XCTAssertEqual(document.text, "she said 'yes ' and")
+        // The same text in the field before the cursor.
+        for before in ["she said 'yes ' ", "'yes ' ", "first\n'yes ' ", "she said 'yes' and 'no ' ", "(' no ' "] {
+            makeController(before: before)
+            type("a")
+            XCTAssertEqual(document.text, before + "a", before.debugDescription)
+        }
+        // A single quote after a closed quotation still opens a quotation.
+        makeController(before: "she said 'yes' and ' ")
+        type("n")
+        XCTAssertEqual(document.text, "she said 'yes' and 'n")
+        // The count of double quotes already reads a closing double quote that kept its space.
+        makeController(before: "he said \"hello ")
+        type("\"")
+        delete()
+        type("\"")
+        XCTAssertEqual(document.text, "he said \"hello \"")
+        type(" and")
+        XCTAssertEqual(document.text, "he said \"hello \" and")
+    }
+
     func testTheRemovalOfTheSpaceAfterAnOpeningQuoteGetsNoSpaceRestore() {
         assertTyped([
             ("say \" he", "say \"he"),
