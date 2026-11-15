@@ -214,8 +214,20 @@ jobs:
         run: bash scripts/ci/fetch_language_model.sh
       - name: Generate the Xcode project
         run: xcodegen generate
+      # The speed test of the language models (Shared/ModelSpeedTest.swift) reads the Core ML
+      # model of SmolLM2-135M from this folder in the simulator. The other test models stay out,
+      # so their pairs report that they are not downloaded.
+      - name: Place the Core ML model of SmolLM2-135M for the speed test
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p build/model-speed/assets
+          gh release download model-speed-1 --pattern 'smollm2-135m.coreml-int4--*' --dir build/model-speed/assets --clobber
+          python3 scripts/model-speed/place_release_files.py smollm2-135m.coreml-int4 build/model-speed/assets build/model-speed/models
       - name: Run every unit test in a simulator, with the typing evaluation on the dev half
         env:
+          TEST_RUNNER_MODEL_SPEED_DIR: ${{ github.workspace }}/build/model-speed/models
           # xcodebuild hands a variable to the test process when its name starts with TEST_RUNNER_.
           TEST_RUNNER_TYPING_CASES_DIR: ${{ github.workspace }}/scripts/typing-evaluation/cases
           TEST_RUNNER_TYPING_OUTPUT_DIR: ${{ github.workspace }}/build/lm-keyboard/keyboard
@@ -260,6 +272,7 @@ jobs:
             python3 scripts/typing-evaluation/score_apostrophe_words.py               --cases "$cases/english-apostrophe-words.dev.jsonl"               --word "$out/english-apostrophe-words.dev$run.jsonl"               --next-word "$out/english-apostrophe-words.dev.next-word$run.jsonl"               --json "$out/english-apostrophe-words.dev$run.summary.json"
           done
           cp build/language-model-test/simulator.txt "$out/language-model-test-simulator.txt"
+          cp build/language-model-test/speed-simulator.txt "$out/speed-simulator.txt"
       - uses: actions/upload-artifact@v7
         if: always()
         with:

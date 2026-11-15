@@ -91,7 +91,9 @@ def main():
                 pairs.append({"name": f"{TITLES[name]} {kind}", "model": model_id, "runtime": "llama-metal",
                               "reference": name})
     if coreml is not None:
-        for name in names:
+        # Qwen2.5 goes last: Python crashed in Core ML on the runner in some of its checks, and a
+        # crash in the keyboard ends the run.
+        for name in sorted(names, key=lambda name: name == "qwen2.5-0.5b"):
             manifest = json.loads((coreml / f"{name}.manifest.json").read_text())
             model_id = manifest["id"]
             models.append({
@@ -105,6 +107,10 @@ def main():
             if name == "smollm2-135m":
                 pairs.append({"name": f"{TITLES[name]} Core ML 4-bit", "model": model_id, "runtime": "coreml-all",
                               "tokens": name, "reference": name})
+    # The processor pairs run first, then Metal, then Core ML. A runtime that crashes the keyboard
+    # ends the run, so the pairs with the least risk come first. The order within a runtime stays.
+    rank = {"llama-cpu": 0, "llama-metal": 1, "llama-metal-no-residency": 1, "coreml-gpu": 2, "coreml-all": 2}
+    pairs.sort(key=lambda pair: rank[pair["runtime"]])
     catalog = {"release": RELEASE, "models": models, "pairs": pairs}
     pathlib.Path("Shared/model-speed-catalog.json").write_text(json.dumps(catalog, indent=2) + "\n", newline="\n")
     pathlib.Path("Shared/model-speed-reference.json").write_text(json.dumps(references) + "\n", newline="\n")

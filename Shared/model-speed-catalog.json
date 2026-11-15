@@ -48,6 +48,210 @@
           "bytes": 352154400
         }
       ]
+    },
+    {
+      "id": "granite-4.0-350m-base.Q4_K_M",
+      "title": "Granite-4.0-350M-Base Q4_K_M",
+      "files": [
+        {
+          "path": "model.gguf",
+          "url": "https://github.com/YilongJu/iphone-duo-keyboard/releases/download/model-speed-1/granite-4.0-350m-base.Q4_K_M.gguf",
+          "sha256": "7117c92949347203acb04b097c47affaf3a23c0fb65a2125489f5ed220aefc05",
+          "bytes": 236978976
+        }
+      ]
+    },
+    {
+      "id": "granite-4.0-350m-base.Q4_0",
+      "title": "Granite-4.0-350M-Base Q4_0",
+      "files": [
+        {
+          "path": "model.gguf",
+          "url": "https://github.com/YilongJu/iphone-duo-keyboard/releases/download/model-speed-1/granite-4.0-350m-base.Q4_0.gguf",
+          "sha256": "a154d540e7f45a4676d510b53e79f28a0c3c6193e397bebf2cc69c8b5e1fc98a",
+          "bytes": 228463392
+        }
+      ]
+    },
+    {
+      "id": "smollm2-135m.coreml-int4",
+      "title": "SmolLM2-135M Core ML 4-bit",
+      "files": [
+        {
+          "path": "model.mlmodelc/analytics/coremldata.bin",
+          "url": "https://github.com/YilongJu/iphone-duo-keyboard/releases/download/model-speed-1/smollm2-135m.coreml-int4--model.mlmodelc--analytics--coremldata.bin",
+          "sha256": "64e444744bedad5d30e8274a1f5f850741400732bd56354c7f34f80ef449a342",
+          "bytes": 243
+        },
+        {
+          "path": "model.mlmodelc/coremldata.bin",
+          "url": "https://github.com/YilongJu/iphone-duo-keyboard/releases/download/model-speed-1/smollm2-135m.coreml-int4--model.mlmodelc--coremldata.bin",
+          "sha256": "a9ec6994344b57b2b07b04689e7bedb4252308e35aad7fae35a7f8295c403f96",
+          "bytes": 757
+        },
+        {
+          "path": "model.mlmodelc/metadata.json",
+          "url": "https://github.com/YilongJu/iphone-duo-keyboard/releases/download/model-speed-1/smollm2-135m.coreml-int4--model.mlmodelc--metadata.json",
+          "sha256": "db01a3a007ea1ca04a14957bb2f5075579672a358ff98162a7f581d76f028eed",
+          "bytes": 5256
+        },
+        {
+          "path": "model.mlmodelc/model.mil",
+          "url": "https://github.com/YilongJu/iphone-duo-keyboard/releases/download/model-speed-1/smollm2-135m.coreml-int4--model.mlmodelc--model.mil",
+          "sha256": "c33d556ccb18ff13a62bb19eb8d5b24931449966b44f0cf55591ae81ef4c0b3b",
+          "bytes": 830404
+        },
+        {
+          "path": "model.mlmodelc/weights/weight.bin",
+          "url": "https://github.com/YilongJu/iphone-duo-keyboard/releases/download/model-speed-1/smollm2-135m.coreml-int4--model.mlmodelc--weights--weight.bin",
+          "sha256": "65488637a7af8fbb8b640129292c3be88aadea093b51b4772287db04308a6502",
+          "bytes": 75997534
+        }
+      ]
+    },
+    {
+      "id": "smollm2-360m.coreml-int4",
+      "title": "SmolLM2-360M Core ML 4-bit",
+      "files": [
+        {
+          "path": "model.mlmodelc/analytics/coremldata.bin",
+          "url": "https://github.com/YilongJu/iphone-duo-keyboard/releases/download/model-speed-1/smollm2-360m.coreml-int4--model.mlmodelc--analytics--coremldata.bin",
+          "sha256": "1b15ef6ccb70c507b97249b4e1a2f8fdd3ed1f83ab7dd8176866cc5818137841",
+          "bytes": 243
+        },
+        {
+          "path": "model.mlmodelc/coremldata.bin",
+          "url": "https://github.com/YilongJu/iphone-duo-keyboard/releases/download/model-speed-1/smollm2-360m.coreml-int4--model.mlmodelc--coremldata.bin",
+          "sha256": "1cb0c629e5947a472cf9d70e7dd14ed2035031ba7b7dad7d219a3f14a0ef7137",
+          "bytes": 757
+        },
+        {
+          "path": "model.mlmodelc/metadata.json",
+          "url": "https://github.com/YilongJu/iphone-duo-keyboard/releases/download/model-speed-1/smollm2-360m.coreml-int4--model.mlmodelc--metadata.json",
+          "sha256": "020fc7b9be5582d5f6c4f62105e8b349e095de6e15005211159923279afcbe19",
+          "bytes": 5256
+        },
+        {
+          "path": "model.mlmodelc/model.mil",
+          "url": "https://github.com/YilongJu/iphone-duo-keyboard/releases/download/model-speed-1/smollm2-360m.coreml-int4--model.mlmodelc--model.mil",
+          "sha256": "37e836c73311911bf1fd7472fd99955995da72341117b8611bf6c5c725b8ccd3",
+          "bytes": 885995
+        },
+        {
+          "path": "model.mlmodelc/weights/weight.bin",
+          "url": "https://github.com/YilongJu/iphone-duo-keyboard/releases/download/model-speed-1/smollm2-360m.coreml-int4--model.mlmodelc--weights--weight.bin",
+          "sha256": "13f82d0a30ccf9eb18809289ae2ad26594dff5285af03300d3138a238c71c1f2",
+          "bytes": 203901534
+        }
+      ]
+    },
+    {
+      "id": "qwen3-0.6b-base.coreml-int4",
+      "title": "Qwen3-0.6B-Base Core ML 4-bit",
+      "files": [
+        {
+          "path": "model.mlmodelc/analytics/coremldata.bin",
+          "url": "https://github.com/YilongJu/iphone-duo-keyboard/releases/download/model-speed-1/qwen3-0.6b-base.coreml-int4--model.mlmodelc--analytics--coremldata.bin",
+          "sha256": "2f092edc37e40548e335310d6c666448e4f6b954bdc27e1c6b2a38a6e84cd472",
+          "bytes": 243
+        },
+        {
+          "path": "model.mlmodelc/coremldata.bin",
+          "url": "https://github.com/YilongJu/iphone-duo-keyboard/releases/download/model-speed-1/qwen3-0.6b-base.coreml-int4--model.mlmodelc--coremldata.bin",
+          "sha256": "eb349d857183c4bc31b973d57925984d2d3fbb0a0b8b4df502ded2e8b4ee4b9d",
+          "bytes": 762
+        },
+        {
+          "path": "model.mlmodelc/metadata.json",
+          "url": "https://github.com/YilongJu/iphone-duo-keyboard/releases/download/model-speed-1/qwen3-0.6b-base.coreml-int4--model.mlmodelc--metadata.json",
+          "sha256": "aa51adcf0aa56d04b91c604fef450194a3fca66c31ead0d4c9fcf0092f2a0615",
+          "bytes": 5270
+        },
+        {
+          "path": "model.mlmodelc/model.mil",
+          "url": "https://github.com/YilongJu/iphone-duo-keyboard/releases/download/model-speed-1/qwen3-0.6b-base.coreml-int4--model.mlmodelc--model.mil",
+          "sha256": "063b2e716cdb7465de2dab31fffc2a97516d2a2aa1c8165b698d98ccb3d87188",
+          "bytes": 878060
+        },
+        {
+          "path": "model.mlmodelc/weights/weight.bin",
+          "url": "https://github.com/YilongJu/iphone-duo-keyboard/releases/download/model-speed-1/qwen3-0.6b-base.coreml-int4--model.mlmodelc--weights--weight.bin",
+          "sha256": "6c03c539df64299c734ad490a0f1c99f637f68e8bee67a18cd279328c1489085",
+          "bytes": 336101248
+        }
+      ]
+    },
+    {
+      "id": "granite-4.0-350m-base.coreml-int4",
+      "title": "Granite-4.0-350M-Base Core ML 4-bit",
+      "files": [
+        {
+          "path": "model.mlmodelc/analytics/coremldata.bin",
+          "url": "https://github.com/YilongJu/iphone-duo-keyboard/releases/download/model-speed-1/granite-4.0-350m-base.coreml-int4--model.mlmodelc--analytics--coremldata.bin",
+          "sha256": "3a830f0b9caf12e7a46cf88f42dd72f904272fcb44d1603905337dc3f452dc8a",
+          "bytes": 243
+        },
+        {
+          "path": "model.mlmodelc/coremldata.bin",
+          "url": "https://github.com/YilongJu/iphone-duo-keyboard/releases/download/model-speed-1/granite-4.0-350m-base.coreml-int4--model.mlmodelc--coremldata.bin",
+          "sha256": "52cb510f4e35cb16f6d28309ac0a2f0431825cafad90521f8532839482d49a54",
+          "bytes": 766
+        },
+        {
+          "path": "model.mlmodelc/metadata.json",
+          "url": "https://github.com/YilongJu/iphone-duo-keyboard/releases/download/model-speed-1/granite-4.0-350m-base.coreml-int4--model.mlmodelc--metadata.json",
+          "sha256": "a4c99930657fcc95125899bec6a11f55cd3baa0b6a22ca1a5577f6ec5a792b94",
+          "bytes": 5275
+        },
+        {
+          "path": "model.mlmodelc/model.mil",
+          "url": "https://github.com/YilongJu/iphone-duo-keyboard/releases/download/model-speed-1/granite-4.0-350m-base.coreml-int4--model.mlmodelc--model.mil",
+          "sha256": "d71722e0bd284165fd9347e28cbe6fc2898f4abea2e37898cdab4e8eaee4ab35",
+          "bytes": 792651
+        },
+        {
+          "path": "model.mlmodelc/weights/weight.bin",
+          "url": "https://github.com/YilongJu/iphone-duo-keyboard/releases/download/model-speed-1/granite-4.0-350m-base.coreml-int4--model.mlmodelc--weights--weight.bin",
+          "sha256": "59933a62881a9b008002af84758a0f33af7041f2fca610b17b4834e3ea49e94b",
+          "bytes": 198796564
+        }
+      ]
+    },
+    {
+      "id": "qwen2.5-0.5b.coreml-int4",
+      "title": "Qwen2.5-0.5B Core ML 4-bit",
+      "files": [
+        {
+          "path": "model.mlmodelc/analytics/coremldata.bin",
+          "url": "https://github.com/YilongJu/iphone-duo-keyboard/releases/download/model-speed-1/qwen2.5-0.5b.coreml-int4--model.mlmodelc--analytics--coremldata.bin",
+          "sha256": "45f6d519b8feca1a6ae5bf14874439cac7d1b7927ac2aff0c44f5952ea206345",
+          "bytes": 243
+        },
+        {
+          "path": "model.mlmodelc/coremldata.bin",
+          "url": "https://github.com/YilongJu/iphone-duo-keyboard/releases/download/model-speed-1/qwen2.5-0.5b.coreml-int4--model.mlmodelc--coremldata.bin",
+          "sha256": "b00af91be2dd7d534e81e874b842795905997d76c60cf79dd8de3fb101c2a567",
+          "bytes": 757
+        },
+        {
+          "path": "model.mlmodelc/metadata.json",
+          "url": "https://github.com/YilongJu/iphone-duo-keyboard/releases/download/model-speed-1/qwen2.5-0.5b.coreml-int4--model.mlmodelc--metadata.json",
+          "sha256": "4db617137742567e163f8a13a369b2684e4984e01822cdb2480270fef9b1aa5a",
+          "bytes": 5255
+        },
+        {
+          "path": "model.mlmodelc/model.mil",
+          "url": "https://github.com/YilongJu/iphone-duo-keyboard/releases/download/model-speed-1/qwen2.5-0.5b.coreml-int4--model.mlmodelc--model.mil",
+          "sha256": "ee1c7e8e993b63a56439070388d2892d056773b93cd067007194a9912bee0172",
+          "bytes": 686072
+        },
+        {
+          "path": "model.mlmodelc/weights/weight.bin",
+          "url": "https://github.com/YilongJu/iphone-duo-keyboard/releases/download/model-speed-1/qwen2.5-0.5b.coreml-int4--model.mlmodelc--weights--weight.bin",
+          "sha256": "03b9d72f62c83468468d86f2c6b167e830325adc2f8f3407ca075da614a7cb8f",
+          "bytes": 278637376
+        }
+      ]
     }
   ],
   "pairs": [
@@ -56,6 +260,42 @@
       "model": "bundled",
       "runtime": "llama-cpu",
       "reference": "shipped"
+    },
+    {
+      "name": "SmolLM2-360M Q4_K_M",
+      "model": "smollm2-360m.Q4_K_M",
+      "runtime": "llama-cpu",
+      "reference": "smollm2-360m"
+    },
+    {
+      "name": "SmolLM2-360M Q4_0",
+      "model": "smollm2-360m.Q4_0",
+      "runtime": "llama-cpu",
+      "reference": "smollm2-360m"
+    },
+    {
+      "name": "Qwen2.5-0.5B Q4_K_M",
+      "model": "qwen2.5-0.5b.Q4_K_M",
+      "runtime": "llama-cpu",
+      "reference": "qwen2.5-0.5b"
+    },
+    {
+      "name": "Qwen2.5-0.5B Q4_0",
+      "model": "qwen2.5-0.5b.Q4_0",
+      "runtime": "llama-cpu",
+      "reference": "qwen2.5-0.5b"
+    },
+    {
+      "name": "Granite-4.0-350M-Base Q4_K_M",
+      "model": "granite-4.0-350m-base.Q4_K_M",
+      "runtime": "llama-cpu",
+      "reference": "granite-4.0-350m-base"
+    },
+    {
+      "name": "Granite-4.0-350M-Base Q4_0",
+      "model": "granite-4.0-350m-base.Q4_0",
+      "runtime": "llama-cpu",
+      "reference": "granite-4.0-350m-base"
     },
     {
       "name": "shipped 135M fine-tune, Q4_K_M",
@@ -72,26 +312,8 @@
     {
       "name": "SmolLM2-360M Q4_K_M",
       "model": "smollm2-360m.Q4_K_M",
-      "runtime": "llama-cpu",
-      "reference": "smollm2-360m"
-    },
-    {
-      "name": "SmolLM2-360M Q4_K_M",
-      "model": "smollm2-360m.Q4_K_M",
       "runtime": "llama-metal",
       "reference": "smollm2-360m"
-    },
-    {
-      "name": "SmolLM2-360M Q4_0",
-      "model": "smollm2-360m.Q4_0",
-      "runtime": "llama-cpu",
-      "reference": "smollm2-360m"
-    },
-    {
-      "name": "Qwen2.5-0.5B Q4_K_M",
-      "model": "qwen2.5-0.5b.Q4_K_M",
-      "runtime": "llama-cpu",
-      "reference": "qwen2.5-0.5b"
     },
     {
       "name": "Qwen2.5-0.5B Q4_K_M",
@@ -100,9 +322,51 @@
       "reference": "qwen2.5-0.5b"
     },
     {
-      "name": "Qwen2.5-0.5B Q4_0",
-      "model": "qwen2.5-0.5b.Q4_0",
-      "runtime": "llama-cpu",
+      "name": "Granite-4.0-350M-Base Q4_K_M",
+      "model": "granite-4.0-350m-base.Q4_K_M",
+      "runtime": "llama-metal",
+      "reference": "granite-4.0-350m-base"
+    },
+    {
+      "name": "SmolLM2-135M Core ML 4-bit",
+      "model": "smollm2-135m.coreml-int4",
+      "runtime": "coreml-gpu",
+      "tokens": "smollm2-135m",
+      "reference": "smollm2-135m"
+    },
+    {
+      "name": "SmolLM2-135M Core ML 4-bit",
+      "model": "smollm2-135m.coreml-int4",
+      "runtime": "coreml-all",
+      "tokens": "smollm2-135m",
+      "reference": "smollm2-135m"
+    },
+    {
+      "name": "SmolLM2-360M Core ML 4-bit",
+      "model": "smollm2-360m.coreml-int4",
+      "runtime": "coreml-gpu",
+      "tokens": "smollm2-360m",
+      "reference": "smollm2-360m"
+    },
+    {
+      "name": "Qwen3-0.6B-Base Core ML 4-bit",
+      "model": "qwen3-0.6b-base.coreml-int4",
+      "runtime": "coreml-gpu",
+      "tokens": "qwen3-0.6b-base",
+      "reference": "qwen3-0.6b-base"
+    },
+    {
+      "name": "Granite-4.0-350M-Base Core ML 4-bit",
+      "model": "granite-4.0-350m-base.coreml-int4",
+      "runtime": "coreml-gpu",
+      "tokens": "granite-4.0-350m-base",
+      "reference": "granite-4.0-350m-base"
+    },
+    {
+      "name": "Qwen2.5-0.5B Core ML 4-bit",
+      "model": "qwen2.5-0.5b.coreml-int4",
+      "runtime": "coreml-gpu",
+      "tokens": "qwen2.5-0.5b",
       "reference": "qwen2.5-0.5b"
     }
   ]
