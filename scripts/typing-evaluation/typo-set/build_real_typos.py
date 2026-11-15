@@ -133,12 +133,21 @@ def is_drift(typed: str, intended: str, layouts) -> bool:
 
 # Contractions whose form without the apostrophe is a common word of its own, as in
 # build_english_typos.AMBIGUOUS_PAIRS.
-AMBIGUOUS_CONTRACTIONS = {"we'll", "it's", "we're", "i'll", "won't", "he'll", "she'll"}
+AMBIGUOUS_CONTRACTIONS = {"we'll", "it's", "we're", "i'll", "won't", "he'll", "she'll", "let's"}
+# Contractions with "'s" of a pronoun or a question word. Any other word with "'s" is a
+# possessive, as "nation's", and its form without the apostrophe is often a word ("nations").
+S_CONTRACTIONS = {"that's", "what's", "there's", "he's", "she's", "here's", "who's", "where's", "how's", "when's", "why's"}
+
+
+def apostrophe_is_ambiguous(typed: str, intended: str) -> bool:
+    if intended in AMBIGUOUS_CONTRACTIONS:
+        return True
+    return intended.endswith("'s") and intended not in S_CONTRACTIONS and zipf(typed) >= REAL_WORD_ZIPF
 
 
 def english_category(typed: str, intended: str, layouts) -> str:
     if "'" in intended and typed == intended.replace("'", ""):
-        return "real_aalto_apostrophe_ambiguous" if intended in AMBIGUOUS_CONTRACTIONS else "real_aalto_apostrophe"
+        return "real_aalto_apostrophe_ambiguous" if apostrophe_is_ambiguous(typed, intended) else "real_aalto_apostrophe"
     if is_drift(typed, intended, layouts):
         return "real_aalto_drift"
     if zipf(typed) >= REAL_WORD_ZIPF:
