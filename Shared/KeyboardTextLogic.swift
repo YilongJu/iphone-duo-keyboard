@@ -193,7 +193,9 @@ enum KeyboardTextLogic {
     /// quotation when the paragraph start or one of `charactersBeforeAnOpeningDoubleQuote`
     /// comes right before it, and the paragraph holds an odd count of double quotes, this one
     /// included. A single quote opens a quotation when the paragraph start or one of
-    /// `charactersBeforeAnOpeningSingleQuote` comes right before it.
+    /// `charactersBeforeAnOpeningSingleQuote` comes right before it, and it does not close an
+    /// open single quotation by the rule of `closesQuotation`. That rule reads the text before
+    /// the quote, without its last space, so a closing quote that kept its space stays closing.
     static func removesSpaceAfterOpeningQuote(
         typing text: String, before: String, allowsAutocorrection: Bool
     ) -> Bool {
@@ -209,7 +211,10 @@ enum KeyboardTextLogic {
             guard beforeQuote.map({ charactersBeforeAnOpeningDoubleQuote.contains($0) }) ?? true else { return false }
             return quoteParagraph.filter { $0 == "\"" }.count % 2 == 1
         case "'":
-            return beforeQuote.map { charactersBeforeAnOpeningSingleQuote.contains($0) } ?? true
+            guard beforeQuote.map({ charactersBeforeAnOpeningSingleQuote.contains($0) }) ?? true else { return false }
+            // A closing quote that kept its space, as in "'yes '", does not open a quotation.
+            let textBeforeQuote = quoteParagraph.dropLast()
+            return !closesQuotation("'", before: textBeforeQuote.last == " " ? textBeforeQuote.dropLast() : textBeforeQuote)
         default:
             return false
         }
