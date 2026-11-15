@@ -16,8 +16,12 @@ folder, this script:
 4. deletes `requests-real.tsv`, the language-model requests of the real-data cases.
 
 Then it reads every file of the folder that belongs to no generated case file, and stops with
-exit code 1 when one holds the context, the typed text or the intended text of a real-data case
-(a text of 12 characters or more), so a new output file cannot carry the texts by mistake.
+exit code 1 when one holds the context, the typed text or the intended text of a real-data case,
+so a new output file cannot carry the texts by mistake. The check reads an English text of 4
+words or more, a Chinese text of 8 characters or more, and typed Pinyin of 20 letters or more. A shorter text, as "don't want to",
+is in any English text. A text that a case file of scripts/typing-evaluation/cases also holds
+is public there, and the check skips it. A line that names a real-data case id may
+hold the id, the step and SHA-256 values only.
 
 Usage:
     python3 scripts/typing-evaluation/typo-set/redact_real.py --folder DIR --cases DIR
@@ -36,7 +40,12 @@ from score import normalize  # noqa: E402
 
 REAL = {"english-typos-aalto": "english", "pinyin-typos-cscd": "pinyin"}
 GENERATED_PREFIXES = ("english-typos.", "english-typos-capitals.", "pinyin-typos.")
-SHORTEST_CHECKED_TEXT = 12
+REAL_ID_PREFIXES = ("enaalto-", "zhcscd-")
+REDACTED_FIELDS = {"id", "step", "normalized_output_sha256", "choice_sha256"}
+SHORTEST_CHECKED_WORDS = 4
+SHORTEST_CHECKED_CHINESE = 8
+SHORTEST_CHECKED_PINYIN_LETTERS = 20
+PUBLIC_CASES = ROOT / "scripts" / "typing-evaluation" / "cases"
 
 
 def sha256(text: str) -> str:
@@ -89,13 +98,21 @@ def main():
     if real_requests.exists():
         real_requests.unlink()
 
+    public = "".join(path.read_text(encoding="utf-8") for path in sorted(PUBLIC_CASES.glob("*.jsonl")))
     texts = set()
     for name in REAL:
         for path in arguments.cases.glob(f"{name}.*.jsonl"):
             for case in read_jsonl(path):
                 for field in ("context", "typed", "intended"):
-                    if len(case[field]) >= SHORTEST_CHECKED_TEXT:
-                        texts.add(case[field])
+                    text = case[field]
+                    if REAL[name] == "english":
+                        long_enough = len(text.split()) >= SHORTEST_CHECKED_WORDS
+                    elif field == "typed":
+                        long_enough = len(text) >= SHORTEST_CHECKED_PINYIN_LETTERS
+                    else:
+                        long_enough = len(text) >= SHORTEST_CHECKED_CHINESE
+                    if long_enough and text not in public and json.dumps(text)[1:-1] not in public:
+                        texts.add(text)
                         # JSON can write a text with \u escapes.
                         texts.add(json.dumps(case[field])[1:-1])
     if not texts:
@@ -104,6 +121,15 @@ def main():
         if path.name.startswith(GENERATED_PREFIXES):
             continue
         content = path.read_bytes().decode("utf-8", errors="replace")
+        # A row of a real-data case may hold its id, its step and SHA-256 values only.
+        for line in content.splitlines():
+            if any(f'"{prefix}' in line for prefix in REAL_ID_PREFIXES):
+                try:
+                    row = json.loads(line)
+                except json.JSONDecodeError:
+                    raise SystemExit(f"{path} names a real-data case outside a row of JSON")
+                if not isinstance(row, dict) or set(row) - REDACTED_FIELDS:
+                    raise SystemExit(f"{path} holds a real-data case with fields {sorted(set(row) - REDACTED_FIELDS)}")
         found = next((text for text in texts if text in content), None)
         if found is not None:
             raise SystemExit(f"{path} holds the text of a real-data case")

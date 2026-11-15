@@ -430,6 +430,7 @@ Table 6. Every source, its licence, and what the repository holds of it.
 | wordfreq 3.1.1, https://github.com/rspeer/wordfreq | Code Apache 2.0, data CC BY-SA 4.0 | Nothing |
 | pypinyin 0.55.0, https://github.com/mozillazg/python-pinyin | MIT | Nothing |
 | jieba 0.42.1, https://github.com/fxsjy/jieba | MIT | Nothing |
+| inflate64 1.0.4, https://pypi.org/project/inflate64/ (reads the Deflate64 archive of the Aalto study) | LGPL 2.1 or later | Nothing |
 | OpenCC (opencc-python-reimplemented) | Apache 2.0 | Nothing |
 | Aalto mobile typing study, https://userinterfaces.aalto.fi/typing37k/ | The page states no licence. It says "we make the code and dataset openly available". | Nothing: fetch_real_data.sh downloads the files and checks their SHA-256 values |
 | CSCD-NS, https://github.com/nghuyong/cscd-ime | The repository code is under MIT. The data files on Google Drive state no licence of their own, and the paper is CC BY 4.0. The sentences are Weibo posts. | Nothing: fetch_real_data.sh downloads the three files with gdown |
@@ -453,9 +454,15 @@ real-data cases builds them itself from the downloaded data. Before an upload,
    normalization.
 4. It deletes `requests-real.tsv`, the language-model requests of these cases.
 
-Then it reads every other file of the folder. It stops the job when a file holds a real-data text
-of 12 characters or more: a context, a typed text or an intended text. An upload runs only
-after this step passes. The summaries hold counts only. `compare_typos.py` compares the SHA-256
+Then it reads every other file of the folder, and stops the job in two cases:
+
+- A line names a real-data case id and holds more than the id, the step and SHA-256 values.
+- The file holds a context, a typed text or an intended text of a real-data case. The check
+  reads English texts of 4 words or more, Chinese texts of 8 characters or more and typed Pinyin
+  of 20 letters or more. It skips a text that a case file of `scripts/typing-evaluation/cases`
+  also holds, as "don't think any", because that text is public there.
+
+An upload runs only after this step passes. The summaries hold counts only. `compare_typos.py` compares the SHA-256
 values, which gives the same counts as a comparison of the texts. The comparison of the keyboard
 with the harness on its own machine also runs on the texts, inside the job, before the step.
 

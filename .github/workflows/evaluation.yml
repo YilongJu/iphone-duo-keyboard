@@ -93,7 +93,7 @@ jobs:
         run: |
           set -euo pipefail
           python3 -m pip install --quiet --break-system-packages wordfreq==3.1.1 gdown==6.5.1 pypinyin==0.55.0 \
-            jieba==0.42.1 zipfile-deflate64==0.2.0
+            jieba==0.42.1 inflate64==1.0.4
           bash scripts/typing-evaluation/typo-set/fetch_real_data.sh
           python3 scripts/typing-evaluation/typo-set/build_real_typos.py
       - name: Score the engine alone on the typo set

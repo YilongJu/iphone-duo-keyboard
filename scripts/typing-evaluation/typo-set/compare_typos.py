@@ -61,7 +61,9 @@ def outputs(path: Path, task: str) -> dict[str, str]:
 def choices(folder: Path, name: str, half: str, label: str) -> tuple[dict, int]:
     """The SHA-256 value of each choice by (case, step), and the count of choices that are not
     the rule's choice."""
-    if name in REAL:
+    # A real-data trace is in its full form inside the job that made it, and redacted after
+    # redact_real.py. The full form gives the same SHA-256 values.
+    if name in REAL and not (folder / f"{name}.{half}.trace.jsonl").exists():
         entries = compare.read_jsonl(folder / f"{name}.{half}.trace-choices.jsonl")
         check = json.loads((folder / f"{name}.{half}.rule-check.json").read_text(encoding="utf-8"))
         if check["corrections"] != len(entries):

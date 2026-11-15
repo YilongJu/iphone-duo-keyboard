@@ -38,7 +38,7 @@ options the script reads that file, as the workflows do, because the files are n
 
 Usage, from the repository root, after fetch_real_data.sh:
     python3 scripts/typing-evaluation/typo-set/build_real_typos.py [--lm-domain-data DIR --lm-finetune2-data DIR]
-(needs wordfreq, pypinyin, jieba and zipfile-deflate64, at the versions of the workflows)
+(needs wordfreq, pypinyin, jieba and inflate64, at the versions of the workflows)
 """
 import argparse
 import hashlib
@@ -221,15 +221,57 @@ def english_category(typed: str, intended: str, layouts) -> str | None:
     return None
 
 
+def zip_member_lines(path: Path, name: str):
+    """The lines of one member of a zip archive, as bytes. The Aalto archive stores its members
+    with Deflate64 (method 9), which zipfile cannot read, so the package inflate64 (LGPL 2.1,
+    https://pypi.org/project/inflate64/) reads them. The CRC-32 value of the member must match."""
+    import inflate64
+    import struct
+    import zipfile
+    import zlib
+    with zipfile.ZipFile(path) as archive:
+        info = archive.getinfo(name)
+    if info.compress_type == 9:
+        inflater = inflate64.Inflater()
+        inflate = inflater.inflate
+    elif info.compress_type == zipfile.ZIP_DEFLATED:
+        decompressor = zlib.decompressobj(-15)
+        inflate = decompressor.decompress
+    else:
+        raise SystemExit(f"{path.name}: {name} has the compression method {info.compress_type}")
+    crc, size, rest = 0, 0, b""
+    with path.open("rb") as file:
+        file.seek(info.header_offset)
+        header = file.read(30)
+        if header[:4] != b"PK\x03\x04":
+            raise SystemExit(f"{path.name}: no local header for {name}")
+        name_length, extra_length = struct.unpack("<HH", header[26:30])
+        file.seek(name_length + extra_length, 1)
+        left = info.compress_size
+        while left > 0:
+            chunk = file.read(min(left, 1 << 22))
+            if not chunk:
+                raise SystemExit(f"{path.name}: {name} ends early")
+            left -= len(chunk)
+            data = inflate(chunk)
+            crc = zlib.crc32(data, crc)
+            size += len(data)
+            lines = (rest + data).split(b"\n")
+            rest = lines.pop()
+            for line in lines:
+                yield line + b"\n"
+    if rest:
+        yield rest
+    if crc != info.CRC or size != info.file_size:
+        raise SystemExit(f"{path.name}: {name} has another CRC-32 value or size than the archive states")
+
+
 def read_aalto() -> tuple[dict, list, dict]:
     folder = DOWNLOAD / "aalto37k"
     sentences = {row[0]: row[1] for row in sql_rows.table_rows(
         (folder / "sentences_content.sql").read_text(encoding="utf-8").splitlines(keepends=True), "SENTENCES")}
     sections, participants = [], {}
-    # The archive uses Deflate64, which zipfile reads only with the package zipfile-deflate64.
-    import zipfile_deflate64 as zipfile
-    archive = zipfile.ZipFile(folder / "processed_typing_data.zip")
-    for raw in archive.open("processed_mobiletyping_data.sql"):
+    for raw in zip_member_lines(folder / "processed_typing_data.zip", "processed_mobiletyping_data.sql"):
         if raw.startswith(b"INSERT INTO `open_test_sections`"):
             line = raw.decode("utf-8", errors="replace")
             sections.extend(sql_rows.parse_values(line, line.index("VALUES") + len("VALUES")))

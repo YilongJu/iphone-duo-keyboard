@@ -333,7 +333,7 @@ jobs:
           set -euo pipefail
           python3 -m venv build/typo-set/venv
           build/typo-set/venv/bin/pip install --quiet wordfreq==3.1.1 gdown==6.5.1 pypinyin==0.55.0 jieba==0.42.1 \
-            zipfile-deflate64==0.2.0
+            inflate64==1.0.4
           PATH="$PWD/build/typo-set/venv/bin:$PATH" bash scripts/typing-evaluation/typo-set/fetch_real_data.sh
           build/typo-set/venv/bin/python scripts/typing-evaluation/typo-set/build_real_typos.py
       - name: Build llama.cpp b4846, lm_score, the engine shim and the engine's command-line program
@@ -382,12 +382,19 @@ jobs:
         with:
           path: build/typo-set/download
           key: typo-set-real-data-${{ hashFiles('scripts/typing-evaluation/typo-set/fetch_real_data.sh') }}
+      # inflate64 has wheels up to Python 3.14, so the cases build with Python 3.12. The other
+      # steps keep the Python of the runner.
+      - uses: actions/setup-python@v6
+        id: python-for-cases
+        with:
+          python-version: '3.12'
+          update-environment: false
       - name: Build the typo-set cases from real typing errors
         run: |
           set -euo pipefail
-          python3 -m venv build/typo-set/venv
+          "${{ steps.python-for-cases.outputs.python-path }}" -m venv build/typo-set/venv
           build/typo-set/venv/bin/pip install --quiet wordfreq==3.1.1 gdown==6.5.1 pypinyin==0.55.0 jieba==0.42.1 \
-            zipfile-deflate64==0.2.0
+            inflate64==1.0.4
           PATH="$PWD/build/typo-set/venv/bin:$PATH" bash scripts/typing-evaluation/typo-set/fetch_real_data.sh
           build/typo-set/venv/bin/python scripts/typing-evaluation/typo-set/build_real_typos.py
       - name: Type the dev cases of the typo set through the keyboard code in a simulator
