@@ -302,8 +302,7 @@ final class SetupViewController: UIViewController, UITextViewDelegate {
     }
 
     private func appendSpeedStatus(_ line: String) {
-        speedModelStatus.text = (speedModelStatus.text ?? "") + line + "
-"
+        speedModelStatus.text = (speedModelStatus.text ?? "") + line + "\n"
     }
 
     // MARK: UITextViewDelegate
