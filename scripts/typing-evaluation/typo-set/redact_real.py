@@ -42,6 +42,7 @@ REAL = {"english-typos-aalto": "english", "pinyin-typos-cscd": "pinyin"}
 GENERATED_PREFIXES = ("english-typos.", "english-typos-capitals.", "pinyin-typos.")
 REAL_ID_PREFIXES = ("enaalto-", "zhcscd-")
 REDACTED_FIELDS = {"id", "step", "normalized_output_sha256", "choice_sha256"}
+COMPARISON_FIELDS = {"file", "run"}
 SHORTEST_CHECKED_WORDS = 4
 SHORTEST_CHECKED_CHINESE = 8
 SHORTEST_CHECKED_PINYIN_LETTERS = 20
@@ -65,6 +66,46 @@ def read_jsonl(path: Path) -> list[dict]:
 
 def write_jsonl(path: Path, rows: list[dict]) -> None:
     path.write_text("".join(json.dumps(row) + "\n" for row in rows), encoding="utf-8", newline="\n")
+
+
+def records(value):
+    """Every JSON object inside a JSON value."""
+    if isinstance(value, dict):
+        yield value
+        for item in value.values():
+            yield from records(item)
+    elif isinstance(value, list):
+        for item in value:
+            yield from records(item)
+
+
+def check_records(path: Path, content: str) -> None:
+    """A record of a real-data case may hold its id, its step, SHA-256 values, and the file and
+    run names of a comparison (`differences.json` of compare_typos.py) only. The content is one
+    JSON value, as differences.json, or one JSON value per line, as a file of outputs."""
+    if not any(f'"{prefix}' in content for prefix in REAL_ID_PREFIXES):
+        return
+    try:
+        values = [json.loads(content)]
+    except json.JSONDecodeError:
+        values = []
+        for line in content.splitlines():
+            if not any(f'"{prefix}' in line for prefix in REAL_ID_PREFIXES):
+                continue
+            try:
+                values.append(json.loads(line))
+            except json.JSONDecodeError:
+                raise SystemExit(f"{path} names a real-data case outside a JSON record")
+    named = 0
+    for value in values:
+        for record in records(value):
+            if isinstance(record.get("id"), str) and record["id"].startswith(REAL_ID_PREFIXES):
+                named += 1
+                extra = set(record) - REDACTED_FIELDS - COMPARISON_FIELDS
+                if extra:
+                    raise SystemExit(f"{path} holds a real-data case with the fields {sorted(extra)}")
+    if named == 0:
+        raise SystemExit(f"{path} names a real-data case outside a record with its id")
 
 
 def main():
@@ -121,15 +162,7 @@ def main():
         if path.name.startswith(GENERATED_PREFIXES):
             continue
         content = path.read_bytes().decode("utf-8", errors="replace")
-        # A row of a real-data case may hold its id, its step and SHA-256 values only.
-        for line in content.splitlines():
-            if any(f'"{prefix}' in line for prefix in REAL_ID_PREFIXES):
-                try:
-                    row = json.loads(line)
-                except json.JSONDecodeError:
-                    raise SystemExit(f"{path} names a real-data case outside a row of JSON")
-                if not isinstance(row, dict) or set(row) - REDACTED_FIELDS:
-                    raise SystemExit(f"{path} holds a real-data case with fields {sorted(set(row) - REDACTED_FIELDS)}")
+        check_records(path, content)
         found = next((text for text in texts if text in content), None)
         if found is not None:
             raise SystemExit(f"{path} holds the text of a real-data case")

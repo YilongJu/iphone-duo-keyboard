@@ -456,7 +456,8 @@ real-data cases builds them itself from the downloaded data. Before an upload,
 
 Then it reads every other file of the folder, and stops the job in two cases:
 
-- A line names a real-data case id and holds more than the id, the step and SHA-256 values.
+- A JSON record names a real-data case id and holds more than the id, the step, SHA-256
+  values, and the file and run names of a comparison.
 - The file holds a context, a typed text or an intended text of a real-data case. The check
   reads English texts of 4 words or more, Chinese texts of 8 characters or more and typed Pinyin
   of 20 letters or more. It skips a text that a case file of `scripts/typing-evaluation/cases`
