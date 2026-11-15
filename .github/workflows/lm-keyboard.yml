@@ -205,7 +205,8 @@ jobs:
   keyboard:
     name: Unit tests, the dev cases through the keyboard code with the model, and the harness on the same machine
     runs-on: xcode-27
-    timeout-minutes: 300
+    # The job takes about 4.5 to 5 hours on this branch. 360 minutes is the most a hosted job may run.
+    timeout-minutes: 360
     steps:
       - uses: actions/checkout@v7
       - name: Install XcodeGen
