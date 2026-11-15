@@ -187,7 +187,7 @@ three times fewer tokens under the Qwen tokenizer than under SmolLM2's.
 ## The simulator
 
 The unit test `testTheSpeedTestRunsEveryPairAndPrintsEveryLine` ran the `duo:speed` test in the
-simulator of run 43666561240 (commit 85f8de3), with the Core ML model of SmolLM2-135M in place.
+simulator of run 43688643199 (commit 8ce3ac1), with the Core ML model of SmolLM2-135M in place.
 The simulator shares the processor of the runner and has no memory limit, so its times say
 nothing about the phone.
 
@@ -195,9 +195,9 @@ Table 6. The pairs that ran in the simulator.
 
 | pair | candidates median | request median | reuse | agreement |
 | --- | --- | --- | --- | --- |
-| shipped, llama.cpp b4846, processor | 66.4 ms | 89.2 ms | 14,918 of 18,403 | 484 of 486 |
-| SmolLM2-135M Core ML 4-bit, CPU and GPU | 136.7 ms | 225.7 ms | 14,918 of 18,403 | 446 of 486 |
-| SmolLM2-135M Core ML 4-bit, all units | 162.9 ms | 266.4 ms | 14,918 of 18,403 | 446 of 486 |
+| shipped, llama.cpp b4846, processor | 82.4 ms | 110.9 ms | 14,918 of 18,403 | 484 of 486 |
+| SmolLM2-135M Core ML 4-bit, CPU and GPU | 138.9 ms | 224.3 ms | 14,918 of 18,403 | 446 of 486 |
+| SmolLM2-135M Core ML 4-bit, all units | 119.9 ms | 192.3 ms | 14,918 of 18,403 | 446 of 486 |
 
 The Swift code of the Core ML route keeps the same context tokens from the cache as the C scorer,
 14,918 of 18,403, and agrees with llama.cpp at Q8_0 in 91.8% of the requests, close to the 91.6%
@@ -208,11 +208,11 @@ there.
 ## The keyboard's normal autocorrection
 
 `scripts/model-speed/compare_keyboard_runs.py` compared the artifact "keyboard" of run
-43666561240 (commit 85f8de3) with that of run 43625399707 on `engine/kv-reuse`, case by case. All
+43688643199 (commit 8ce3ac1) with that of run 43625399707 on `engine/kv-reuse`, case by case. All
 14 case files hold the same cases with the same outputs: 54,744 cases, 0 differ. This covers the
 outputs with the model and with the engine alone, the traces with every model number, and the
 Pinyin cases. The re-ranker changed the same choices in both runs: 839 of 6,234, 60 of 1,826 and
-526 of 6,566. The compare job of run 43666561240 passed.
+526 of 6,566. Every unit test of run 43688643199 passed.
 
 ## What the phone run must show
 
