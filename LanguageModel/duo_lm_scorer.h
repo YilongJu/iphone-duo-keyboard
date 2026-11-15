@@ -107,6 +107,8 @@ typedef struct {
        milliseconds of a monotonic clock. The check's reads do not count. */
     double window_milliseconds;
     double candidate_milliseconds;
+    /* Time spent in the tokenizer: the context and the candidates of each request. */
+    double tokenize_milliseconds;
 } duo_lm_scorer_info;
 
 /* Loads the model at `model_path` with `threads` threads and the reuse mode `reuse`, on the
@@ -155,6 +157,15 @@ int duo_lm_scorer_score(duo_lm_scorer *scorer, const char *context, const char *
                         duo_lm_score *scores, char *error, size_t error_size);
 
 duo_lm_scorer_info duo_lm_scorer_get_info(const duo_lm_scorer *scorer);
+
+/* The last line of llama.cpp's Metal code since the last open that says whether it keeps
+   residency sets, such as "ggml_metal_init: has residency sets    = true", or an empty text when
+   no such line came. The speed test reports it for each Metal pair. */
+const char *duo_lm_scorer_residency_note(void);
+
+/* llama.cpp's own line about the build: the processor features it was compiled for, such as
+   DOTPROD and MATMUL_INT8, and whether it repacks Q4_0 weights (AARCH64_REPACK). */
+const char *duo_lm_scorer_system_info(void);
 
 /* Frees the model and its state. NULL is allowed. */
 void duo_lm_scorer_close(duo_lm_scorer *scorer);

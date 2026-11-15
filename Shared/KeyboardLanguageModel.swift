@@ -230,7 +230,33 @@ final class KeyboardLanguageModel: CandidateScoring, LanguageModelLoading {
         }
     }
 
+    /// The reason that holds the model freed, such as a running speed test. While it is set, a
+    /// request to load does nothing.
+    private(set) var heldReason: String?
+    /// Load threads that have not handed their outcome to the main thread yet. A load that a
+    /// memory warning or a hold dropped still holds its model until then.
+    private(set) var runningLoads = 0
+    private var onNoRunningLoad: [@MainActor () -> Void] = []
+
+    /// Frees the model and keeps it freed until `release()`. Calls `ready` on the main thread once
+    /// no load thread holds a model any more, so the caller has the memory to itself.
+    func hold(reason: String, ready: @escaping @MainActor () -> Void) {
+        heldReason = reason
+        unload(reason: reason)
+        if runningLoads == 0 {
+            ready()
+        } else {
+            onNoRunningLoad.append(ready)
+        }
+    }
+
+    /// Ends a hold. The model loads again at the next request to load.
+    func release() {
+        heldReason = nil
+    }
+
     func loadInBackground() {
+        if heldReason != nil { return }
         switch state {
         case .loading, .ready: return
         case .notLoaded, .loadFailed, .freed: break
@@ -238,6 +264,7 @@ final class KeyboardLanguageModel: CandidateScoring, LanguageModelLoading {
         generation += 1
         let loadGeneration = generation
         state = .loading
+        runningLoads += 1
         let path = modelPath
         let name = modelName
         let checkTolerance = cacheCheckTolerance
@@ -246,6 +273,7 @@ final class KeyboardLanguageModel: CandidateScoring, LanguageModelLoading {
             let outcome = KeyboardLanguageModel.open(path: path, name: name, checkTolerance: checkTolerance)
             Task { @MainActor in
                 self.finishLoad(outcome, generation: loadGeneration)
+                self.endRunningLoad()
             }
         }
         thread.stackSize = 2 << 20
@@ -279,6 +307,18 @@ final class KeyboardLanguageModel: CandidateScoring, LanguageModelLoading {
             let reason = outcome.error ?? "the scorer gave no reason"
             state = .loadFailed(reason)
             onEvent(.loadFailed(reason))
+        }
+    }
+
+    /// Counts a load thread as done. The callers of `hold` run in a later turn of the main
+    /// thread, after the task that ended the load has let go of the outcome and its model.
+    private func endRunningLoad() {
+        runningLoads -= 1
+        guard runningLoads == 0, !onNoRunningLoad.isEmpty else { return }
+        let waiting = onNoRunningLoad
+        onNoRunningLoad = []
+        Task { @MainActor in
+            for ready in waiting { ready() }
         }
     }
 

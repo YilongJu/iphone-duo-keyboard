@@ -158,8 +158,19 @@ struct duo_lm_scorer {
 /* The last error line of llama.cpp. A load that fails reports it. */
 static char last_llama_error[200];
 
+/* The last line of llama.cpp's Metal code that says whether it keeps residency sets, for the
+   speed test (duo_lm_scorer_residency_note). */
+static char residency_note[120];
+
 static void keep_last_error(enum ggml_log_level level, const char *text, void *user_data) {
     (void)user_data;
+    if (text != NULL && strstr(text, "has residency sets") != NULL) {
+        snprintf(residency_note, sizeof residency_note, "%s", text);
+        size_t length = strlen(residency_note);
+        while (length > 0 && (residency_note[length - 1] == '\n' || residency_note[length - 1] == ' ')) {
+            residency_note[--length] = 0;
+        }
+    }
     if (level != GGML_LOG_LEVEL_ERROR || text == NULL) return;
     snprintf(last_llama_error, sizeof last_llama_error, "%s", text);
     size_t length = strlen(last_llama_error);
@@ -366,6 +377,7 @@ duo_lm_scorer *duo_lm_scorer_open_on(const char *model_path, int threads, duo_lm
     }
     scorer->reuse = reuse;
     last_llama_error[0] = 0;
+    residency_note[0] = 0;
     llama_log_set(keep_last_error, NULL);
     llama_backend_init();
 
@@ -747,6 +759,7 @@ int duo_lm_scorer_score(duo_lm_scorer *scorer, const char *context, const char *
         return 0;
     }
     scorer->info.requests++;
+    double tokenize_started = now_milliseconds();
 
     /* Every token of the context. The window is the start token and the last tokens of it. */
     llama_token *context_tokens = NULL;
@@ -788,6 +801,7 @@ int duo_lm_scorer_score(duo_lm_scorer *scorer, const char *context, const char *
         candidate_tokens.lengths[candidate] = found;
         free(tokens);
     }
+    scorer->info.tokenize_milliseconds += now_milliseconds() - tokenize_started;
 
     /* The slot that keeps the most tokens of the cache. When no slot keeps more than the start
        token, the slot that waited longest takes the request, an empty slot first. */
@@ -905,6 +919,10 @@ duo_lm_scorer_info duo_lm_scorer_get_info(const duo_lm_scorer *scorer) {
     memset(&empty, 0, sizeof empty);
     return scorer != NULL ? scorer->info : empty;
 }
+
+const char *duo_lm_scorer_residency_note(void) { return residency_note; }
+
+const char *duo_lm_scorer_system_info(void) { return llama_print_system_info(); }
 
 void duo_lm_scorer_close(duo_lm_scorer *scorer) {
     if (scorer == NULL) return;

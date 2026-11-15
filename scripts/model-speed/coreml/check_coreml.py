@@ -6,8 +6,9 @@ Usage: python check_coreml.py MODEL.mlpackage TOKENS REFERENCE OUT --units cpu|g
   OUT        OUT.summary, OUT.times and OUT.answers in the format of speed_cli, and OUT.check.json
   --units    the compute units of Core ML: cpu (CPU_ONLY), gpu (CPU_AND_GPU), all (ALL)
 
-OUT.check.json holds the share of requests with the same top candidate as the reference, the
-widest and the median difference of the numbers, and the time to load the model.
+OUT.check.json holds the form of the model, Core ML's compute plan on this machine, the share of
+requests with the same top candidate as the reference, the widest and the median difference of
+the numbers, and the time to load the model.
 """
 
 import argparse
@@ -19,11 +20,36 @@ import time
 
 import coremltools as ct
 import numpy as np
+from coremltools.models.compute_plan import MLComputePlan
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
 from request_driver import Driver, read_tokens  # noqa: E402
 
 UNITS = {"cpu": ct.ComputeUnit.CPU_ONLY, "gpu": ct.ComputeUnit.CPU_AND_GPU, "all": ct.ComputeUnit.ALL}
+
+
+def compute_plan(model, units) -> dict:
+    """Core ML's plan for the operations of the model on this machine: per device, the count of
+    operations it prefers that device for, and their share of the estimated cost."""
+    plan = MLComputePlan.load_from_path(path=model.get_compiled_model_path(), compute_units=units)
+    counts, costs = {}, {}
+
+    def walk(block):
+        for operation in block.operations:
+            usage = plan.get_compute_device_usage_for_mlprogram_operation(operation)
+            if usage is not None:
+                device = type(usage.preferred_compute_device).__name__
+                counts[device] = counts.get(device, 0) + 1
+                cost = plan.get_estimated_cost_for_mlprogram_operation(operation)
+                costs[device] = costs.get(device, 0.0) + (cost.weight if cost is not None else 0.0)
+            for inner in operation.blocks:
+                walk(inner)
+
+    for function in plan.model_structure.program.functions.values():
+        walk(function.block)
+    total = sum(costs.values())
+    return {device: {"operations": counts[device], "cost_share": round(costs[device] / total, 4) if total else None}
+            for device in sorted(counts)}
 
 
 def main():
@@ -38,16 +64,23 @@ def main():
     model = ct.models.MLModel(arguments.model, compute_units=UNITS[arguments.units])
     load_ms = (time.perf_counter() - started) * 1000
     times = []
+    # The fixed form of convert.py has the input write_cells and lists the token counts of its
+    # calls as the shapes of input_ids.
+    inputs = {entry.name: entry for entry in model.get_spec().description.input}
+    sizes = None
+    if "write_cells" in inputs:
+        listed = inputs["input_ids"].type.multiArrayType.enumeratedShapes.shapes
+        sizes = sorted({int(shape.shape[1]) for shape in listed})
+    print(f"form {'fixed with sizes ' + str(sizes) if sizes else 'flexible'}")
 
-    def call(state, ids, positions, mask, targets):
+    def call(state, values):
         began = time.perf_counter()
-        outputs = model.predict(
-            {"input_ids": ids, "position_ids": positions, "attention_mask": mask, "target_ids": targets}, state=state)
+        outputs = model.predict(values, state=state)
         times.append((time.perf_counter() - began) * 1000)
-        return (np.asarray(outputs["last_logits"]).reshape(-1), np.asarray(outputs["target_logit"]).reshape(-1),
-                np.asarray(outputs["log_norm"]).reshape(-1), np.asarray(outputs["space_log_mass"]).reshape(-1))
+        return tuple(np.asarray(outputs[name]).reshape(-1)
+                     for name in ("target_logit", "log_norm", "space_log_mass", "first_logit"))
 
-    driver = Driver(call, model.make_state)
+    driver = Driver(call, model.make_state, sizes=sizes)
     reference = []
     for line in pathlib.Path(arguments.reference).read_text().splitlines():
         reference.append([tuple(float(number) for number in field.split(" ")) for field in line.split("\t")])
@@ -57,12 +90,16 @@ def main():
     first_request_ms = None
     for index, request in enumerate(requests):
         window_before, reused_before = driver.window_tokens, driver.window_tokens_reused
+        calls_before = len(times)
         began = time.perf_counter()
         scores = driver.score(request)
         total = (time.perf_counter() - began) * 1000
         if first_request_ms is None:
             first_request_ms = total
-        window_ms, candidate_ms = times[-2], times[-1]
+        parts = [part for part, _, _ in driver.calls]
+        made = times[calls_before:]
+        window_ms = sum(ms for ms, part in zip(made, parts) if part == "window")
+        candidate_ms = sum(ms for ms, part in zip(made, parts) if part == "candidates")
         time_lines.append(f"{driver.window_tokens - window_before} {driver.window_tokens_reused - reused_before} "
                           f"{window_ms:.4f} {candidate_ms:.4f} {total:.4f}")
         answer_lines.append("\t".join(f"{lp:.17g} {sa:.17g}" for lp, sa in scores))
@@ -79,6 +116,8 @@ def main():
         f"tokens_read {driver.tokens_read}", f"window_tokens {driver.window_tokens}",
         f"window_tokens_reused {driver.window_tokens_reused}"]) + "\n")
     check = {
+        "form": "fixed" if sizes else "flexible",
+        "compute_plan": compute_plan(model, UNITS[arguments.units]),
         "requests": len(requests),
         "agreement": round(same / len(requests), 4),
         "widest_difference": round(max(differences), 4),

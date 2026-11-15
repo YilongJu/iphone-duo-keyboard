@@ -6,23 +6,37 @@ and keeps the keys and values of the tokens it read in two buffers, `key_cache` 
 `value_cache`. coremltools turns the buffers into the state of a stateful Core ML model, so the
 cache stays on the device between calls, as llama.cpp's cache does.
 
-One call reads Q tokens:
-  input_ids       [1, Q]     the tokens
-  position_ids    [1, Q]     the position of each token for the rotary embedding
-  attention_mask  [1, 1, Q, E]  0 where a token may attend to a cell, a large negative number
-                  where it may not. The call writes its keys and values into the cells E - Q to
-                  E - 1 and attends over the cells 0 to E - 1. A mask of this shape lets the
-                  candidates of a request share the cells of the context in one call: each
-                  candidate attends to the context and to its own earlier tokens only.
-  target_ids      [1, Q]     for each token, the token whose score the caller wants next
-It gives:
-  last_logits     [1, V]     the scores of the vocabulary after the last token
-  target_logit    [1, Q]     the score of the target token after each token
-  log_norm        [1, Q]     the natural log of the sum of e to each score, per token
-  space_log_mass  [1, Q]     the same sum over the tokens whose text starts with a space
+The model has two forms. They differ only in how a call writes the cache:
+  flexible  (fixed_cells=False) for the processor and the GPU. The count of mask cells E
+            changes from call to call. The call writes its keys and values into the cells
+            E - Q to E - 1 and attends over the cells 0 to E - 1.
+  fixed     (fixed_cells=True) for the Neural Engine, which needs shapes that stay the same
+            within one shape of the model. E is always CACHE_CELLS. The input `write_cells`
+            names the cell of each token, and a padding row has no cell and writes no cell.
+            The scores of the vocabulary are made in parts of VOCABULARY_PART tokens, because
+            the Neural Engine takes no axis longer than 16,384.
+
+One call reads Q tokens and scores R of them:
+  input_ids       [1, Q]        the tokens
+  position_ids    [1, Q]        the position of each token for the rotary embedding
+  attention_mask  [1, 1, Q, E]  0 where a token may attend to a cell, MASKED where it may not.
+                  A mask of this shape lets the candidates of a request share the cells of the
+                  context in one call: each candidate attends to the context and to its own
+                  earlier tokens only.
+  write_cells     [1, Q, E]     the fixed form only: 1 at the cell of each token, 0 elsewhere
+  score_rows      [1, R]        the tokens of the call whose scores the caller wants
+  target_ids      [1, R]        for each scored token, the token whose score the caller wants next
+  first_ids       [1, F]        tokens whose scores the caller wants after the last scored token
+It gives, for the scored tokens only:
+  target_logit    [1, R]        the score of the target token after each scored token
+  log_norm        [1, R]        the natural log of the sum of e to each score of the vocabulary
+  space_log_mass  [1, R]        the same sum over the tokens whose text starts with a space
+  first_logit     [1, F]        the score of each first token after the last scored token
 
 So a log probability is target_logit - log_norm, and the space-after term is
-space_log_mass - log_norm, the two numbers of LanguageModel/duo_lm_scorer.c.
+space_log_mass - log_norm, the two numbers of LanguageModel/duo_lm_scorer.c. The window call
+scores its last token only (R = 1), as the C scorer asks llama.cpp for the scores of the last
+window token only, and its first_ids are the first tokens of the candidates.
 """
 
 from __future__ import annotations
@@ -38,6 +52,14 @@ from safetensors.torch import load_file
 CACHE_CELLS = 512
 # A mask value that keeps a cell out of the attention in half precision.
 MASKED = -30000.0
+# The first tokens of a window call: one per candidate, as DUO_LM_MAX_CANDIDATES.
+FIRST_TOKENS = 8
+# The longest part of the vocabulary in one product of the fixed form.
+VOCABULARY_PART = 16384
+# The token counts Q of the shapes of the fixed form. On the requests of the speed test a window
+# call reads 5 tokens in the median and 68 at most, and a candidate call 17 in the median and 41
+# at most. A call takes the smallest size that holds its tokens.
+FIXED_SIZES = (8, 16, 32, 64)
 
 
 class Settings:
@@ -82,8 +104,10 @@ def rotate_half(x: torch.Tensor) -> torch.Tensor:
 
 
 class ScoringModel(torch.nn.Module):
-    def __init__(self, folder: pathlib.Path, space_first: list[int], dtype: torch.dtype = torch.float32):
+    def __init__(self, folder: pathlib.Path, space_first: list[int], dtype: torch.dtype = torch.float32,
+                 fixed_cells: bool = False):
         super().__init__()
+        self.fixed_cells = fixed_cells
         config = json.loads(folder.joinpath("config.json").read_text())
         s = self.settings = Settings(config)
         weights = {name: tensor.to(dtype) for name, tensor in load_file(str(folder / "model.safetensors")).items()}
@@ -126,6 +150,10 @@ class ScoringModel(torch.nn.Module):
         self.register_buffer("cos_table", angles.cos().to(dtype), persistent=False)
         self.register_buffer("sin_table", angles.sin().to(dtype), persistent=False)
         self.register_buffer("space_ids", torch.tensor(space_first, dtype=torch.int32), persistent=False)
+        # 0 for a token whose text starts with a space, MASKED for every other token.
+        space_bias = torch.full((s.vocabulary,), MASKED, dtype=dtype)
+        space_bias[torch.tensor(space_first, dtype=torch.long)] = 0
+        self.register_buffer("space_bias", space_bias, persistent=False)
         cache_shape = (s.layers, 1, s.kv_heads, CACHE_CELLS, s.head_dim)
         self.register_buffer("key_cache", torch.zeros(cache_shape, dtype=torch.float16))
         self.register_buffer("value_cache", torch.zeros(cache_shape, dtype=torch.float16))
@@ -133,7 +161,13 @@ class ScoringModel(torch.nn.Module):
     def weight(self, layer: int, name: str) -> torch.Tensor:
         return getattr(self, f"l{layer}_{name}")
 
-    def forward(self, input_ids, position_ids, attention_mask, target_ids):
+    def forward(self, input_ids, position_ids, attention_mask, *rest):
+        """The flexible form takes score_rows, target_ids and first_ids after the mask. The
+        fixed form takes write_cells first, then the same three."""
+        if self.fixed_cells:
+            write_cells, score_rows, target_ids, first_ids = rest
+        else:
+            score_rows, target_ids, first_ids = rest
         s = self.settings
         query_count = input_ids.shape[-1]
         end = attention_mask.shape[-1]
@@ -142,6 +176,11 @@ class ScoringModel(torch.nn.Module):
         cos = self.cos_table[position_ids[0]].unsqueeze(0).unsqueeze(0)
         sin = self.sin_table[position_ids[0]].unsqueeze(0).unsqueeze(0)
         mask = attention_mask.to(x.dtype)
+        if self.fixed_cells:
+            # [E, Q]: moves the keys of each token into its cell. A cell that no token of the
+            # call writes keeps its old keys.
+            placing = write_cells[0].transpose(0, 1).to(torch.float16)
+            keeping = (1 - placing.sum(dim=-1, keepdim=True)).to(torch.float16)
         group = s.heads // s.kv_heads
         for layer in range(s.layers):
             w = lambda name: self.weight(layer, name)  # noqa: E731
@@ -161,8 +200,14 @@ class ScoringModel(torch.nn.Module):
                 k = rms_norm(k, w("k_norm"), s.eps)
             q = q * cos + rotate_half(q) * sin
             k = k * cos + rotate_half(k) * sin
-            self.key_cache[layer : layer + 1, :, :, start:end, :] = k.to(torch.float16).unsqueeze(0)
-            self.value_cache[layer : layer + 1, :, :, start:end, :] = v.to(torch.float16).unsqueeze(0)
+            if self.fixed_cells:
+                old_keys = self.key_cache[layer : layer + 1]
+                old_values = self.value_cache[layer : layer + 1]
+                self.key_cache[layer : layer + 1] = old_keys * keeping + (placing @ k.to(torch.float16)).unsqueeze(0)
+                self.value_cache[layer : layer + 1] = old_values * keeping + (placing @ v.to(torch.float16)).unsqueeze(0)
+            else:
+                self.key_cache[layer : layer + 1, :, :, start:end, :] = k.to(torch.float16).unsqueeze(0)
+                self.value_cache[layer : layer + 1, :, :, start:end, :] = v.to(torch.float16).unsqueeze(0)
             keys = self.key_cache[layer, :, :, :end, :].to(x.dtype)
             values = self.value_cache[layer, :, :, :end, :].to(x.dtype)
             # Each key and value head serves `group` query heads in a row.
@@ -175,13 +220,25 @@ class ScoringModel(torch.nn.Module):
             h = rms_norm(x, w("mlp_norm"), s.eps)
             gated = torch.nn.functional.silu(h @ w("gate").T) * (h @ w("up").T)
             x = x + (gated @ w("down").T) * s.residual_multiplier
+        # Only the scored tokens go through the final norm and the scores of the vocabulary.
+        x = x.index_select(1, score_rows[0].long())
         x = rms_norm(x, self.final_norm, s.eps)
-        logits = (x @ self.embed.T).float() / s.logits_scaling
-        log_norm = torch.logsumexp(logits, dim=-1)
-        target_logit = torch.gather(logits, -1, target_ids.long().unsqueeze(-1)).squeeze(-1)
-        space_log_mass = torch.logsumexp(logits.index_select(-1, self.space_ids.long()), dim=-1)
-        last_logits = logits[:, -1, :]
-        return last_logits, target_logit, log_norm, space_log_mass
+        target_logit = (x * self.embed[target_ids[0].long()].unsqueeze(0)).sum(-1).float() / s.logits_scaling
+        first_logit = (x[:, -1, :] @ self.embed[first_ids[0].long()].T).float() / s.logits_scaling
+        if self.fixed_cells:
+            norms, spaces = [], []
+            for begin in range(0, s.vocabulary, VOCABULARY_PART):
+                stop = min(begin + VOCABULARY_PART, s.vocabulary)
+                part = (x @ self.embed[begin:stop].T).float() / s.logits_scaling
+                norms.append(torch.logsumexp(part, dim=-1))
+                spaces.append(torch.logsumexp(part + self.space_bias[begin:stop].float(), dim=-1))
+            log_norm = torch.logsumexp(torch.stack(norms, dim=-1), dim=-1)
+            space_log_mass = torch.logsumexp(torch.stack(spaces, dim=-1), dim=-1)
+        else:
+            logits = (x @ self.embed.T).float() / s.logits_scaling
+            log_norm = torch.logsumexp(logits, dim=-1)
+            space_log_mass = torch.logsumexp(logits.index_select(-1, self.space_ids.long()), dim=-1)
+        return target_logit, log_norm, space_log_mass, first_logit
 
 
 def space_first_tokens(folder: pathlib.Path) -> list[int]:

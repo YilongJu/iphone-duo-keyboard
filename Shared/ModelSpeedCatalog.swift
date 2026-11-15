@@ -43,10 +43,11 @@ struct ModelSpeedCatalog: Codable, Equatable, Sendable {
         case llamaMetal = "llama-metal"
         /// As llamaMetal, with GGML_METAL_NO_RESIDENCY=1, so llama.cpp keeps no residency set.
         case llamaMetalNoResidency = "llama-metal-no-residency"
-        /// Core ML with the compute units CPU and GPU.
+        /// Core ML with the compute units CPU and GPU, on the flexible form of the model.
         case coreMLGPU = "coreml-gpu"
-        /// Core ML with every compute unit, the Neural Engine included where Core ML allows it.
-        case coreMLAll = "coreml-all"
+        /// Core ML with the compute units CPU and Neural Engine, on the fixed form of the model,
+        /// whose shapes the Neural Engine can run.
+        case coreMLNeuralEngine = "coreml-ane"
     }
 
     struct Pair: Codable, Equatable, Sendable {

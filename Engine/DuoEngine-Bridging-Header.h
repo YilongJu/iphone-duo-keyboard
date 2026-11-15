@@ -4,3 +4,5 @@
 #include "../LanguageModel/duo_lm_probe.h"
 /* The language model that re-ranks the English corrections. */
 #include "../LanguageModel/duo_lm_scorer.h"
+/* Measurements of the process for the speed test of the language models. */
+#include "../LanguageModel/duo_speed_probe.h"

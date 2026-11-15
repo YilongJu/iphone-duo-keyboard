@@ -214,17 +214,19 @@ jobs:
         run: bash scripts/ci/fetch_language_model.sh
       - name: Generate the Xcode project
         run: xcodegen generate
-      # The speed test of the language models (Shared/ModelSpeedTest.swift) reads the Core ML
-      # model of SmolLM2-135M from this folder in the simulator. The other test models stay out,
-      # so their pairs report that they are not downloaded.
-      - name: Place the Core ML model of SmolLM2-135M for the speed test
+      # The speed test of the language models (Shared/ModelSpeedTest.swift) reads the two Core ML
+      # models of SmolLM2-135M from this folder in the simulator: the flexible form and the fixed
+      # form. The other test models stay out, so their pairs report that they are not downloaded.
+      - name: Place the Core ML models of SmolLM2-135M for the speed test
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           mkdir -p build/model-speed/assets
-          gh release download model-speed-1 --pattern 'smollm2-135m.coreml-int4--*' --dir build/model-speed/assets --clobber
-          python3 scripts/model-speed/place_release_files.py smollm2-135m.coreml-int4 build/model-speed/assets build/model-speed/models
+          for model in smollm2-135m.coreml-gpu-int4 smollm2-135m.coreml-ane-int4; do
+            gh release download model-speed-1 --pattern "$model--*" --dir build/model-speed/assets --clobber
+            python3 scripts/model-speed/place_release_files.py "$model" build/model-speed/assets build/model-speed/models
+          done
       - name: Run every unit test in a simulator, with the typing evaluation on the dev half
         env:
           TEST_RUNNER_MODEL_SPEED_DIR: ${{ github.workspace }}/build/model-speed/models

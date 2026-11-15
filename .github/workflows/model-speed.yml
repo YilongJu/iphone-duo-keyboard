@@ -22,7 +22,7 @@ on:
   workflow_dispatch:
     inputs:
       upload:
-        description: Upload the compiled Core ML models to the release model-speed-1
+        description: Upload the compiled Core ML models of both forms to the release model-speed-1
         type: boolean
         default: false
       models:
@@ -45,7 +45,7 @@ jobs:
   coreml:
     name: Core ML conversion and check of ${{ matrix.model }}
     runs-on: xcode-27
-    timeout-minutes: 120
+    timeout-minutes: 300
     strategy:
       fail-fast: false
       matrix:
@@ -65,25 +65,32 @@ jobs:
             | tee "$RUNNER_TEMP/runner.txt"
       - name: Fetch the model
         run: bash scripts/model-speed/desktop/fetch_models.sh build/model-speed "$MODEL"
-      - name: Convert with 4-bit and with 16-bit weights
+      # The flexible form runs on the processor and the GPU, the fixed form on the Neural Engine
+      # (scripts/model-speed/coreml/convert.py). The 16-bit flexible model checks the conversion.
+      - name: Convert with 4-bit and with 16-bit weights, in the flexible and the fixed form
         run: |
           set -euo pipefail
           out=build/model-speed/coreml
           mkdir -p "$out"
-          for weights in int4 fp16; do
+          for build in "int4 flexible" "int4 fixed" "fp16 flexible"; do
+            set -- $build
             "$RUNNER_TEMP/venv/bin/python" scripts/model-speed/coreml/convert.py "build/model-speed/hf/$MODEL" \
-              "$out/$MODEL.$weights.mlpackage" --weights "$weights" 2>&1 | grep -v -E 'passes/s|ops/s'
+              "$out/$MODEL.$1.$2.mlpackage" --weights "$1" --form "$2" 2>&1 | grep -v -E 'passes/s|ops/s'
           done
           du -sh "$out"/*.mlpackage
-      - name: Compile the 4-bit model and list its files
+      - name: Compile the 4-bit models and list their files
         run: |
           set -euo pipefail
           out=build/model-speed/coreml
-          mkdir -p "$out/compiled"
-          xcrun coremlcompiler compile "$out/$MODEL.int4.mlpackage" "$out/compiled"
-          mv "$out/compiled/$MODEL.int4.mlmodelc" "$out/compiled/model.mlmodelc"
-          python3 scripts/model-speed/coreml_manifest.py "$out/compiled" "$MODEL.coreml-int4" "$out/$MODEL.manifest.json" \
-            "$out/assets"
+          for build in "flexible gpu" "fixed ane"; do
+            set -- $build
+            rm -rf "$out/compiled"
+            mkdir -p "$out/compiled"
+            xcrun coremlcompiler compile "$out/$MODEL.int4.$1.mlpackage" "$out/compiled"
+            mv "$out/compiled/$MODEL.int4.$1.mlmodelc" "$out/compiled/model.mlmodelc"
+            python3 scripts/model-speed/coreml_manifest.py "$out/compiled" "$MODEL.coreml-$2-int4" \
+              "$out/$MODEL.$2.manifest.json" "$out/assets"
+          done
           cp "$RUNNER_TEMP/runner.txt" "$out/runner.txt"
       - name: Upload the compiled model to the release model-speed-1
         if: github.event_name == 'workflow_dispatch' && inputs.upload
@@ -98,11 +105,17 @@ jobs:
           out=build/model-speed/coreml
           tokens="Shared/model-speed-tokens.$MODEL.tsv"
           reference="scripts/model-speed/reference/$MODEL.Q8_0.answers"
-          for run in "int4 cpu" "int4 gpu" "fp16 cpu"; do
+          # Each check runs even when one before it crashed, and the step fails at the end.
+          failed=0
+          for run in "int4 flexible cpu" "int4 flexible gpu" "fp16 flexible cpu" "int4 fixed cpu" "int4 fixed all"; do
             set -- $run
-            "$RUNNER_TEMP/venv/bin/python" scripts/model-speed/coreml/check_coreml.py "$out/$MODEL.$1.mlpackage" \
-              "$tokens" "$reference" "$out/$MODEL.coreml-$1-$2" --units "$2"
+            if ! "$RUNNER_TEMP/venv/bin/python" scripts/model-speed/coreml/check_coreml.py "$out/$MODEL.$1.$2.mlpackage" \
+              "$tokens" "$reference" "$out/$MODEL.coreml-$1-$2-$3" --units "$3"; then
+              echo "::error::the check $run failed"
+              failed=1
+            fi
           done
+          exit "$failed"
       - uses: actions/upload-artifact@v7
         if: always()
         with:
@@ -219,6 +232,17 @@ jobs:
         run: brew install xcodegen
       - name: Fetch the llama.cpp framework and the language model
         run: bash scripts/ci/fetch_language_model.sh
+      # llama.cpp repacks Q4_0 weights only when its processor code has the dot-product (sdot) or
+      # i8mm (smmla) kernels. Their count in the phone part of the app's framework says whether
+      # the Q4_0 pairs can repack on the phone.
+      - name: Count the dot-product and i8mm instructions in the phone part of the app's framework
+        run: |
+          set -euo pipefail
+          device=$(find Vendor/llama.xcframework -path '*ios-arm64/llama.framework/llama' | head -n 1)
+          lipo -info "$device"
+          for instruction in sdot smmla; do
+            echo "$instruction in the phone part of the app's framework: $(otool -tv "$device" | grep -c -w "$instruction" || true)"
+          done
       - name: Generate the Xcode project
         run: xcodegen generate
       - name: Archive with signing off, as the TestFlight workflow does

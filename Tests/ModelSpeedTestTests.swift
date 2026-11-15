@@ -57,6 +57,110 @@ final class ModelSpeedTestTests: XCTestCase {
         XCTAssertEqual(kept, 14918)
     }
 
+    /// The same check request by request: the C scorer on the keyboard's file keeps as many
+    /// context tokens of the cache in each request as the window rules of the Core ML route.
+    func testTheWindowRulesKeepTheTokensOfTheCScorerInEveryRequest() throws {
+        let text = try String(contentsOf: ModelSpeedRun.resource("model-speed-tokens.smollm2-135m", "tsv"), encoding: .utf8)
+        let tokens = try TokenRequest.read(text)
+        let requests = try ModelSpeedRun.textRequests()
+        let path = try XCTUnwrap(Bundle(for: ModelSpeedTest.self).path(
+            forResource: BundledLanguageModelTest.modelResource, ofType: "gguf"))
+        var error = [CChar](repeating: 0, count: Int(DUO_LM_ERROR_SIZE))
+        let scorer = try XCTUnwrap(duo_lm_scorer_open(
+            path, Int32(ModelSpeedTest.threads), KeyboardLanguageModel.reuse, &error, Int(DUO_LM_ERROR_SIZE)),
+            String(cString: error))
+        defer { duo_lm_scorer_close(scorer) }
+        var planner = AnchoredWindowPlanner()
+        var differing: [Int] = []
+        for (index, request) in requests.enumerated() {
+            let plan = planner.next(start: tokens[index].start, context: tokens[index].context)
+            let copies = request.candidates.map { strdup($0) }
+            defer { copies.forEach { free($0) } }
+            let pointers = copies.map { UnsafePointer<CChar>($0) }
+            var scores = [duo_lm_score](repeating: duo_lm_score(), count: request.candidates.count)
+            let before = duo_lm_scorer_get_info(scorer)
+            let result = pointers.withUnsafeBufferPointer { pointerBuffer in
+                scores.withUnsafeMutableBufferPointer { scoreBuffer in
+                    duo_lm_scorer_score(scorer, request.context, pointerBuffer.baseAddress, Int32(request.candidates.count),
+                                        scoreBuffer.baseAddress, &error, Int(DUO_LM_ERROR_SIZE))
+                }
+            }
+            XCTAssertEqual(result, 1, String(cString: error))
+            let after = duo_lm_scorer_get_info(scorer)
+            if after.window_tokens - before.window_tokens != plan.window.count
+                || after.window_tokens_reused - before.window_tokens_reused != plan.kept
+            {
+                differing.append(index + 1)
+            }
+        }
+        XCTAssertEqual(differing, [], "the requests whose window or kept tokens differ")
+    }
+
+    /// A run that stopped goes on after its last pair: the pairs that ended are not run again,
+    /// and the pair that was running is skipped. A run that ended starts over.
+    func testTheProgressFileResumesAStoppedRunOnly() throws {
+        let file = FileManager.default.temporaryDirectory.appendingPathComponent("speed-progress-\(UUID().uuidString).txt")
+        defer { try? FileManager.default.removeItem(at: file) }
+        let progress = ModelSpeedProgress(file: file, signature: "abc")
+        XCTAssertNil(try progress.stoppedRun())
+        try progress.begin()
+        for line in ["start 0", "end 0", "start 1", "end 1", "start 2"] { try progress.append(line) }
+        let stopped = try XCTUnwrap(try progress.stoppedRun())
+        XCTAssertEqual(stopped.ended, [0, 1])
+        XCTAssertEqual(stopped.running, 2)
+        XCTAssertNil(try ModelSpeedProgress(file: file, signature: "other").stoppedRun())
+        try progress.append("done")
+        XCTAssertNil(try progress.stoppedRun())
+    }
+
+    /// A hold keeps the keyboard's model from loading until the hold ends.
+    func testAHoldKeepsTheKeyboardModelFromLoading() async throws {
+        let model = KeyboardLanguageModel(modelPath: nil, modelName: "none", cacheCheckTolerance: nil)
+        var ready = false
+        model.hold(reason: "a test") { ready = true }
+        XCTAssertTrue(ready)
+        model.loadInBackground()
+        XCTAssertEqual(model.state, .notLoaded)
+        XCTAssertEqual(model.runningLoads, 0)
+        model.release()
+        model.loadInBackground()
+        XCTAssertEqual(model.state, .loading)
+    }
+
+    /// The two forms of the Core ML model of SmolLM2-135M give the same top candidate in nearly
+    /// every request, so the padding and the cells of the fixed form are right. Runs only where
+    /// TEST_RUNNER_MODEL_SPEED_DIR holds both models.
+    func testTheFixedAndTheFlexibleCoreMLModelsAgree() throws {
+        guard let named = ProcessInfo.processInfo.environment["MODEL_SPEED_DIR"] else {
+            throw XCTSkip("MODEL_SPEED_DIR is not set")
+        }
+        let folder = URL(fileURLWithPath: named)
+        let flexibleURL = folder.appendingPathComponent("smollm2-135m.coreml-gpu-int4/model.mlmodelc")
+        let fixedURL = folder.appendingPathComponent("smollm2-135m.coreml-ane-int4/model.mlmodelc")
+        guard FileManager.default.fileExists(atPath: flexibleURL.path), FileManager.default.fileExists(atPath: fixedURL.path)
+        else {
+            throw XCTSkip("the two Core ML models of SmolLM2-135M are not in \(named)")
+        }
+        let flexible = try CoreMLSpeedScorer(compiledModel: flexibleURL, computeUnits: .cpuOnly)
+        let fixed = try CoreMLSpeedScorer(compiledModel: fixedURL, computeUnits: .cpuOnly)
+        XCTAssertNil(flexible.fixedSizes)
+        XCTAssertEqual(fixed.fixedSizes, [8, 16, 32, 64])
+        let text = try String(contentsOf: ModelSpeedRun.resource("model-speed-tokens.smollm2-135m", "tsv"), encoding: .utf8)
+        let requests = Array(try TokenRequest.read(text).prefix(100))
+        var same = 0, widest = 0.0
+        for request in requests {
+            let one = try autoreleasepool { try flexible.score(request) }
+            let other = try autoreleasepool { try fixed.score(request) }
+            XCTAssertEqual(one.windowTokens, other.windowTokens)
+            XCTAssertEqual(one.keptTokens, other.keptTokens)
+            if topCandidate(one.scores) == topCandidate(other.scores) { same += 1 }
+            for (a, b) in zip(one.scores, other.scores) {
+                widest = max(widest, abs(a.logProbability - b.logProbability), abs(a.spaceAfter - b.spaceAfter))
+            }
+        }
+        XCTAssertGreaterThanOrEqual(same, 95, "widest difference \(widest)")
+    }
+
     func testTheStatisticsUseTheNearestRank() throws {
         let statistics = try XCTUnwrap(MillisecondStatistics([5, 1, 4, 2, 3, 10, 6, 7, 8, 9]))
         XCTAssertEqual(statistics.mean, 5.5)
