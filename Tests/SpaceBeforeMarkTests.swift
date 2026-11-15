@@ -945,10 +945,19 @@ final class SpaceBeforeMarkTests: XCTestCase {
             type("a")
             XCTAssertEqual(document.text, before + "a", before.debugDescription)
         }
-        // A single quote after a closed quotation still opens a quotation.
-        makeController(before: "she said 'yes' and ' ")
-        type("n")
-        XCTAssertEqual(document.text, "she said 'yes' and 'n")
+        // A single quote after a closed quotation still opens a quotation, also when the
+        // closing quote kept its space.
+        for before in ["she said 'yes' and ' ", "she said 'yes ' and ' ", "she said ' yes ' and ' "] {
+            makeController(before: before)
+            type("n")
+            XCTAssertEqual(document.text, String(before.dropLast()) + "n", before)
+        }
+        makeController(before: "she said 'yes ' and ")
+        type("'")
+        XCTAssertEqual(document.text, "she said 'yes ' and '")
+        makeController(before: "she said 'yes ' and 'no ")
+        type("'")
+        XCTAssertEqual(document.text, "she said 'yes ' and 'no'")
         // The count of double quotes already reads a closing double quote that kept its space.
         makeController(before: "he said \"hello ")
         type("\"")
