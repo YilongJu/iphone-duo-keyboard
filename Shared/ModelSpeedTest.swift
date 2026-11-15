@@ -292,7 +292,7 @@ struct ModelSpeedRun {
         let reuse = KeyboardLanguageModel.reuse
         guard let scorer = duo_lm_scorer_open_on(path, Int32(ModelSpeedTest.threads), reuse, device, &error, errorSize)
         else {
-            throw ModelSpeedError("the model did not load: \(String(cString: error))")
+            throw ModelSpeedError(String(cString: error))
         }
         defer { duo_lm_scorer_close(scorer) }
         emitLoad(milliseconds: Self.now() - started, before: before, after: ProcessMemory.now())
