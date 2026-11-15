@@ -422,6 +422,22 @@ final class SlideKeyTouchTests: XCTestCase {
         XCTAssertEqual(document.text, "\u{FF08}\u{FF09}\u{FF1B}\u{FF1A}\u{201C}\u{201D}")
     }
 
+    func testASlideQuoteThatClosesAQuotationLosesTheSpace() throws {
+        // The slide characters of "l" and "k" are the straight double quote and single quote.
+        makeKeyboard(before: "he said \"hello ")
+        slide(try cell("l"), rows: -0.5)
+        XCTAssertEqual(document.text, "he said \"hello\"")
+
+        makeKeyboard(before: "she said 'yes ")
+        slide(try cell("k"), rows: -0.5)
+        XCTAssertEqual(document.text, "she said 'yes'")
+
+        // With no open quotation the slide quote opens one and keeps the space.
+        makeKeyboard(before: "he said ")
+        slide(try cell("l"), rows: -0.5)
+        XCTAssertEqual(document.text, "he said \"")
+    }
+
     func testASlideCharacterEndsThePinyinWordAsATappedMarkDoes() throws {
         makeKeyboard()
         controller.keyboardView(keyboardView, edit: .toggleLanguage)
