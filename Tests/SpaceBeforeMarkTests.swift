@@ -992,10 +992,43 @@ final class SpaceBeforeMarkTests: XCTestCase {
         makeChineseController(before: "say \" ")
         type("5")
         XCTAssertEqual(document.text, "say \"5")
-        // A Pinyin candidate goes into the field without space removal, as after a mark.
+        // A Pinyin candidate also takes the place of the space.
         makeChineseController(before: "say \" ")
         type("wo ")
+        XCTAssertEqual(document.text, "say \"\u{6211}")
+    }
+
+    func testACommittedPinyinCandidateAfterAStraightOpeningQuoteAndOneSpaceTakesThePlaceOfTheSpace() {
+        // The text before the cursor, the typed keys, and the text after them.
+        let cases = [
+            ("say ' ", "wo ", "say '\u{6211}"),
+            ("\" ", "wo ", "\"\u{6211}"),
+            ("(' ", "wo ", "('\u{6211}"),
+            ("\"a\" and \" ", "wo1", "\"a\" and \"\u{6211}"),
+            ("say \" ", "wo,", "say \"\u{6211}\u{FF0C}"),
+            ("first\n' ", "wo\n", "first\n'wo"),
+        ]
+        for (before, keys, expected) in cases {
+            makeChineseController(before: before)
+            type(keys)
+            XCTAssertEqual(document.text, expected, before.debugDescription + keys.debugDescription)
+        }
+        // A quote that does not open a quotation keeps the space, by the rules of English mode.
+        for before in ["he said \"hello\" ", "the dogs' ", "she said 'yes ' ", "say \"  ", "\"a\nb\" "] {
+            makeChineseController(before: before)
+            type("wo ")
+            XCTAssertEqual(document.text, before + "\u{6211}", before.debugDescription)
+        }
+        makeChineseController(before: "say \" ")
+        document.allowsAutocorrection = false
+        type("wo ")
         XCTAssertEqual(document.text, "say \" \u{6211}")
+        // A delete right after the candidate is a plain delete.
+        makeChineseController(before: "say \" ")
+        type("wo ")
+        delete()
+        XCTAssertEqual(document.text, "say \"")
+        XCTAssertEqual(keyboardView.spaceCaption, "\u{62FC}\u{97F3}")
     }
 
     // MARK: Curly quotes
