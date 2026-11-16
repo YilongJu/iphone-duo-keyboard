@@ -140,6 +140,10 @@ final class SetupViewController: UIViewController, UITextViewDelegate {
         if !didAutoFocus, ProcessInfo.processInfo.arguments.contains("-focusPreviewField") {
             didAutoFocus = true
             previewField.becomeFirstResponder()
+            // The launch argument "-previewText good" types a word first, so a screenshot shows its emoji.
+            if let text = UserDefaults.standard.string(forKey: "previewText") {
+                previewField.insertText(text)
+            }
             textController.documentDidChange()
         }
     }

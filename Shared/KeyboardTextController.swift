@@ -160,11 +160,15 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
     private let document: KeyboardDocument
     private let spellChecker: SpellChecking
 
-    /// The last autocorrection. One backspace right after the correction brings the typed word back.
+    /// The last autocorrection, or the last word that a tap on its emoji replaced. One backspace
+    /// right after it brings the typed word back.
     private struct Correction {
         let original: String
         let corrected: String
         let terminator: String
+        /// True when the backspace also stops the keyboard from changing the word again. A word
+        /// that the person replaced with its emoji was not wrong, so it is not learned.
+        var learnsOriginal = true
     }
 
     private var lastCorrection: Correction?
@@ -238,6 +242,8 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
     }
 
     private(set) var proofreadSuggestion: ProofreadSuggestion?
+    /// The text at the left end of the candidate row while the row shows the proofreader's fix.
+    private var proofreadCaption = ""
     /// The request that is running now. The tests wait for it.
     private(set) var proofreadTask: Task<Void, Never>?
     /// The sentence of the latest request, so one sentence is read once.
@@ -307,31 +313,53 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
     /// True while the keyboard types Simplified Chinese through Pinyin.
     private(set) var chineseMode = false
     /// The Pinyin letters typed so far that are not Chinese text yet.
-    private(set) var pinyinBuffer = ""
+    private(set) var pinyinBuffer = "" {
+        didSet { keyboardView.pinyinLettersWait = !pinyinBuffer.isEmpty }
+    }
     private var pinyinCandidates: [PinyinCandidate] = []
     /// The candidates picked since the buffer was last empty.
     private var sessionPicks: [PinyinCandidate] = []
-    /// True after an opening quotation mark, so the next one closes.
-    private var doubleQuoteIsOpen = false
-    private var singleQuoteIsOpen = false
+    /// True after an opening quotation mark, so the next one closes. The quote keys show the
+    /// quote they type next, so the keyboard view follows both values.
+    private var doubleQuoteIsOpen = false {
+        didSet { keyboardView.chineseDoubleQuoteIsOpen = doubleQuoteIsOpen }
+    }
+    private var singleQuoteIsOpen = false {
+        didSet { keyboardView.chineseSingleQuoteIsOpen = singleQuoteIsOpen }
+    }
     private let makePinyinEngine: @MainActor () -> PinyinEngine
     /// The dictionary loads on the first switch to Chinese, so English typing does not pay for the load.
     private lazy var pinyinEngine: PinyinEngine = makePinyinEngine()
 
-    /// Chinese forms of the punctuation keys.
-    private static let chinesePunctuation: [String: String] = [
-        ",": "\u{FF0C}", ".": "\u{3002}", "?": "\u{FF1F}", "!": "\u{FF01}", ":": "\u{FF1A}",
-        ";": "\u{FF1B}", "(": "\u{FF08}", ")": "\u{FF09}", "<": "\u{300A}", ">": "\u{300B}", "\\": "\u{3001}",
-    ]
+    /// The emoji that the candidate row offers for a word.
+    private let emojiSuggestions: EmojiSuggestions
+
+    /// One entry of the candidate row.
+    private enum RowItem: Equatable {
+        /// The proofreader's fix of the sentence before the cursor.
+        case proofread
+        /// The Pinyin candidate at this index of `pinyinCandidates`.
+        case pinyin(Int)
+        /// An emoji of the English word before the cursor, or of the first Pinyin candidate.
+        case emoji(String)
+    }
+
+    /// The entries of the candidate row, from left to right. A tap on the row gives an index here.
+    private var rowItems: [RowItem] = []
+    /// The text at the left end and the words of the row as the keyboard view shows them, or
+    /// nil before the first change of the row.
+    private var shownRow: (composition: String?, words: [String])?
 
     init(
         keyboardView: KeyboardView, document: KeyboardDocument, spellChecker: SpellChecking,
-        pinyinEngine: @escaping @MainActor () -> PinyinEngine
+        pinyinEngine: @escaping @MainActor () -> PinyinEngine,
+        emojiSuggestions: EmojiSuggestions = .bundled
     ) {
         self.keyboardView = keyboardView
         self.document = document
         self.spellChecker = spellChecker
         self.makePinyinEngine = pinyinEngine
+        self.emojiSuggestions = emojiSuggestions
         super.init()
         keyboardView.delegate = self
         // A tap on the typed Pinyin letters types them as plain letters.
@@ -363,6 +391,8 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
         let capitalize = !chineseMode && KeyboardTextLogic.shouldAutoCapitalize(
             before: document.textBeforeCursor, type: document.autocapitalizationType)
         keyboardView.setAutomaticShift(capitalize)
+        // Each change of the text ends here, so the emoji of the word before the cursor follow the text.
+        showRow()
     }
 
     private func refreshCaption() {
@@ -547,7 +577,8 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
         // A cloud marks the model on Apple's servers and a star the model on the device. The
         // number is the time the model took.
         let mark = result.source == "cloud" ? "\u{2601}\u{FE0E}" : "\u{2726}"
-        keyboardView.showCandidates(composition: String(format: "%@ %.1f s", mark, result.seconds), words: [corrected])
+        proofreadCaption = String(format: "%@ %.1f s", mark, result.seconds)
+        showRow()
     }
 
     /// Replaces the sentence right before the cursor with the proposed fix.
@@ -571,9 +602,7 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
     private func clearProofreadSuggestion() {
         guard proofreadSuggestion != nil else { return }
         proofreadSuggestion = nil
-        if pinyinBuffer.isEmpty {
-            keyboardView.showCandidates(composition: nil, words: [])
-        }
+        showRow()
     }
 
     // MARK: Language model test
@@ -652,14 +681,90 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
     // MARK: Chinese
 
     private func refreshCandidates() {
-        if pinyinBuffer.isEmpty {
-            pinyinCandidates = []
-            keyboardView.showCandidates(composition: nil, words: [])
+        pinyinCandidates = pinyinBuffer.isEmpty ? [] : pinyinEngine.candidates(for: pinyinBuffer)
+        showRow()
+    }
+
+    // MARK: The candidate row
+
+    /// Shows the candidate row and the English emoji of the top row of keys. While Pinyin
+    /// letters wait in the buffer, the row holds the candidates, with the emoji of the first
+    /// candidate right after it. Otherwise the row shows only while the proofreader has a fix:
+    /// the fix, then the emoji of the English word before the cursor, because the row covers
+    /// the top row of keys. The top row of keys shows the emoji of the English word before the
+    /// cursor. A field without autocorrection gets no emoji.
+    private func showRow() {
+        var items: [RowItem]
+        let composition: String?
+        if !pinyinBuffer.isEmpty {
+            keyboardView.topRowEmoji = []
+            items = pinyinCandidates.indices.map { RowItem.pinyin($0) }
+            if let first = pinyinCandidates.first, document.allowsAutocorrection {
+                items.insert(contentsOf: emojiSuggestions.chinese(for: first.word).map { RowItem.emoji($0) }, at: 1)
+            }
+            composition = pinyinEngine.display(for: pinyinBuffer)
         } else {
-            pinyinCandidates = pinyinEngine.candidates(for: pinyinBuffer)
-            keyboardView.showCandidates(
-                composition: pinyinEngine.display(for: pinyinBuffer), words: pinyinCandidates.map { $0.word })
+            let emoji = englishEmoji()
+            keyboardView.topRowEmoji = emoji
+            if proofreadSuggestion == nil {
+                items = []
+                composition = nil
+            } else {
+                items = [.proofread] + emoji.map { RowItem.emoji($0) }
+                composition = proofreadCaption
+            }
         }
+        rowItems = items
+        let words = items.map { item -> String in
+            switch item {
+            case .proofread: return proofreadSuggestion?.corrected ?? ""
+            case .pinyin(let index): return pinyinCandidates[index].word
+            case .emoji(let emoji): return emoji
+            }
+        }
+        // Most key presses leave the row as it is, and a new row would scroll back to its start.
+        if let shownRow, shownRow.composition == composition, shownRow.words == words { return }
+        shownRow = (composition, words)
+        keyboardView.showCandidates(composition: composition, words: words)
+    }
+
+    /// The emoji of the English word right before the cursor, by the rule of
+    /// `KeyboardTextLogic.wordForEmoji(before:)`. Chinese mode, a field without autocorrection,
+    /// a selection and select all give none.
+    private func englishEmoji() -> [String] {
+        guard !chineseMode, document.allowsAutocorrection, document.selectedText == nil, allText == nil,
+            pending == nil, let word = KeyboardTextLogic.wordForEmoji(before: document.textBeforeCursor)
+        else { return [] }
+        return emojiSuggestions.english(for: word)
+    }
+
+    /// Types an emoji of the candidate row. In Chinese the emoji takes the place of the first
+    /// Pinyin candidate and of the letters that candidate covers. In English the emoji takes the
+    /// place of the word before the cursor, as on the iOS keyboard, and the space after the word
+    /// stays. One backspace right after it brings the word back, as after a correction. An
+    /// emoji is not a mark, so it takes no space removal.
+    private func insertEmoji(_ emoji: String) {
+        if !pinyinBuffer.isEmpty {
+            guard let first = pinyinCandidates.first else { return }
+            document.insertText(emoji)
+            // The emoji ends the phrase of the picks before it, so the engine learns no phrase.
+            sessionPicks = []
+            pinyinBuffer.removeFirst(first.consumedLetters)
+            refreshCandidates()
+            return
+        }
+        let before = document.textBeforeCursor
+        // The row shows English emoji only for the word of `wordForEmoji`, so a word is there.
+        guard let word = KeyboardTextLogic.wordForEmoji(before: before) else { return }
+        let terminator = before.hasSuffix(" ") ? " " : ""
+        let shown = String(before.dropLast(terminator.count).suffix(word.count))
+        clearProofreadSuggestion()
+        recentWord = nil
+        previousInsertWasSpace = false
+        deleteBackward(count: shown.count + terminator.count)
+        document.insertText(emoji + terminator)
+        lastCorrection = Correction(original: shown, corrected: emoji, terminator: terminator, learnsOriginal: false)
+        updateAutoShift()
     }
 
     /// Types the candidate at `index` and keeps the letters the candidate did not cover.
@@ -743,21 +848,14 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
             }
             commitPinyinLetters()
         }
-        if let chinese = Self.chinesePunctuation[text] {
-            insertWithSpaceRemoval(chinese, keepsSpace: keepsSpace)
-            return true
-        }
-        if text == "\"" {
-            insertWithSpaceRemoval(doubleQuoteIsOpen ? "\u{201D}" : "\u{201C}", keepsSpace: keepsSpace)
-            doubleQuoteIsOpen.toggle()
-            return true
-        }
-        if text == "'" {
-            insertWithSpaceRemoval(singleQuoteIsOpen ? "\u{2019}" : "\u{2018}", keepsSpace: keepsSpace)
-            singleQuoteIsOpen.toggle()
-            return true
-        }
-        return false
+        // The keys show the same marks, by the same rule (`KeyboardView.label(_:)`).
+        let mark = KeyboardTextLogic.chineseMark(
+            forKey: text, doubleQuoteIsOpen: doubleQuoteIsOpen, singleQuoteIsOpen: singleQuoteIsOpen)
+        guard mark != text else { return false }
+        insertWithSpaceRemoval(mark, keepsSpace: keepsSpace)
+        if text == "\"" { doubleQuoteIsOpen.toggle() }
+        if text == "'" { singleQuoteIsOpen.toggle() }
+        return true
     }
 
     private func deleteBackward(count: Int) {
@@ -1026,8 +1124,10 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
         guard document.textBeforeCursor.hasSuffix(typed) else { return false }
         deleteBackward(count: typed.count)
         document.insertText(correction.original)
-        for word in correction.original.split(separator: " ") {
-            spellChecker.learn(String(word))
+        if correction.learnsOriginal {
+            for word in correction.original.split(separator: " ") {
+                spellChecker.learn(String(word))
+            }
         }
         showNotice("Kept \(correction.original)")
         return true
@@ -1067,14 +1167,27 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
         typeCharacter(text)
     }
 
+    func keyboardView(_ keyboardView: KeyboardView, didSelectTopRowEmoji emoji: String) {
+        defer { proofreadAfterAPause() }
+        // The top row shows English emoji only, so Pinyin letters or a running replacement
+        // mean the row changed under the finger.
+        guard pending == nil, pinyinBuffer.isEmpty else { return }
+        clearSpaceRemoval()
+        insertEmoji(emoji)
+    }
+
     func keyboardView(_ keyboardView: KeyboardView, didSelectCandidateAt index: Int) {
         defer { proofreadAfterAPause() }
         clearSpaceRemoval()
-        if proofreadSuggestion != nil {
+        guard rowItems.indices.contains(index) else { return }
+        switch rowItems[index] {
+        case .proofread:
             applyProofreadSuggestion()
-            return
+        case .pinyin(let candidate):
+            selectCandidate(at: candidate)
+        case .emoji(let emoji):
+            insertEmoji(emoji)
         }
-        selectCandidate(at: index)
     }
 
     func keyboardViewDeleteBackward(_ keyboardView: KeyboardView) {
@@ -1115,6 +1228,7 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
         recentWord = nil
         clearSpaceRemoval()
         document.moveCursor(byUTF16Offset: utf16Offset(forCharacters: offset))
+        showRow()
     }
 
     func keyboardView(_ keyboardView: KeyboardView, edit command: EditCommand) {

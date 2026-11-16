@@ -60,6 +60,24 @@ sys.exit("simulator not found: " + prefix)
     sleep 10
     capture "$udid" "$output_dir/$slug-$layer-light"
   done
+  # The same layers in Chinese mode, where the punctuation keys show the Chinese marks. The
+  # launch argument sets the stored language of the keyboard for this launch only.
+  for layer in letters symbols more; do
+    xcrun simctl terminate "$udid" "$bundle_id" 2>/dev/null || true
+    xcrun simctl launch "$udid" "$bundle_id" -focusPreviewField -layer "$layer" -typesChinese YES
+    sleep 10
+    capture "$udid" "$output_dir/$slug-$layer-chinese-light"
+  done
+  # The letters with the word "good" typed, so the top row of keys shows its emoji between
+  # Copy and Paste. The letters screenshot above shows the same row without emoji.
+  xcrun simctl terminate "$udid" "$bundle_id" 2>/dev/null || true
+  xcrun simctl launch "$udid" "$bundle_id" -focusPreviewField -layer letters -previewText good
+  sleep 10
+  capture "$udid" "$output_dir/$slug-letters-emoji-light"
+  # The last launch shows Chinese mode, so the dark screenshot opens the English "more" layer again.
+  xcrun simctl terminate "$udid" "$bundle_id" 2>/dev/null || true
+  xcrun simctl launch "$udid" "$bundle_id" -focusPreviewField -layer more
+  sleep 10
   xcrun simctl ui "$udid" appearance dark
   sleep 4
   capture "$udid" "$output_dir/$slug-more-dark"
