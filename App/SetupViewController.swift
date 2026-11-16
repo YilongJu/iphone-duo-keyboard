@@ -16,6 +16,8 @@ final class SetupViewController: UIViewController, UITextViewDelegate {
     private let appSpeedResults = UITextView()
     /// The progress line of the running test, written again every 2 seconds.
     private let appSpeedProgress = UILabel()
+    /// The pair the app's run starts at, as in "duo:speed6". Empty starts at the first pair.
+    private let appSpeedStart = UITextField()
     /// The record of the app's run, so a run that stopped goes on at the next tap, as in the
     /// keyboard. It is apart from the keyboard's record, in the app's own container.
     private let appSpeedFolder = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
@@ -325,6 +327,11 @@ final class SetupViewController: UIViewController, UITextViewDelegate {
         appSpeedButton.addAction(UIAction { [weak self] _ in
             self?.runAppSpeedTest()
         }, for: .touchUpInside)
+        appSpeedStart.placeholder = "Start at pair (empty: the first pair)"
+        appSpeedStart.keyboardType = .numberPad
+        appSpeedStart.borderStyle = .roundedRect
+        appSpeedStart.accessibilityIdentifier = "appSpeedStart"
+        stack.addArrangedSubview(appSpeedStart)
         stack.addArrangedSubview(appSpeedButton)
         appSpeedProgress.font = .monospacedSystemFont(ofSize: 13, weight: .semibold)
         appSpeedProgress.numberOfLines = 0
@@ -366,6 +373,17 @@ final class SetupViewController: UIViewController, UITextViewDelegate {
         let test = ModelSpeedTest(
             runtimes: [.coreMLGPU, .coreMLNeuralEngine], progressFolder: appSpeedFolder,
             diagnosticsFile: appDiagnostics.file)
+        appSpeedStart.resignFirstResponder()
+        let startText = (appSpeedStart.text ?? "").trimmingCharacters(in: .whitespaces)
+        if !startText.isEmpty {
+            guard let start = Int(startText) else {
+                appSpeedResults.text = "The start pair \"\(startText)\" is not a number."
+                UIApplication.shared.isIdleTimerDisabled = false
+                appSpeedButton.isEnabled = true
+                return
+            }
+            test.startPair = start
+        }
         let lines = test.resultLines()
         let ticker = Task { [weak self] in
             while !Task.isCancelled {
