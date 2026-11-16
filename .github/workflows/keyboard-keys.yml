@@ -90,7 +90,8 @@ jobs:
   screenshots:
     name: Simulator screenshots of the keyboard
     runs-on: xcode-27
-    timeout-minutes: 40
+    # The job took 38.7 minutes on ui/action-return, and the emoji screenshots add a launch per device.
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v7
       - name: Install XcodeGen
