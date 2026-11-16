@@ -214,6 +214,27 @@ final class SlideKeyTouchTests: XCTestCase {
         XCTAssertEqual(document.text, "@@#$&*()'\"%-+=/;:")
     }
 
+    func testASlideInChineseModeShowsAndTypesTheChineseMark() throws {
+        makeKeyboard()
+        controller.keyboardView(keyboardView, edit: .toggleLanguage)
+        let key = try cell("m")
+        XCTAssertEqual(try shownTexts(at: key), ["\u{FF1A}", "m"])
+        let touch = press(key)
+        drag(touch, rows: -0.6, from: key)
+        XCTAssertEqual(try shownTexts(at: key), ["\u{FF1A}"])
+        lift(touch)
+        XCTAssertEqual(document.text, "\u{FF1A}")
+        XCTAssertEqual(try shownTexts(at: key), ["\u{FF1A}", "m"])
+        // The comma key shows its shifted mark while a slide selects it.
+        let comma = try commaKey
+        let second = press(comma)
+        drag(second, rows: -0.6, from: comma)
+        XCTAssertEqual(try shownTexts(at: comma), ["\u{FF01}"])
+        lift(second)
+        XCTAssertEqual(document.text, "\u{FF1A}\u{FF01}")
+        XCTAssertEqual(try shownTexts(at: comma), ["\u{FF01}", "\u{FF0C}"])
+    }
+
     func testAShortVerticalMoveTypesTheLetter() throws {
         makeKeyboard()
         slide(try cell("a"), rows: -0.3)
