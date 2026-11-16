@@ -3,9 +3,10 @@ import XCTest
 
 @testable import DuoKeyboard
 
-/// The emoji of a word on the candidate row: at the end of the row for the English word right
-/// before the cursor, and right after the first Pinyin candidate. A tap on an English emoji
-/// puts the emoji in place of the word, as the iOS keyboard does. The tests read the bundled table
+/// The emoji of a word: in the top row of keys, between the Copy and Paste keys, for the
+/// English word right before the cursor, and on the candidate row right after the first Pinyin
+/// candidate. A tap on an English emoji puts the emoji in place of the word, as the iOS
+/// keyboard does. The tests read the bundled table
 /// Shared/emoji-suggestions.tsv, which offers "👍" for "good" and for "好", "👋" for "你好" and
 /// "💻" for "office", and nothing for "the", "我" and "xyz".
 @MainActor
@@ -16,7 +17,9 @@ final class EmojiSuggestionTests: XCTestCase {
     private var controller: KeyboardTextController!
 
     private func makeController(before: String = "", chinese: Bool = false) {
-        keyboardView = KeyboardView()
+        let height = KeyboardView.preferredHeight(forWidth: 466, compactHeight: false, device: .phone, landscape: false)
+        keyboardView = KeyboardView(frame: CGRect(x: 0, y: 0, width: 466, height: height))
+        keyboardView.layoutIfNeeded()
         document = FakeDocument(before: before)
         spellChecker = FakeSpellChecker()
         controller = KeyboardTextController(
@@ -50,52 +53,86 @@ final class EmojiSuggestionTests: XCTestCase {
         return buttons.sorted { $0.tag < $1.tag }.map { $0.configuration?.title ?? "" }
     }
 
+    /// The emoji labels of the keyboard view outside the keys and the candidate row, from left to right.
+    private func emojiLabels() -> [UILabel] {
+        keyboardView.layoutIfNeeded()
+        var views: [UIView] = keyboardView.subviews.filter { !($0 is KeyView) && !($0 is CandidateBar) }
+        var labels: [UILabel] = []
+        while let view = views.popLast() {
+            if view.isHidden { continue }
+            if let label = view as? UILabel, let text = label.text, !text.isEmpty { labels.append(label) }
+            views += view.subviews
+        }
+        return labels.sorted { $0.convert($0.bounds, to: keyboardView).minX < $1.convert($1.bounds, to: keyboardView).minX }
+    }
+
+    /// The emoji that the top row of keys shows, from left to right.
+    private func topRow() -> [String] {
+        emojiLabels().compactMap(\.text)
+    }
+
+    /// A finger tap on the middle of the emoji at `index` in the top row of keys.
+    private func tapEmoji(_ index: Int, file: StaticString = #filePath, line: UInt = #line) {
+        let labels = emojiLabels()
+        guard labels.indices.contains(index) else {
+            XCTFail("The top row shows \(labels.count) emoji", file: file, line: line)
+            return
+        }
+        let frame = labels[index].convert(labels[index].bounds, to: keyboardView)
+        let touch = FakeTouch(at: CGPoint(x: frame.midX, y: frame.midY))
+        keyboardView.touchesBegan([touch], with: nil)
+        keyboardView.touchesEnded([touch], with: nil)
+    }
+
     private func pinyinWords(_ letters: String) -> [String] {
         PinyinEngine(dictionaryText: testDictionary).candidates(for: letters).map(\.word)
     }
 
     // MARK: English
 
-    func testTheWordBeingTypedShowsItsEmoji() {
+    func testTheWordBeingTypedShowsItsEmojiInTheTopRow() {
         makeController()
         type("good")
-        XCTAssertEqual(row()?.first, "\u{1F44D}")
-        XCTAssertLessThanOrEqual(row()?.count ?? 0, 2)
+        XCTAssertEqual(topRow().first, "\u{1F44D}")
+        XCTAssertLessThanOrEqual(topRow().count, 2)
+        // The English emoji take no row of their own.
+        XCTAssertNil(row())
     }
 
     func testTheWordBeforeOneSpaceShowsItsEmoji() {
         makeController(before: "That is ")
         type("good ")
-        XCTAssertEqual(row()?.first, "\u{1F44D}")
+        XCTAssertEqual(topRow().first, "\u{1F44D}")
+        XCTAssertNil(row())
     }
 
     func testACapitalDoesNotHideTheEmoji() {
         makeController()
         type("Good ")
-        XCTAssertEqual(row()?.first, "\u{1F44D}")
+        XCTAssertEqual(topRow().first, "\u{1F44D}")
     }
 
     func testATapReplacesTheWordAndKeepsTheSpaceAfterIt() {
         makeController(before: "I feel ")
         type("good ")
-        tap(0)
+        tapEmoji(0)
         XCTAssertEqual(document.text, "I feel \u{1F44D} ")
-        XCTAssertNil(row())
+        XCTAssertEqual(topRow(), [])
     }
 
     func testATapWhileTypingReplacesTheWord() {
         makeController()
         type("good")
-        tap(0)
+        tapEmoji(0)
         XCTAssertEqual(document.text, "\u{1F44D}")
     }
 
     func testTheSecondEmojiOfAWordGoesInOnItsTap() throws {
         makeController()
         type("good ")
-        XCTAssertEqual(row()?.count, 2)
-        let second = try XCTUnwrap(row()?.dropFirst().first)
-        tap(1)
+        XCTAssertEqual(topRow().count, 2)
+        let second = try XCTUnwrap(topRow().dropFirst().first)
+        tapEmoji(1)
         XCTAssertEqual(document.text, second + " ")
     }
 
@@ -103,7 +140,7 @@ final class EmojiSuggestionTests: XCTestCase {
         // As after a correction, the delete takes the space after the emoji too.
         makeController()
         type("Good ")
-        tap(0)
+        tapEmoji(0)
         XCTAssertEqual(document.text, "\u{1F44D} ")
         controller.keyboardViewDeleteBackward(keyboardView)
         XCTAssertEqual(document.text, "Good")
@@ -117,7 +154,7 @@ final class EmojiSuggestionTests: XCTestCase {
     func testADeleteBringsTheWordBackAfterATapWhileTyping() {
         makeController()
         type("good")
-        tap(0)
+        tapEmoji(0)
         controller.keyboardViewDeleteBackward(keyboardView)
         XCTAssertEqual(document.text, "good")
     }
@@ -125,7 +162,7 @@ final class EmojiSuggestionTests: XCTestCase {
     func testAKeyAfterTheReplacementEndsTheWayBack() {
         makeController()
         type("good ")
-        tap(0)
+        tapEmoji(0)
         type("x")
         controller.keyboardViewDeleteBackward(keyboardView)
         XCTAssertEqual(document.text, "\u{1F44D} ")
@@ -139,6 +176,7 @@ final class EmojiSuggestionTests: XCTestCase {
         for text in ["xyz ", "good  ", "good.", "good,", "goodness ", "@good ", "the "] {
             makeController()
             type(text)
+            XCTAssertEqual(topRow(), [], text)
             XCTAssertNil(row(), text)
         }
     }
@@ -147,16 +185,16 @@ final class EmojiSuggestionTests: XCTestCase {
         makeController()
         document.allowsAutocorrection = false
         type("good ")
-        XCTAssertNil(row())
+        XCTAssertEqual(topRow(), [])
         type("good")
-        XCTAssertNil(row())
+        XCTAssertEqual(topRow(), [])
     }
 
     func testAutocorrectionStaysAsBefore() {
         makeController()
         type("good teh ")
         XCTAssertEqual(document.text, "good the ")
-        XCTAssertNil(row())
+        XCTAssertEqual(topRow(), [])
         type("recieve ")
         XCTAssertEqual(document.text, "good the receive ")
     }
@@ -165,7 +203,7 @@ final class EmojiSuggestionTests: XCTestCase {
         makeController()
         spellChecker.corrections["good"] = "food"
         type("good")
-        tap(0)
+        tapEmoji(0)
         XCTAssertEqual(document.text, "\u{1F44D}")
         XCTAssertEqual(spellChecker.requests, [])
     }
@@ -174,12 +212,12 @@ final class EmojiSuggestionTests: XCTestCase {
         // An emoji is not a word, so a mark after the emoji and one space keeps that space.
         makeController()
         type("good ")
-        tap(0)
+        tapEmoji(0)
         type(",")
         XCTAssertEqual(document.text, "\u{1F44D} ,")
         makeController()
         type("good")
-        tap(0)
+        tapEmoji(0)
         type(".")
         XCTAssertEqual(document.text, "\u{1F44D}.")
     }
@@ -188,10 +226,10 @@ final class EmojiSuggestionTests: XCTestCase {
         makeController()
         type("good ,")
         XCTAssertEqual(document.text, "good,")
-        XCTAssertNil(row())
+        XCTAssertEqual(topRow(), [])
         controller.keyboardViewDeleteBackward(keyboardView)
         XCTAssertEqual(document.text, "good ")
-        XCTAssertEqual(row()?.first, "\u{1F44D}")
+        XCTAssertEqual(topRow().first, "\u{1F44D}")
         type(",")
         XCTAssertEqual(document.text, "good ,")
     }
@@ -203,6 +241,8 @@ final class EmojiSuggestionTests: XCTestCase {
     }
 
     func testAProofreadFixComesBeforeTheEmoji() async {
+        // The fix has a row of its own, which covers the top row of keys, so that row also
+        // offers the emoji after the fix.
         makeController()
         let proofreader = FakeProofreader()
         proofreader.answers = ["I came form the office": "I came from the office"]
@@ -233,19 +273,19 @@ final class EmojiSuggestionTests: XCTestCase {
     func testChineseModeShowsNoEnglishEmoji() {
         makeController()
         type("good ")
-        XCTAssertNotNil(row())
+        XCTAssertEqual(topRow().first, "\u{1F44D}")
         controller.keyboardView(keyboardView, edit: .toggleLanguage)
-        XCTAssertNil(row())
+        XCTAssertEqual(topRow(), [])
         controller.keyboardView(keyboardView, edit: .toggleLanguage)
-        XCTAssertEqual(row()?.first, "\u{1F44D}")
+        XCTAssertEqual(topRow().first, "\u{1F44D}")
     }
 
     func testACursorMoveShowsTheEmojiOfTheWordBeforeTheCursor() {
         makeController()
         type("good xyz")
-        XCTAssertNil(row())
+        XCTAssertEqual(topRow(), [])
         controller.keyboardView(keyboardView, moveCursorBy: -4)
-        XCTAssertEqual(row()?.first, "\u{1F44D}")
+        XCTAssertEqual(topRow().first, "\u{1F44D}")
     }
 
     // MARK: Chinese
@@ -253,6 +293,8 @@ final class EmojiSuggestionTests: XCTestCase {
     func testTheFirstCandidateInTheTableGetsItsEmojiRightAfterIt() {
         makeController(chinese: true)
         type("hao")
+        // Chinese emoji stay on the candidate row, and the top row of keys shows none.
+        XCTAssertEqual(topRow(), [])
         let shown = row() ?? []
         XCTAssertEqual(shown.first, "\u{597D}")
         XCTAssertEqual(shown.dropFirst().first, "\u{1F44D}")

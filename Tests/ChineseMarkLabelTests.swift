@@ -171,3 +171,116 @@ final class ChineseMarkLabelTests: XCTestCase {
         }
     }
 }
+
+/// The full-width Chinese marks on the keys. A font draws "，" and "。" in the lower left of their
+/// square, so the key moves the label until the drawn mark sits in the middle of the key. The
+/// tests draw a label as UIKit draws it and measure the middle of its dark pixels.
+@MainActor
+final class ChineseMarkCenteringTests: XCTestCase {
+    private var keyboardView: KeyboardView!
+    private var controller: KeyboardTextController!
+
+    /// How far, in points, the middle of a drawn mark may lie from the middle of its key.
+    private static let tolerance: CGFloat = 1.5
+
+    private func makeKeyboard(chinese: Bool) {
+        let height = KeyboardView.preferredHeight(forWidth: 466, compactHeight: false, device: .phone, landscape: false)
+        keyboardView = KeyboardView(frame: CGRect(x: 0, y: 0, width: 466, height: height))
+        keyboardView.overrideUserInterfaceStyle = .light
+        keyboardView.layoutIfNeeded()
+        controller = KeyboardTextController(
+            keyboardView: keyboardView, document: FakeDocument(before: ""), spellChecker: FakeSpellChecker(),
+            pinyinEngine: { PinyinEngine(dictionaryText: testDictionary) })
+        if chinese {
+            controller.keyboardView(keyboardView, edit: .toggleLanguage)
+        }
+    }
+
+    private func keyView(_ kind: KeyKind) throws -> KeyView {
+        let keyView = try XCTUnwrap(
+            keyboardView.subviews.compactMap { $0 as? KeyView }.first { $0.key.kind == kind }, "\(kind)")
+        keyView.layoutIfNeeded()
+        return keyView
+    }
+
+    private func label(_ text: String, of keyView: KeyView) throws -> UILabel {
+        try XCTUnwrap(keyView.subviews.compactMap { $0 as? UILabel }.first { $0.text == text }, text)
+    }
+
+    /// The middle of the dark pixels that `label` draws, in the coordinates of its key.
+    private func inkMiddle(of label: UILabel, in keyView: KeyView) throws -> CGPoint {
+        let scale: CGFloat = 2
+        let size = keyView.bounds.size
+        let width = Int(size.width * scale), height = Int(size.height * scale)
+        var pixels = [UInt8](repeating: 255, count: width * height * 4)
+        try pixels.withUnsafeMutableBytes { buffer in
+            let context = try XCTUnwrap(CGContext(
+                data: buffer.baseAddress, width: width, height: height, bitsPerComponent: 8, bytesPerRow: width * 4,
+                space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue))
+            // UIKit draws with the origin at the top left.
+            context.translateBy(x: 0, y: CGFloat(height))
+            context.scaleBy(x: scale, y: -scale)
+            UIGraphicsPushContext(context)
+            label.traitCollection.performAsCurrent {
+                context.translateBy(x: label.frame.minX, y: label.frame.minY)
+                label.drawText(in: label.bounds)
+            }
+            UIGraphicsPopContext()
+        }
+        var minX = width, maxX = -1, minY = height, maxY = -1
+        for y in 0..<height {
+            for x in 0..<width where pixels[(y * width + x) * 4] < 128 {
+                minX = min(minX, x)
+                maxX = max(maxX, x)
+                minY = min(minY, y)
+                maxY = max(maxY, y)
+            }
+        }
+        guard maxX >= 0 else { throw NoInk(text: label.text ?? "") }
+        return CGPoint(x: CGFloat(minX + maxX + 1) / 2 / scale, y: CGFloat(minY + maxY + 1) / 2 / scale)
+    }
+
+    private struct NoInk: Error {
+        let text: String
+    }
+
+    func testTheFullWidthMarksOfTheSymbolLayersLookCenteredOnTheirKeys() throws {
+        makeKeyboard(chinese: true)
+        let marks: [(KeyboardLayer, String, String)] = [
+            (.symbols, ",", "\u{FF0C}"), (.symbols, ".", "\u{3002}"), (.symbols, "?", "\u{FF1F}"),
+            (.symbols, "!", "\u{FF01}"), (.symbols, ":", "\u{FF1A}"), (.symbols, ";", "\u{FF1B}"),
+            (.symbols, "(", "\u{FF08}"), (.symbols, ")", "\u{FF09}"), (.more, "\\", "\u{3001}"),
+            (.more, "<", "\u{300A}"), (.more, ">", "\u{300B}"),
+        ]
+        for (layer, ascii, mark) in marks {
+            keyboardView.show(layer: layer)
+            keyboardView.layoutIfNeeded()
+            let key = try keyView(.character(ascii))
+            let middle = try inkMiddle(of: try label(mark, of: key), in: key)
+            XCTAssertEqual(middle.x, key.bounds.midX, accuracy: Self.tolerance, mark)
+            XCTAssertEqual(middle.y, key.bounds.midY, accuracy: Self.tolerance, mark)
+        }
+    }
+
+    func testTheMarksOfTheLetterKeysLookCenteredAcrossTheirKeys() throws {
+        makeKeyboard(chinese: true)
+        for (kind, mark) in [
+            (KeyKind.dual(",", "!"), "\u{FF0C}"), (.dual(",", "!"), "\u{FF01}"), (.dual(".", "?"), "\u{3002}"),
+            (.dual(".", "?"), "\u{FF1F}"), (.slide("n", ";"), "\u{FF1B}"), (.slide("m", ":"), "\u{FF1A}"),
+        ] {
+            let key = try keyView(kind)
+            let middle = try inkMiddle(of: try label(mark, of: key), in: key)
+            XCTAssertEqual(middle.x, key.bounds.midX, accuracy: Self.tolerance, mark)
+        }
+    }
+
+    func testEnglishMarksKeepTheirPlace() throws {
+        makeKeyboard(chinese: false)
+        keyboardView.show(layer: .symbols)
+        keyboardView.layoutIfNeeded()
+        for ascii in [",", ".", "?", "!", ":", ";", "(", ")"] {
+            let key = try keyView(.character(ascii))
+            XCTAssertEqual(try label(ascii, of: key).frame, key.bounds.insetBy(dx: 2, dy: 2), ascii)
+        }
+    }
+}

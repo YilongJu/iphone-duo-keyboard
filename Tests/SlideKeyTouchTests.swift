@@ -34,6 +34,7 @@ final class RecordingKeyboardDelegate: KeyboardViewDelegate {
     func keyboardView(_ keyboardView: KeyboardView, moveCursorBy offset: Int) {}
     func keyboardView(_ keyboardView: KeyboardView, edit command: EditCommand) {}
     func keyboardView(_ keyboardView: KeyboardView, didSelectCandidateAt index: Int) {}
+    func keyboardView(_ keyboardView: KeyboardView, didSelectTopRowEmoji emoji: String) {}
     func keyboardViewDismiss(_ keyboardView: KeyboardView) {}
     func keyboardViewDidPressKey(_ keyboardView: KeyboardView) {}
 }

@@ -23,6 +23,8 @@ on:
       - 'Tests/SpaceBeforeMarkTests.swift'
       - 'Tests/EmojiSuggestionTests.swift'
       - 'Tests/ChineseMarkLabelTests.swift'
+      - 'Tests/TopRowEmojiTests.swift'
+      - 'App/SetupViewController.swift'
       - 'Tests/TypingEngineTests.swift'
       - 'scripts/keyboard-preview/**'
       - 'scripts/ci/capture_screenshots.sh'
@@ -72,7 +74,7 @@ jobs:
           only=()
           for class in $(grep -h -o -E '^final class [A-Za-z]+: XCTestCase' \
               Tests/SlideKey*.swift Tests/KeyboardTextControllerTests.swift Tests/SpaceBeforeMarkTests.swift \
-              Tests/EmojiSuggestionTests.swift Tests/ChineseMarkLabelTests.swift \
+              Tests/EmojiSuggestionTests.swift Tests/ChineseMarkLabelTests.swift Tests/TopRowEmojiTests.swift \
               Tests/TypingEngineTests.swift | awk '{ print $3 }' | tr -d ':'); do
             only+=("-only-testing:DuoKeyboardTests/$class")
           done
