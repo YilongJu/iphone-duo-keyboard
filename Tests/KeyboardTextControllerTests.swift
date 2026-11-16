@@ -1463,7 +1463,7 @@ final class ReturnKeyColorTests: XCTestCase {
         let symbolColor = try symbolView(of: key, file: file, line: line).tintColor
         for (style, name) in appearances {
             XCTAssertEqual(
-                try parts(key.backgroundColor, style), try parts(.systemBlue, style),
+                try parts(key.drawnColor, style), try parts(.systemBlue, style),
                 "key color, \(context), \(name) mode", file: file, line: line)
             XCTAssertEqual(
                 try parts(symbolColor, style), try parts(.white, style),
@@ -1480,7 +1480,7 @@ final class ReturnKeyColorTests: XCTestCase {
         let symbolColor = try symbolView(of: key, file: file, line: line).tintColor
         for (style, name) in appearances {
             XCTAssertEqual(
-                try parts(key.backgroundColor, style), try parts(KeyColors.function, style),
+                try parts(key.drawnColor, style), try parts(KeyColors.function, style),
                 "key color, \(context), \(name) mode", file: file, line: line)
             XCTAssertEqual(
                 try parts(symbolColor, style), try parts(KeyColors.text, style),
@@ -1537,7 +1537,7 @@ final class ReturnKeyColorTests: XCTestCase {
                 XCTAssertTrue(key.isHighlighted)
                 for (appearance, name) in appearances {
                     XCTAssertEqual(
-                        try parts(key.backgroundColor, appearance), try parts(KeyColors.character, appearance),
+                        try parts(key.drawnColor, appearance), try parts(KeyColors.character, appearance),
                         "pressed key color, \(style) \(layer), \(name) mode")
                 }
                 view.touchesEnded([touch], with: nil)
@@ -1557,7 +1557,7 @@ final class ReturnKeyColorTests: XCTestCase {
             let symbolColor = try symbolView(of: key).tintColor
             for (style, name) in appearances {
                 let blue = try hsb(.systemBlue, style)
-                let pressed = try hsb(key.backgroundColor, style)
+                let pressed = try hsb(key.drawnColor, style)
                 // The same blue, a little darker: the hue and the saturation stay, and the
                 // brightness falls by more than 0.05 and by less than 30 percent.
                 XCTAssertEqual(pressed[0], blue[0], accuracy: 0.01, "hue, width \(width), \(name) mode")
