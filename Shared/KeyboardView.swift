@@ -109,6 +109,31 @@ final class KeyboardView: UIView {
         didSet { if oldValue != chineseActive { refreshLabels() } }
     }
 
+    /// True while a Chinese quotation of the double quote key is open, so the key shows the
+    /// closing quote. `chineseSingleQuoteIsOpen` is the same for the single quote key.
+    var chineseDoubleQuoteIsOpen = false {
+        didSet { if oldValue != chineseDoubleQuoteIsOpen { refreshLabels() } }
+    }
+
+    var chineseSingleQuoteIsOpen = false {
+        didSet { if oldValue != chineseSingleQuoteIsOpen { refreshLabels() } }
+    }
+
+    /// True while Pinyin letters wait for a candidate. The apostrophe key then splits two
+    /// syllables, as in "xi'an", so it shows the apostrophe.
+    var pinyinLettersWait = false {
+        didSet { if oldValue != pinyinLettersWait { refreshLabels() } }
+    }
+
+    /// The text a key shows for the character `character` that it types. In Chinese mode a
+    /// punctuation key types a Chinese mark (`KeyboardTextLogic.chineseMark`), and the key shows
+    /// that mark. Every other key shows its own character.
+    func label(_ character: String) -> String {
+        guard chineseActive, !(character == "'" && pinyinLettersWait) else { return character }
+        return KeyboardTextLogic.chineseMark(
+            forKey: character, doubleQuoteIsOpen: chineseDoubleQuoteIsOpen, singleQuoteIsOpen: chineseSingleQuoteIsOpen)
+    }
+
     /// The bar of Chinese candidates. The bar covers the top row while the user composes a word.
     private let candidateBar = CandidateBar()
 
@@ -331,12 +356,12 @@ final class KeyboardView: UIView {
         let wordSize: CGFloat = 16
         switch kind {
         case .character(let character):
-            return KeyDisplay(primary: characterText(character), primaryFontSize: letterSize)
+            return KeyDisplay(primary: label(characterText(character)), primaryFontSize: letterSize)
         case .dual(let base, let shifted):
-            return KeyDisplay(primary: base, secondary: shifted, primaryFontSize: 19)
+            return KeyDisplay(primary: label(base), secondary: label(shifted), primaryFontSize: 19)
         case .slide(let letter, let slideCharacter):
             return KeyDisplay(
-                primary: characterText(letter), slideCharacter: slideCharacter, primaryFontSize: letterSize)
+                primary: characterText(letter), slideCharacter: label(slideCharacter), primaryFontSize: letterSize)
         case .space:
             if let spaceCaption {
                 return KeyDisplay(primary: spaceCaption, primaryFontSize: 13)
@@ -734,7 +759,7 @@ final class KeyboardView: UIView {
         if active {
             state.holdTimer?.invalidate()
             state.holdTimer = nil
-            state.keyView.apply(KeyDisplay(primary: alternate, primaryFontSize: 26))
+            state.keyView.apply(KeyDisplay(primary: label(alternate), primaryFontSize: 26))
         } else {
             state.keyView.apply(display(for: state.keyView.key.kind))
         }

@@ -303,22 +303,23 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
     /// True while the keyboard types Simplified Chinese through Pinyin.
     private(set) var chineseMode = false
     /// The Pinyin letters typed so far that are not Chinese text yet.
-    private(set) var pinyinBuffer = ""
+    private(set) var pinyinBuffer = "" {
+        didSet { keyboardView.pinyinLettersWait = !pinyinBuffer.isEmpty }
+    }
     private var pinyinCandidates: [PinyinCandidate] = []
     /// The candidates picked since the buffer was last empty.
     private var sessionPicks: [PinyinCandidate] = []
-    /// True after an opening quotation mark, so the next one closes.
-    private var doubleQuoteIsOpen = false
-    private var singleQuoteIsOpen = false
+    /// True after an opening quotation mark, so the next one closes. The quote keys show the
+    /// quote they type next, so the keyboard view follows both values.
+    private var doubleQuoteIsOpen = false {
+        didSet { keyboardView.chineseDoubleQuoteIsOpen = doubleQuoteIsOpen }
+    }
+    private var singleQuoteIsOpen = false {
+        didSet { keyboardView.chineseSingleQuoteIsOpen = singleQuoteIsOpen }
+    }
     private let makePinyinEngine: @MainActor () -> PinyinEngine
     /// The dictionary loads on the first switch to Chinese, so English typing does not pay for the load.
     private lazy var pinyinEngine: PinyinEngine = makePinyinEngine()
-
-    /// Chinese forms of the punctuation keys.
-    private static let chinesePunctuation: [String: String] = [
-        ",": "\u{FF0C}", ".": "\u{3002}", "?": "\u{FF1F}", "!": "\u{FF01}", ":": "\u{FF1A}",
-        ";": "\u{FF1B}", "(": "\u{FF08}", ")": "\u{FF09}", "<": "\u{300A}", ">": "\u{300B}", "\\": "\u{3001}",
-    ]
 
     /// The emoji that the candidate row offers for a word.
     private let emojiSuggestions: EmojiSuggestions
@@ -803,21 +804,14 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
             }
             commitPinyinLetters()
         }
-        if let chinese = Self.chinesePunctuation[text] {
-            insertWithSpaceRemoval(chinese, keepsSpace: keepsSpace)
-            return true
-        }
-        if text == "\"" {
-            insertWithSpaceRemoval(doubleQuoteIsOpen ? "\u{201D}" : "\u{201C}", keepsSpace: keepsSpace)
-            doubleQuoteIsOpen.toggle()
-            return true
-        }
-        if text == "'" {
-            insertWithSpaceRemoval(singleQuoteIsOpen ? "\u{2019}" : "\u{2018}", keepsSpace: keepsSpace)
-            singleQuoteIsOpen.toggle()
-            return true
-        }
-        return false
+        // The keys show the same marks, by the same rule (`KeyboardView.label(_:)`).
+        let mark = KeyboardTextLogic.chineseMark(
+            forKey: text, doubleQuoteIsOpen: doubleQuoteIsOpen, singleQuoteIsOpen: singleQuoteIsOpen)
+        guard mark != text else { return false }
+        insertWithSpaceRemoval(mark, keepsSpace: keepsSpace)
+        if text == "\"" { doubleQuoteIsOpen.toggle() }
+        if text == "'" { singleQuoteIsOpen.toggle() }
+        return true
     }
 
     private func deleteBackward(count: Int) {

@@ -82,6 +82,27 @@ enum KeyboardTextLogic {
 
     static let marks: Set<Character> = asciiMarks.union(chineseMarks)
 
+    /// The Chinese marks that the punctuation keys type in Chinese mode, by the ASCII character of
+    /// the key. The two quote keys are in `chineseMark(forKey:doubleQuoteIsOpen:singleQuoteIsOpen:)`.
+    /// Every other key types its own character in Chinese mode too.
+    static let chinesePunctuation: [String: String] = [
+        ",": "\u{FF0C}", ".": "\u{3002}", "?": "\u{FF1F}", "!": "\u{FF01}", ":": "\u{FF1A}",
+        ";": "\u{FF1B}", "(": "\u{FF08}", ")": "\u{FF09}", "<": "\u{300A}", ">": "\u{300B}", "\\": "\u{3001}",
+    ]
+
+    /// The text that the key of `character` types in Chinese mode while no Pinyin letters wait:
+    /// the Chinese mark of `chinesePunctuation`, or a curly quote for a straight quote key, or
+    /// `character` itself. A quote key types the opening quote, or the closing quote while its
+    /// quotation is open.
+    static func chineseMark(forKey character: String, doubleQuoteIsOpen: Bool, singleQuoteIsOpen: Bool) -> String {
+        if let mark = chinesePunctuation[character] { return mark }
+        switch character {
+        case "\"": return doubleQuoteIsOpen ? "\u{201D}" : "\u{201C}"
+        case "'": return singleQuoteIsOpen ? "\u{2019}" : "\u{2018}"
+        default: return character
+        }
+    }
+
     /// The closing characters that can stand between a word and the space before a mark.
     static let closingCharacters: Set<Character> = [")", "]", "}", "\"", "'", "\u{201D}", "\u{2019}"]
 
