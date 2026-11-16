@@ -96,7 +96,15 @@ final class FakeLanguageModelMeasurer: LanguageModelMeasuring {
     var runs = 0
     /// True keeps each run open after its lines, until `finish()`.
     var staysOpen = false
+    /// The progress line, or nil for none.
+    var progress: String?
     private var openRun: AsyncStream<String>.Continuation?
+
+    func progressText() -> String? { progress }
+
+    func yield(_ line: String) {
+        openRun?.yield(line)
+    }
 
     func resultLines() -> AsyncStream<String> {
         runs += 1
@@ -219,6 +227,52 @@ final class KeyboardTextControllerTests: XCTestCase {
         XCTAssertEqual(reset.runs, 1)
         XCTAssertEqual(speed.runs, 0)
         XCTAssertEqual(document.text, "duo:speedreset \nreset       done")
+    }
+
+    /// The progress line stays at the end of the result lines while the test runs, and goes away
+    /// at the end of the run.
+    func testTheProgressLineStaysLastAndGoesAwayAtTheEnd() async throws {
+        let measurer = makeMeasuringController(before: "")
+        controller.progressIntervalSeconds = 0.01
+        measurer.lines = ["model       fake"]
+        measurer.staysOpen = true
+        measurer.progress = "progress    pair 1"
+        type("duo:lm ")
+        try await waitFor { self.document.text.hasSuffix("\nprogress    pair 1") }
+        XCTAssertEqual(document.text, "duo:lm \nmodel       fake\nprogress    pair 1")
+        measurer.progress = "progress    pair 2"
+        try await waitFor { self.document.text.hasSuffix("\nprogress    pair 2") }
+        measurer.yield("done        fake")
+        try await waitFor { self.document.text.contains("done") }
+        XCTAssertEqual(document.text, "duo:lm \nmodel       fake\ndone        fake\nprogress    pair 2")
+        let run = controller.languageModelTask
+        measurer.finish()
+        await run?.value
+        XCTAssertEqual(document.text, "duo:lm \nmodel       fake\ndone        fake")
+    }
+
+    /// Text after the progress line stops the progress line, and the keyboard deletes nothing.
+    func testTheProgressLineStopsWhenTheTextChanges() async throws {
+        let measurer = makeMeasuringController(before: "")
+        controller.progressIntervalSeconds = 0.01
+        measurer.lines = []
+        measurer.staysOpen = true
+        measurer.progress = "progress    pair 1"
+        type("duo:lm ")
+        try await waitFor { self.document.text.hasSuffix("\nprogress    pair 1") }
+        document.insertText(" mine")
+        try await Task.sleep(nanoseconds: 100_000_000)
+        let run = controller.languageModelTask
+        measurer.finish()
+        await run?.value
+        XCTAssertEqual(document.text, "duo:lm \nprogress    pair 1 mine")
+    }
+
+    private func waitFor(_ condition: @escaping () -> Bool) async throws {
+        for _ in 0..<500 where !condition() {
+            try await Task.sleep(nanoseconds: 10_000_000)
+        }
+        XCTAssertTrue(condition(), document.text)
     }
 
     func testOtherTextDoesNotRunTheSpeedTest() {

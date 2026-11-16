@@ -6,6 +6,14 @@ protocol LanguageModelMeasuring: AnyObject {
     /// Starts one run of the test. The stream gives each result line as soon as the line
     /// exists, and it ends when the test is over and the model is freed.
     func resultLines() -> AsyncStream<String>
+    /// One line about where the run is now, which the keyboard keeps at the end of the result
+    /// lines and writes again every `KeyboardTextController.progressIntervalSeconds`. Nil when
+    /// the test gives no such line.
+    func progressText() -> String?
+}
+
+extension LanguageModelMeasuring {
+    func progressText() -> String? { nil }
 }
 
 /// The language model test on the model file of the bundle. LanguageModel/duo_lm_probe.h

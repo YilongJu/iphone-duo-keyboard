@@ -71,6 +71,9 @@ final class ModelSpeedTest: LanguageModelMeasuring {
     let progressFolder: URL?
     let pauseSeconds: Double
     let coolingLimitSeconds: Double
+    /// Where the run is now.
+    let status = ModelSpeedStatus()
+    private var running = false
 
     init(modelsFolder: URL? = nil, runtimes: Set<ModelSpeedCatalog.Runtime>? = nil, progressFolder: URL? = nil,
          pauseSeconds: Double = 20, coolingLimitSeconds: Double = 180) {
@@ -99,9 +102,13 @@ final class ModelSpeedTest: LanguageModelMeasuring {
         let runtimes = self.runtimes, progressFolder = self.progressFolder
         let pauseSeconds = self.pauseSeconds, coolingLimitSeconds = self.coolingLimitSeconds
         let onRunEnd = self.onRunEnd
+        let status = self.status
+        status.start()
+        running = true
         let (inner, innerContinuation) = AsyncStream.makeStream(of: String.self)
-        Task { @MainActor in
+        Task { @MainActor [weak self] in
             for await line in inner { emit(line) }
+            self?.running = false
             onRunEnd?()
             continuation.finish()
         }
@@ -109,7 +116,7 @@ final class ModelSpeedTest: LanguageModelMeasuring {
             let thread = Thread { @Sendable in
                 ModelSpeedRun(
                     folder: folder, bundledModelPath: bundledModel, runtimes: runtimes, progressFolder: progressFolder,
-                    pauseSeconds: pauseSeconds, coolingLimitSeconds: coolingLimitSeconds,
+                    pauseSeconds: pauseSeconds, coolingLimitSeconds: coolingLimitSeconds, status: status,
                     emit: { innerContinuation.yield($0) }
                 ).run()
                 innerContinuation.finish()
@@ -125,6 +132,11 @@ final class ModelSpeedTest: LanguageModelMeasuring {
             start()
         }
         return stream
+    }
+
+    /// The progress line while a run is under way, and nil after its end.
+    func progressText() -> String? {
+        running ? status.line() : nil
     }
 }
 
@@ -324,6 +336,77 @@ struct ModelSpeedProgress {
     }
 }
 
+/// Where a run of the speed test is now, for the progress line that the keyboard keeps at the
+/// end of the result lines. The run's thread writes it, and the main thread reads it.
+final class ModelSpeedStatus: @unchecked Sendable {
+    enum Step: Equatable {
+        case starting
+        case keptLines
+        case pausing
+        case loading
+        case requests
+    }
+
+    private let lock = NSLock()
+    private var pair = 0, pairs = 0, step = Step.starting, done = 0, requests = 0
+    private var started: Double = 0, stepStarted: Double = 0
+
+    private static func now() -> Double { ProcessInfo.processInfo.systemUptime }
+
+    func start() {
+        lock.lock()
+        defer { lock.unlock() }
+        pair = 0
+        pairs = 0
+        step = .starting
+        started = Self.now()
+        stepStarted = started
+    }
+
+    /// `pair` counts from 1.
+    func set(pair: Int, of pairs: Int, step: Step) {
+        lock.lock()
+        defer { lock.unlock() }
+        if self.pair != pair || self.step != step { stepStarted = Self.now() }
+        self.pair = pair
+        self.pairs = pairs
+        self.step = step
+    }
+
+    /// `index` counts from 0: the request that starts now.
+    func setRequest(_ index: Int, of requests: Int) {
+        lock.lock()
+        defer { lock.unlock() }
+        if step != .requests { stepStarted = Self.now() }
+        step = .requests
+        done = index
+        self.requests = requests
+    }
+
+    /// One line of ASCII text: a bar of the pairs, the pair, the step and the time since the start.
+    func line() -> String {
+        lock.lock()
+        defer { lock.unlock() }
+        let now = Self.now()
+        let total = Int(now - started)
+        let clock = String(format: "%d:%02d:%02d", total / 3600, total / 60 % 60, total % 60)
+        let inStep = Int(now - stepStarted)
+        let what: String
+        switch step {
+        case .starting: what = "starting"
+        case .keptLines: what = "typing the kept lines"
+        case .pausing: what = "pausing and waiting for the phone to cool, \(inStep) s"
+        case .loading: what = "loading the model, \(inStep) s"
+        case .requests: what = "request \(done) of \(requests) done"
+        }
+        guard pairs > 0 else { return "progress    \(what), \(clock) since the start" }
+        let width = 20
+        let filled = width * (pair - 1) / pairs
+        let bar = "[" + String(repeating: "#", count: filled) + String(repeating: "-", count: width - filled) + "]"
+        return "progress    \(bar) pair \(pair) of \(pairs), \(what), \(clock) since the start"
+    }
+}
+
 /// One run of the speed test on its own thread.
 struct ModelSpeedRun {
     let folder: URL?
@@ -333,6 +416,7 @@ struct ModelSpeedRun {
     let progressFolder: URL?
     let pauseSeconds: Double
     let coolingLimitSeconds: Double
+    let status: ModelSpeedStatus
     let emit: (String) -> Void
 
     private static var bundle: Bundle { Bundle(for: ModelSpeedBundleToken.self) }
@@ -396,6 +480,7 @@ struct ModelSpeedRun {
         for (index, pair) in pairs.enumerated() {
             let title = "pair        \(index + 1)/\(pairs.count) \(pair.name), \(pair.model), \(pair.runtime.rawValue)"
             if let earlierRuns, let progress, earlierRuns.ended.contains(index) {
+                status.set(pair: index + 1, of: pairs.count, step: .keptLines)
                 do {
                     for line in try progress.savedLines(index) { emit(line) }
                 } catch {
@@ -422,7 +507,8 @@ struct ModelSpeedRun {
             }
             let pairRun = ModelSpeedRun(
                 folder: folder, bundledModelPath: bundledModelPath, runtimes: runtimes, progressFolder: progressFolder,
-                pauseSeconds: pauseSeconds, coolingLimitSeconds: coolingLimitSeconds, emit: pairEmit)
+                pauseSeconds: pauseSeconds, coolingLimitSeconds: coolingLimitSeconds, status: status,
+                emit: pairEmit)
             var downloaded = true
             do {
                 try progress?.append("start \(index)")
@@ -443,8 +529,9 @@ struct ModelSpeedRun {
             if stops > 0 {
                 pairEmit("\(title): runs again: an earlier run stopped during this pair")
             }
+            status.set(pair: index + 1, of: pairs.count, step: .starting)
             let result = pairRun.runPair(
-                index: index, pair: pair, title: title, catalog: catalog, requests: requests, references: references,
+                index: index, pairCount: pairs.count, pair: pair, title: title, catalog: catalog, requests: requests, references: references,
                 sampler: sampler)
             switch result {
             case .ran: ran += 1
@@ -468,7 +555,7 @@ struct ModelSpeedRun {
 
     /// Runs one pair and gives its lines to `emit`.
     private func runPair(
-        index: Int, pair: ModelSpeedCatalog.Pair, title: String, catalog: ModelSpeedCatalog, requests: [TextRequest],
+        index: Int, pairCount: Int, pair: ModelSpeedCatalog.Pair, title: String, catalog: ModelSpeedCatalog, requests: [TextRequest],
         references: [String: [Int]], sampler: FootprintSampler
     ) -> PairResult {
         guard let reference = references[pair.reference], reference.count == requests.count else {
@@ -495,7 +582,9 @@ struct ModelSpeedRun {
             location = folder.appendingPathComponent(model.id, isDirectory: true).appendingPathComponent(file)
         }
         emit(title)
+        status.set(pair: index + 1, of: pairCount, step: .pausing)
         let setting = coolDown()
+        status.set(pair: index + 1, of: pairCount, step: .loading)
         do {
             if pair.runtime.isLlama {
                 try runLlama(pair: pair, path: location.path, requests: requests, reference: reference,
@@ -655,6 +744,7 @@ struct ModelSpeedRun {
         let loadHighest = sampler.take().highest
         var timed = Requests()
         for (index, request) in requests.enumerated() {
+            status.setRequest(index, of: requests.count)
             let copies = request.candidates.map { strdup($0) }
             defer { copies.forEach { free($0) } }
             let pointers = copies.map { UnsafePointer<CChar>($0) }
@@ -722,6 +812,7 @@ struct ModelSpeedRun {
         var timed = Requests()
         var calls = 0, padded = 0, tokens = 0
         for (index, request) in requests.enumerated() {
+            status.setRequest(index, of: requests.count)
             let processorStarted = duo_speed_process_milliseconds()
             let requestStarted = Self.now()
             let result = try autoreleasepool { try scorer.score(request) }

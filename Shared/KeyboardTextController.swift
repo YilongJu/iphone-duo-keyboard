@@ -278,6 +278,13 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
     var speedResetMeasurer: LanguageModelMeasuring?
     /// The run of the test that is under way now. The tests wait for it.
     private(set) var languageModelTask: Task<Void, Never>?
+    /// The time between two writes of the progress line of a running test.
+    var progressIntervalSeconds: Double = 2
+    /// The progress line at the end of the field, as the keyboard last typed it.
+    private var progressLine: String?
+    /// True after the text before the cursor stopped ending with the progress line (the person
+    /// moved the cursor or typed). The keyboard then leaves the field alone until the next run.
+    private var progressLineStopped = false
 
     /// Loads the language model of the English corrections. The controller asks for a load
     /// when the keyboard appears in English and when the person switches to English, so
@@ -657,14 +664,51 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
         showNotice(notice)
         // The run starts here, before the task below gets its turn on the main thread.
         let lines = languageModelMeasurer.resultLines()
+        progressLine = nil
+        progressLineStopped = false
+        let interval = progressIntervalSeconds
+        let ticker = Task { [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: UInt64(interval * 1_000_000_000))
+                guard !Task.isCancelled else { return }
+                self?.writeProgressLine(languageModelMeasurer.progressText())
+            }
+        }
         languageModelTask = Task { [weak self] in
             for await line in lines {
-                self?.document.insertText("\n" + line)
+                self?.insertResultLine(line)
             }
+            ticker.cancel()
+            self?.writeProgressLine(nil)
             self?.languageModelTask = nil
             self?.updateAutoShift()
         }
         return true
+    }
+
+    /// Types a result line before the progress line, so the progress line stays last.
+    private func insertResultLine(_ line: String) {
+        let progress = progressLine
+        writeProgressLine(nil)
+        document.insertText("\n" + line)
+        if let progress { writeProgressLine(progress) }
+    }
+
+    /// Takes the progress line out of the field and types `text` in its place, on a line of its
+    /// own. The keyboard deletes only when the text before the cursor ends with the line it
+    /// typed, so the person's own text is never deleted.
+    private func writeProgressLine(_ text: String?) {
+        if let old = progressLine {
+            progressLine = nil
+            guard document.textBeforeCursor.hasSuffix("\n" + old) else {
+                progressLineStopped = true
+                return
+            }
+            deleteBackward(count: old.count + 1)
+        }
+        guard let text, !progressLineStopped else { return }
+        document.insertText("\n" + text)
+        progressLine = text
     }
 
     // MARK: Work area
