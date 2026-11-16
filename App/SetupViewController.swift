@@ -16,6 +16,14 @@ final class SetupViewController: UIViewController, UITextViewDelegate {
     private let appSpeedResults = UITextView()
     /// The progress line of the running test, written again every 2 seconds.
     private let appSpeedProgress = UILabel()
+    /// The record of the app's run, so a run that stopped goes on at the next tap, as in the
+    /// keyboard. It is apart from the keyboard's record, in the app's own container.
+    private let appSpeedFolder = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+        .appendingPathComponent("model-speed-progress-app", isDirectory: true)
+    /// The MetricKit diagnostics of the app, such as a crash during an earlier run.
+    private let appDiagnostics = ModelSpeedDiagnostics(
+        file: FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+            .appendingPathComponent("model-speed-diagnostics-app.txt"))
     private let systemField = UITextView()
     private let previewField = UITextView()
     private let previewKeyboard = KeyboardView()
@@ -308,6 +316,7 @@ final class SetupViewController: UIViewController, UITextViewDelegate {
     /// than a keyboard and which is in the foreground. When a pair runs here and stops the
     /// keyboard, the cause is the keyboard's limits and not the model or the code.
     private func addAppSpeedTest() {
+        appDiagnostics.start()
         stack.addArrangedSubview(makeLabel("Core ML pairs in this app", style: .headline))
         var configuration = UIButton.Configuration.filled()
         configuration.title = "Run the Core ML pairs in this app"
@@ -321,6 +330,17 @@ final class SetupViewController: UIViewController, UITextViewDelegate {
         appSpeedProgress.numberOfLines = 0
         appSpeedProgress.accessibilityIdentifier = "appSpeedProgress"
         stack.addArrangedSubview(appSpeedProgress)
+        var resetConfiguration = UIButton.Configuration.bordered()
+        resetConfiguration.title = "Delete the record of the app's run"
+        stack.addArrangedSubview(UIButton(configuration: resetConfiguration, primaryAction: UIAction { [weak self] _ in
+            guard let self else { return }
+            do {
+                try ModelSpeedProgress.reset(self.appSpeedFolder)
+                self.appSpeedResults.text = "The record is deleted. The next run starts at the first pair."
+            } catch {
+                self.appSpeedResults.text = "The record was not deleted: \(error)"
+            }
+        }))
         var copyConfiguration = UIButton.Configuration.bordered()
         copyConfiguration.title = "Copy the result lines"
         stack.addArrangedSubview(UIButton(configuration: copyConfiguration, primaryAction: UIAction { [weak self] _ in
@@ -333,7 +353,8 @@ final class SetupViewController: UIViewController, UITextViewDelegate {
         appSpeedResults.textContainerInset = .zero
         appSpeedResults.textContainer.lineFragmentPadding = 0
         appSpeedResults.accessibilityIdentifier = "appSpeedResults"
-        appSpeedResults.text = "Runs pairs 13 to 22 in this app. Keep the app open: the screen stays on during the run."
+        appSpeedResults.text = "Runs pairs 13 to 22 in this app. Keep the app open: the screen stays on during the run. "
+            + "After a stop, tap the button again: the run shows the kept lines and goes on."
         stack.addArrangedSubview(appSpeedResults)
     }
 
@@ -342,7 +363,9 @@ final class SetupViewController: UIViewController, UITextViewDelegate {
         appSpeedResults.text = ""
         // The screen stays on, so the app stays in the foreground for the whole run.
         UIApplication.shared.isIdleTimerDisabled = true
-        let test = ModelSpeedTest(runtimes: [.coreMLGPU, .coreMLNeuralEngine])
+        let test = ModelSpeedTest(
+            runtimes: [.coreMLGPU, .coreMLNeuralEngine], progressFolder: appSpeedFolder,
+            diagnosticsFile: appDiagnostics.file)
         let lines = test.resultLines()
         let ticker = Task { [weak self] in
             while !Task.isCancelled {
