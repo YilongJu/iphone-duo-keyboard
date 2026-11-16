@@ -172,10 +172,12 @@ sequence of requests as in the keyboard:
   next `duo:speed` runs that pair again. A pair that stopped 2 runs is skipped, and its line
   says so. That line is a result: the pair stops the keyboard.
 - While a run is under way, the keyboard keeps one progress line at the end of the result lines
-  and types it again every 2 seconds: a bar of the pairs, the pair, the step (the pause, the
-  load, or the count of requests done) and the time since the start. The keyboard deletes the
-  old line only when the text before the cursor ends with it, so after the person types or moves
-  the cursor, the line stays as it is until the run ends.
+  and types it again every 2 seconds: a bar of the pairs and the requests, the pair, the step
+  with its seconds (the cooling, the load, or the count of requests done) and the time since the
+  start. The keyboard deletes the old line only when the text before the cursor ends with it,
+  so after the person types or moves the cursor, the line stays as it is until the run ends.
+- At each write the space bar shows a short form of the same facts with a mark that turns, so
+  the person sees that the run goes on even when the app does not show the line.
 - `duo:speedreset` and a space deletes the record, so the next `duo:speed` starts at the first
   pair. A change of the pairs or the requests also starts a new record.
 - The first line of the run gives llama.cpp's build line, with the processor features of the

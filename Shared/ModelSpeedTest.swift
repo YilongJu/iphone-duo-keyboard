@@ -104,6 +104,7 @@ final class ModelSpeedTest: LanguageModelMeasuring {
         let onRunEnd = self.onRunEnd
         let status = self.status
         status.start()
+        status.setPauseLimit(pauseSeconds + coolingLimitSeconds)
         running = true
         let (inner, innerContinuation) = AsyncStream.makeStream(of: String.self)
         Task { @MainActor [weak self] in
@@ -137,6 +138,10 @@ final class ModelSpeedTest: LanguageModelMeasuring {
     /// The progress line while a run is under way, and nil after its end.
     func progressText() -> String? {
         running ? status.line() : nil
+    }
+
+    func progressCaption() -> String? {
+        running ? status.caption() : nil
     }
 }
 
@@ -383,27 +388,60 @@ final class ModelSpeedStatus: @unchecked Sendable {
         self.requests = requests
     }
 
-    /// One line of ASCII text: a bar of the pairs, the pair, the step and the time since the start.
-    func line() -> String {
+    /// The longest pause before a pair, for the progress line.
+    private var pauseLimit: Double = 0
+    /// Counts the reads, so the caption's mark turns at each read.
+    private var reads = 0
+
+    func setPauseLimit(_ seconds: Double) {
         lock.lock()
         defer { lock.unlock() }
+        pauseLimit = seconds
+    }
+
+    private func parts() -> (bar: String, place: String, step: String, clock: String) {
         let now = Self.now()
         let total = Int(now - started)
         let clock = String(format: "%d:%02d:%02d", total / 3600, total / 60 % 60, total % 60)
         let inStep = Int(now - stepStarted)
-        let what: String
-        switch step {
-        case .starting: what = "starting"
-        case .keptLines: what = "typing the kept lines"
-        case .pausing: what = "pausing and waiting for the phone to cool, \(inStep) s"
-        case .loading: what = "loading the model, \(inStep) s"
-        case .requests: what = "request \(done) of \(requests) done"
+        let step: String
+        // The share of the current pair that is done: the requests are the work of a pair.
+        var share = 0.0
+        switch self.step {
+        case .starting: step = "starting"
+        case .keptLines: step = "typing the kept lines"
+        case .pausing: step = "cooling \(inStep) s of at most \(Int(pauseLimit)) s"
+        case .loading: step = "loading \(inStep) s"
+        case .requests:
+            step = "request \(done) of \(requests)"
+            share = requests > 0 ? Double(done) / Double(requests) : 0
         }
-        guard pairs > 0 else { return "progress    \(what), \(clock) since the start" }
         let width = 20
-        let filled = width * (pair - 1) / pairs
+        let place = pairs > 0 ? "pair \(pair) of \(pairs)" : ""
+        let filled = pairs > 0 ? Int(Double(width) * (Double(pair - 1) + share) / Double(pairs)) : 0
         let bar = "[" + String(repeating: "#", count: filled) + String(repeating: "-", count: width - filled) + "]"
-        return "progress    \(bar) pair \(pair) of \(pairs), \(what), \(clock) since the start"
+        return (bar, place, step, clock)
+    }
+
+    /// One line of ASCII text: a bar of the pairs and the requests, the pair, the step with its
+    /// seconds, and the time since the start.
+    func line() -> String {
+        lock.lock()
+        defer { lock.unlock() }
+        let (bar, place, step, clock) = parts()
+        guard !place.isEmpty else { return "progress    \(step), \(clock) since the start" }
+        return "progress    \(bar) \(place), \(step), \(clock) since the start"
+    }
+
+    /// A short text for the space bar, with a mark that turns at each read.
+    func caption() -> String {
+        lock.lock()
+        defer { lock.unlock() }
+        reads += 1
+        let marks = ["\u{25D0}", "\u{25D3}", "\u{25D1}", "\u{25D2}"]
+        let (_, _, step, clock) = parts()
+        let place = pairs > 0 ? "\(pair)/\(pairs) " : ""
+        return "\(marks[reads % marks.count]) Speed test \(place)\(step) \(clock)"
     }
 }
 

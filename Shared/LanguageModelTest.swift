@@ -10,10 +10,14 @@ protocol LanguageModelMeasuring: AnyObject {
     /// lines and writes again every `KeyboardTextController.progressIntervalSeconds`. Nil when
     /// the test gives no such line.
     func progressText() -> String?
+    /// A short text about where the run is now, which the space bar shows at each write of the
+    /// progress line. Nil when the test gives no such text.
+    func progressCaption() -> String?
 }
 
 extension LanguageModelMeasuring {
     func progressText() -> String? { nil }
+    func progressCaption() -> String? { nil }
 }
 
 /// The language model test on the model file of the bundle. LanguageModel/duo_lm_probe.h

@@ -19,16 +19,25 @@ final class FakeDocument: KeyboardDocument {
         cursor = before.utf16.count
     }
 
-    var textBeforeCursor: String { (text as NSString).substring(to: cursor) }
+    /// True hands out only the text after the last line break, as some apps do.
+    var onlyCurrentLine = false
+
+    private var fullBefore: String { (text as NSString).substring(to: cursor) }
+
+    var textBeforeCursor: String {
+        let before = fullBefore
+        guard onlyCurrentLine, let lineBreak = before.lastIndex(of: "\n") else { return before }
+        return String(before[before.index(after: lineBreak)...])
+    }
     var textAfterCursor: String { (text as NSString).substring(from: cursor) }
 
     func insertText(_ inserted: String) {
-        text = textBeforeCursor + inserted + textAfterCursor
+        text = fullBefore + inserted + textAfterCursor
         cursor += inserted.utf16.count
     }
 
     func deleteBackward() {
-        let before = textBeforeCursor
+        let before = fullBefore
         guard let last = before.last else { return }
         text = String(before.dropLast()) + textAfterCursor
         cursor -= String(last).utf16.count
@@ -249,6 +258,26 @@ final class KeyboardTextControllerTests: XCTestCase {
         measurer.finish()
         await run?.value
         XCTAssertEqual(document.text, "duo:lm \nmodel       fake\ndone        fake")
+    }
+
+    /// An app that hands the keyboard only the current line still gets the progress line written
+    /// again.
+    func testTheProgressLineWorksWhenTheAppHidesEarlierLines() async throws {
+        let measurer = makeMeasuringController(before: "")
+        document.onlyCurrentLine = true
+        controller.progressIntervalSeconds = 0.01
+        measurer.lines = []
+        measurer.staysOpen = true
+        measurer.progress = "progress    pair 1"
+        type("duo:lm ")
+        try await waitFor { self.document.text.hasSuffix("\nprogress    pair 1") }
+        measurer.progress = "progress    pair 2"
+        try await waitFor { self.document.text.hasSuffix("\nprogress    pair 2") }
+        XCTAssertEqual(document.text, "duo:lm \nprogress    pair 2")
+        let run = controller.languageModelTask
+        measurer.finish()
+        await run?.value
+        XCTAssertEqual(document.text, "duo:lm ")
     }
 
     /// Text after the progress line stops the progress line, and the keyboard deletes nothing.

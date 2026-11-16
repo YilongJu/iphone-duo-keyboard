@@ -672,6 +672,9 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
                 try? await Task.sleep(nanoseconds: UInt64(interval * 1_000_000_000))
                 guard !Task.isCancelled else { return }
                 self?.writeProgressLine(languageModelMeasurer.progressText())
+                if let caption = languageModelMeasurer.progressCaption() {
+                    self?.showNotice(caption)
+                }
             }
         }
         languageModelTask = Task { [weak self] in
@@ -700,7 +703,11 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
     private func writeProgressLine(_ text: String?) {
         if let old = progressLine {
             progressLine = nil
-            guard document.textBeforeCursor.hasSuffix("\n" + old) else {
+            // Some apps hand the keyboard only the text of the current line, without the line
+            // break before it, so the line break counts when the text shows it.
+            let before = document.textBeforeCursor
+            let rest = before.dropLast(old.count)
+            guard before.hasSuffix(old), rest.isEmpty || rest.hasSuffix("\n") else {
                 progressLineStopped = true
                 return
             }
