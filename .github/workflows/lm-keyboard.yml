@@ -7,7 +7,7 @@ name: Language model in the keyboard
 # check. Only the dev half is typed and scored. Every unit test runs as well.
 on:
   push:
-    branches: [engine/lm-keyboard, engine/apostrophe-words, engine/domain-pack, ui/swipe-punctuation, engine/domain-model, ui/space-before-mark, engine/kv-reuse, engine/model-speed]
+    branches: [engine/lm-keyboard, engine/apostrophe-words, engine/domain-pack, ui/swipe-punctuation, engine/domain-model, ui/space-before-mark, ui/closing-quotes, ui/quote-spaces, engine/kv-reuse, engine/model-speed]
   workflow_dispatch:
 
 concurrency:
@@ -203,10 +203,10 @@ jobs:
           if-no-files-found: error
 
   keyboard:
-    name: Unit tests, the dev cases through the keyboard code with the model, and the harness on the same machine
+    name: Unit tests, and the dev cases through the keyboard code with the model
     runs-on: xcode-27
-    # The job takes 4.5 to 5 hours on a busy runner. 6 hours is the limit of a hosted runner.
-    timeout-minutes: 360
+    # The unit tests, with the speed test of the language models, take about 2.5 hours.
+    timeout-minutes: 240
     steps:
       - uses: actions/checkout@v7
       - name: Install XcodeGen
@@ -282,11 +282,25 @@ jobs:
           name: keyboard
           path: build/lm-keyboard/keyboard
           if-no-files-found: error
-      # The harness on this same machine, with lm_score linked against the macOS part of the
-      # app's llama.cpp framework. llama.cpp gives other numbers on another machine, so only
-      # the same machine separates the code from the machine.
+
+  # The harness on the macOS runner type of the keyboard job, with lm_score linked against the
+  # macOS part of the app's llama.cpp framework. llama.cpp gives other numbers on another type of
+  # machine, so only the same type of machine separates the code from the machine. The four jobs
+  # run beside the keyboard job: the typing job writes the requests, the next job scores them with
+  # lm_score and the keyboard's scorer, and the last two score them with the reuse of the cache and
+  # hold the answers against those of lm_score. lm_score and the keyboard's scorer stay in one job,
+  # so the byte for byte comparison of the two holds on one machine. Each job keeps the processor
+  # of its runner in a runner file, and the compare job merges the four artifacts into harness-mac.
+  harness-mac-trace:
+    name: macOS harness, the dev cases with the tuned rule
+    runs-on: xcode-27
+    # The typing step takes about 30 minutes.
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v7
+      - name: Fetch the llama.cpp framework and the language model
+        run: bash scripts/ci/fetch_language_model.sh
       - name: Build the engine shim, lm_score and the keyboard's scorer against the framework
-        if: always()
         run: |
           set -euo pipefail
           mkdir -p build/lm-rerank build/lm-keyboard/harness-mac
@@ -300,14 +314,49 @@ jobs:
           { sysctl -n machdep.cpu.brand_string; sysctl hw.optional | grep -E 'arm|neon|fp16|i8mm|dotprod' || true; } \
             | tee build/lm-keyboard/harness-mac/runner.txt
       - name: Type the dev cases through the harness with the tuned rule, on this machine
-        if: always()
         run: |
           set -euo pipefail
           # 2 threads of lm_score, as the runner has 3 cores.
           python3 scripts/lm-keyboard/harness_trace.py --shim build/lm-rerank/libduo_shim.so \
             --lm build/lm-rerank/lm_score --model Shared/smollm2-lora-domain-s100-seed1.Q4_K_M.gguf --threads 2 --out build/lm-keyboard/harness-mac
-      - name: Score the harness requests with lm_score and the keyboard's scorer, on this machine
+      - uses: actions/upload-artifact@v7
         if: always()
+        with:
+          name: harness-mac-trace
+          path: build/lm-keyboard/harness-mac
+          if-no-files-found: error
+
+  harness-mac-score:
+    name: macOS harness, the requests through lm_score and the keyboard's scorer
+    needs: harness-mac-trace
+    if: ${{ !cancelled() }}
+    runs-on: xcode-27
+    # The scoring step takes about 45 minutes.
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v7
+      - name: Fetch the llama.cpp framework and the language model
+        run: bash scripts/ci/fetch_language_model.sh
+      - name: Build the engine shim, lm_score and the keyboard's scorer against the framework
+        run: |
+          set -euo pipefail
+          mkdir -p build/lm-rerank build/lm-keyboard/harness-mac
+          fw="$PWD/Vendor/llama.xcframework/macos-arm64_x86_64"
+          clang -std=c11 -O2 -Wall -Wextra -shared -fPIC -I Engine Engine/duo_engine.c scripts/lm-rerank/engine_shim.c \
+            -o build/lm-rerank/libduo_shim.so
+          clang -std=c11 -O2 -Wall -Wextra -I "$fw/llama.framework/Headers" scripts/lm-rerank/lm_score.c \
+            -F "$fw" -framework llama -Wl,-rpath,"$fw" -o build/lm-rerank/lm_score
+          clang -std=c11 -O2 -Wall -Wextra -Werror -I LanguageModel -F "$fw" LanguageModel/duo_lm_scorer.c \
+            scripts/lm-keyboard/scorer_cli.c -framework llama -Wl,-rpath,"$fw" -o build/lm-keyboard/scorer_cli
+          { sysctl -n machdep.cpu.brand_string; sysctl hw.optional | grep -E 'arm|neon|fp16|i8mm|dotprod' || true; } \
+            | tee build/lm-keyboard/harness-mac/runner.txt
+      - name: Keep the processor of this runner under its own name
+        run: mv build/lm-keyboard/harness-mac/runner.txt build/lm-keyboard/harness-mac/runner-score.txt
+      - uses: actions/download-artifact@v7
+        with:
+          name: harness-mac-trace
+          path: build/lm-keyboard/harness-mac
+      - name: Score the harness requests with lm_score and the keyboard's scorer, on this machine
         run: |
           set -euo pipefail
           out=build/lm-keyboard/harness-mac
@@ -328,8 +377,54 @@ jobs:
             cat "$out/scorer_cli.log"
           } | tee "$out/scorer-check.txt"
           cmp "$out/lm_score.answers" "$out/scorer_cli.answers"
-      - name: Score the harness requests in order with the prefix reuse of the cache, on this machine
+      - uses: actions/upload-artifact@v7
         if: always()
+        with:
+          name: harness-mac-score
+          path: |
+            build/lm-keyboard/harness-mac/lm_score.answers
+            build/lm-keyboard/harness-mac/lm_score.log
+            build/lm-keyboard/harness-mac/scorer_cli.answers
+            build/lm-keyboard/harness-mac/scorer_cli.log
+            build/lm-keyboard/harness-mac/scorer-check.txt
+            build/lm-keyboard/harness-mac/runner-score.txt
+          if-no-files-found: error
+
+  harness-mac-prefix:
+    name: macOS harness, the requests in order with the prefix reuse of the cache
+    needs: [harness-mac-trace, harness-mac-score]
+    if: ${{ !cancelled() }}
+    runs-on: xcode-27
+    # The scoring step takes about 45 minutes.
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v7
+      - name: Fetch the llama.cpp framework and the language model
+        run: bash scripts/ci/fetch_language_model.sh
+      - name: Build the engine shim, lm_score and the keyboard's scorer against the framework
+        run: |
+          set -euo pipefail
+          mkdir -p build/lm-rerank build/lm-keyboard/harness-mac
+          fw="$PWD/Vendor/llama.xcframework/macos-arm64_x86_64"
+          clang -std=c11 -O2 -Wall -Wextra -shared -fPIC -I Engine Engine/duo_engine.c scripts/lm-rerank/engine_shim.c \
+            -o build/lm-rerank/libduo_shim.so
+          clang -std=c11 -O2 -Wall -Wextra -I "$fw/llama.framework/Headers" scripts/lm-rerank/lm_score.c \
+            -F "$fw" -framework llama -Wl,-rpath,"$fw" -o build/lm-rerank/lm_score
+          clang -std=c11 -O2 -Wall -Wextra -Werror -I LanguageModel -F "$fw" LanguageModel/duo_lm_scorer.c \
+            scripts/lm-keyboard/scorer_cli.c -framework llama -Wl,-rpath,"$fw" -o build/lm-keyboard/scorer_cli
+          { sysctl -n machdep.cpu.brand_string; sysctl hw.optional | grep -E 'arm|neon|fp16|i8mm|dotprod' || true; } \
+            | tee build/lm-keyboard/harness-mac/runner.txt
+      - name: Keep the processor of this runner under its own name
+        run: mv build/lm-keyboard/harness-mac/runner.txt build/lm-keyboard/harness-mac/runner-prefix.txt
+      - uses: actions/download-artifact@v7
+        with:
+          name: harness-mac-trace
+          path: build/lm-keyboard/harness-mac
+      - uses: actions/download-artifact@v7
+        with:
+          name: harness-mac-score
+          path: build/lm-keyboard/harness-mac
+      - name: Score the harness requests in order with the prefix reuse of the cache, on this machine
         run: |
           set -euo pipefail
           out=build/lm-keyboard/harness-mac
@@ -346,8 +441,52 @@ jobs:
             cat "$out/scorer_cli_prefix.log"
           } | tee "$out/scorer-check-prefix.txt"
           cmp "$out/lm_score.answers" "$out/scorer_cli_prefix.answers"
-      - name: Score the harness requests in order with the keyboard's reuse of the cache, against a fresh read and lm_score
+      - uses: actions/upload-artifact@v7
         if: always()
+        with:
+          name: harness-mac-prefix
+          path: |
+            build/lm-keyboard/harness-mac/scorer_cli_prefix.answers
+            build/lm-keyboard/harness-mac/scorer_cli_prefix.log
+            build/lm-keyboard/harness-mac/scorer-check-prefix.txt
+            build/lm-keyboard/harness-mac/runner-prefix.txt
+          if-no-files-found: error
+
+  harness-mac-anchor:
+    name: macOS harness, the requests in order with the keyboard's reuse of the cache
+    needs: [harness-mac-trace, harness-mac-score]
+    if: ${{ !cancelled() }}
+    runs-on: xcode-27
+    # The scoring step takes about 55 minutes.
+    timeout-minutes: 100
+    steps:
+      - uses: actions/checkout@v7
+      - name: Fetch the llama.cpp framework and the language model
+        run: bash scripts/ci/fetch_language_model.sh
+      - name: Build the engine shim, lm_score and the keyboard's scorer against the framework
+        run: |
+          set -euo pipefail
+          mkdir -p build/lm-rerank build/lm-keyboard/harness-mac
+          fw="$PWD/Vendor/llama.xcframework/macos-arm64_x86_64"
+          clang -std=c11 -O2 -Wall -Wextra -shared -fPIC -I Engine Engine/duo_engine.c scripts/lm-rerank/engine_shim.c \
+            -o build/lm-rerank/libduo_shim.so
+          clang -std=c11 -O2 -Wall -Wextra -I "$fw/llama.framework/Headers" scripts/lm-rerank/lm_score.c \
+            -F "$fw" -framework llama -Wl,-rpath,"$fw" -o build/lm-rerank/lm_score
+          clang -std=c11 -O2 -Wall -Wextra -Werror -I LanguageModel -F "$fw" LanguageModel/duo_lm_scorer.c \
+            scripts/lm-keyboard/scorer_cli.c -framework llama -Wl,-rpath,"$fw" -o build/lm-keyboard/scorer_cli
+          { sysctl -n machdep.cpu.brand_string; sysctl hw.optional | grep -E 'arm|neon|fp16|i8mm|dotprod' || true; } \
+            | tee build/lm-keyboard/harness-mac/runner.txt
+      - name: Keep the processor of this runner under its own name
+        run: mv build/lm-keyboard/harness-mac/runner.txt build/lm-keyboard/harness-mac/runner-anchor.txt
+      - uses: actions/download-artifact@v7
+        with:
+          name: harness-mac-trace
+          path: build/lm-keyboard/harness-mac
+      - uses: actions/download-artifact@v7
+        with:
+          name: harness-mac-score
+          path: build/lm-keyboard/harness-mac
+      - name: Score the harness requests in order with the keyboard's reuse of the cache, against a fresh read and lm_score
         run: |
           set -euo pipefail
           out=build/lm-keyboard/harness-mac
@@ -371,8 +510,14 @@ jobs:
       - uses: actions/upload-artifact@v7
         if: always()
         with:
-          name: harness-mac
-          path: build/lm-keyboard/harness-mac
+          name: harness-mac-anchor
+          path: |
+            build/lm-keyboard/harness-mac/scorer_cli_anchor.answers
+            build/lm-keyboard/harness-mac/scorer_cli_anchor.log
+            build/lm-keyboard/harness-mac/long.lines
+            build/lm-keyboard/harness-mac/anchor-differing.lines
+            build/lm-keyboard/harness-mac/scorer-check-anchor.txt
+            build/lm-keyboard/harness-mac/runner-anchor.txt
           if-no-files-found: error
 
   device-build:
@@ -401,12 +546,19 @@ jobs:
 
   compare:
     name: Keyboard against the harness on its own machine, and the Linux harnesses as reports
-    needs: [harness, harness-arm, keyboard]
+    needs: [harness, harness-arm, keyboard, harness-mac-trace, harness-mac-score, harness-mac-prefix, harness-mac-anchor]
     if: always()
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
+      # The four macOS harness jobs write separate files, so their artifacts merge into one folder.
+      # The four artifacts stay, because a rerun of a failed harness job downloads the files of the
+      # jobs before it.
+      - uses: actions/upload-artifact/merge@v7
+        with:
+          name: harness-mac
+          pattern: harness-mac-*
       - uses: actions/download-artifact@v7
         with:
           path: build/lm-keyboard/artifacts
@@ -415,7 +567,7 @@ jobs:
           set -euo pipefail
           a=build/lm-keyboard/artifacts
           out=build/lm-keyboard/compare
-          # The keyboard must agree case by case with the harness on its own machine, and that
+          # The keyboard must agree case by case with the harness on its own type of machine, and that
           # comparison sets the result of this job. llama.cpp gives other numbers on other machines,
           # so the comparisons with the Linux harnesses are reports only.
           status=0

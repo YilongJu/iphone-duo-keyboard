@@ -229,8 +229,11 @@ keyboard loads its model again after, so the keyboard never holds two copies.
 2. The workflow scores every distinct request of that run again with `lm_score` and `scorer_cli`.
 3. The simulator runs every unit test. `TypingEvaluationTests` types the dev cases with the model
    and with the engine alone, and writes the same trace.
-4. The same job then builds the engine shim, `lm_score` and `scorer_cli` against the macOS part of
-   the app's framework, and runs steps 1 and 2 on the same machine.
+4. Four jobs on the macOS runner type of the simulator build the engine shim, `lm_score` and
+   `scorer_cli` against the macOS part of the app's framework, and run steps 1 and 2. They run
+   beside the simulator job. One job runs step 1. One job scores the requests with `lm_score` and
+   `scorer_cli`, so those two programs share one machine. Two jobs score them again with the reuse
+   of the cache and hold the answers against those of `lm_score`.
 5. `compare.py` compares two runs case by case and correction by correction. It recomputes each
    recorded choice with `rerank.choose`, the apostrophe step included.
 6. The compare job passes or fails on the keyboard against the macOS harness. The x86 and ARM

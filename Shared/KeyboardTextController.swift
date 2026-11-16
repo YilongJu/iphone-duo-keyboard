@@ -666,7 +666,7 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
     private func selectCandidate(at index: Int) {
         guard pinyinCandidates.indices.contains(index) else { return }
         let candidate = pinyinCandidates[index]
-        document.insertText(candidate.word)
+        insertCommittedPinyin(candidate.word)
         pinyinEngine.learn(spelling: candidate.spelling, word: candidate.word)
         sessionPicks.append(candidate)
         pinyinBuffer.removeFirst(candidate.consumedLetters)
@@ -687,9 +687,21 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
     private func commitPinyinLetters() {
         sessionPicks = []
         guard !pinyinBuffer.isEmpty else { return }
-        document.insertText(pinyinBuffer)
+        insertCommittedPinyin(pinyinBuffer)
         pinyinBuffer = ""
         refreshCandidates()
+    }
+
+    /// Types committed Pinyin text, a candidate or the typed letters, into the field. Text
+    /// after a curly opening quote and one space takes the place of that space, by the rule of
+    /// `KeyboardTextLogic.removesSpaceAfterOpeningCurlyQuote`. As after a letter in English
+    /// mode, a delete right after it is a plain delete.
+    private func insertCommittedPinyin(_ text: String) {
+        if document.selectedText == nil, KeyboardTextLogic.removesSpaceAfterOpeningCurlyQuote(
+            committing: text, before: document.textBeforeCursor, allowsAutocorrection: document.allowsAutocorrection) {
+            document.deleteBackward()
+        }
+        document.insertText(text)
     }
 
     /// Handles a typed character while the keyboard types Chinese.
@@ -779,15 +791,29 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
     // MARK: Space before a mark
 
     /// Types `text` into the field. A mark after a word and one space takes the place of that
-    /// space (space removal), by the rule of `KeyboardTextLogic.spaceRemoval`. With
-    /// `keepsSpace` the text goes in as typed, because the person just brought the space back.
+    /// space (space removal), by the rule of `KeyboardTextLogic.spaceRemoval`. A letter or a
+    /// digit after an opening quote and one space also takes the place of that space, by the
+    /// rule of `KeyboardTextLogic.removesSpaceAfterOpeningQuote`. With `keepsSpace` the text
+    /// goes in as typed, because the person just brought the space back.
     private func insertWithSpaceRemoval(_ text: String, keepsSpace: Bool) {
         // A typed character replaces a selection of the app, so the delete of the space would
         // delete the selected text.
-        guard !keepsSpace, document.selectedText == nil,
-            let form = KeyboardTextLogic.spaceRemoval(
-                typing: text, before: document.textBeforeCursor, after: document.textAfterCursor,
-                allowsAutocorrection: document.allowsAutocorrection)
+        guard !keepsSpace, document.selectedText == nil else {
+            document.insertText(text)
+            return
+        }
+        // A letter or a digit after an opening quote and one space takes the place of that
+        // space. A delete right after it deletes the letter alone, because the person usually
+        // fixes a typo there and wants the next letter right after the quote too.
+        if KeyboardTextLogic.removesSpaceAfterOpeningQuote(
+            typing: text, before: document.textBeforeCursor, allowsAutocorrection: document.allowsAutocorrection) {
+            document.deleteBackward()
+            document.insertText(text)
+            return
+        }
+        guard let form = KeyboardTextLogic.spaceRemoval(
+            typing: text, before: document.textBeforeCursor, after: document.textAfterCursor,
+            allowsAutocorrection: document.allowsAutocorrection)
         else {
             document.insertText(text)
             return
@@ -847,6 +873,10 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
     private func undoSpaceRemoval() -> Bool {
         guard let removal = takeSpaceRemoval() else { return false }
         deleteBackward(count: removal.typed.count)
+        // The quote key of Chinese mode types the closing quote that this delete took out
+        // again, as the straight quote of English mode does.
+        if removal.mark == "\u{201D}" { doubleQuoteIsOpen = true }
+        if removal.mark == "\u{2019}" { singleQuoteIsOpen = true }
         document.insertText(" ")
         keptSpaceContext = recentContext()
         showNotice("Kept the space")
