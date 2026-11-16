@@ -264,6 +264,24 @@ final class TopRowEmojiTests: XCTestCase {
         XCTAssertTrue(keyboardView.selectAllActive)
     }
 
+    func testASecondFingerOnAnEmojiThatALetterTookAwayTypesNoEmoji() throws {
+        // A second finger commits the letter of the first finger, and the letter ends the word,
+        // so the emoji leave before the second finger lands on their old place.
+        makeKeyboard(width: Self.compactWidth)
+        UIPasteboard.general.items = []
+        type("good ")
+        let box = frame(of: try XCTUnwrap(emojiLabels().first))
+        let letterKey = try keyView(.slide("x", "-")).hitFrame
+        let letter = FakeTouch(at: CGPoint(x: letterKey.midX, y: letterKey.midY))
+        keyboardView.touchesBegan([letter], with: nil)
+        let second = FakeTouch(at: CGPoint(x: box.midX, y: box.midY))
+        keyboardView.touchesBegan([second], with: nil)
+        keyboardView.touchesEnded([second], with: nil)
+        keyboardView.touchesEnded([letter], with: nil)
+        XCTAssertEqual(document.text, "good x")
+        XCTAssertEqual(emojiLabels().count, 0)
+    }
+
     // MARK: Other text
 
     func testChineseModeAndFieldsWithoutAutocorrectionShowNoTopRowEmoji() throws {
