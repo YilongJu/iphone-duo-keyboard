@@ -90,6 +90,10 @@ enum KeyboardTextLogic {
         ";": "\u{FF1B}", "(": "\u{FF08}", ")": "\u{FF09}", "<": "\u{300A}", ">": "\u{300B}", "\\": "\u{3001}",
     ]
 
+    /// The full-width marks of `chinesePunctuation`. A key moves such a mark into its middle
+    /// (`KeyView.offsetToCenter`). The curly quotes are not in the set, because they belong high.
+    static let fullWidthMarks = Set(chinesePunctuation.values)
+
     /// The text that the key of `character` types in Chinese mode while no Pinyin letters wait:
     /// the Chinese mark of `chinesePunctuation`, or a curly quote for a straight quote key, or
     /// `character` itself. A quote key types the opening quote, or the closing quote while its

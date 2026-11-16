@@ -68,6 +68,12 @@ sys.exit("simulator not found: " + prefix)
     sleep 10
     capture "$udid" "$output_dir/$slug-$layer-chinese-light"
   done
+  # The letters with the word "good" typed, so the top row of keys shows its emoji between
+  # Copy and Paste. The letters screenshot above shows the same row without emoji.
+  xcrun simctl terminate "$udid" "$bundle_id" 2>/dev/null || true
+  xcrun simctl launch "$udid" "$bundle_id" -focusPreviewField -layer letters -previewText good
+  sleep 10
+  capture "$udid" "$output_dir/$slug-letters-emoji-light"
   # The last launch shows Chinese mode, so the dark screenshot opens the English "more" layer again.
   xcrun simctl terminate "$udid" "$bundle_id" 2>/dev/null || true
   xcrun simctl launch "$udid" "$bundle_id" -focusPreviewField -layer more

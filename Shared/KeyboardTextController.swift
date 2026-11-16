@@ -663,23 +663,32 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
 
     // MARK: The candidate row
 
-    /// Shows the candidate row. While Pinyin letters wait in the buffer, the row holds the
-    /// candidates, with the emoji of the first candidate right after it. Otherwise the row holds
-    /// the proofreader's fix and then the emoji of the English word before the cursor. The row
-    /// hides when it has nothing to show. A field without autocorrection gets no emoji.
+    /// Shows the candidate row and the English emoji of the top row of keys. While Pinyin
+    /// letters wait in the buffer, the row holds the candidates, with the emoji of the first
+    /// candidate right after it. Otherwise the row shows only while the proofreader has a fix:
+    /// the fix, then the emoji of the English word before the cursor, because the row covers
+    /// the top row of keys. The top row of keys shows the emoji of the English word before the
+    /// cursor. A field without autocorrection gets no emoji.
     private func showRow() {
         var items: [RowItem]
         let composition: String?
         if !pinyinBuffer.isEmpty {
+            keyboardView.topRowEmoji = []
             items = pinyinCandidates.indices.map { RowItem.pinyin($0) }
             if let first = pinyinCandidates.first, document.allowsAutocorrection {
                 items.insert(contentsOf: emojiSuggestions.chinese(for: first.word).map { RowItem.emoji($0) }, at: 1)
             }
             composition = pinyinEngine.display(for: pinyinBuffer)
         } else {
-            items = proofreadSuggestion == nil ? [] : [.proofread]
-            items += englishEmoji().map { RowItem.emoji($0) }
-            composition = items.isEmpty ? nil : (proofreadSuggestion == nil ? "" : proofreadCaption)
+            let emoji = englishEmoji()
+            keyboardView.topRowEmoji = emoji
+            if proofreadSuggestion == nil {
+                items = []
+                composition = nil
+            } else {
+                items = [.proofread] + emoji.map { RowItem.emoji($0) }
+                composition = proofreadCaption
+            }
         }
         rowItems = items
         let words = items.map { item -> String in
@@ -1132,6 +1141,15 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
             return
         }
         typeCharacter(text)
+    }
+
+    func keyboardView(_ keyboardView: KeyboardView, didSelectTopRowEmoji emoji: String) {
+        defer { proofreadAfterAPause() }
+        // The top row shows English emoji only, so Pinyin letters or a running replacement
+        // mean the row changed under the finger.
+        guard pending == nil, pinyinBuffer.isEmpty else { return }
+        clearSpaceRemoval()
+        insertEmoji(emoji)
     }
 
     func keyboardView(_ keyboardView: KeyboardView, didSelectCandidateAt index: Int) {

@@ -9,6 +9,8 @@ protocol KeyboardViewDelegate: AnyObject {
     func keyboardView(_ keyboardView: KeyboardView, edit command: EditCommand)
     /// The user tapped a word in the candidate bar.
     func keyboardView(_ keyboardView: KeyboardView, didSelectCandidateAt index: Int)
+    /// The user tapped an emoji in the top row of keys.
+    func keyboardView(_ keyboardView: KeyboardView, didSelectTopRowEmoji emoji: String)
     func keyboardViewDismiss(_ keyboardView: KeyboardView)
     /// Called on every finger down, so the owner can play the key click.
     func keyboardViewDidPressKey(_ keyboardView: KeyboardView)
@@ -149,6 +151,41 @@ final class KeyboardView: UIView {
             candidateBar.isHidden = true
         }
     }
+
+    /// The emoji of the English word before the cursor. They show in the top row of keys,
+    /// between the Copy and Paste keys. The drawn backgrounds of those two keys get narrower to
+    /// free the gap, and every icon and text of the row stays at its place.
+    var topRowEmoji: [String] = [] {
+        didSet {
+            guard oldValue != topRowEmoji else { return }
+            for label in emojiLabels {
+                label.removeFromSuperview()
+            }
+            emojiLabels = topRowEmoji.map { emoji in
+                let label = UILabel()
+                label.text = emoji
+                label.font = .systemFont(ofSize: 20)
+                label.textAlignment = .center
+                label.adjustsFontSizeToFitWidth = true
+                label.minimumScaleFactor = 0.6
+                label.isUserInteractionEnabled = false
+                addSubview(label)
+                return label
+            }
+            emojiTouches.removeAll()
+            bringSubviewToFront(candidateBar)
+            setNeedsLayout()
+        }
+    }
+
+    /// The width of an emoji's box in the top row, in points, when the row has the room.
+    private static let emojiBoxWidth: CGFloat = 30
+
+    private var emojiLabels: [UILabel] = []
+    /// The box of each emoji of `topRowEmoji`. A touch in a box types its emoji.
+    private var emojiBoxes: [CGRect] = []
+    /// The touches that started in an emoji box, with the index of the emoji.
+    private var emojiTouches: [UITouch: Int] = [:]
 
     /// Called when the user tapped the typed Pinyin letters at the left end of the candidate row.
     var onSelectComposition: @MainActor () -> Void = {}
@@ -339,6 +376,9 @@ final class KeyboardView: UIView {
                 return keyView
             }
         }
+        for label in emojiLabels {
+            bringSubviewToFront(label)
+        }
         bringSubviewToFront(globeButton)
         bringSubviewToFront(candidateBar)
         refreshLabels()
@@ -504,6 +544,55 @@ final class KeyboardView: UIView {
                 }
             }
         }
+        layoutTopRowEmoji()
+    }
+
+    /// Places the emoji of `topRowEmoji` between the Copy and Paste keys. The gap first takes the
+    /// room that is already free there, as the empty middle of the split layout. When that room
+    /// is too small, the drawn backgrounds of Copy and Paste move in from their sides that face
+    /// each other, by the same distance, as far as their icons allow. The emoji boxes then share
+    /// the gap. The keys themselves, with their icons, texts and touch cells, do not change.
+    private func layoutTopRowEmoji() {
+        let row = rows.first ?? []
+        guard let copy = row.first(where: { $0.key.kind == .copy }), let paste = row.first(where: { $0.key.kind == .paste })
+        else {
+            precondition(topRowEmoji.isEmpty, "The top row of this layout has no Copy and Paste keys for the emoji")
+            emojiBoxes = []
+            return
+        }
+        let spacing = Self.spec.gapX
+        var shrink: CGFloat = 0
+        var boxes: [CGRect] = []
+        if !topRowEmoji.isEmpty {
+            let count = CGFloat(topRowEmoji.count)
+            let free = paste.frame.minX - copy.frame.maxX
+            let wanted = Self.emojiBoxWidth * count + 2 * spacing
+            let room = min(copy.roomToShrinkBackground, paste.roomToShrinkBackground)
+            shrink = min(max((wanted - free) / 2, 0), room)
+            let gapStart = copy.frame.maxX - shrink + spacing
+            let gapWidth = free + 2 * shrink - 2 * spacing
+            let boxWidth = min(Self.emojiBoxWidth, gapWidth / count)
+            let firstX = gapStart + (gapWidth - boxWidth * count) / 2
+            boxes = (0..<topRowEmoji.count).map { index in
+                CGRect(x: firstX + boxWidth * CGFloat(index), y: copy.frame.minY, width: boxWidth, height: copy.frame.height)
+            }
+        }
+        copy.backgroundInsets = (0, shrink)
+        paste.backgroundInsets = (shrink, 0)
+        for keyView in row where keyView !== copy && keyView !== paste {
+            keyView.backgroundInsets = (0, 0)
+        }
+        emojiBoxes = boxes
+        for (label, box) in zip(emojiLabels, boxes) {
+            label.frame = box
+        }
+    }
+
+    /// The index of the emoji whose box holds `point`, or nil. The box takes the full height
+    /// of the top row's cell, so a tap a little above or below the emoji still types it.
+    private func emojiIndex(at point: CGPoint) -> Int? {
+        guard let metrics = metrics(), point.y < metrics.rowEdges[1] else { return nil }
+        return emojiBoxes.firstIndex { point.x >= $0.minX && point.x < $0.maxX }
     }
 
     private func keyView(at point: CGPoint) -> KeyView? {
@@ -537,6 +626,12 @@ final class KeyboardView: UIView {
             commitPendingTextTouches()
             let point = touch.location(in: self)
             if candidateRowTakesTouch(at: point, time: touch.timestamp) { continue }
+            if let index = emojiIndex(at: point) {
+                emojiTouches[touch] = index
+                emojiLabels[index].alpha = 0.4
+                delegate?.keyboardViewDidPressKey(self)
+                continue
+            }
             guard let keyView = keyView(at: point) else { continue }
             let state = TouchState(keyView: keyView)
             state.startPoint = point
@@ -613,6 +708,12 @@ final class KeyboardView: UIView {
 
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
         for touch in touches {
+            if let index = emojiTouches.removeValue(forKey: touch) {
+                // The emoji types on the lift, as a candidate does.
+                emojiLabels[index].alpha = 1
+                delegate?.keyboardView(self, didSelectTopRowEmoji: topRowEmoji[index])
+                continue
+            }
             guard let state = activeTouches.removeValue(forKey: touch) else { continue }
             finish(state, commit: true)
         }
@@ -620,6 +721,10 @@ final class KeyboardView: UIView {
 
     override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
         for touch in touches {
+            if let index = emojiTouches.removeValue(forKey: touch) {
+                emojiLabels[index].alpha = 1
+                continue
+            }
             guard let state = activeTouches.removeValue(forKey: touch) else { continue }
             // iOS cancels a touch when a second finger makes the system check for a two-finger
             // gesture. A cancelled touch on a text key still types the key, so fast typing with
@@ -672,6 +777,10 @@ final class KeyboardView: UIView {
     private func cancelAllTouches() {
         let states = Array(activeTouches.values)
         activeTouches.removeAll()
+        for index in emojiTouches.values {
+            emojiLabels[index].alpha = 1
+        }
+        emojiTouches.removeAll()
         for state in states {
             finish(state, commit: false)
         }

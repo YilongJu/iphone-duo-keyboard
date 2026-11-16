@@ -39,7 +39,16 @@ final class KeyView: UIView {
         didSet { updateBackground() }
     }
 
+    /// How far the drawn background stays in from the left and the right edge of the key, in
+    /// points. The top row of keys frees room for emoji this way. The texts and the icon keep
+    /// their place, because they lay out in the whole key.
+    var backgroundInsets: (left: CGFloat, right: CGFloat) = (0, 0) {
+        didSet { setNeedsLayout() }
+    }
+
     private var emphasized = false
+    /// The drawn key: its color, its round corners and its shadow.
+    private let background = UIView()
     private let primaryLabel = UILabel()
     private let secondaryLabel = UILabel()
     private let slideCharacterLabel = UILabel()
@@ -49,11 +58,13 @@ final class KeyView: UIView {
         self.key = key
         super.init(frame: .zero)
         isUserInteractionEnabled = false
-        layer.cornerRadius = 5
-        layer.shadowColor = UIColor.black.cgColor
-        layer.shadowOpacity = 0.3
-        layer.shadowRadius = 0
-        layer.shadowOffset = CGSize(width: 0, height: 1)
+        background.isUserInteractionEnabled = false
+        background.layer.cornerRadius = 5
+        background.layer.shadowColor = UIColor.black.cgColor
+        background.layer.shadowOpacity = 0.3
+        background.layer.shadowRadius = 0
+        background.layer.shadowOffset = CGSize(width: 0, height: 1)
+        addSubview(background)
 
         for label in [primaryLabel, secondaryLabel] {
             label.textAlignment = .center
@@ -120,10 +131,32 @@ final class KeyView: UIView {
         iconView.alpha = alpha
     }
 
+    /// How far the drawn background can move in from each side of the key while the icon and
+    /// the texts stay inside it with a margin of 6 points, in points.
+    var roomToShrinkBackground: CGFloat {
+        let iconWidth = iconView.image?.size.width ?? 0
+        let textWidth = [primaryLabel, secondaryLabel, slideCharacterLabel]
+            .map { $0.text == nil ? 0 : $0.intrinsicContentSize.width }.max() ?? 0
+        return max(0, (bounds.width - max(iconWidth, textWidth)) / 2 - 6)
+    }
+
     override func layoutSubviews() {
         super.layoutSubviews()
-        layer.shadowPath = UIBezierPath(roundedRect: bounds, cornerRadius: layer.cornerRadius).cgPath
+        background.frame = CGRect(
+            x: bounds.minX + backgroundInsets.left, y: bounds.minY,
+            width: max(0, bounds.width - backgroundInsets.left - backgroundInsets.right), height: bounds.height)
+        background.layer.shadowPath = UIBezierPath(
+            roundedRect: background.bounds, cornerRadius: background.layer.cornerRadius).cgPath
         let content = bounds.insetBy(dx: 2, dy: 2)
+        defer {
+            for label in [primaryLabel, secondaryLabel, slideCharacterLabel] {
+                guard let text = label.text, KeyboardTextLogic.fullWidthMarks.contains(text), !label.frame.isEmpty else {
+                    continue
+                }
+                let offset = Self.offsetToCenter(text, font: label.font, size: label.frame.size)
+                label.frame = label.frame.offsetBy(dx: offset.dx, dy: offset.dy)
+            }
+        }
         iconView.frame = content
         slideCharacterLabel.frame = .zero
         if slideCharacterLabel.text != nil {
@@ -149,9 +182,57 @@ final class KeyView: UIView {
     private func updateBackground() {
         let pressed = isHighlighted != emphasized
         if key.kind.isFunctionKey {
-            backgroundColor = pressed ? KeyColors.character : KeyColors.function
+            background.backgroundColor = pressed ? KeyColors.character : KeyColors.function
         } else {
-            backgroundColor = pressed ? KeyColors.function : KeyColors.character
+            background.backgroundColor = pressed ? KeyColors.function : KeyColors.character
         }
+    }
+
+    // MARK: Full-width marks
+
+    /// The moves that center a drawn mark in its label, by the text, the font size and the label size.
+    private static var centeringOffsets: [String: CGVector] = [:]
+
+    /// The move that puts the drawn ink of `text` in the middle of a label of `size`. A font
+    /// draws a full-width mark such as "，" in a corner of its square, and a centered label
+    /// centers the square, so the mark looks low and left. The function draws the text as a
+    /// UILabel draws it and measures its dark pixels, and the result holds for every font.
+    static func offsetToCenter(_ text: String, font: UIFont, size: CGSize) -> CGVector {
+        let cacheKey = "\(text)|\(font.fontName)|\(font.pointSize)|\(size.width)|\(size.height)"
+        if let cached = centeringOffsets[cacheKey] { return cached }
+        let scale: CGFloat = 2
+        let width = Int((size.width * scale).rounded(.up)), height = Int((size.height * scale).rounded(.up))
+        var pixels = [UInt8](repeating: 255, count: width * height * 4)
+        let label = UILabel(frame: CGRect(origin: .zero, size: size))
+        label.font = font
+        label.text = text
+        label.textAlignment = .center
+        label.textColor = .black
+        pixels.withUnsafeMutableBytes { buffer in
+            guard let context = CGContext(
+                data: buffer.baseAddress, width: width, height: height, bitsPerComponent: 8, bytesPerRow: width * 4,
+                space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
+            else { preconditionFailure("No bitmap of \(width) by \(height) pixels for \(text)") }
+            context.translateBy(x: 0, y: CGFloat(height))
+            context.scaleBy(x: scale, y: -scale)
+            UIGraphicsPushContext(context)
+            label.drawText(in: label.bounds)
+            UIGraphicsPopContext()
+        }
+        var minX = width, maxX = -1, minY = height, maxY = -1
+        for y in 0..<height {
+            for x in 0..<width where pixels[(y * width + x) * 4] < 200 {
+                minX = min(minX, x)
+                maxX = max(maxX, x)
+                minY = min(minY, y)
+                maxY = max(maxY, y)
+            }
+        }
+        // Each full-width mark has a glyph on iOS, so a mark that draws nothing is a bug.
+        precondition(maxX >= 0, "\(text) draws no pixels in \(font.fontName)")
+        let inkMiddle = CGPoint(x: CGFloat(minX + maxX + 1) / 2 / scale, y: CGFloat(minY + maxY + 1) / 2 / scale)
+        let offset = CGVector(dx: size.width / 2 - inkMiddle.x, dy: size.height / 2 - inkMiddle.y)
+        centeringOffsets[cacheKey] = offset
+        return offset
     }
 }
