@@ -46,9 +46,10 @@ import os
 /// "failed" line after its "pair" line. The last line starts with "done". Each line also goes to
 /// the system log, subsystem com.yilongju.duokeyboard, category speed.
 ///
-/// With a progress file, a run that stopped before its end (iOS stopped the keyboard, or the
-/// keyboard crashed) goes on at the next "duo:speed": the pairs that ended in the stopped run
-/// give one line that says so, and each pair that was running when a run stopped is skipped.
+/// With a progress folder, the test keeps its record until "duo:speedreset": each later
+/// "duo:speed" shows the lines of the pairs that ended in earlier runs and runs only the rest.
+/// A pair that was running when a run stopped (iOS stopped the keyboard, or the keyboard
+/// crashed) runs again, and a pair that stopped `ModelSpeedProgress.stopLimit` runs is skipped.
 @MainActor
 final class ModelSpeedTest: LanguageModelMeasuring {
     /// Threads of llama.cpp, as the keyboard's model uses.
@@ -65,17 +66,17 @@ final class ModelSpeedTest: LanguageModelMeasuring {
     let modelsFolder: URL?
     /// The pairs to run, by runtime. Nil runs every pair of the catalog.
     let runtimes: Set<ModelSpeedCatalog.Runtime>?
-    /// The file that records which pairs started and ended, or nil for a run that always starts
-    /// at the first pair.
-    let progressFile: URL?
+    /// The folder that records which pairs started and ended and keeps their lines, or nil for a
+    /// run that always starts at the first pair.
+    let progressFolder: URL?
     let pauseSeconds: Double
     let coolingLimitSeconds: Double
 
-    init(modelsFolder: URL? = nil, runtimes: Set<ModelSpeedCatalog.Runtime>? = nil, progressFile: URL? = nil,
+    init(modelsFolder: URL? = nil, runtimes: Set<ModelSpeedCatalog.Runtime>? = nil, progressFolder: URL? = nil,
          pauseSeconds: Double = 20, coolingLimitSeconds: Double = 180) {
         self.modelsFolder = modelsFolder
         self.runtimes = runtimes
-        self.progressFile = progressFile
+        self.progressFolder = progressFolder
         self.pauseSeconds = pauseSeconds
         self.coolingLimitSeconds = coolingLimitSeconds
     }
@@ -95,7 +96,7 @@ final class ModelSpeedTest: LanguageModelMeasuring {
         let folder = modelsFolder ?? ModelSpeedCatalog.sharedFolder()
         let bundledModel = Bundle(for: ModelSpeedTest.self)
             .path(forResource: BundledLanguageModelTest.modelResource, ofType: "gguf")
-        let runtimes = self.runtimes, progressFile = self.progressFile
+        let runtimes = self.runtimes, progressFolder = self.progressFolder
         let pauseSeconds = self.pauseSeconds, coolingLimitSeconds = self.coolingLimitSeconds
         let onRunEnd = self.onRunEnd
         let (inner, innerContinuation) = AsyncStream.makeStream(of: String.self)
@@ -107,7 +108,7 @@ final class ModelSpeedTest: LanguageModelMeasuring {
         let start: @MainActor () -> Void = {
             let thread = Thread { @Sendable in
                 ModelSpeedRun(
-                    folder: folder, bundledModelPath: bundledModel, runtimes: runtimes, progressFile: progressFile,
+                    folder: folder, bundledModelPath: bundledModel, runtimes: runtimes, progressFolder: progressFolder,
                     pauseSeconds: pauseSeconds, coolingLimitSeconds: coolingLimitSeconds,
                     emit: { innerContinuation.yield($0) }
                 ).run()
@@ -236,38 +237,76 @@ final class FootprintSampler: @unchecked Sendable {
     }
 }
 
-/// The record of a run in a file, so a run that stopped before its end goes on at the next run.
-/// Lines: "run SIGNATURE" first, then "start N" and "end N" for each pair, and "done" last.
+/// The record of the speed test in a folder, kept until "duo:speedreset" deletes the folder.
+/// `progress.txt` holds "run SIGNATURE" first, then "start N" and "end N" for each pair. Each
+/// `pair-N.txt` holds the result lines of pair N, written as the pair gives them, so a later
+/// run shows them again without running the pair.
 struct ModelSpeedProgress {
-    let file: URL
+    /// A pair that stopped this many runs (iOS stopped the keyboard, or the keyboard crashed) is
+    /// skipped, so one pair that always stops the keyboard cannot keep the rest from running.
+    static let stopLimit = 2
+
+    let folder: URL
     let signature: String
 
-    /// The pairs that ended, and the pairs that started without an end, in the runs since the
-    /// last "run" line, when those runs stopped before their end with the same pairs. A pair that
-    /// stopped one run stays skipped in every later run, so two pairs that stop the keyboard
-    /// cannot keep the rest from running. Nil when the next run starts at the first pair.
-    func stoppedRun() throws -> (ended: Set<Int>, stopped: Set<Int>)? {
+    var file: URL { folder.appendingPathComponent("progress.txt") }
+
+    func linesFile(_ index: Int) -> URL { folder.appendingPathComponent("pair-\(index).txt") }
+
+    /// The pairs that ended, and for each pair that started without an end the number of runs it
+    /// stopped. Nil when no record of the same pairs exists, so the run starts at the first pair.
+    func earlierRuns() throws -> (ended: Set<Int>, stops: [Int: Int])? {
         guard FileManager.default.fileExists(atPath: file.path) else { return nil }
         let lines = try String(contentsOf: file, encoding: .utf8).split(separator: "\n").map(String.init)
-        guard lines.first == "run \(signature)", !lines.contains("done") else { return nil }
-        var ended = Set<Int>(), started = Set<Int>()
+        guard lines.first == "run \(signature)" else { return nil }
+        var ended = Set<Int>(), starts: [Int: Int] = [:]
         for line in lines.dropFirst() {
             let parts = line.split(separator: " ")
             guard parts.count == 2, let index = Int(parts[1]) else {
                 throw ModelSpeedError("the progress file holds the line \"\(line)\"")
             }
-            if parts[0] == "start" { started.insert(index) } else if parts[0] == "end" { ended.insert(index) }
+            switch parts[0] {
+            case "start": starts[index, default: 0] += 1
+            case "end": ended.insert(index)
+            default: throw ModelSpeedError("the progress file holds the line \"\(line)\"")
+            }
         }
-        return (ended, started.subtracting(ended))
+        return (ended, starts.filter { !ended.contains($0.key) })
     }
 
+    /// Deletes every earlier record and starts the record of a new run.
     func begin() throws {
-        try FileManager.default.createDirectory(at: file.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try Self.reset(folder)
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
         try "run \(signature)\n".write(to: file, atomically: true, encoding: .utf8)
     }
 
     func append(_ line: String) throws {
-        let handle = try FileHandle(forWritingTo: file)
+        try Self.append(line, to: file)
+    }
+
+    /// Starts the file of the result lines of pair `index` again, empty.
+    func startLines(_ index: Int) throws {
+        try Data().write(to: linesFile(index))
+    }
+
+    func appendLine(_ line: String, pair index: Int) throws {
+        try Self.append(line, to: linesFile(index))
+    }
+
+    func savedLines(_ index: Int) throws -> [String] {
+        try String(contentsOf: linesFile(index), encoding: .utf8).split(separator: "\n").map(String.init)
+    }
+
+    /// Deletes the record, so the next run starts at the first pair.
+    static func reset(_ folder: URL) throws {
+        if FileManager.default.fileExists(atPath: folder.path) {
+            try FileManager.default.removeItem(at: folder)
+        }
+    }
+
+    private static func append(_ line: String, to url: URL) throws {
+        let handle = try FileHandle(forWritingTo: url)
         defer { try? handle.close() }
         try handle.seekToEnd()
         try handle.write(contentsOf: Data((line + "\n").utf8))
@@ -291,7 +330,7 @@ struct ModelSpeedRun {
     /// The keyboard's own model file in the bundle, for the pairs of the model "bundled".
     let bundledModelPath: String?
     let runtimes: Set<ModelSpeedCatalog.Runtime>?
-    let progressFile: URL?
+    let progressFolder: URL?
     let pauseSeconds: Double
     let coolingLimitSeconds: Double
     let emit: (String) -> Void
@@ -334,101 +373,85 @@ struct ModelSpeedRun {
         emit("Core ML     devices of this machine: \(CoreMLComputePlan.availableDevices())")
         let pairs = catalog.pairs.filter { runtimes?.contains($0.runtime) ?? true }
         var progress: ModelSpeedProgress?
-        var resumed: (ended: Set<Int>, stopped: Set<Int>)?
+        var earlierRuns: (ended: Set<Int>, stops: [Int: Int])?
         do {
-            if let progressFile {
+            if let progressFolder {
                 let record = ModelSpeedProgress(
-                    file: progressFile, signature: ModelSpeedProgress.signature(of: pairs, requests: requests.count))
-                resumed = try record.stoppedRun()
-                if resumed == nil { try record.begin() }
+                    folder: progressFolder, signature: ModelSpeedProgress.signature(of: pairs, requests: requests.count))
+                earlierRuns = try record.earlierRuns()
+                if earlierRuns == nil { try record.begin() }
                 progress = record
             }
         } catch {
             emit("done        failed before the first pair: the progress file: \(error)")
             return
         }
-        if let resumed {
-            let stoppedPairs = resumed.stopped.sorted().map { String($0 + 1) }.joined(separator: ", ")
-            emit("resume      the last run stopped before its end. \(resumed.ended.count) pairs ended, and the run "
-                 + "stopped during pair \(stoppedPairs.isEmpty ? "none" : stoppedPairs). This run goes on after them.")
+        if let earlierRuns {
+            emit("resume      \(earlierRuns.ended.count) pairs ended in earlier runs, and their lines follow from the "
+                 + "record. Type duo:speedreset and a space to delete the record and start at the first pair.")
         }
         let sampler = FootprintSampler()
         defer { sampler.stop() }
-        var ran = 0, missing = 0, failed = 0, earlier = 0
+        var ran = 0, missing = 0, failed = 0, earlier = 0, skipped = 0
         for (index, pair) in pairs.enumerated() {
             let title = "pair        \(index + 1)/\(pairs.count) \(pair.name), \(pair.model), \(pair.runtime.rawValue)"
-            if let resumed, resumed.ended.contains(index) {
-                emit("\(title): ended in the last run")
+            if let earlierRuns, let progress, earlierRuns.ended.contains(index) {
+                do {
+                    for line in try progress.savedLines(index) { emit(line) }
+                } catch {
+                    emit("\(title): ended in an earlier run, and its lines did not load: \(error)")
+                }
                 earlier += 1
                 continue
             }
-            if let resumed, resumed.stopped.contains(index) {
-                emit("\(title): skipped: an earlier run stopped during this pair")
-                earlier += 1
+            let stops = earlierRuns?.stops[index] ?? 0
+            if stops >= ModelSpeedProgress.stopLimit {
+                emit("\(title): skipped: \(stops) earlier runs stopped during this pair")
+                skipped += 1
                 continue
             }
+            // Each line of this pair also goes to the record. A pair that is not downloaded gets
+            // no "end", so a later run tries it again.
+            let pairEmit: (String) -> Void = { line in
+                self.emit(line)
+                do {
+                    try progress?.appendLine(line, pair: index)
+                } catch {
+                    self.emit("failed      the progress file: \(error)")
+                }
+            }
+            let pairRun = ModelSpeedRun(
+                folder: folder, bundledModelPath: bundledModelPath, runtimes: runtimes, progressFolder: progressFolder,
+                pauseSeconds: pauseSeconds, coolingLimitSeconds: coolingLimitSeconds, emit: pairEmit)
+            var downloaded = true
             do {
                 try progress?.append("start \(index)")
+                try progress?.startLines(index)
             } catch {
                 emit("done        failed at pair \(index + 1): the progress file: \(error)")
                 return
             }
             defer {
-                do {
-                    try progress?.append("end \(index)")
-                } catch {
-                    emit("failed      the progress file: \(error)")
-                }
-            }
-            guard let reference = references[pair.reference], reference.count == requests.count else {
-                emit("\(title): failed: the reference \(pair.reference) does not hold \(requests.count) top candidates")
-                failed += 1
-                continue
-            }
-            let location: URL
-            if pair.model == "bundled" {
-                guard let path = bundledModelPath else {
-                    emit("\(title): failed: the keyboard's model file is missing from the bundle")
-                    failed += 1
-                    continue
-                }
-                location = URL(fileURLWithPath: path)
-            } else {
-                guard let model = catalog.model(id: pair.model) else {
-                    emit("\(title): failed: the catalog has no model \(pair.model)")
-                    failed += 1
-                    continue
-                }
-                guard let folder, Self.present(model, in: folder) else {
-                    emit("\(title): not downloaded")
-                    missing += 1
-                    continue
-                }
-                let file = pair.runtime.isLlama ? "model.gguf" : "model.mlmodelc"
-                location = folder.appendingPathComponent(model.id, isDirectory: true).appendingPathComponent(file)
-            }
-            emit(title)
-            let setting = coolDown()
-            do {
-                if pair.runtime.isLlama {
-                    try runLlama(pair: pair, path: location.path, requests: requests, reference: reference,
-                                 setting: setting, sampler: sampler)
-                } else {
-                    guard let tokensName = pair.tokens else {
-                        throw ModelSpeedError("a Core ML pair needs a token file")
+                if downloaded {
+                    do {
+                        try progress?.append("end \(index)")
+                    } catch {
+                        emit("failed      the progress file: \(error)")
                     }
-                    let tokens = try TokenRequest.read(String(
-                        contentsOf: Self.resource("model-speed-tokens.\(tokensName)", "tsv"), encoding: .utf8))
-                    guard tokens.count == requests.count else {
-                        throw ModelSpeedError("the token file holds \(tokens.count) requests, not \(requests.count)")
-                    }
-                    try runCoreML(pair: pair, url: location, requests: tokens, reference: reference,
-                                  setting: setting, sampler: sampler)
                 }
-                ran += 1
-            } catch {
-                emit("failed      \(error)")
-                failed += 1
+            }
+            if stops > 0 {
+                pairEmit("\(title): runs again: an earlier run stopped during this pair")
+            }
+            let result = pairRun.runPair(
+                index: index, pair: pair, title: title, catalog: catalog, requests: requests, references: references,
+                sampler: sampler)
+            switch result {
+            case .ran: ran += 1
+            case .failed: failed += 1
+            case .missing:
+                missing += 1
+                downloaded = false
             }
         }
         do {
@@ -437,7 +460,63 @@ struct ModelSpeedRun {
             emit("failed      the progress file: \(error)")
         }
         emit("done        \(ran) pairs ran, \(missing) not downloaded, \(failed) failed"
-             + (earlier > 0 ? ", \(earlier) ended or stopped in earlier runs" : ""))
+             + (earlier > 0 ? ", \(earlier) ended in earlier runs" : "")
+             + (skipped > 0 ? ", \(skipped) skipped after \(ModelSpeedProgress.stopLimit) stops" : ""))
+    }
+
+    private enum PairResult { case ran, failed, missing }
+
+    /// Runs one pair and gives its lines to `emit`.
+    private func runPair(
+        index: Int, pair: ModelSpeedCatalog.Pair, title: String, catalog: ModelSpeedCatalog, requests: [TextRequest],
+        references: [String: [Int]], sampler: FootprintSampler
+    ) -> PairResult {
+        guard let reference = references[pair.reference], reference.count == requests.count else {
+            emit("\(title): failed: the reference \(pair.reference) does not hold \(requests.count) top candidates")
+            return .failed
+        }
+        let location: URL
+        if pair.model == "bundled" {
+            guard let path = bundledModelPath else {
+                emit("\(title): failed: the keyboard's model file is missing from the bundle")
+                return .failed
+            }
+            location = URL(fileURLWithPath: path)
+        } else {
+            guard let model = catalog.model(id: pair.model) else {
+                emit("\(title): failed: the catalog has no model \(pair.model)")
+                return .failed
+            }
+            guard let folder, Self.present(model, in: folder) else {
+                emit("\(title): not downloaded")
+                return .missing
+            }
+            let file = pair.runtime.isLlama ? "model.gguf" : "model.mlmodelc"
+            location = folder.appendingPathComponent(model.id, isDirectory: true).appendingPathComponent(file)
+        }
+        emit(title)
+        let setting = coolDown()
+        do {
+            if pair.runtime.isLlama {
+                try runLlama(pair: pair, path: location.path, requests: requests, reference: reference,
+                             setting: setting, sampler: sampler)
+            } else {
+                guard let tokensName = pair.tokens else {
+                    throw ModelSpeedError("a Core ML pair needs a token file")
+                }
+                let tokens = try TokenRequest.read(String(
+                    contentsOf: Self.resource("model-speed-tokens.\(tokensName)", "tsv"), encoding: .utf8))
+                guard tokens.count == requests.count else {
+                    throw ModelSpeedError("the token file holds \(tokens.count) requests, not \(requests.count)")
+                }
+                try runCoreML(pair: pair, url: location, requests: tokens, reference: reference,
+                              setting: setting, sampler: sampler)
+            }
+            return .ran
+        } catch {
+            emit("failed      \(error)")
+            return .failed
+        }
     }
 
     /// True when every file of the model is in place with its size. The app checked each SHA-256
@@ -699,3 +778,26 @@ extension ModelSpeedCatalog.Runtime {
 }
 
 private final class ModelSpeedBundleToken {}
+
+/// "duo:speedreset" and a space: deletes the record of the speed test, so the next "duo:speed"
+/// starts at the first pair.
+@MainActor
+final class ModelSpeedReset: LanguageModelMeasuring {
+    let progressFolder: URL
+
+    init(progressFolder: URL) {
+        self.progressFolder = progressFolder
+    }
+
+    func resultLines() -> AsyncStream<String> {
+        let (stream, continuation) = AsyncStream.makeStream(of: String.self)
+        do {
+            try ModelSpeedProgress.reset(progressFolder)
+            continuation.yield("reset       the record of the speed test is deleted. The next duo:speed starts at the first pair.")
+        } catch {
+            continuation.yield("reset       failed: \(error)")
+        }
+        continuation.finish()
+        return stream
+    }
+}

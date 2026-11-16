@@ -164,9 +164,15 @@ sequence of requests as in the keyboard:
   nominal, for at most 180 seconds more. The heat line gives the pause.
 - The control pair runs last. The larger models, Metal and Core ML run after minutes of load, so
   the control pair shows whether the phone slowed down over the run.
-- The run writes the start and the end of each pair to a file in the keyboard's caches. When iOS
-  stops the keyboard during a pair, the next `duo:speed` goes on after that pair, and its line
-  says that the pair was skipped. That line is a result: the pair stopped the keyboard.
+- The run keeps a record in the keyboard's Application Support folder: the start and the end of
+  each pair, and the result lines of each pair. Each later `duo:speed` types the kept lines of
+  the pairs that ended and runs only the rest, also after a run that reached "done". A pair that
+  is not downloaded gets no end, so a later run tries the pair again.
+- When the keyboard stops during a pair (iOS stopped the keyboard, or the person closed it), the
+  next `duo:speed` runs that pair again. A pair that stopped 2 runs is skipped, and its line
+  says so. That line is a result: the pair stops the keyboard.
+- `duo:speedreset` and a space deletes the record, so the next `duo:speed` starts at the first
+  pair. A change of the pairs or the requests also starts a new record.
 - The first line of the run gives llama.cpp's build line, with the processor features of the
   framework (DOTPROD, MATMUL_INT8) and whether it repacks Q4_0 weights. A repacked Q4_0 pair
   copies its weights into the footprint, so its memory line shows the cost.
@@ -187,8 +193,8 @@ sequence of requests as in the keyboard:
    the SHA-256 value of each file before the file goes to its place.
 2. The person types `duo:speed` and a space with Duo Keyboard. The keyboard frees its own model,
    runs every pair whose files are in place, and types the result lines. The lines also go to
-   the system log (subsystem `com.yilongju.duokeyboard`, category `speed`). A run that iOS
-   stopped goes on at the next `duo:speed`.
+   the system log (subsystem `com.yilongju.duokeyboard`, category `speed`). A run that stopped
+   goes on at the next `duo:speed`, and the record stays until `duo:speedreset`.
 3. The keyboard has no network code. It reads only the bundle and the shared container.
 
 Why a download: the files of the test models hold about 4.2 GB. In the bundle they would make every

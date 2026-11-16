@@ -42,11 +42,14 @@ final class KeyboardViewController: UIInputViewController {
         // The speed test of the language models (docs/model-speed-design.md) starts with
         // "duo:speed" and a space. It holds the keyboard's model freed for the whole run, so
         // neither a load that was under way nor a new load (the keyboard appearing again, a
-        // switch of language) puts a second model beside the pair under test. The progress file
-        // in the keyboard's own caches lets a run that iOS stopped go on at the next "duo:speed".
-        // iOS gives every app extension a caches folder.
-        let caches = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
-        let speedTest = ModelSpeedTest(progressFile: caches.appendingPathComponent("model-speed-progress.txt"))
+        // switch of language) puts a second model beside the pair under test. The progress folder
+        // keeps the lines of each pair that ended until "duo:speedreset", so a run that iOS
+        // stopped goes on at the next "duo:speed". The folder is in Application Support, which
+        // iOS does not clear the way it may clear caches.
+        let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+        let speedProgress = support.appendingPathComponent("model-speed-progress", isDirectory: true)
+        let speedTest = ModelSpeedTest(progressFolder: speedProgress)
+        textController.speedResetMeasurer = ModelSpeedReset(progressFolder: speedProgress)
         speedTest.keyboardLines = { [languageModel, reranker] in
             languageModel.reportLines(statistics: reranker.statistics)
         }

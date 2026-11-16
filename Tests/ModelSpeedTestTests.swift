@@ -96,26 +96,73 @@ final class ModelSpeedTestTests: XCTestCase {
         XCTAssertEqual(differing, [], "the requests whose window or kept tokens differ")
     }
 
-    /// A run that stopped goes on after its last pair: the pairs that ended are not run again,
-    /// and the pair that was running is skipped. A run that ended starts over.
-    func testTheProgressFileResumesAStoppedRunOnly() throws {
-        let file = FileManager.default.temporaryDirectory.appendingPathComponent("speed-progress-\(UUID().uuidString).txt")
-        defer { try? FileManager.default.removeItem(at: file) }
-        let progress = ModelSpeedProgress(file: file, signature: "abc")
-        XCTAssertNil(try progress.stoppedRun())
+    /// The record keeps every pair that ended, also after a run that ended, until a reset. A pair
+    /// that was running when a run stopped counts one stop per run, and a changed catalog starts
+    /// a new record.
+    func testTheProgressRecordKeepsEndedPairsUntilAReset() throws {
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent("speed-progress-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: folder) }
+        let progress = ModelSpeedProgress(folder: folder, signature: "abc")
+        XCTAssertNil(try progress.earlierRuns())
         try progress.begin()
         for line in ["start 0", "end 0", "start 1", "end 1", "start 2"] { try progress.append(line) }
-        let stopped = try XCTUnwrap(try progress.stoppedRun())
+        try progress.startLines(0)
+        try progress.appendLine("pair        1/3 a", pair: 0)
+        try progress.appendLine("load        5 ms", pair: 0)
+        let stopped = try XCTUnwrap(try progress.earlierRuns())
         XCTAssertEqual(stopped.ended, [0, 1])
-        XCTAssertEqual(stopped.stopped, [2])
-        // A second run that skipped pair 2 and stopped during pair 4 skips both next time.
-        for line in ["start 3", "end 3", "start 4"] { try progress.append(line) }
-        let again = try XCTUnwrap(try progress.stoppedRun())
-        XCTAssertEqual(again.ended, [0, 1, 3])
-        XCTAssertEqual(again.stopped, [2, 4])
-        XCTAssertNil(try ModelSpeedProgress(file: file, signature: "other").stoppedRun())
-        try progress.append("done")
-        XCTAssertNil(try progress.stoppedRun())
+        XCTAssertEqual(stopped.stops, [2: 1])
+        XCTAssertEqual(try progress.savedLines(0), ["pair        1/3 a", "load        5 ms"])
+        // A second run that stopped during pair 2 again: two stops.
+        try progress.append("start 2")
+        XCTAssertEqual(try XCTUnwrap(try progress.earlierRuns()).stops, [2: 2])
+        // A run that ended keeps its record.
+        for line in ["end 2", "done"] { try progress.append(line) }
+        let ended = try XCTUnwrap(try progress.earlierRuns())
+        XCTAssertEqual(ended.ended, [0, 1, 2])
+        XCTAssertEqual(ended.stops, [:])
+        XCTAssertNil(try ModelSpeedProgress(folder: folder, signature: "other").earlierRuns())
+        try ModelSpeedProgress.reset(folder)
+        XCTAssertNil(try progress.earlierRuns())
+        XCTAssertFalse(FileManager.default.fileExists(atPath: folder.path))
+    }
+
+    /// A second run with the same record shows the lines of the first run again and runs no pair
+    /// again. A reset makes the next run start over.
+    func testASecondRunShowsTheKeptLinesAndAResetStartsOver() async throws {
+        let models = FileManager.default.temporaryDirectory.appendingPathComponent("no-speed-models-\(UUID().uuidString)")
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent("speed-progress-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: folder) }
+        func run() async -> [String] {
+            var lines: [String] = []
+            let test = ModelSpeedTest(modelsFolder: models, runtimes: [.llamaProcessor], progressFolder: folder,
+                                      pauseSeconds: 0, coolingLimitSeconds: 0)
+            for await line in test.resultLines() { lines.append(line) }
+            return lines
+        }
+        // The catalog holds 8 processor pairs. The 2 pairs of the bundled model run, and the 6
+        // others are not downloaded.
+        let first = await run()
+        let firstReport = first.joined(separator: "\n")
+        XCTAssertEqual(first.filter { $0.hasPrefix("resume      ") }, [], firstReport)
+        XCTAssertEqual(first.last, "done        2 pairs ran, 6 not downloaded, 0 failed", firstReport)
+        let second = await run()
+        let secondReport = second.joined(separator: "\n")
+        XCTAssertEqual(second.filter { $0.hasPrefix("resume      ") }.count, 1, secondReport)
+        XCTAssertEqual(second.last, "done        0 pairs ran, 6 not downloaded, 0 failed, 2 ended in earlier runs",
+                       secondReport)
+        // Every line of the pairs equals the line of the first run.
+        let pairLines = { (lines: [String]) in
+            Array(lines.drop { !$0.hasPrefix("pair        ") }.dropLast())
+        }
+        XCTAssertEqual(pairLines(second), pairLines(first), secondReport)
+        var resetLines: [String] = []
+        for await line in ModelSpeedReset(progressFolder: folder).resultLines() { resetLines.append(line) }
+        XCTAssertEqual(resetLines.count, 1)
+        XCTAssertTrue(resetLines[0].hasPrefix("reset       the record"), resetLines[0])
+        let third = await run()
+        XCTAssertEqual(third.filter { $0.hasPrefix("resume      ") }, [])
+        XCTAssertEqual(third.last, "done        2 pairs ran, 6 not downloaded, 0 failed")
     }
 
     /// A hold keeps the keyboard's model from loading until the hold ends.

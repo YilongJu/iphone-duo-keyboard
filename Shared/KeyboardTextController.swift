@@ -265,12 +265,17 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
     /// The text that starts the speed test of the language models when a space follows it.
     static let speedTestTrigger = "duo:speed"
 
+    /// The text that deletes the record of the speed test when a space follows it.
+    static let speedResetTrigger = "duo:speedreset"
+
     /// Runs the language model test. Without a measurer the trigger text is typed as any
     /// other text, and the test does not load a model.
     var languageModelMeasurer: LanguageModelMeasuring?
     /// Runs the speed test of the language models (Shared/ModelSpeedTest.swift), in the same
     /// way. The speed test and the language model test never run at the same time.
     var speedTestMeasurer: LanguageModelMeasuring?
+    /// Deletes the record of the speed test, so the next speed test starts at the first pair.
+    var speedResetMeasurer: LanguageModelMeasuring?
     /// The run of the test that is under way now. The tests wait for it.
     private(set) var languageModelTask: Task<Void, Never>?
 
@@ -616,6 +621,11 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
         if let languageModelMeasurer,
             startTest(trigger: Self.languageModelTrigger, measurer: languageModelMeasurer,
                       notice: "Language model test is running")
+        {
+            return true
+        }
+        if let speedResetMeasurer,
+            startTest(trigger: Self.speedResetTrigger, measurer: speedResetMeasurer, notice: "Speed test record deleted")
         {
             return true
         }

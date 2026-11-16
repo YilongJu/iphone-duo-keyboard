@@ -207,6 +207,20 @@ final class KeyboardTextControllerTests: XCTestCase {
         XCTAssertEqual(speed.runs, 2)
     }
 
+    func testTheResetTriggerRunsTheResetAndNotTheSpeedTest() async {
+        makeController(before: "")
+        let speed = FakeLanguageModelMeasurer()
+        let reset = FakeLanguageModelMeasurer()
+        reset.lines = ["reset       done"]
+        controller.speedTestMeasurer = speed
+        controller.speedResetMeasurer = reset
+        type("duo:speedreset ")
+        await controller.languageModelTask?.value
+        XCTAssertEqual(reset.runs, 1)
+        XCTAssertEqual(speed.runs, 0)
+        XCTAssertEqual(document.text, "duo:speedreset \nreset       done")
+    }
+
     func testOtherTextDoesNotRunTheSpeedTest() {
         for text in ["duo:speed", "duo:speedx ", "xduo:speed ", "/duo:speed "] {
             makeController(before: "")
