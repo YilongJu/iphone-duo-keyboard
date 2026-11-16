@@ -3,8 +3,9 @@ import XCTest
 
 @testable import DuoKeyboard
 
-/// The emoji of a word on the candidate row: after the English word right before the cursor,
-/// and right after the first Pinyin candidate. The tests read the bundled table
+/// The emoji of a word on the candidate row: at the end of the row for the English word right
+/// before the cursor, and right after the first Pinyin candidate. A tap on an English emoji
+/// puts the emoji in place of the word, as the iOS keyboard does. The tests read the bundled table
 /// Shared/emoji-suggestions.tsv, which offers "👍" for "good" and for "好", "👋" for "你好" and
 /// "💻" for "office", and nothing for "the", "我" and "xyz".
 @MainActor
@@ -74,28 +75,62 @@ final class EmojiSuggestionTests: XCTestCase {
         XCTAssertEqual(row()?.first, "\u{1F44D}")
     }
 
-    func testATapAfterTheSpacePutsTheEmojiAfterTheSpace() {
-        makeController()
+    func testATapReplacesTheWordAndKeepsTheSpaceAfterIt() {
+        makeController(before: "I feel ")
         type("good ")
         tap(0)
-        XCTAssertEqual(document.text, "good \u{1F44D}")
+        XCTAssertEqual(document.text, "I feel \u{1F44D} ")
         XCTAssertNil(row())
     }
 
-    func testATapWhileTypingPutsOneSpaceBetweenTheWordAndTheEmoji() {
+    func testATapWhileTypingReplacesTheWord() {
         makeController()
         type("good")
         tap(0)
-        XCTAssertEqual(document.text, "good \u{1F44D}")
+        XCTAssertEqual(document.text, "\u{1F44D}")
     }
 
-    func testTheSecondEmojiOfAWordGoesInOnItsTap() {
+    func testTheSecondEmojiOfAWordGoesInOnItsTap() throws {
         makeController()
         type("good ")
-        let shown = row() ?? []
-        XCTAssertEqual(shown.count, 2)
+        XCTAssertEqual(row()?.count, 2)
+        let second = try XCTUnwrap(row()?.dropFirst().first)
         tap(1)
-        XCTAssertEqual(document.text, "good " + shown[1])
+        XCTAssertEqual(document.text, second + " ")
+    }
+
+    func testOneDeleteAfterTheReplacementBringsTheWordBack() {
+        // As after a correction, the delete takes the space after the emoji too.
+        makeController()
+        type("Good ")
+        tap(0)
+        XCTAssertEqual(document.text, "\u{1F44D} ")
+        controller.keyboardViewDeleteBackward(keyboardView)
+        XCTAssertEqual(document.text, "Good")
+        // The word does not join the words the person brought back after a correction.
+        XCTAssertEqual(spellChecker.learned, [])
+        // A second delete is a plain delete.
+        controller.keyboardViewDeleteBackward(keyboardView)
+        XCTAssertEqual(document.text, "Goo")
+    }
+
+    func testADeleteBringsTheWordBackAfterATapWhileTyping() {
+        makeController()
+        type("good")
+        tap(0)
+        controller.keyboardViewDeleteBackward(keyboardView)
+        XCTAssertEqual(document.text, "good")
+    }
+
+    func testAKeyAfterTheReplacementEndsTheWayBack() {
+        makeController()
+        type("good ")
+        tap(0)
+        type("x")
+        controller.keyboardViewDeleteBackward(keyboardView)
+        XCTAssertEqual(document.text, "\u{1F44D} ")
+        controller.keyboardViewDeleteBackward(keyboardView)
+        XCTAssertEqual(document.text, "\u{1F44D}")
     }
 
     func testOtherTextShowsNoEmoji() {
@@ -126,16 +161,13 @@ final class EmojiSuggestionTests: XCTestCase {
         XCTAssertEqual(document.text, "good the receive ")
     }
 
-    func testAnEmojiTapLeavesTheWordAsTyped() {
+    func testATapWhileTypingRunsNoCorrection() {
         makeController()
         spellChecker.corrections["good"] = "food"
         type("good")
         tap(0)
-        XCTAssertEqual(document.text, "good \u{1F44D}")
-        // A delete after the emoji is a plain delete, and no correction comes back.
-        controller.keyboardViewDeleteBackward(keyboardView)
-        XCTAssertEqual(document.text, "good ")
-        XCTAssertEqual(row()?.first, "\u{1F44D}")
+        XCTAssertEqual(document.text, "\u{1F44D}")
+        XCTAssertEqual(spellChecker.requests, [])
     }
 
     func testAMarkAfterTheEmojiKeepsItsSpace() {
@@ -143,13 +175,13 @@ final class EmojiSuggestionTests: XCTestCase {
         makeController()
         type("good ")
         tap(0)
-        type(" ,")
-        XCTAssertEqual(document.text, "good \u{1F44D} ,")
+        type(",")
+        XCTAssertEqual(document.text, "\u{1F44D} ,")
         makeController()
-        type("good ")
+        type("good")
         tap(0)
         type(".")
-        XCTAssertEqual(document.text, "good \u{1F44D}.")
+        XCTAssertEqual(document.text, "\u{1F44D}.")
     }
 
     func testSpaceRemovalAndItsUndoStillWorkAfterAWordWithEmoji() {
@@ -182,7 +214,7 @@ final class EmojiSuggestionTests: XCTestCase {
         XCTAssertEqual(row()?.first, "I came from the office")
         XCTAssertEqual(row()?.dropFirst().first, "\u{1F4BB}")
         tap(1)
-        XCTAssertEqual(document.text, "I came form the office \u{1F4BB}")
+        XCTAssertEqual(document.text, "I came form the \u{1F4BB} ")
     }
 
     func testTheProofreadFixStillGoesInOnATapOfTheFirstWord() async {
