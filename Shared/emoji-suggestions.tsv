@@ -1,0 +1,597 @@
+# Emoji that the keyboard offers for a word. Built by scripts/emoji-table/build_emoji_table.py
+# from the Unicode CLDR 49.0.0 emoji annotations (Unicode License v3) and the Unicode
+# emoji frequency ranking. docs/emoji-suggestions.md describes the table.
+# Unicode data: Copyright (c) 1991-2026 Unicode, Inc. License: https://www.unicode.org/license.txt
+# Columns: language, word, emoji separated by one space.
+en	afraid	😨
+en	agree	💯
+en	alarm	⏰
+en	alien	👽
+en	angel	😇 👼
+en	angry	😡 😠
+en	annoyed	😖
+en	applause	👏
+en	apple	🍎
+en	appreciate	🙏
+en	autumn	🍂
+en	awesome	👏 😎
+en	awkward	😬
+en	baby	👶
+en	bacon	🥓
+en	balloon	🎈
+en	banana	🍌
+en	baseball	⚾
+en	basketball	🏀
+en	beach	🏖️ 🌴
+en	bear	🐻
+en	bedtime	😴
+en	bee	🐝
+en	beer	🍺 🍻
+en	bike	🚲
+en	bird	🐦 🐥
+en	birthday	🎂 🎉
+en	blessed	🙏 😇
+en	blush	😊
+en	book	📚 📖
+en	books	📚
+en	boom	💥
+en	bored	😒
+en	bouquet	💐
+en	brain	🧠
+en	bread	🍞
+en	breakfast	🍳 🥞
+en	broken	💔
+en	bunny	🐰
+en	burger	🍔
+en	bus	🚌
+en	butterfly	🦋
+en	bye	👋
+en	cactus	🌵
+en	cake	🎂 🍰
+en	calm	😌
+en	camera	📷 📸
+en	candy	🍬 🍭
+en	car	🚗
+en	cash	💰 💸
+en	cat	🐱 🐈
+en	celebrate	🎉 🎊
+en	celebration	🎉 🎊
+en	champion	🏆
+en	cheerful	😀
+en	cheers	🍻
+en	cheese	🧀
+en	cherry	🍒
+en	chicken	🐔 🍗
+en	chocolate	🍫
+en	christmas	🎁 🌲
+en	clap	👏
+en	clock	⏰
+en	cloud	☁️
+en	clown	🤡
+en	cocktail	🍹 🍸
+en	coffee	☕
+en	cold	❄️
+en	complete	✅
+en	computer	💻
+en	confused	😕
+en	congrats	👏
+en	congratulations	👏 ㊗️
+en	cookie	🍪
+en	cool	😎
+en	cow	🐮 🐄
+en	crazy	😜 🤪
+en	crown	👑
+en	cry	😭 😢
+en	crying	😭 😢
+en	dance	💃 🕺
+en	dancing	💃 🕺
+en	delicious	😋
+en	dessert	🍰 🍩
+en	devil	😈
+en	diamond	💎
+en	dinner	🍽️ 🍴
+en	disappointed	😔 😞
+en	doctor	💊 🏥
+en	dog	🐶 🐕
+en	dollar	💵
+en	dolphin	🐬
+en	done	✅
+en	dream	💭
+en	drink	🍹 ☕
+en	dunno	🤷
+en	earth	🌍 🌎
+en	eat	😋 🍴
+en	egg	🥚 🍳
+en	elephant	🐘
+en	email	📩
+en	embarrassed	😳
+en	engaged	💍
+en	fear	😱 😨
+en	fever	🤧
+en	fire	🔥
+en	fireworks	🎆
+en	fish	🐟 🐠
+en	flower	🌸 🌹
+en	food	🍕 🍔
+en	football	⚽ 🏈
+en	forest	🌳 🌲
+en	fries	🍟
+en	frog	🐸
+en	funny	😂 🤣
+en	furious	😤
+en	game	🎮
+en	garden	🏡
+en	ghost	👻
+en	gift	🎁
+en	glad	😊
+en	globe	🌍
+en	golf	⛳
+en	good	👍 👏
+en	graduation	🎓
+en	grapes	🍇
+en	great	👏
+en	greetings	👋
+en	guitar	🎸
+en	gym	💪
+en	haha	😂 🤣
+en	halloween	🎃 👻
+en	hamburger	🍔
+en	happy	😁 😄
+en	hear	👂
+en	heart	❤️ 💕
+en	hearts	💕 💞
+en	hello	👋
+en	hey	👋
+en	hilarious	😂 🤣
+en	hmm	🤔
+en	home	🏠 🏡
+en	horse	🐴
+en	hospital	🏥
+en	hot	🔥 🌶️
+en	house	🏠 🏡
+en	hug	🤗
+en	hundred	💯
+en	hungry	😋 🍕
+en	idea	💡
+en	idk	🤷
+en	innocent	😇
+en	island	🏝️
+en	joke	😜
+en	joy	😂
+en	king	👑
+en	kiss	😘 💋
+en	kitten	🐱
+en	kitty	🐱
+en	laptop	💻
+en	laugh	😂 🤣
+en	laughing	😹
+en	leaf	🍃 🍀
+en	lemon	🍋
+en	lightning	⚡
+en	lion	🦁
+en	listen	👂
+en	lit	🔥
+en	lock	🔒
+en	lol	😂 🤣
+en	love	❤️ 😍
+en	loving	💕
+en	luck	🤞
+en	lucky	🍀
+en	lunch	🍴
+en	mad	😡 😠
+en	magic	✨ 🔮
+en	married	💍
+en	mask	😷
+en	meat	🍖 🥩
+en	medal	🥇 🏅
+en	medicine	💊
+en	message	💬
+en	milk	🥛
+en	money	💰 💸
+en	moon	🌙 🌚
+en	movie	🎬 🍿
+en	muscle	💪
+en	music	🎶 🎵
+en	nap	😴
+en	nerd	🤓
+en	nervous	😅 😰
+en	nice	👏 😁
+en	night	🌃 🌠
+en	ocean	🌊
+en	octopus	🐙
+en	office	💻
+en	okay	👌
+en	omg	😮 😲
+en	oops	🤭
+en	panda	🐼
+en	party	🎉 🎊
+en	password	🔑
+en	pasta	🍝
+en	peace	✌️ 🕊️
+en	peach	🍑
+en	penguin	🐧
+en	perfect	💯
+en	phone	📱
+en	photo	📷
+en	piano	🎹
+en	pig	🐷
+en	pill	💊
+en	pineapple	🍍
+en	pizza	🍕
+en	plane	✈️
+en	plant	🌱 🌿
+en	please	🙏
+en	poop	💩
+en	popcorn	🍿
+en	pray	🙏
+en	princess	👸
+en	pumpkin	🎃
+en	puppy	🐶
+en	queen	👑 👸
+en	quiet	🤫
+en	rabbit	🐰
+en	rain	☔ 🌧️
+en	rainbow	🌈
+en	relax	💆
+en	relieved	😌
+en	rice	🍚
+en	rich	💰
+en	ring	💍
+en	robot	🤖
+en	rocket	🚀
+en	romance	😍 💘
+en	romantic	😍 😘
+en	rose	🌹
+en	run	🏃
+en	running	🏃
+en	sad	😭 😢
+en	satisfied	😊
+en	scared	😱 😰
+en	school	📚
+en	secret	🤭 🤐
+en	shark	🦈
+en	shocked	😱 😲
+en	shrug	🤷
+en	sick	😷 🤒
+en	sing	🎤
+en	sleep	😴 💤
+en	sleeping	😴
+en	sleepy	😪
+en	smart	🤓 🧠
+en	smile	😊 😁
+en	smiling	😊
+en	snake	🐍
+en	snow	❄️ ☃️
+en	snowman	☃️
+en	soccer	⚽
+en	sorry	🙇
+en	soup	🍜
+en	spaghetti	🍝
+en	sparkle	✨
+en	spring	🌸
+en	star	⭐ 🌟
+en	stars	⭐ 💫
+en	stop	🛑
+en	strawberry	🍓
+en	stress	😅
+en	stressed	😅
+en	strong	💪
+en	study	📚
+en	sun	☀️ 🌞
+en	sunglasses	😎
+en	sunny	☀️ 🌞
+en	sunrise	🌅
+en	sunshine	🌞
+en	surprised	😮 😯
+en	sushi	🍣
+en	swimming	🏊
+en	taco	🌮
+en	tasty	😋
+en	tea	🍵 ☕
+en	tears	😭
+en	television	📺
+en	tennis	🎾
+en	thanks	🙏
+en	thinking	🤔
+en	thumbs	👍
+en	thunder	⚡ ⛈️
+en	tiger	🐯
+en	tired	😩 😴
+en	toast	🍞
+en	tongue	😜 😛
+en	tornado	🌪️
+en	train	🚂
+en	travel	✈️
+en	tree	🌳 🌲
+en	trophy	🏆
+en	turtle	🐢
+en	unhappy	😢
+en	unicorn	🦄
+en	upset	😡 😠
+en	valentine	🌹 💘
+en	victory	✌️ 🏆
+en	volcano	🌋
+en	warning	⚠️
+en	watermelon	🍉
+en	wave	👋
+en	weather	☀️ 🌈
+en	wedding	💍 💒
+en	whale	🐳
+en	whatever	🙄 🤷
+en	win	🏆
+en	wind	🌬️
+en	wine	🍷
+en	wink	😉
+en	winner	🏅
+en	workout	🏋️
+en	world	🌍 🌎
+en	worried	😟
+en	wow	🤩 😮
+en	write	✍️
+en	yes	👍
+en	yum	😋
+en	yummy	😋
+zh	下雨	☔ 🌧️
+zh	不好意思	🙇
+zh	不懂	😕
+zh	不爽	😠 😤
+zh	世界	🌍 🌏
+zh	书	📚 📖
+zh	云	☁️
+zh	亲亲	😘 😚
+zh	伤心	💔 😢
+zh	你好	👋
+zh	信	💌
+zh	停	✋
+zh	停止	🛑
+zh	兔子	🐇
+zh	公主	👸
+zh	再见	👋
+zh	写	✍️
+zh	冠军	🏆
+zh	冷	❄️
+zh	医生	💊 🏥
+zh	医院	🏥
+zh	发烧	🤒
+zh	发财	🤑
+zh	取消	❌
+zh	受伤	🤕
+zh	口水	🤤 😋
+zh	可以	👌
+zh	台风	🌀
+zh	叶子	🍃
+zh	吃	🍴 🍔
+zh	吃饭	🍴
+zh	同意	👍 👌
+zh	听	👂
+zh	吻	💋 😚
+zh	呵呵	🙂 ☺️
+zh	和平	✌️ 🕊️
+zh	咖啡	☕
+zh	哈哈	🤣 😆
+zh	哎呀	🤭
+zh	哭	😭 😢
+zh	唱歌	🎤
+zh	啤酒	🍺 🍻
+zh	喜欢	😻
+zh	喝	🥂 🥛
+zh	喝酒	🍻 🍷
+zh	嗨	👋 🙋
+zh	嘴	👄
+zh	嘻嘻	😁
+zh	嘿嘿	😀
+zh	困	😪
+zh	困惑	😕
+zh	国王	👑
+zh	圣诞	🎁
+zh	地球	🌍 🌏
+zh	大脑	🧠
+zh	天使	😇 👼
+zh	天气	🌧️ ❄️
+zh	太阳	☀️ 🌞
+zh	失望	😞 😥
+zh	头痛	😣
+zh	奶	🥛
+zh	好	👍
+zh	好吃	😋
+zh	好朋友	👭
+zh	好的	👌
+zh	委屈	☹️ 🙁
+zh	婚礼	💒 👰
+zh	婴儿	🍼
+zh	学习	📚
+zh	学校	📚
+zh	安静	🤫 😶
+zh	完成	✅
+zh	宝宝	👶
+zh	宠物	🐶 🐱
+zh	害怕	😱 😨
+zh	家	🏠 🏡
+zh	密码	🔑
+zh	对不起	🙇
+zh	小心	⚠️
+zh	小狗	🐶 🐕
+zh	尴尬	😬 🙈
+zh	山	🌄 🌋
+zh	岛	🏝️
+zh	工作	👔
+zh	巧克力	🍫
+zh	幸运	🍀 🤞
+zh	庆祝	🎉 🎊
+zh	开心	😆 😄
+zh	开玩笑	😜
+zh	开车	🚗
+zh	当然	👌
+zh	得意	😏
+zh	微笑	😊 ☺️
+zh	心	❤️ 💌
+zh	怀疑	🤨 🤷
+zh	怕	😨
+zh	思考	🤔
+zh	恐怖	😱 😨
+zh	恭喜	👏
+zh	恶心	🤢
+zh	恶魔	👿
+zh	情侣	💑 💏
+zh	惊喜	🎁
+zh	惊讶	😲 🙀
+zh	想	🤔
+zh	想你	😘
+zh	感冒	😷
+zh	感谢	🙇
+zh	愤怒	😠 😤
+zh	成功	✌️
+zh	我爱你	😍 💕
+zh	戒指	💍
+zh	房子	🏠 🏡
+zh	手机	📱
+zh	抱	🤗
+zh	抱抱	🤗
+zh	担心	😟
+zh	拍照	📸 📷
+zh	拜托	🙏
+zh	拥抱	🤗
+zh	旅行	✈️
+zh	无所谓	🤷
+zh	无语	🙄 🤦
+zh	早餐	🍳
+zh	时间	⏰ ⌚
+zh	星星	⭐ 🌟
+zh	晕	🌀
+zh	晚安	😴 💤
+zh	月亮	🌙 🌚
+zh	有钱	💰
+zh	朋友	👭 👬
+zh	机器人	🤖
+zh	树	🌳 🌲
+zh	植物	🌺 🌵
+zh	正确	✔️
+zh	毕业	🎓
+zh	水	💧
+zh	水果	🍓 🍎
+zh	汽车	🚗
+zh	沙漠	🌵
+zh	浪	🌊
+zh	海洋	🌊
+zh	游戏	🎮
+zh	游泳	🏊
+zh	满意	😊
+zh	火	🔥
+zh	火箭	🚀
+zh	火车	🚂
+zh	炸弹	💣
+zh	照片	📷
+zh	熊	🐻
+zh	熊猫	🐼
+zh	爆炸	💥
+zh	爱	❤️ 😍
+zh	爱你	🤟
+zh	爱情	💕 💘
+zh	牛	🐄 🐂
+zh	牛奶	🥛
+zh	狗	🐶 🐕
+zh	狮子	🦁
+zh	狼	🐺
+zh	猪	🐷
+zh	猫	🐱 🐈
+zh	猴子	🐒 🐵
+zh	玉米	🌽
+zh	王子	🤴
+zh	玫瑰	🌹
+zh	现金	💵 💰
+zh	甜	🍭 🍩
+zh	生日	🎂 🎉
+zh	生气	😡 😠
+zh	生病	😷 🤒
+zh	电影	🎥 📽️
+zh	电脑	💻
+zh	电视	📺
+zh	电话	📞 📱
+zh	相机	📷 📸
+zh	看	👀
+zh	看电影	🍿
+zh	眼睛	👀
+zh	睡着	💤
+zh	睡觉	😴 😪
+zh	确定	👌
+zh	礼物	🎁
+zh	祈祷	🙏
+zh	祝福	🙏 ㊗️
+zh	祝贺	㊗️
+zh	禁止	🚫
+zh	秋	🍂
+zh	秘密	🤭 🤐
+zh	笑	😂 🤣
+zh	笔	✏️ ✍️
+zh	等待	⏳
+zh	篮球	🏀
+zh	米	🍚
+zh	糖	🍬 🍭
+zh	紧张	😅 😰
+zh	累	😩 😫
+zh	结婚	💍 💒
+zh	羊	🐑
+zh	老虎	🐯 🐅
+zh	考试	💯
+zh	耳朵	👂
+zh	耳机	🎧
+zh	聚会	👯
+zh	聪明	🧠 🤓
+zh	肉	🍖 🥩
+zh	肌肉	💪
+zh	胜利	✌️ 🏆
+zh	自行车	🚲 🚴
+zh	船	🚤 ⚓
+zh	节日	🎈
+zh	花	🌸 🌹
+zh	苹果	🍎 🍏
+zh	茶	🍵 ☕
+zh	药	💊
+zh	葡萄	🍇
+zh	蔬菜	🍅 🥕
+zh	蚂蚁	🐜
+zh	蛇	🐍
+zh	蛋	🍳 🥚
+zh	蛋糕	🎂 🍰
+zh	蜘蛛	🕷️
+zh	蝴蝶	🦋
+zh	西瓜	🍉
+zh	警告	⚠️
+zh	警察	👮 🚓
+zh	读书	📖
+zh	谢谢	🙏
+zh	赞	👍
+zh	足球	⚽
+zh	跑步	🏃
+zh	跳舞	💃 🕺
+zh	运动	⚽ 🏀
+zh	道歉	🙇
+zh	邮件	📩 ✉️
+zh	郁闷	😒
+zh	酒	🍷 🍺
+zh	酷	😎
+zh	钟	⏰
+zh	钢琴	🎹
+zh	钥匙	🔑
+zh	钱	💰 💸
+zh	钻石	💎
+zh	锁	🔒 🔐
+zh	锻炼	🙆
+zh	难过	😞
+zh	雨	🌧️ ☂️
+zh	雪	❄️ ☃️
+zh	雷	⛈️
+zh	面包	🍞
+zh	音乐	🎶 🎵
+zh	飞机	✈️ 🛫
+zh	饭	🍚 🍛
+zh	饿	🍕 🍔
+zh	马	🐴
+zh	高兴	😆 😄
+zh	鬼	👻
+zh	魔法	🔮
+zh	鱼	🐟 🐠
+zh	鲜花	💐
+zh	鸟	🐦 🕊️
+zh	鸡	🐔 🐤
+zh	龙	🐉

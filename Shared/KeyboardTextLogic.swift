@@ -373,6 +373,26 @@ enum KeyboardTextLogic {
         return head[start...].lowercased()
     }
 
+    /// The English word whose emoji the candidate row offers, or nil: the word of ASCII letters
+    /// that the person is typing right before the cursor, or the word before one space (U+0020).
+    /// The word starts the text, or a space, a line break or an opening bracket or quote comes
+    /// right before it, so a word inside a longer text such as "@good" or "don't" gives nil.
+    static func wordForEmoji(before text: String) -> String? {
+        let body = text.hasSuffix(" ") ? text.dropLast() : Substring(text)
+        var start = body.endIndex
+        while start > body.startIndex {
+            let previous = body.index(before: start)
+            guard body[previous].isASCII, body[previous].isLetter else { break }
+            start = previous
+        }
+        guard start < body.endIndex else { return nil }
+        if start > body.startIndex {
+            let preceding = body[body.index(before: start)]
+            guard preceding.isWhitespace || "([{\"\u{201C}\u{2018}".contains(preceding) else { return nil }
+        }
+        return body[start...].lowercased()
+    }
+
     /// Gives corrected lower-case words the capitals of the typed words. A typed word that
     /// starts with a capital gives its capital to the word in the same place, or to the first
     /// word when the correction changed the count of words. The word "i" and its contractions
