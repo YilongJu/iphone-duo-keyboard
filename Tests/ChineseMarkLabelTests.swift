@@ -229,7 +229,8 @@ final class ChineseMarkCenteringTests: XCTestCase {
         }
         var minX = width, maxX = -1, minY = height, maxY = -1
         for y in 0..<height {
-            for x in 0..<width where pixels[(y * width + x) * 4] < 128 {
+            // The slide character is gray, so every pixel clearly darker than the white ground counts.
+            for x in 0..<width where pixels[(y * width + x) * 4] < 200 {
                 minX = min(minX, x)
                 maxX = max(maxX, x)
                 minY = min(minY, y)
