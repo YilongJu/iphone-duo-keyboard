@@ -538,11 +538,12 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       # The four macOS harness jobs write separate files, so their artifacts merge into one folder.
+      # The four artifacts stay, because a rerun of a failed harness job downloads the files of the
+      # jobs before it.
       - uses: actions/upload-artifact/merge@v7
         with:
           name: harness-mac
           pattern: harness-mac-*
-          delete-merged: true
       - uses: actions/download-artifact@v7
         with:
           path: build/lm-keyboard/artifacts
