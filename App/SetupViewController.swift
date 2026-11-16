@@ -14,6 +14,8 @@ final class SetupViewController: UIViewController, UITextViewDelegate {
     private var speedModelButtons: [UIButton] = []
     private let appSpeedButton = UIButton(type: .system)
     private let appSpeedResults = UITextView()
+    /// The progress line of the running test, written again every 2 seconds.
+    private let appSpeedProgress = UILabel()
     private let systemField = UITextView()
     private let previewField = UITextView()
     private let previewKeyboard = KeyboardView()
@@ -315,6 +317,10 @@ final class SetupViewController: UIViewController, UITextViewDelegate {
             self?.runAppSpeedTest()
         }, for: .touchUpInside)
         stack.addArrangedSubview(appSpeedButton)
+        appSpeedProgress.font = .monospacedSystemFont(ofSize: 13, weight: .semibold)
+        appSpeedProgress.numberOfLines = 0
+        appSpeedProgress.accessibilityIdentifier = "appSpeedProgress"
+        stack.addArrangedSubview(appSpeedProgress)
         var copyConfiguration = UIButton.Configuration.bordered()
         copyConfiguration.title = "Copy the result lines"
         stack.addArrangedSubview(UIButton(configuration: copyConfiguration, primaryAction: UIAction { [weak self] _ in
@@ -338,11 +344,19 @@ final class SetupViewController: UIViewController, UITextViewDelegate {
         UIApplication.shared.isIdleTimerDisabled = true
         let test = ModelSpeedTest(runtimes: [.coreMLGPU, .coreMLNeuralEngine])
         let lines = test.resultLines()
+        let ticker = Task { [weak self] in
+            while !Task.isCancelled {
+                self?.appSpeedProgress.text = test.progressCaption()
+                try? await Task.sleep(nanoseconds: 2_000_000_000)
+            }
+        }
         Task { [weak self] in
             for await line in lines {
                 guard let self else { return }
                 self.appSpeedResults.text = (self.appSpeedResults.text ?? "") + line + "\n"
             }
+            ticker.cancel()
+            self?.appSpeedProgress.text = "The run ended."
             UIApplication.shared.isIdleTimerDisabled = false
             self?.appSpeedButton.isEnabled = true
         }
