@@ -5,7 +5,7 @@ name: Keyboard keys
 # workflow "Language model in the keyboard" runs every unit test, and takes more than three hours.
 on:
   push:
-    branches: [ui/swipe-punctuation, engine/domain-model, ui/space-before-mark, ui/closing-quotes, ui/quote-spaces]
+    branches: [ui/swipe-punctuation, engine/domain-model, ui/space-before-mark, ui/closing-quotes, ui/quote-spaces, ui/emoji-marks]
     paths:
       - 'Shared/keyboard-layout.json'
       - 'Shared/KeyboardLayout.swift'
@@ -13,13 +13,18 @@ on:
       - 'Shared/KeyView.swift'
       - 'Shared/KeyboardTextController.swift'
       - 'Shared/KeyboardTextLogic.swift'
+      - 'Shared/CandidateBar.swift'
+      - 'Shared/EmojiSuggestions.swift'
+      - 'Shared/emoji-suggestions.tsv'
       - 'Engine/duo_engine.c'
       - 'Shared/TypingEngine.swift'
       - 'Tests/SlideKey*.swift'
       - 'Tests/KeyboardTextControllerTests.swift'
       - 'Tests/SpaceBeforeMarkTests.swift'
+      - 'Tests/EmojiSuggestionTests.swift'
       - 'Tests/TypingEngineTests.swift'
       - 'scripts/keyboard-preview/**'
+      - 'scripts/ci/capture_screenshots.sh'
       - 'scripts/typing-evaluation/symbol_keys.py'
       - '.github/workflows/keyboard-keys.yml'
 
@@ -66,7 +71,7 @@ jobs:
           only=()
           for class in $(grep -h -o -E '^final class [A-Za-z]+: XCTestCase' \
               Tests/SlideKey*.swift Tests/KeyboardTextControllerTests.swift Tests/SpaceBeforeMarkTests.swift \
-              Tests/TypingEngineTests.swift | awk '{ print $3 }' | tr -d ':'); do
+              Tests/EmojiSuggestionTests.swift Tests/TypingEngineTests.swift | awk '{ print $3 }' | tr -d ':'); do
             only+=("-only-testing:DuoKeyboardTests/$class")
           done
           test "${#only[@]}" -ge 5
