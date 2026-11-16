@@ -9,8 +9,11 @@ The candidate row is the row of words over the top row of keys.
 
 - **English:** when the word right before the cursor is in the table, the candidate row shows
   its emoji. The word is the word the person is typing, or the word before one space. The
-  emoji come after the proofreader's fix when the row also shows a fix. A tap types the emoji
-  after the word with one space between, as in "good 👍". Autocorrection does not change.
+  emoji come after the proofreader's fix when the row also shows a fix. A tap puts the emoji
+  in place of the word, as the iOS keyboard does: "good " and a tap on 👍 give "👍 ". The
+  space after the word stays. One delete right after the tap brings the word back, as one
+  delete after an autocorrection does, and the word stays open to later corrections. The tap
+  runs no autocorrection, and typing keeps its autocorrection.
 - **Chinese:** when the first Pinyin candidate is a word in the table, its emoji come right
   after that candidate. A tap types the emoji in place of the word, and the emoji takes the
   Pinyin letters of the word. The space bar and the digit keys still pick the Pinyin

@@ -160,11 +160,15 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
     private let document: KeyboardDocument
     private let spellChecker: SpellChecking
 
-    /// The last autocorrection. One backspace right after the correction brings the typed word back.
+    /// The last autocorrection, or the last word that a tap on its emoji replaced. One backspace
+    /// right after it brings the typed word back.
     private struct Correction {
         let original: String
         let corrected: String
         let terminator: String
+        /// True when the backspace also stops the keyboard from changing the word again. A word
+        /// that the person replaced with its emoji was not wrong, so it is not learned.
+        var learnsOriginal = true
     }
 
     private var lastCorrection: Correction?
@@ -702,9 +706,10 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
     }
 
     /// Types an emoji of the candidate row. In Chinese the emoji takes the place of the first
-    /// Pinyin candidate and of the letters that candidate covers. In English the emoji follows
-    /// the word before the cursor with one space between the two, and the word stays as typed.
-    /// An emoji is not a mark, so it takes no space removal.
+    /// Pinyin candidate and of the letters that candidate covers. In English the emoji takes the
+    /// place of the word before the cursor, as on the iOS keyboard, and the space after the word
+    /// stays. One backspace right after it brings the word back, as after a correction. An
+    /// emoji is not a mark, so it takes no space removal.
     private func insertEmoji(_ emoji: String) {
         if !pinyinBuffer.isEmpty {
             guard let first = pinyinCandidates.first else { return }
@@ -715,11 +720,17 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
             refreshCandidates()
             return
         }
+        let before = document.textBeforeCursor
+        // The row shows English emoji only for the word of `wordForEmoji`, so a word is there.
+        guard let word = KeyboardTextLogic.wordForEmoji(before: before) else { return }
+        let terminator = before.hasSuffix(" ") ? " " : ""
+        let shown = String(before.dropLast(terminator.count).suffix(word.count))
         clearProofreadSuggestion()
-        lastCorrection = nil
         recentWord = nil
         previousInsertWasSpace = false
-        document.insertText(document.textBeforeCursor.hasSuffix(" ") ? emoji : " " + emoji)
+        deleteBackward(count: shown.count + terminator.count)
+        document.insertText(emoji + terminator)
+        lastCorrection = Correction(original: shown, corrected: emoji, terminator: terminator, learnsOriginal: false)
         updateAutoShift()
     }
 
@@ -1080,8 +1091,10 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
         guard document.textBeforeCursor.hasSuffix(typed) else { return false }
         deleteBackward(count: typed.count)
         document.insertText(correction.original)
-        for word in correction.original.split(separator: " ") {
-            spellChecker.learn(String(word))
+        if correction.learnsOriginal {
+            for word in correction.original.split(separator: " ") {
+                spellChecker.learn(String(word))
+            }
         }
         showNotice("Kept \(correction.original)")
         return true
