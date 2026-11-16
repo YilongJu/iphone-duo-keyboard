@@ -178,6 +178,11 @@ sequence of requests as in the keyboard:
   so after the person types or moves the cursor, the line stays as it is until the run ends.
 - At each write the space bar shows a short form of the same facts with a mark that turns, so
   the person sees that the run goes on even when the app does not show the line.
+- Every 10 requests, and before each load, the record gets a checkpoint of the running pair: the
+  requests done, the footprint and the memory still allowed. The line of a pair that runs again
+  or is skipped after a stop gives the last checkpoint, so the line says where the pair stopped.
+- `duo:speed` with a pair number, as in `duo:speed16` and a space, starts at that pair. The
+  pairs before it that did not end are skipped, and the start pair runs even after 2 stops.
 - `duo:speedreset` and a space deletes the record, so the next `duo:speed` starts at the first
   pair. A change of the pairs or the requests also starts a new record.
 - The first line of the run gives llama.cpp's build line, with the processor features of the

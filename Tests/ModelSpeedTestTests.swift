@@ -116,6 +116,12 @@ final class ModelSpeedTestTests: XCTestCase {
         // A second run that stopped during pair 2 again: two stops.
         try progress.append("start 2")
         XCTAssertEqual(try XCTUnwrap(try progress.earlierRuns()).stops, [2: 2])
+        // The last checkpoint of a stopped pair says where it stopped.
+        try progress.append("at 2 30 120.5 40.2")
+        XCTAssertEqual(try XCTUnwrap(try progress.earlierRuns()).lastPlace,
+                       [2: "after 30 requests, footprint 120.5 MB, still allowed 40.2 MB"])
+        try progress.append("at 2 -1")
+        XCTAssertEqual(try XCTUnwrap(try progress.earlierRuns()).lastPlace, [2: "during the load"])
         // A run that ended keeps its record.
         for line in ["end 2", "done"] { try progress.append(line) }
         let ended = try XCTUnwrap(try progress.earlierRuns())
@@ -163,6 +169,31 @@ final class ModelSpeedTestTests: XCTestCase {
         let third = await run()
         XCTAssertEqual(third.filter { $0.hasPrefix("resume      ") }, [])
         XCTAssertEqual(third.last, "done        2 pairs ran, 6 not downloaded, 0 failed")
+    }
+
+    /// A start pair skips the pairs before it that did not end, and a start pair outside the
+    /// catalog fails before the first pair.
+    func testAStartPairSkipsThePairsBeforeIt() async throws {
+        let models = FileManager.default.temporaryDirectory.appendingPathComponent("no-speed-models-\(UUID().uuidString)")
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent("speed-progress-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: folder) }
+        func run(from start: Int) async -> [String] {
+            var lines: [String] = []
+            let test = ModelSpeedTest(modelsFolder: models, runtimes: [.llamaProcessor], progressFolder: folder,
+                                      pauseSeconds: 0, coolingLimitSeconds: 0)
+            test.startPair = start
+            for await line in test.resultLines() { lines.append(line) }
+            return lines
+        }
+        // Of the 8 processor pairs, pairs 1 and 2 come before the start, pairs 3 to 7 are not
+        // downloaded, and pair 8 holds the bundled model.
+        let lines = await run(from: 3)
+        let report = lines.joined(separator: "
+")
+        XCTAssertEqual(lines.filter { $0.hasSuffix(": skipped: before the start pair 3") }.count, 2, report)
+        XCTAssertEqual(lines.last, "done        1 pairs ran, 5 not downloaded, 0 failed, 2 before the start pair", report)
+        let outside = await run(from: 9)
+        XCTAssertEqual(outside.last, "done        failed before the first pair: there is no pair 9, the pairs are 1 to 8")
     }
 
     /// A hold keeps the keyboard's model from loading until the hold ends.

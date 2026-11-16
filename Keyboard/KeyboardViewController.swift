@@ -50,6 +50,9 @@ final class KeyboardViewController: UIInputViewController {
         let speedProgress = support.appendingPathComponent("model-speed-progress", isDirectory: true)
         let speedTest = ModelSpeedTest(progressFolder: speedProgress)
         textController.speedResetMeasurer = ModelSpeedReset(progressFolder: speedProgress)
+        textController.speedTestStart = { [speedTest] start in
+            speedTest.startPair = start
+        }
         speedTest.keyboardLines = { [languageModel, reranker] in
             languageModel.reportLines(statistics: reranker.statistics)
         }

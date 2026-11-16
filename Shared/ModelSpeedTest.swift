@@ -73,6 +73,10 @@ final class ModelSpeedTest: LanguageModelMeasuring {
     let coolingLimitSeconds: Double
     /// Where the run is now.
     let status = ModelSpeedStatus()
+    /// The pair to start at, counting from 1, for the next run. The pairs before it that did not
+    /// end in an earlier run are skipped, and the start pair runs even after earlier stops. Nil
+    /// starts at the first pair.
+    var startPair: Int?
     private var running = false
 
     init(modelsFolder: URL? = nil, runtimes: Set<ModelSpeedCatalog.Runtime>? = nil, progressFolder: URL? = nil,
@@ -99,7 +103,7 @@ final class ModelSpeedTest: LanguageModelMeasuring {
         let folder = modelsFolder ?? ModelSpeedCatalog.sharedFolder()
         let bundledModel = Bundle(for: ModelSpeedTest.self)
             .path(forResource: BundledLanguageModelTest.modelResource, ofType: "gguf")
-        let runtimes = self.runtimes, progressFolder = self.progressFolder
+        let runtimes = self.runtimes, progressFolder = self.progressFolder, startPair = self.startPair
         let pauseSeconds = self.pauseSeconds, coolingLimitSeconds = self.coolingLimitSeconds
         let onRunEnd = self.onRunEnd
         let status = self.status
@@ -118,7 +122,7 @@ final class ModelSpeedTest: LanguageModelMeasuring {
                 ModelSpeedRun(
                     folder: folder, bundledModelPath: bundledModel, runtimes: runtimes, progressFolder: progressFolder,
                     pauseSeconds: pauseSeconds, coolingLimitSeconds: coolingLimitSeconds, status: status,
-                    emit: { innerContinuation.yield($0) }
+                    startPair: startPair, checkpoint: { _ in }, emit: { innerContinuation.yield($0) }
                 ).run()
                 innerContinuation.finish()
             }
@@ -255,7 +259,9 @@ final class FootprintSampler: @unchecked Sendable {
 }
 
 /// The record of the speed test in a folder, kept until "duo:speedreset" deletes the folder.
-/// `progress.txt` holds "run SIGNATURE" first, then "start N" and "end N" for each pair. Each
+/// `progress.txt` holds "run SIGNATURE" first, then "start N" and "end N" for each pair, and
+/// "at N DONE FOOTPRINT ALLOWED" checkpoints: the requests of pair N done so far (-1 while the
+/// model loads), the footprint and the memory still allowed in MB, so a stop leaves its place. Each
 /// `pair-N.txt` holds the result lines of pair N, written as the pair gives them, so a later
 /// run shows them again without running the pair.
 struct ModelSpeedProgress {
@@ -270,25 +276,44 @@ struct ModelSpeedProgress {
 
     func linesFile(_ index: Int) -> URL { folder.appendingPathComponent("pair-\(index).txt") }
 
-    /// The pairs that ended, and for each pair that started without an end the number of runs it
-    /// stopped. Nil when no record of the same pairs exists, so the run starts at the first pair.
-    func earlierRuns() throws -> (ended: Set<Int>, stops: [Int: Int])? {
+    /// The pairs that ended, for each pair that started without an end the number of runs it
+    /// stopped, and the last checkpoint of each such pair as text. Nil when no record of the same
+    /// pairs exists, so the run starts at the first pair.
+    func earlierRuns() throws -> (ended: Set<Int>, stops: [Int: Int], lastPlace: [Int: String])? {
         guard FileManager.default.fileExists(atPath: file.path) else { return nil }
         let lines = try String(contentsOf: file, encoding: .utf8).split(separator: "\n").map(String.init)
         guard lines.first == "run \(signature)" else { return nil }
-        var ended = Set<Int>(), starts: [Int: Int] = [:]
+        var ended = Set<Int>(), starts: [Int: Int] = [:], places: [Int: String] = [:]
         for line in lines.dropFirst() {
-            let parts = line.split(separator: " ")
-            guard parts.count == 2, let index = Int(parts[1]) else {
+            let parts = line.split(separator: " ").map(String.init)
+            guard parts.count >= 2, let index = Int(parts[1]) else {
                 throw ModelSpeedError("the progress file holds the line \"\(line)\"")
             }
-            switch parts[0] {
-            case "start": starts[index, default: 0] += 1
-            case "end": ended.insert(index)
+            switch (parts[0], parts.count) {
+            case ("start", 2):
+                starts[index, default: 0] += 1
+                places[index] = "before the load"
+            case ("end", 2): ended.insert(index)
+            case ("at", 3), ("at", 5):
+                guard let done = Int(parts[2]) else {
+                    throw ModelSpeedError("the progress file holds the line \"\(line)\"")
+                }
+                var place = done < 0 ? "during the load" : "after \(done) requests"
+                if parts.count == 5 {
+                    place += ", footprint \(parts[3]) MB, still allowed \(parts[4]) MB"
+                }
+                places[index] = place
             default: throw ModelSpeedError("the progress file holds the line \"\(line)\"")
             }
         }
-        return (ended, starts.filter { !ended.contains($0.key) })
+        let open = starts.filter { !ended.contains($0.key) }
+        return (ended, open, places.filter { open[$0.key] != nil })
+    }
+
+    /// The checkpoint line of pair `index` after `done` requests (-1 while the model loads).
+    static func checkpoint(_ index: Int, done: Int) -> String {
+        guard let memory = ProcessMemory.now() else { return "at \(index) \(done)" }
+        return String(format: "at %d %d %.1f %.1f", index, done, memory.footprintMB, memory.availableMB)
     }
 
     /// Deletes every earlier record and starts the record of a new run.
@@ -455,6 +480,10 @@ struct ModelSpeedRun {
     let pauseSeconds: Double
     let coolingLimitSeconds: Double
     let status: ModelSpeedStatus
+    /// The pair to start at, counting from 1, or nil for the first pair.
+    let startPair: Int?
+    /// Writes a checkpoint of the running pair: the requests done, or -1 while the model loads.
+    let checkpoint: (Int) -> Void
     let emit: (String) -> Void
 
     private static var bundle: Bundle { Bundle(for: ModelSpeedBundleToken.self) }
@@ -495,7 +524,7 @@ struct ModelSpeedRun {
         emit("Core ML     devices of this machine: \(CoreMLComputePlan.availableDevices())")
         let pairs = catalog.pairs.filter { runtimes?.contains($0.runtime) ?? true }
         var progress: ModelSpeedProgress?
-        var earlierRuns: (ended: Set<Int>, stops: [Int: Int])?
+        var earlierRuns: (ended: Set<Int>, stops: [Int: Int], lastPlace: [Int: String])?
         do {
             if let progressFolder {
                 let record = ModelSpeedProgress(
@@ -512,9 +541,16 @@ struct ModelSpeedRun {
             emit("resume      \(earlierRuns.ended.count) pairs ended in earlier runs, and their lines follow from the "
                  + "record. Type duo:speedreset and a space to delete the record and start at the first pair.")
         }
+        if let startPair {
+            guard (1...pairs.count).contains(startPair) else {
+                emit("done        failed before the first pair: there is no pair \(startPair), the pairs are 1 to \(pairs.count)")
+                return
+            }
+            emit("start       pair \(startPair): the pairs before it that did not end in earlier runs are skipped")
+        }
         let sampler = FootprintSampler()
         defer { sampler.stop() }
-        var ran = 0, missing = 0, failed = 0, earlier = 0, skipped = 0
+        var ran = 0, missing = 0, failed = 0, earlier = 0, skipped = 0, beforeStart = 0
         for (index, pair) in pairs.enumerated() {
             let title = "pair        \(index + 1)/\(pairs.count) \(pair.name), \(pair.model), \(pair.runtime.rawValue)"
             if let earlierRuns, let progress, earlierRuns.ended.contains(index) {
@@ -527,9 +563,15 @@ struct ModelSpeedRun {
                 earlier += 1
                 continue
             }
+            if let startPair, index + 1 < startPair {
+                emit("\(title): skipped: before the start pair \(startPair)")
+                beforeStart += 1
+                continue
+            }
             let stops = earlierRuns?.stops[index] ?? 0
-            if stops >= ModelSpeedProgress.stopLimit {
-                emit("\(title): skipped: \(stops) earlier runs stopped during this pair")
+            let lastPlace = earlierRuns?.lastPlace[index].map { "; the last stop came \($0)" } ?? ""
+            if stops >= ModelSpeedProgress.stopLimit, index + 1 != startPair {
+                emit("\(title): skipped: \(stops) earlier runs stopped during this pair\(lastPlace)")
                 skipped += 1
                 continue
             }
@@ -546,6 +588,14 @@ struct ModelSpeedRun {
             let pairRun = ModelSpeedRun(
                 folder: folder, bundledModelPath: bundledModelPath, runtimes: runtimes, progressFolder: progressFolder,
                 pauseSeconds: pauseSeconds, coolingLimitSeconds: coolingLimitSeconds, status: status,
+                startPair: startPair,
+                checkpoint: { done in
+                    do {
+                        try progress?.append(ModelSpeedProgress.checkpoint(index, done: done))
+                    } catch {
+                        self.emit("failed      the progress file: \(error)")
+                    }
+                },
                 emit: pairEmit)
             var downloaded = true
             do {
@@ -565,7 +615,7 @@ struct ModelSpeedRun {
                 }
             }
             if stops > 0 {
-                pairEmit("\(title): runs again: an earlier run stopped during this pair")
+                pairEmit("\(title): runs again: \(stops) earlier runs stopped during this pair\(lastPlace)")
             }
             status.set(pair: index + 1, of: pairs.count, step: .starting)
             let result = pairRun.runPair(
@@ -586,7 +636,8 @@ struct ModelSpeedRun {
         }
         emit("done        \(ran) pairs ran, \(missing) not downloaded, \(failed) failed"
              + (earlier > 0 ? ", \(earlier) ended in earlier runs" : "")
-             + (skipped > 0 ? ", \(skipped) skipped after \(ModelSpeedProgress.stopLimit) stops" : ""))
+             + (skipped > 0 ? ", \(skipped) skipped after \(ModelSpeedProgress.stopLimit) stops" : "")
+             + (beforeStart > 0 ? ", \(beforeStart) before the start pair" : ""))
     }
 
     private enum PairResult { case ran, failed, missing }
@@ -769,6 +820,7 @@ struct ModelSpeedRun {
         }
         let before = ProcessMemory.now()
         _ = sampler.take()
+        checkpoint(-1)
         var started = Self.now()
         let firstScorer = try open()
         let first = Self.now() - started
@@ -783,6 +835,7 @@ struct ModelSpeedRun {
         var timed = Requests()
         for (index, request) in requests.enumerated() {
             status.setRequest(index, of: requests.count)
+            if index % 10 == 0 { checkpoint(index) }
             let copies = request.candidates.map { strdup($0) }
             defer { copies.forEach { free($0) } }
             let pointers = copies.map { UnsafePointer<CChar>($0) }
@@ -832,6 +885,7 @@ struct ModelSpeedRun {
         let resident = Self.residentText(url.appendingPathComponent("weights/weight.bin").path)
         let before = ProcessMemory.now()
         _ = sampler.take()
+        checkpoint(-1)
         // Core ML hands out Objective-C objects that stay alive until their autorelease pool
         // drains. This thread has no pool of its own, so each step gets one, and the footprint
         // shows only what the model keeps.
@@ -851,6 +905,7 @@ struct ModelSpeedRun {
         var calls = 0, padded = 0, tokens = 0
         for (index, request) in requests.enumerated() {
             status.setRequest(index, of: requests.count)
+            if index % 10 == 0 { checkpoint(index) }
             let processorStarted = duo_speed_process_milliseconds()
             let requestStarted = Self.now()
             let result = try autoreleasepool { try scorer.score(request) }

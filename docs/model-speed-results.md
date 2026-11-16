@@ -290,5 +290,7 @@ For each pair, from the lines of `duo:speed`:
    of 23 pairs takes 1.5 to 2 hours.
 5. When the keyboard goes away before the "done" line, type `duo:speed` and a space again. The
    keyboard types the kept lines of the pairs that ended, then runs the pair that stopped again
-   and goes on. To start over at the first pair, type `duo:speedreset` and a space first.
+   and goes on. To start at a given pair, type the number after the trigger, as in
+   `duo:speed16` and a space. To start over at the first pair, type `duo:speedreset` and a
+   space first.
 6. Copy the lines from the note and send them back.

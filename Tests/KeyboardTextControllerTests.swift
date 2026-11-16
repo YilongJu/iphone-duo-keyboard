@@ -224,6 +224,26 @@ final class KeyboardTextControllerTests: XCTestCase {
         XCTAssertEqual(speed.runs, 2)
     }
 
+    func testANumberAfterTheSpeedTriggerSetsTheStartPair() async {
+        makeController(before: "")
+        let speed = FakeLanguageModelMeasurer()
+        speed.lines = ["done        fake"]
+        controller.speedTestMeasurer = speed
+        var starts: [Int?] = []
+        controller.speedTestStart = { starts.append($0) }
+        type("duo:speed16 ")
+        await controller.languageModelTask?.value
+        type("
+duo:speed ")
+        await controller.languageModelTask?.value
+        XCTAssertEqual(speed.runs, 2)
+        XCTAssertEqual(starts, [16, nil])
+        XCTAssertEqual(document.text, "duo:speed16 
+done        fake
+duo:speed 
+done        fake")
+    }
+
     func testTheResetTriggerRunsTheResetAndNotTheSpeedTest() async {
         makeController(before: "")
         let speed = FakeLanguageModelMeasurer()

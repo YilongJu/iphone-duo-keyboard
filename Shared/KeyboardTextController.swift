@@ -276,6 +276,8 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
     var speedTestMeasurer: LanguageModelMeasuring?
     /// Deletes the record of the speed test, so the next speed test starts at the first pair.
     var speedResetMeasurer: LanguageModelMeasuring?
+    /// Sets the pair the next speed test starts at: the number after "duo:speed", or nil.
+    var speedTestStart: ((Int?) -> Void)?
     /// The run of the test that is under way now. The tests wait for it.
     private(set) var languageModelTask: Task<Void, Never>?
     /// The time between two writes of the progress line of a running test.
@@ -636,12 +638,25 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
         {
             return true
         }
-        if let speedTestMeasurer,
-            startTest(trigger: Self.speedTestTrigger, measurer: speedTestMeasurer, notice: "Speed test is running")
-        {
-            return true
+        // "duo:speed" may carry the pair to start at, as in "duo:speed16".
+        if let speedTestMeasurer, let found = speedTrigger() {
+            if languageModelTask == nil { speedTestStart?(found.start) }
+            if startTest(trigger: found.trigger, measurer: speedTestMeasurer, notice: "Speed test is running") {
+                return true
+            }
         }
         return false
+    }
+
+    /// The speed test trigger at the end of the text before the cursor, with the start pair when
+    /// one or two digits follow "duo:speed". Nil when the text does not end with the trigger.
+    private func speedTrigger() -> (trigger: String, start: Int?)? {
+        let before = document.textBeforeCursor.lowercased()
+        let digits = String(before.reversed().prefix { $0.isASCII && $0.isNumber }.reversed())
+        guard digits.count <= 2 else { return nil }
+        let trigger = Self.speedTestTrigger + digits
+        guard before.hasSuffix(trigger) else { return nil }
+        return (trigger, digits.isEmpty ? nil : Int(digits))
     }
 
     /// Starts `measurer` when `trigger` stands right before the cursor as a word of its own.
