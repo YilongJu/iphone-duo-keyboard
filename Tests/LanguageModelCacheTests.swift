@@ -13,7 +13,7 @@ final class LanguageModelCacheTests: XCTestCase {
 
     private func model() throws -> KeyboardLanguageModel {
         if let checked = Self.checked { return checked }
-        let model = KeyboardLanguageModel.bundled(cacheCheckTolerance: 0)
+        let model = KeyboardLanguageModel.bundled(device: DUO_LM_DEVICE_CPU, cacheCheckTolerance: 0)
         do {
             try model.loadNow()
         } catch let error as LanguageModelError {

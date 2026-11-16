@@ -10,7 +10,7 @@ final class LanguageModelScorerTests: XCTestCase {
 
     private func model() throws -> KeyboardLanguageModel {
         if let loaded = Self.loaded { return loaded }
-        let model = KeyboardLanguageModel.bundled(cacheCheckTolerance: nil)
+        let model = KeyboardLanguageModel.bundled(device: DUO_LM_DEVICE_CPU, cacheCheckTolerance: nil)
         do {
             try model.loadNow()
         } catch let error as LanguageModelError {
@@ -123,7 +123,7 @@ final class LanguageModelScorerTests: XCTestCase {
     }
 
     func testAMemoryWarningFreesTheModelAndALaterLoadBringsItBack() throws {
-        let model = KeyboardLanguageModel.bundled(cacheCheckTolerance: nil)
+        let model = KeyboardLanguageModel.bundled(device: DUO_LM_DEVICE_CPU, cacheCheckTolerance: nil)
         var events: [LanguageModelEvent] = []
         model.onEvent = { events.append($0) }
         try model.loadNow()
@@ -146,7 +146,7 @@ final class LanguageModelScorerTests: XCTestCase {
         var statistics = RerankStatistics()
         statistics.recordRead(milliseconds: 21.5, changed: false)
         let lines = model.reportLines(statistics: statistics)
-        XCTAssertTrue(lines[0].hasPrefix("reranker    smollm2-lora-domain-s100-seed1.Q4_K_M, 2 threads, loaded in "), lines[0])
+        XCTAssertTrue(lines[0].hasPrefix("reranker    smollm2-lora-domain-s100-seed1.Q4_K_M, processor, 2 threads, loaded in "), lines[0])
         XCTAssertTrue(lines.contains { $0.contains("footprint") && $0.contains("before the load") }, "\(lines)")
         XCTAssertTrue(lines.contains { $0.contains("1 corrections read by the model") && $0.contains("mean 21.5 ms") }, "\(lines)")
         XCTAssertTrue(lines.allSatisfy { $0.count > 12 && $0.prefix(12).last == " " }, "\(lines)")

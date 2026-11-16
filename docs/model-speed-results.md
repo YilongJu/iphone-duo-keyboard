@@ -37,9 +37,16 @@ machine.
    at Q8_0 in 97.7% to 99.4% of the requests. Its 4-bit weights agree in 84.6% to 91.8%, about as
    often as llama.cpp's own 4-bit files (84.0% to 97.7%). The fixed form, for the Neural Engine,
    gives the same agreement as the flexible form for four models and 0.4 points more for Qwen3.
-5. The open questions are the GPU and the Neural Engine of the phone. Metal (llama.cpp b4846),
-   Core ML on the GPU and Core ML on the Neural Engine all run on the phone with the `duo:speed`
-   command, for every model of the shortlist. Only a phone run gives their delay and memory.
+5. On the iPhone Duo, only llama.cpp b4846 on the GPU (Metal) meets the delay target. The
+   keyboard's own 135M file takes 18.9 ms in the median and 22.9 ms at the 95th percentile for
+   the candidate part, against 57.9 ms on the processor. Its highest footprint is 70.7 MB, with
+   106 MB still allowed. Its top candidate equals the desktop's in 99.2% of the requests. The
+   first load takes 8.2 s, while Metal builds its library. The larger models on Metal take 31 to
+   50 ms. The keyboard therefore runs its model on the GPU.
+6. Core ML does not fit the keyboard. On the GPU, the 135M model takes 39.2 ms and grows the
+   footprint to 1249 MB, so it ran only in the app. On the Neural Engine it takes 204.2 ms, and
+   the compute plan puts 70.4% of the cost on the processor. Its footprint reaches 253 MB during
+   the requests and 354 MB during the loads, above the keyboard's limit of about 177 MB.
 
 ```mermaid
 ---

@@ -8,14 +8,14 @@ import os
 final class LanguageModelScorer: @unchecked Sendable {
     private let handle: OpaquePointer
 
-    /// Loads the model with the reuse mode `reuse` of the cache. With `checkTolerance` the scorer
-    /// also reads every request again from an empty cache and fails a request whose numbers
-    /// differ by more (`duo_lm_scorer_set_check`), for the tests. The error holds the reason
-    /// when the model does not load.
-    init(modelPath: String, threads: Int, reuse: duo_lm_reuse, checkTolerance: Double?) throws {
+    /// Loads the model on `device` with the reuse mode `reuse` of the cache. With
+    /// `checkTolerance` the scorer also reads every request again from an empty cache and fails a
+    /// request whose numbers differ by more (`duo_lm_scorer_set_check`), for the tests. The error
+    /// holds the reason when the model does not load.
+    init(modelPath: String, threads: Int, reuse: duo_lm_reuse, device: duo_lm_device, checkTolerance: Double?) throws {
         let errorSize = Int(DUO_LM_ERROR_SIZE)
         var error = [CChar](repeating: 0, count: errorSize)
-        guard let opened = duo_lm_scorer_open(modelPath, Int32(threads), reuse, &error, errorSize) else {
+        guard let opened = duo_lm_scorer_open_on(modelPath, Int32(threads), reuse, device, &error, errorSize) else {
             throw LanguageModelError(reason: String(cString: error))
         }
         if let checkTolerance, duo_lm_scorer_set_check(opened, checkTolerance, &error, errorSize) != 1 {
@@ -129,12 +129,18 @@ protocol LanguageModelLoading: AnyObject {
 /// The language model of the English corrections: the SmolLM2-135M fine-tune of the bundle,
 /// loaded once and kept loaded until a memory warning frees it.
 ///
+/// The keyboard and the app run the model on the GPU through llama.cpp's Metal device. On the
+/// iPhone Duo the candidate part takes 18.9 ms in the median there, against 57.9 ms on the
+/// processor (docs/model-speed-results.md). The tests run on the processor, because llama.cpp's
+/// Metal device does not load the model in the simulator.
+///
 /// The keyboard asks for a load when it appears in English and when the person switches to
 /// English, so Chinese typing never loads the model. A correction made before the model is
 /// ready keeps the engine's choice. A model that does not load is named on the space bar.
 @MainActor
 final class KeyboardLanguageModel: CandidateScoring, LanguageModelLoading {
-    /// Threads of each call of the model, the count measured on the iPhone Duo.
+    /// Threads of each call of the model, the count measured on the iPhone Duo. On the GPU the
+    /// processor runs only the operations that the GPU device refuses.
     nonisolated static let threads = 2
 
     /// The rule of the bundled model: the setting of scripts/lm-domain/candidate.json, which the
@@ -178,6 +184,8 @@ final class KeyboardLanguageModel: CandidateScoring, LanguageModelLoading {
     /// The model file, or nil when the bundle does not hold it.
     let modelPath: String?
     let modelName: String
+    /// The device that runs the model: the GPU in the keyboard and the app, the processor in the tests.
+    let device: duo_lm_device
     /// The tolerance of the check of the cache, or nil without the check. Only tests set it.
     let cacheCheckTolerance: Double?
     /// Receives each change of the model on the main thread.
@@ -189,22 +197,25 @@ final class KeyboardLanguageModel: CandidateScoring, LanguageModelLoading {
     /// buffers for scores exist.
     private(set) var afterFirstScore: ProcessMemory?
 
-    init(modelPath: String?, modelName: String, cacheCheckTolerance: Double?) {
+    init(modelPath: String?, modelName: String, device: duo_lm_device, cacheCheckTolerance: Double?) {
         self.modelPath = modelPath
         self.modelName = modelName
+        self.device = device
         self.cacheCheckTolerance = cacheCheckTolerance
     }
 
     /// The model file of the bundle. scripts/ci/fetch_language_model.sh downloads it before the build.
     /// The keyboard passes nil: the check of the cache reads every request twice.
-    static func bundled(cacheCheckTolerance: Double?) -> KeyboardLanguageModel {
+    static func bundled(device: duo_lm_device, cacheCheckTolerance: Double?) -> KeyboardLanguageModel {
         let name = BundledLanguageModelTest.modelResource
         return KeyboardLanguageModel(
             modelPath: Bundle(for: KeyboardLanguageModel.self).path(forResource: name, ofType: "gguf"),
-            modelName: name, cacheCheckTolerance: cacheCheckTolerance)
+            modelName: name, device: device, cacheCheckTolerance: cacheCheckTolerance)
     }
 
-    private nonisolated static func open(path: String?, name: String, checkTolerance: Double?) -> LanguageModelLoadOutcome {
+    private nonisolated static func open(
+        path: String?, name: String, device: duo_lm_device, checkTolerance: Double?
+    ) -> LanguageModelLoadOutcome {
         let before = ProcessMemory.now()
         let started = ProcessInfo.processInfo.systemUptime
         guard let path else {
@@ -214,7 +225,7 @@ final class KeyboardLanguageModel: CandidateScoring, LanguageModelLoading {
         }
         do {
             let scorer = try LanguageModelScorer(
-                modelPath: path, threads: threads, reuse: reuse, checkTolerance: checkTolerance)
+                modelPath: path, threads: threads, reuse: reuse, device: device, checkTolerance: checkTolerance)
             let milliseconds = (ProcessInfo.processInfo.systemUptime - started) * 1000
             return LanguageModelLoadOutcome(
                 scorer: scorer, error: nil,
@@ -268,9 +279,10 @@ final class KeyboardLanguageModel: CandidateScoring, LanguageModelLoading {
         let path = modelPath
         let name = modelName
         let checkTolerance = cacheCheckTolerance
+        let device = device
         // A new thread gets a stack of 512 KB, and llama.cpp gets 2 MB here, as in the test.
         let thread = Thread { @Sendable in
-            let outcome = KeyboardLanguageModel.open(path: path, name: name, checkTolerance: checkTolerance)
+            let outcome = KeyboardLanguageModel.open(path: path, name: name, device: device, checkTolerance: checkTolerance)
             Task { @MainActor in
                 self.finishLoad(outcome, generation: loadGeneration)
                 self.endRunningLoad()
@@ -288,7 +300,7 @@ final class KeyboardLanguageModel: CandidateScoring, LanguageModelLoading {
         if state == .ready { return }
         generation += 1
         state = .loading
-        let outcome = Self.open(path: modelPath, name: modelName, checkTolerance: cacheCheckTolerance)
+        let outcome = Self.open(path: modelPath, name: modelName, device: device, checkTolerance: cacheCheckTolerance)
         finishLoad(outcome, generation: generation)
         if let error = outcome.error {
             throw LanguageModelError(reason: error)
@@ -368,7 +380,13 @@ final class KeyboardLanguageModel: CandidateScoring, LanguageModelLoading {
         case .loadFailed(let reason): stateText = "load failed: \(reason)"
         case .freed(let reason): stateText = "freed: \(reason)"
         }
-        lines.append("reranker    \(modelName), \(Self.threads) threads, \(stateText)")
+        let deviceText: String
+        switch device {
+        case DUO_LM_DEVICE_GPU: deviceText = "GPU (Metal)"
+        case DUO_LM_DEVICE_CPU: deviceText = "processor"
+        default: preconditionFailure("an unknown device \(device.rawValue)")
+        }
+        lines.append("reranker    \(modelName), \(deviceText), \(Self.threads) threads, \(stateText)")
         if let load = lastLoad, let before = load.before, let after = load.after {
             var memory = String(
                 format: "reranker    footprint %.1f MB before the load, %.1f MB after it", before.footprintMB,

@@ -216,7 +216,7 @@ final class ModelSpeedTestTests: XCTestCase {
 
     /// A hold keeps the keyboard's model from loading until the hold ends.
     func testAHoldKeepsTheKeyboardModelFromLoading() async throws {
-        let model = KeyboardLanguageModel(modelPath: nil, modelName: "none", cacheCheckTolerance: nil)
+        let model = KeyboardLanguageModel(modelPath: nil, modelName: "none", device: DUO_LM_DEVICE_CPU, cacheCheckTolerance: nil)
         var ready = false
         model.hold(reason: "a test") { ready = true }
         XCTAssertTrue(ready)

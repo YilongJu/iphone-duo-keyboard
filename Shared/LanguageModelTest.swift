@@ -30,8 +30,9 @@ extension LanguageModelMeasuring {
 /// Before the test's own lines come the lines of `keyboardLines`, which describe that model in
 /// this process. Each starts with "reranker" or "memory":
 ///
-///   reranker    the model, its threads, and its state: loaded with the time of the load, not
-///               loaded, loading, freed with the reason, or "load failed" with the reason
+///   reranker    the model, its device (GPU or processor), its threads, and its state: loaded
+///               with the time of the load, not loaded, loading, freed with the reason, or
+///               "load failed" with the reason
 ///   reranker    the footprint right before the load, right after it, and right after the first
 ///               correction that the model read, when the model's buffers for scores exist
 ///   reranker    the corrections the model read and the time each one added to its space

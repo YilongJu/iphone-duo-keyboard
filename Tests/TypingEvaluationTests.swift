@@ -113,7 +113,7 @@ final class TypingEvaluationTests: XCTestCase {
 
     private func loadedModel() throws -> KeyboardLanguageModel {
         if let model = Self.model { return model }
-        let model = KeyboardLanguageModel.bundled(cacheCheckTolerance: nil)
+        let model = KeyboardLanguageModel.bundled(device: DUO_LM_DEVICE_CPU, cacheCheckTolerance: nil)
         do {
             try model.loadNow()
         } catch let error as LanguageModelError {
