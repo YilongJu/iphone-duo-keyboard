@@ -577,4 +577,17 @@ enum KeyboardTextLogic {
         @unknown default: return "return.left"
         }
     }
+
+    /// True when the return key does the field's action, such as search or send, in place of a
+    /// line break. The keyboard draws that return key blue.
+    static func returnKeyPerformsAction(for type: UIReturnKeyType) -> Bool {
+        switch type {
+        case .default: return false
+        case .go, .google, .join, .next, .route, .search, .send, .yahoo, .done, .emergencyCall, .continue:
+            return true
+        // Only `.default` types a line break. A return key type that a later iOS adds names an
+        // action too, as every type other than `.default` does, so it counts as an action.
+        @unknown default: return true
+        }
+    }
 }
