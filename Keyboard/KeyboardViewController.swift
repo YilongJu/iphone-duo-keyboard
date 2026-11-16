@@ -147,8 +147,7 @@ final class KeyboardViewController: UIInputViewController {
 
     private func refreshFromDocument() {
         // `.default` is the value UIKit documents for a text field that does not set a return key type.
-        let returnKeyType = textDocumentProxy.returnKeyType ?? .default
-        keyboardView.returnKeySymbol = KeyboardTextLogic.returnKeySymbol(for: returnKeyType)
+        keyboardView.returnKeyType = textDocumentProxy.returnKeyType ?? .default
         textController.documentDidChange()
     }
 }

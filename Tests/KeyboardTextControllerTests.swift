@@ -1423,3 +1423,238 @@ final class KeyboardLayoutTests: XCTestCase {
         XCTAssertEqual(leftHalf(5).last, .space)
     }
 }
+
+/// The return key of a field whose return key does an action, such as search or send, is blue
+/// with a white symbol. The return key of a field that types a line break keeps the gray of the
+/// other function keys. The tests read each color in light mode and in dark mode.
+@MainActor
+final class ReturnKeyColorTests: XCTestCase {
+    /// Every return key type of today that names an action. Only `.default` types a line break.
+    private let actionTypes: [UIReturnKeyType] = [
+        .go, .google, .join, .next, .route, .search, .send, .yahoo, .done, .emergencyCall, .continue,
+    ]
+
+    /// A return key type that iOS does not have today. A later iOS can add one.
+    private var laterType: UIReturnKeyType {
+        get throws { try XCTUnwrap(UIReturnKeyType(rawValue: 1000)) }
+    }
+
+    private let layers: [KeyboardLayer] = [.letters, .symbols, .more]
+
+    /// The keyboard width of the folded phone, of the open phone in portrait and of the open
+    /// phone in landscape, in points, with the layout that each width gets.
+    private let widths: [(CGFloat, LayoutStyle)] = [(466, .compact), (669, .wide), (951, .split)]
+
+    private func makeView(width: CGFloat) -> KeyboardView {
+        let height = KeyboardView.preferredHeight(
+            forWidth: width, compactHeight: false, device: .phone, landscape: false)
+        let view = KeyboardView(frame: CGRect(x: 0, y: 0, width: width, height: height))
+        view.setNeedsLayout()
+        view.layoutIfNeeded()
+        return view
+    }
+
+    /// The return key on screen. Each layer of each layout has one.
+    private func returnKey(of view: KeyboardView, file: StaticString = #filePath, line: UInt = #line) throws -> KeyView {
+        let keys = view.subviews.compactMap { $0 as? KeyView }.filter { $0.key.kind == .returnKey && !$0.isHidden }
+        XCTAssertEqual(keys.count, 1, "return keys on the layer", file: file, line: line)
+        return try XCTUnwrap(keys.first, file: file, line: line)
+    }
+
+    private struct NotRGB: Error {
+        let color: UIColor
+    }
+
+    private func resolved(_ color: UIColor?, _ style: UIUserInterfaceStyle) throws -> UIColor {
+        try XCTUnwrap(color).resolvedColor(with: UITraitCollection(userInterfaceStyle: style))
+    }
+
+    /// The red, green, blue and alpha parts of a color in one appearance, rounded to 3 decimals.
+    private func parts(_ color: UIColor?, _ style: UIUserInterfaceStyle) throws -> [Double] {
+        let color = try resolved(color, style)
+        var red: CGFloat = 0, green: CGFloat = 0, blue: CGFloat = 0, alpha: CGFloat = 0
+        guard color.getRed(&red, green: &green, blue: &blue, alpha: &alpha) else { throw NotRGB(color: color) }
+        return [red, green, blue, alpha].map { (Double($0) * 1000).rounded() / 1000 }
+    }
+
+    /// The hue, the saturation and the brightness of a color in one appearance.
+    private func hsb(_ color: UIColor?, _ style: UIUserInterfaceStyle) throws -> [CGFloat] {
+        let color = try resolved(color, style)
+        var hue: CGFloat = 0, saturation: CGFloat = 0, brightness: CGFloat = 0, alpha: CGFloat = 0
+        guard color.getHue(&hue, saturation: &saturation, brightness: &brightness, alpha: &alpha) else {
+            throw NotRGB(color: color)
+        }
+        return [hue, saturation, brightness]
+    }
+
+    private func symbolView(of key: KeyView, file: StaticString = #filePath, line: UInt = #line) throws -> UIImageView {
+        try XCTUnwrap(
+            key.subviews.compactMap { $0 as? UIImageView }.first { $0.image != nil }, "the key shows no symbol",
+            file: file, line: line)
+    }
+
+    private let appearances: [(UIUserInterfaceStyle, String)] = [(.light, "light"), (.dark, "dark")]
+
+    /// Checks that a return key is system blue with a white symbol, in light mode and in dark mode.
+    private func assertActionLook(
+        _ key: KeyView, _ context: String, file: StaticString = #filePath, line: UInt = #line
+    ) throws {
+        let symbolColor = try symbolView(of: key, file: file, line: line).tintColor
+        for (style, name) in appearances {
+            XCTAssertEqual(
+                try parts(key.drawnColor, style), try parts(.systemBlue, style),
+                "key color, \(context), \(name) mode", file: file, line: line)
+            XCTAssertEqual(
+                try parts(symbolColor, style), try parts(.white, style),
+                "symbol color, \(context), \(name) mode", file: file, line: line)
+        }
+    }
+
+    /// Checks that a return key has the gray of the function keys and the symbol in the text
+    /// color, in light mode and in dark mode. This look was the return key's look before the
+    /// blue key.
+    private func assertLineBreakLook(
+        _ key: KeyView, _ context: String, file: StaticString = #filePath, line: UInt = #line
+    ) throws {
+        let symbolColor = try symbolView(of: key, file: file, line: line).tintColor
+        for (style, name) in appearances {
+            XCTAssertEqual(
+                try parts(key.drawnColor, style), try parts(KeyColors.function, style),
+                "key color, \(context), \(name) mode", file: file, line: line)
+            XCTAssertEqual(
+                try parts(symbolColor, style), try parts(KeyColors.text, style),
+                "symbol color, \(context), \(name) mode", file: file, line: line)
+        }
+    }
+
+    func testOnlyTheDefaultReturnKeyTypeTypesALineBreak() throws {
+        XCTAssertFalse(KeyboardTextLogic.returnKeyPerformsAction(for: .default))
+        for type in actionTypes {
+            XCTAssertTrue(KeyboardTextLogic.returnKeyPerformsAction(for: type), "return key type \(type.rawValue)")
+        }
+        // A return key type of a later iOS names an action too.
+        let later = try laterType
+        XCTAssertTrue(KeyboardTextLogic.returnKeyPerformsAction(for: later))
+    }
+
+    func testTheReturnKeyOfAnActionFieldIsBlueOnEveryLayerOfEveryLayout() throws {
+        try XCTSkipUnless(KeyboardDevice.current == .phone, "An iPad chooses its layout by the orientation of the screen")
+        let types = try actionTypes + [laterType]
+        for (width, style) in widths {
+            let view = makeView(width: width)
+            XCTAssertEqual(view.style, style)
+            // The field's type comes first and the layer after, so each new layer starts blue.
+            view.returnKeyType = .search
+            for layer in layers {
+                view.show(layer: layer)
+                view.layoutIfNeeded()
+                try assertActionLook(returnKey(of: view), "\(style) \(layer), search")
+                for type in types {
+                    view.returnKeyType = type
+                    try assertActionLook(returnKey(of: view), "\(style) \(layer), return key type \(type.rawValue)")
+                }
+                view.returnKeyType = .default
+                try assertLineBreakLook(returnKey(of: view), "\(style) \(layer), default")
+                view.returnKeyType = .search
+            }
+        }
+    }
+
+    func testTheReturnKeyOfALineBreakFieldKeepsItsGrayLook() throws {
+        try XCTSkipUnless(KeyboardDevice.current == .phone, "An iPad chooses its layout by the orientation of the screen")
+        for (width, style) in widths {
+            let view = makeView(width: width)
+            XCTAssertEqual(view.returnKeyType, .default)
+            for layer in layers {
+                view.show(layer: layer)
+                view.layoutIfNeeded()
+                let key = try returnKey(of: view)
+                try assertLineBreakLook(key, "\(style) \(layer)")
+                // A pressed gray function key takes the color of a letter key, as before.
+                let touch = FakeTouch(at: CGPoint(x: key.hitFrame.midX, y: key.hitFrame.midY))
+                view.touchesBegan([touch], with: nil)
+                XCTAssertTrue(key.isHighlighted)
+                for (appearance, name) in appearances {
+                    XCTAssertEqual(
+                        try parts(key.drawnColor, appearance), try parts(KeyColors.character, appearance),
+                        "pressed key color, \(style) \(layer), \(name) mode")
+                }
+                view.touchesEnded([touch], with: nil)
+                try assertLineBreakLook(key, "\(style) \(layer), after the lift")
+            }
+        }
+    }
+
+    func testAPressedBlueReturnKeyIsASlightlyDarkerBlue() throws {
+        for width: CGFloat in [466, 669] {
+            let view = makeView(width: width)
+            view.returnKeyType = .send
+            let key = try returnKey(of: view)
+            let touch = FakeTouch(at: CGPoint(x: key.hitFrame.midX, y: key.hitFrame.midY))
+            view.touchesBegan([touch], with: nil)
+            XCTAssertTrue(key.isHighlighted)
+            let symbolColor = try symbolView(of: key).tintColor
+            for (style, name) in appearances {
+                let blue = try hsb(.systemBlue, style)
+                let pressed = try hsb(key.drawnColor, style)
+                // The same blue, a little darker: the hue and the saturation stay, and the
+                // brightness falls by more than 0.05 and by less than 30 percent.
+                XCTAssertEqual(pressed[0], blue[0], accuracy: 0.01, "hue, width \(width), \(name) mode")
+                XCTAssertEqual(pressed[1], blue[1], accuracy: 0.02, "saturation, width \(width), \(name) mode")
+                XCTAssertLessThan(pressed[2], blue[2] - 0.05, "brightness, width \(width), \(name) mode")
+                XCTAssertGreaterThan(pressed[2], blue[2] * 0.7, "brightness, width \(width), \(name) mode")
+                XCTAssertEqual(try parts(symbolColor, style), try parts(.white, style), "symbol color, \(name) mode")
+            }
+            view.touchesEnded([touch], with: nil)
+            XCTAssertFalse(key.isHighlighted)
+            try assertActionLook(key, "width \(width), after the lift")
+        }
+    }
+
+    func testTheReturnKeyFollowsTheFieldWhenTheFieldChanges() throws {
+        let view = makeView(width: 669)
+        // A new keyboard has a field that types a line break, as a field of the Notes app does.
+        try assertLineBreakLook(returnKey(of: view), "a new keyboard")
+        XCTAssertEqual(try returnKey(of: view).shownSymbolName, "return.left")
+        // The person moves to a search field.
+        view.returnKeyType = .search
+        try assertActionLook(returnKey(of: view), "a search field")
+        XCTAssertEqual(try returnKey(of: view).shownSymbolName, "magnifyingglass")
+        // The person moves back to the notes field.
+        view.returnKeyType = .default
+        try assertLineBreakLook(returnKey(of: view), "the notes field again")
+        XCTAssertEqual(try returnKey(of: view).shownSymbolName, "return.left")
+        // The person moves to the field of a message.
+        view.returnKeyType = .send
+        try assertActionLook(returnKey(of: view), "a message field")
+        XCTAssertEqual(try returnKey(of: view).shownSymbolName, "paperplane")
+    }
+
+    func testTheReturnKeyStaysBlueInChineseMode() throws {
+        for width: CGFloat in [466, 669] {
+            let view = makeView(width: width)
+            let document = FakeDocument(before: "")
+            let controller = KeyboardTextController(
+                keyboardView: view, document: document, spellChecker: FakeSpellChecker(),
+                pinyinEngine: { PinyinEngine(dictionaryText: testDictionary) })
+            controller.documentDidChange()
+            view.returnKeyType = .search
+            controller.keyboardView(view, edit: .toggleLanguage)
+            XCTAssertTrue(view.chineseActive)
+            try assertActionLook(returnKey(of: view), "width \(width), Chinese mode")
+            // Pinyin letters wait for a candidate, and the candidate row shows.
+            controller.keyboardView(view, insert: "n")
+            controller.keyboardView(view, insert: "i")
+            XCTAssertEqual(controller.pinyinBuffer, "ni")
+            try assertActionLook(returnKey(of: view), "width \(width), Chinese mode with Pinyin letters")
+            for layer in [KeyboardLayer.symbols, .more] {
+                view.show(layer: layer)
+                view.layoutIfNeeded()
+                try assertActionLook(returnKey(of: view), "width \(width), Chinese mode, \(layer)")
+            }
+            // A field that types a line break keeps the gray key in Chinese mode.
+            view.returnKeyType = .default
+            try assertLineBreakLook(returnKey(of: view), "width \(width), Chinese mode, default")
+        }
+    }
+}

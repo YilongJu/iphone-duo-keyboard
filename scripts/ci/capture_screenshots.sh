@@ -81,6 +81,24 @@ sys.exit("simulator not found: " + prefix)
   xcrun simctl ui "$udid" appearance dark
   sleep 4
   capture "$udid" "$output_dir/$slug-more-dark"
+  # The return key is blue in a field whose return key does an action, such as search or send.
+  # The launch argument "-returnKeyType" gives the field that return key type. The letters of a
+  # default field in dark mode go first, to set beside the search field.
+  xcrun simctl terminate "$udid" "$bundle_id" 2>/dev/null || true
+  xcrun simctl launch "$udid" "$bundle_id" -focusPreviewField
+  sleep 10
+  capture "$udid" "$output_dir/$slug-letters-dark"
+  xcrun simctl terminate "$udid" "$bundle_id" 2>/dev/null || true
+  xcrun simctl launch "$udid" "$bundle_id" -focusPreviewField -returnKeyType search
+  sleep 10
+  capture "$udid" "$output_dir/$slug-letters-search-dark"
+  xcrun simctl ui "$udid" appearance light
+  sleep 4
+  capture "$udid" "$output_dir/$slug-letters-search-light"
+  xcrun simctl terminate "$udid" "$bundle_id" 2>/dev/null || true
+  xcrun simctl launch "$udid" "$bundle_id" -focusPreviewField -layer symbols -returnKeyType send
+  sleep 10
+  capture "$udid" "$output_dir/$slug-symbols-send-light"
   xcrun simctl shutdown "$udid"
 done
 

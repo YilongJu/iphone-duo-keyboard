@@ -13,10 +13,31 @@ struct KeyDisplay {
     var primaryFontSize: CGFloat = 22
     /// A key drawn in the pressed color while a mode is on, such as shift.
     var emphasized = false
+    /// The return key of a field whose return key does an action, such as search or send, in
+    /// place of a line break. The key is blue with a white symbol.
+    var performsAction = false
 }
 
 enum KeyColors {
     static let text = UIColor.label
+
+    /// The return key that does the field's action. The system blue adapts to light mode and
+    /// dark mode.
+    static let action = UIColor.systemBlue
+
+    /// The pressed return key that does the field's action: the system blue of the appearance
+    /// with 80 percent of its brightness, as a letter key turns darker when pressed.
+    static let actionPressed = UIColor { traits in
+        let color = UIColor.systemBlue.resolvedColor(with: traits)
+        var red: CGFloat = 0, green: CGFloat = 0, blue: CGFloat = 0, alpha: CGFloat = 0
+        guard color.getRed(&red, green: &green, blue: &blue, alpha: &alpha) else {
+            fatalError("The system blue has no red, green and blue parts: \(color)")
+        }
+        return UIColor(red: red * 0.8, green: green * 0.8, blue: blue * 0.8, alpha: alpha)
+    }
+
+    /// The symbol and the text on the blue return key.
+    static let actionText = UIColor.white
 
     static let character = UIColor { traits in
         traits.userInterfaceStyle == .dark ? UIColor(white: 0.42, alpha: 1) : UIColor.white
@@ -47,6 +68,7 @@ final class KeyView: UIView {
     }
 
     private var emphasized = false
+    private var performsAction = false
     /// The drawn key: its color, its round corners and its shadow.
     private let background = UIView()
     private let primaryLabel = UILabel()
@@ -97,8 +119,20 @@ final class KeyView: UIView {
         (primaryLabel.text, secondaryLabel.text, slideCharacterLabel.text)
     }
 
+    /// The name of the SF Symbol the key shows now, or nil. The unit tests read this value.
+    private(set) var shownSymbolName: String?
+
+    /// The color of the drawn key now. The unit tests read this value, so the tests do not
+    /// depend on which view draws the key.
+    var drawnColor: UIColor? { background.backgroundColor }
+
     func apply(_ display: KeyDisplay) {
         primaryLabel.font = .systemFont(ofSize: display.primaryFontSize)
+        // The color goes before the text, because styled text brings its own colors and a color
+        // set after the styled text would replace them.
+        let contentColor = display.performsAction ? KeyColors.actionText : KeyColors.text
+        primaryLabel.textColor = contentColor
+        iconView.tintColor = contentColor
         if let styled = display.styledPrimary {
             primaryLabel.attributedText = styled
         } else {
@@ -117,7 +151,9 @@ final class KeyView: UIView {
         } else {
             iconView.image = nil
         }
+        shownSymbolName = display.symbolName
         emphasized = display.emphasized
+        performsAction = display.performsAction
         updateBackground()
         setNeedsLayout()
     }
@@ -181,7 +217,9 @@ final class KeyView: UIView {
 
     private func updateBackground() {
         let pressed = isHighlighted != emphasized
-        if key.kind.isFunctionKey {
+        if performsAction {
+            background.backgroundColor = pressed ? KeyColors.actionPressed : KeyColors.action
+        } else if key.kind.isFunctionKey {
             background.backgroundColor = pressed ? KeyColors.character : KeyColors.function
         } else {
             background.backgroundColor = pressed ? KeyColors.function : KeyColors.character

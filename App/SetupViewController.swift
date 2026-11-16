@@ -122,6 +122,15 @@ final class SetupViewController: UIViewController, UITextViewDelegate {
         case "more": previewKeyboard.show(layer: .more)
         default: break
         }
+        // The launch argument "-returnKeyType search" or "-returnKeyType send" gives the field that
+        // return key type, for a screenshot of the blue return key.
+        switch UserDefaults.standard.string(forKey: "returnKeyType") {
+        case nil: break
+        case "search": previewField.returnKeyType = .search
+        case "send": previewField.returnKeyType = .send
+        case let other?: fatalError("Unknown launch argument -returnKeyType \(other)")
+        }
+        previewKeyboard.returnKeyType = previewField.returnKeyType
         previewKeyboard.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         previewContainer.allowsSelfSizing = false
         previewContainer.addSubview(previewKeyboard)

@@ -76,8 +76,10 @@ final class KeyboardView: UIView {
         didSet { if oldValue != showsGlobe { rebuild() } }
     }
 
-    var returnKeySymbol = "return.left" {
-        didSet { if oldValue != returnKeySymbol { refreshLabels() } }
+    /// The return key type of the field. The return key shows the symbol of the type, and the
+    /// key is blue when the type does an action, such as search or send, in place of a line break.
+    var returnKeyType: UIReturnKeyType = .default {
+        didSet { if oldValue != returnKeyType { refreshLabels() } }
     }
 
     /// Small text on the space bar, for a short notice such as "Copied".
@@ -423,7 +425,9 @@ final class KeyboardView: UIView {
         case .tab:
             return KeyDisplay(symbolName: "arrow.right.to.line")
         case .returnKey:
-            return KeyDisplay(symbolName: returnKeySymbol)
+            return KeyDisplay(
+                symbolName: KeyboardTextLogic.returnKeySymbol(for: returnKeyType),
+                performsAction: KeyboardTextLogic.returnKeyPerformsAction(for: returnKeyType))
         case .globe:
             return KeyDisplay(symbolName: "globe")
         case .dismiss:
