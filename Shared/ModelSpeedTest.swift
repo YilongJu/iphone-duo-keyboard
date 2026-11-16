@@ -73,6 +73,9 @@ final class ModelSpeedTest: LanguageModelMeasuring {
     let coolingLimitSeconds: Double
     /// Where the run is now.
     let status = ModelSpeedStatus()
+    /// The file of the MetricKit diagnostics (`ModelSpeedDiagnostics`), whose lines each run
+    /// shows near its start. Nil shows none.
+    let diagnosticsFile: URL?
     /// The pair to start at, counting from 1, for the next run. The pairs before it that did not
     /// end in an earlier run are skipped, and the start pair runs even after earlier stops. Nil
     /// starts at the first pair.
@@ -80,10 +83,12 @@ final class ModelSpeedTest: LanguageModelMeasuring {
     private var running = false
 
     init(modelsFolder: URL? = nil, runtimes: Set<ModelSpeedCatalog.Runtime>? = nil, progressFolder: URL? = nil,
+         diagnosticsFile: URL? = nil,
          pauseSeconds: Double = 20, coolingLimitSeconds: Double = 180) {
         self.modelsFolder = modelsFolder
         self.runtimes = runtimes
         self.progressFolder = progressFolder
+        self.diagnosticsFile = diagnosticsFile
         self.pauseSeconds = pauseSeconds
         self.coolingLimitSeconds = coolingLimitSeconds
     }
@@ -100,6 +105,15 @@ final class ModelSpeedTest: LanguageModelMeasuring {
             emit("test        speed of the language models, the requests did not load: \(error)")
         }
         for line in keyboardLines?() ?? [] { emit(line) }
+        if let diagnosticsFile {
+            do {
+                let saved = try ModelSpeedDiagnostics.saved(diagnosticsFile)
+                if saved.isEmpty { emit("diagnostic  none: MetricKit has delivered no diagnostic of this keyboard") }
+                for line in saved { emit(line) }
+            } catch {
+                emit("diagnostic  the diagnostics file did not load: \(error)")
+            }
+        }
         let folder = modelsFolder ?? ModelSpeedCatalog.sharedFolder()
         let bundledModel = Bundle(for: ModelSpeedTest.self)
             .path(forResource: BundledLanguageModelTest.modelResource, ofType: "gguf")

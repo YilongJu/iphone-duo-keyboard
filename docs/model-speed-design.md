@@ -183,6 +183,12 @@ sequence of requests as in the keyboard:
   or is skipped after a stop gives the last checkpoint, so the line says where the pair stopped.
 - `duo:speed` with a pair number, as in `duo:speed16` and a space, starts at that pair. The
   pairs before it that did not end are skipped, and the start pair runs even after 2 stops.
+- The keyboard subscribes to MetricKit. iOS hands it diagnostics of earlier stops at a later
+  launch: crashes, hangs and, from iOS 27, a stop at the memory limit of an app extension. The
+  keyboard keeps one line per diagnostic, and each run shows them after the keyboard's lines.
+- The app has a button that runs the Core ML pairs in the app itself, in the foreground and
+  with the far larger memory limit of an app. A pair that runs there and stops the keyboard
+  points to the keyboard's limits.
 - `duo:speedreset` and a space deletes the record, so the next `duo:speed` starts at the first
   pair. A change of the pairs or the requests also starts a new record.
 - The first line of the run gives llama.cpp's build line, with the processor features of the

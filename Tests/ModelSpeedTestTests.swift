@@ -196,6 +196,24 @@ final class ModelSpeedTestTests: XCTestCase {
         XCTAssertEqual(outside.last, "done        failed before the first pair: there is no pair 9, the pairs are 1 to 8")
     }
 
+    /// A MetricKit payload gives one line per diagnostic with its plain metadata, and the file
+    /// keeps each line once.
+    func testTheDiagnosticLinesKeepTheMetadataOnce() throws {
+        let json = """
+        {"timeStampBegin": "2026-11-16 13:00", "timeStampEnd": "2026-11-16 14:00",
+         "crashDiagnostics": [{"diagnosticMetaData": {"exceptionType": 1, "signal": 11, "bundleIdentifier": "x"},
+                               "callStackTree": {"callStacks": []}}]}
+        """
+        let lines = ModelSpeedDiagnostics.lines(fromJSON: Data(json.utf8))
+        XCTAssertEqual(lines, ["diagnostic  crashDiagnostics up to 2026-11-16 14:00: bundleIdentifier x, exceptionType 1, signal 11"])
+        let file = FileManager.default.temporaryDirectory.appendingPathComponent("diagnostics-\(UUID().uuidString).txt")
+        defer { try? FileManager.default.removeItem(at: file) }
+        XCTAssertEqual(try ModelSpeedDiagnostics.saved(file), [])
+        try ModelSpeedDiagnostics.append(lines, to: file)
+        try ModelSpeedDiagnostics.append(lines, to: file)
+        XCTAssertEqual(try ModelSpeedDiagnostics.saved(file), lines)
+    }
+
     /// A hold keeps the keyboard's model from loading until the hold ends.
     func testAHoldKeepsTheKeyboardModelFromLoading() async throws {
         let model = KeyboardLanguageModel(modelPath: nil, modelName: "none", cacheCheckTolerance: nil)

@@ -12,6 +12,8 @@ final class SetupViewController: UIViewController, UITextViewDelegate {
     private let languageModelTest = BundledLanguageModelTest()
     private let speedModelStatus = UITextView()
     private var speedModelButtons: [UIButton] = []
+    private let appSpeedButton = UIButton(type: .system)
+    private let appSpeedResults = UITextView()
     private let systemField = UITextView()
     private let previewField = UITextView()
     private let previewKeyboard = KeyboardView()
@@ -297,6 +299,53 @@ final class SetupViewController: UIViewController, UITextViewDelegate {
         speedModelStatus.text = "Tap a model to download it. Then type duo:speed and a space with Duo Keyboard "
             + "in the Notes app. The keyboard runs every model that is in place."
         stack.addArrangedSubview(speedModelStatus)
+        addAppSpeedTest()
+    }
+
+    /// Runs the Core ML pairs of the speed test in this app, which iOS allows far more memory
+    /// than a keyboard and which is in the foreground. When a pair runs here and stops the
+    /// keyboard, the cause is the keyboard's limits and not the model or the code.
+    private func addAppSpeedTest() {
+        stack.addArrangedSubview(makeLabel("Core ML pairs in this app", style: .headline))
+        var configuration = UIButton.Configuration.filled()
+        configuration.title = "Run the Core ML pairs in this app"
+        appSpeedButton.configuration = configuration
+        appSpeedButton.accessibilityIdentifier = "appSpeedButton"
+        appSpeedButton.addAction(UIAction { [weak self] _ in
+            self?.runAppSpeedTest()
+        }, for: .touchUpInside)
+        stack.addArrangedSubview(appSpeedButton)
+        var copyConfiguration = UIButton.Configuration.bordered()
+        copyConfiguration.title = "Copy the result lines"
+        stack.addArrangedSubview(UIButton(configuration: copyConfiguration, primaryAction: UIAction { [weak self] _ in
+            UIPasteboard.general.string = self?.appSpeedResults.text
+        }))
+        appSpeedResults.isEditable = false
+        appSpeedResults.isScrollEnabled = false
+        appSpeedResults.font = .monospacedSystemFont(ofSize: 13, weight: .regular)
+        appSpeedResults.backgroundColor = .clear
+        appSpeedResults.textContainerInset = .zero
+        appSpeedResults.textContainer.lineFragmentPadding = 0
+        appSpeedResults.accessibilityIdentifier = "appSpeedResults"
+        appSpeedResults.text = "Runs pairs 13 to 22 in this app. Keep the app open: the screen stays on during the run."
+        stack.addArrangedSubview(appSpeedResults)
+    }
+
+    private func runAppSpeedTest() {
+        appSpeedButton.isEnabled = false
+        appSpeedResults.text = ""
+        // The screen stays on, so the app stays in the foreground for the whole run.
+        UIApplication.shared.isIdleTimerDisabled = true
+        let test = ModelSpeedTest(runtimes: [.coreMLGPU, .coreMLNeuralEngine])
+        let lines = test.resultLines()
+        Task { [weak self] in
+            for await line in lines {
+                guard let self else { return }
+                self.appSpeedResults.text = (self.appSpeedResults.text ?? "") + line + "\n"
+            }
+            UIApplication.shared.isIdleTimerDisabled = false
+            self?.appSpeedButton.isEnabled = true
+        }
     }
 
     private func download(_ model: ModelSpeedCatalog.Model, with downloader: ModelSpeedDownloader) {

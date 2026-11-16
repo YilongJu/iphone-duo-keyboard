@@ -20,6 +20,8 @@ final class KeyboardViewController: UIInputViewController {
         keyboardView: keyboardView, document: document, spellChecker: EngineSpellChecker.bundled(reranker: reranker),
         pinyinEngine: { PinyinEngine.bundled() })
     private var heightConstraint: NSLayoutConstraint?
+    /// Keeps the MetricKit diagnostics, such as a stop at the memory limit, for the speed test.
+    private var speedDiagnostics: ModelSpeedDiagnostics?
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -48,7 +50,10 @@ final class KeyboardViewController: UIInputViewController {
         // iOS does not clear the way it may clear caches.
         let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
         let speedProgress = support.appendingPathComponent("model-speed-progress", isDirectory: true)
-        let speedTest = ModelSpeedTest(progressFolder: speedProgress)
+        let diagnostics = ModelSpeedDiagnostics(file: support.appendingPathComponent("model-speed-diagnostics.txt"))
+        diagnostics.start()
+        speedDiagnostics = diagnostics
+        let speedTest = ModelSpeedTest(progressFolder: speedProgress, diagnosticsFile: diagnostics.file)
         textController.speedResetMeasurer = ModelSpeedReset(progressFolder: speedProgress)
         textController.speedTestStart = { [speedTest] start in
             speedTest.startPair = start
