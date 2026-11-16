@@ -174,7 +174,9 @@ final class KeyboardView: UIView {
             }
             emojiTouches.removeAll()
             bringSubviewToFront(candidateBar)
-            setNeedsLayout()
+            // The boxes change at once, because a touch can arrive before the next layout pass:
+            // a second finger commits the first finger's letter, which can take the emoji away.
+            layoutTopRowEmoji()
         }
     }
 
@@ -560,6 +562,11 @@ final class KeyboardView: UIView {
             emojiBoxes = []
             return
         }
+        // Before the first layout pass the keys have no frames, and the next pass places the emoji.
+        guard copy.frame.width > 0, paste.frame.width > 0 else {
+            emojiBoxes = []
+            return
+        }
         let spacing = Self.spec.gapX
         var shrink: CGFloat = 0
         var boxes: [CGRect] = []
@@ -592,6 +599,7 @@ final class KeyboardView: UIView {
     /// of the top row's cell, so a tap a little above or below the emoji still types it.
     private func emojiIndex(at point: CGPoint) -> Int? {
         guard let metrics = metrics(), point.y < metrics.rowEdges[1] else { return nil }
+        precondition(emojiBoxes.isEmpty || emojiBoxes.count == emojiLabels.count, "Emoji boxes out of step with the emoji")
         return emojiBoxes.firstIndex { point.x >= $0.minX && point.x < $0.maxX }
     }
 
