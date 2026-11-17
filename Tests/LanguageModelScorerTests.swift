@@ -41,6 +41,26 @@ final class LanguageModelScorerTests: XCTestCase {
         XCTAssertEqual(info.vocabulary, 49152)
     }
 
+    func testScoresReadAheadEqualTheScoresOfARead() throws {
+        let model = try model()
+        let prompt = LanguageModelPrompt(context: context, candidates: eight)
+        let other = LanguageModelPrompt(context: "I will take the", candidates: [" bus", " banana"])
+        guard case .scores(let read) = model.score(prompt) else { return XCTFail("the model did not score the prompt") }
+        _ = model.score(other)
+        let ready = model.readyFromTypingCount
+        model.readAhead(prompt)
+        guard case .scores(let readAhead) = model.score(prompt) else { return XCTFail("the model did not score the prompt") }
+        XCTAssertEqual(model.readyFromTypingCount, ready + 1)
+        XCTAssertEqual(readAhead.count, read.count)
+        for (first, second) in zip(read, readAhead) {
+            XCTAssertEqual(first.logProbability, second.logProbability, accuracy: 1e-3)
+            XCTAssertEqual(first.spaceAfter, second.spaceAfter, accuracy: 1e-3)
+        }
+        // A prompt that was not read ahead is read at the call.
+        _ = model.score(other)
+        XCTAssertEqual(model.readyFromTypingCount, ready + 1)
+    }
+
     func testEveryCandidateGetsAProbabilityAndTheLikelyOneIsHigher() throws {
         let values = try scores("I will take the", [" bus", " banana"])
         XCTAssertEqual(values.count, 2)

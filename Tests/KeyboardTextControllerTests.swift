@@ -76,6 +76,13 @@ final class FakeSpellChecker: SpellChecking {
             .joined(separator: " ")
     }
 
+    /// Every call of `readAhead`, as "previous word|typed text|text before".
+    var readAheads: [String] = []
+
+    func readAhead(previousWord: String, typed: String, textBefore: String) {
+        readAheads.append("\(previousWord)|\(typed)|\(textBefore)")
+    }
+
     func learn(_ word: String) {
         learned.append(word)
     }
@@ -739,6 +746,18 @@ done        fake")
         XCTAssertEqual(document.text, "the cat ")
         // The second request holds the keys the person pressed, and the field holds "the".
         XCTAssertEqual(spellChecker.requests, ["|teh", "|teh cat"])
+    }
+
+    func testEachLetterReadsAheadTheSpanThatTheSpaceReads() {
+        makeController(before: "I said ")
+        type("teh cat ")
+        XCTAssertEqual(spellChecker.requests, ["said|teh", "said|teh cat"])
+        // A lone letter is not read, and the last read ahead before each space holds the
+        // request of that space, with the same text before the span.
+        XCTAssertEqual(
+            spellChecker.readAheads,
+            ["said|te|I said ", "said|teh|I said ", "said|teh c|I said ", "said|teh ca|I said ", "said|teh cat|I said "])
+        XCTAssertEqual(spellChecker.textsBefore, ["I said ", "I said "])
     }
 
     func testTwoWordsReadTogetherCanChangeTheFirstWord() {

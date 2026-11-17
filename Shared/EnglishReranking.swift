@@ -40,6 +40,13 @@ enum CandidateScoringResult: Equatable {
 @MainActor
 protocol CandidateScoring: AnyObject {
     func score(_ prompt: LanguageModelPrompt) -> CandidateScoringResult
+    /// Starts to read `prompt` while the person types, so a later `score` of the same prompt
+    /// finds its scores ready. A scorer without its own thread does nothing here.
+    func readAhead(_ prompt: LanguageModelPrompt)
+}
+
+extension CandidateScoring {
+    func readAhead(_ prompt: LanguageModelPrompt) {}
 }
 
 /// The text that the language model reads for one correction: a context, and one candidate per
@@ -355,6 +362,16 @@ final class EnglishReranker {
     init(scorer: CandidateScoring, rule: RerankRule) {
         self.scorer = scorer
         self.rule = rule
+    }
+
+    /// Asks the model to read the prompt that `choose` would read for these readings, while the
+    /// person still types the span. The apostrophe step's prompt depends on the scores, so it
+    /// waits for the space press.
+    func readAhead(readings: [EnglishReading], textBefore: String, typed: String) {
+        guard readings.count > 1,
+            let prompt = LanguageModelPrompt.make(textBefore: textBefore, typed: typed, readings: readings.map { $0.text })
+        else { return }
+        scorer.readAhead(prompt)
     }
 
     /// The text to show for the typed span. `textBefore` is the field's text before the span.

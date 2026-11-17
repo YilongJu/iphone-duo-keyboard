@@ -60,13 +60,6 @@ final class KeyView: UIView {
         didSet { updateBackground() }
     }
 
-    /// How far the drawn background stays in from the left and the right edge of the key, in
-    /// points. The top row of keys frees room for emoji this way. The texts and the icon keep
-    /// their place, because they lay out in the whole key.
-    var backgroundInsets: (left: CGFloat, right: CGFloat) = (0, 0) {
-        didSet { setNeedsLayout() }
-    }
-
     private var emphasized = false
     private var performsAction = false
     /// The drawn key: its color, its round corners and its shadow.
@@ -167,20 +160,9 @@ final class KeyView: UIView {
         iconView.alpha = alpha
     }
 
-    /// How far the drawn background can move in from each side of the key while the icon and
-    /// the texts stay inside it with a margin of 6 points, in points.
-    var roomToShrinkBackground: CGFloat {
-        let iconWidth = iconView.image?.size.width ?? 0
-        let textWidth = [primaryLabel, secondaryLabel, slideCharacterLabel]
-            .map { $0.text == nil ? 0 : $0.intrinsicContentSize.width }.max() ?? 0
-        return max(0, (bounds.width - max(iconWidth, textWidth)) / 2 - 6)
-    }
-
     override func layoutSubviews() {
         super.layoutSubviews()
-        background.frame = CGRect(
-            x: bounds.minX + backgroundInsets.left, y: bounds.minY,
-            width: max(0, bounds.width - backgroundInsets.left - backgroundInsets.right), height: bounds.height)
+        background.frame = bounds
         background.layer.shadowPath = UIBezierPath(
             roundedRect: background.bounds, cornerRadius: background.layer.cornerRadius).cgPath
         let content = bounds.insetBy(dx: 2, dy: 2)

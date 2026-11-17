@@ -4,7 +4,8 @@ import os
 /// The C scorer of LanguageModel/duo_lm_scorer.h with one loaded model.
 ///
 /// One thread at a time uses an object: the thread that loads the model creates it, and the
-/// main thread uses and frees it after that. The object is marked Sendable for that handover.
+/// model's worker thread (`LanguageModelWorker`) uses it after that. The object is marked
+/// Sendable for that handover.
 final class LanguageModelScorer: @unchecked Sendable {
     private let handle: OpaquePointer
 
@@ -59,6 +60,83 @@ final class LanguageModelScorer: @unchecked Sendable {
 
 struct LanguageModelError: Error, Equatable {
     let reason: String
+}
+
+/// The thread that runs every call of the keyboard's model, one call at a time, in the order of
+/// the requests. The main thread hands it work, so a letter key never waits for the model.
+/// The thread has a stack of 2 MB, as llama.cpp needs at the load.
+final class LanguageModelWorker: @unchecked Sendable {
+    private let condition = NSCondition()
+    private var jobs: [() -> Void] = []
+    private var stopped = false
+
+    init() {
+        let thread = Thread { [self] in run() }
+        thread.stackSize = 2 << 20
+        thread.qualityOfService = .userInitiated
+        thread.name = "language model"
+        thread.start()
+    }
+
+    /// Runs `job` after the jobs before it, and returns at once.
+    func async(_ job: @escaping () -> Void) {
+        condition.lock()
+        precondition(!stopped, "a job came after the worker stopped")
+        jobs.append(job)
+        condition.signal()
+        condition.unlock()
+    }
+
+    /// Runs `job` after the jobs before it, and waits for its result. A job that ran before it
+    /// has let go of everything it held by then.
+    func sync<T>(_ job: @escaping () -> T) -> T {
+        let box = SyncResult<T>()
+        let done = DispatchSemaphore(value: 0)
+        async {
+            box.value = job()
+            done.signal()
+        }
+        done.wait()
+        guard let value = box.value else { preconditionFailure("the job gave no result") }
+        return value
+    }
+
+    /// Ends the thread after the jobs it holds.
+    func stop() {
+        condition.lock()
+        stopped = true
+        condition.signal()
+        condition.unlock()
+    }
+
+    private func run() {
+        while true {
+            condition.lock()
+            while jobs.isEmpty && !stopped { condition.wait() }
+            if jobs.isEmpty {
+                condition.unlock()
+                return
+            }
+            let job = jobs.removeFirst()
+            condition.unlock()
+            job()
+        }
+    }
+}
+
+/// The result of `LanguageModelWorker.sync`, which the worker thread writes before the caller reads it.
+private final class SyncResult<T>: @unchecked Sendable {
+    var value: T?
+}
+
+/// The scores that the worker read while a word was typed, and the prompt it reads next.
+/// `wanted` is shared between threads under the lock. `ready` belongs to the worker thread.
+private final class ScoresReadAhead: @unchecked Sendable {
+    /// The prompts of the last letters typed, so a space right after a fast letter still finds them.
+    static let keptCount = 4
+    let lock = NSLock()
+    var wanted: (prompt: LanguageModelPrompt, scorer: LanguageModelScorer)?
+    var ready: [(prompt: LanguageModelPrompt, scores: CandidateScoringResult)] = []
 }
 
 /// The memory of this process, as iOS counts it against the limit of a keyboard.
@@ -134,6 +212,11 @@ protocol LanguageModelLoading: AnyObject {
 /// processor (docs/model-speed-results.md). The tests run on the processor, because llama.cpp's
 /// Metal device does not load the model in the simulator.
 ///
+/// While the person types a word, the keyboard asks the model to read the prompt of the word as
+/// typed so far (`readAhead`). The worker thread reads the latest such prompt. When the space
+/// press asks for the same prompt, its scores are ready, and the space press does not wait for
+/// the model. These scores equal the scores of a read at the space press.
+///
 /// The keyboard asks for a load when it appears in English and when the person switches to
 /// English, so Chinese typing never loads the model. A correction made before the model is
 /// ready keeps the engine's choice. A model that does not load is named on the space bar.
@@ -178,7 +261,13 @@ final class KeyboardLanguageModel: CandidateScoring, LanguageModelLoading {
     }
 
     private(set) var state: State = .notLoaded
+    /// The loaded model. Only the worker thread calls it.
     private var scorer: LanguageModelScorer?
+    private let worker = LanguageModelWorker()
+    private let readAheadScores = ScoresReadAhead()
+    /// Requests that reached the loaded model, and those whose scores were ready from the typing.
+    private(set) var requestCount = 0
+    private(set) var readyFromTypingCount = 0
     /// Counts the loads, so a load that ends after a memory warning freed its model is dropped.
     private var generation = 0
     /// The model file, or nil when the bundle does not hold it.
@@ -202,6 +291,10 @@ final class KeyboardLanguageModel: CandidateScoring, LanguageModelLoading {
         self.modelName = modelName
         self.device = device
         self.cacheCheckTolerance = cacheCheckTolerance
+    }
+
+    deinit {
+        worker.stop()
     }
 
     /// The model file of the bundle. scripts/ci/fetch_language_model.sh downloads it before the build.
@@ -334,16 +427,46 @@ final class KeyboardLanguageModel: CandidateScoring, LanguageModelLoading {
         }
     }
 
-    /// Frees the model, as on a memory warning. The next load starts over.
+    /// Frees the model, as on a memory warning. The next load starts over. The call returns after
+    /// the worker thread let go of the model.
     func unload(reason: String) {
         switch state {
         case .ready, .loading:
             generation += 1
             scorer = nil
+            let readAhead = readAheadScores
+            worker.sync {
+                readAhead.lock.lock()
+                readAhead.wanted = nil
+                readAhead.lock.unlock()
+                readAhead.ready.removeAll()
+            }
             state = .freed(reason)
             onEvent(.freed(reason))
         case .notLoaded, .loadFailed, .freed:
             return
+        }
+    }
+
+    /// Asks the worker thread to read `prompt` before the space press asks for it. A later call
+    /// takes the place of a prompt that the worker has not started yet.
+    func readAhead(_ prompt: LanguageModelPrompt) {
+        guard let scorer else { return }
+        let readAhead = readAheadScores
+        readAhead.lock.lock()
+        readAhead.wanted = (prompt, scorer)
+        readAhead.lock.unlock()
+        worker.async {
+            readAhead.lock.lock()
+            let wanted = readAhead.wanted
+            readAhead.wanted = nil
+            readAhead.lock.unlock()
+            guard let wanted, !readAhead.ready.contains(where: { $0.prompt == wanted.prompt }) else { return }
+            let result = wanted.scorer.scores(context: wanted.prompt.context, candidates: wanted.prompt.candidates)
+            // A refused or failed prompt is read again at the space press, which reports it.
+            guard case .scores = result else { return }
+            readAhead.ready.append((wanted.prompt, result))
+            if readAhead.ready.count > ScoresReadAhead.keptCount { readAhead.ready.removeFirst() }
         }
     }
 
@@ -357,7 +480,15 @@ final class KeyboardLanguageModel: CandidateScoring, LanguageModelLoading {
             case .ready: preconditionFailure("a ready model has a scorer")
             }
         }
-        let result = scorer.scores(context: prompt.context, candidates: prompt.candidates)
+        let readAhead = readAheadScores
+        // The worker reads the prompts before this one first, so a read of this prompt that
+        // the typing started ends before the lookup.
+        let (result, wasReady) = worker.sync { () -> (CandidateScoringResult, Bool) in
+            if let found = readAhead.ready.first(where: { $0.prompt == prompt }) { return (found.scores, true) }
+            return (scorer.scores(context: prompt.context, candidates: prompt.candidates), false)
+        }
+        requestCount += 1
+        if wasReady { readyFromTypingCount += 1 }
         if case .scores = result, afterFirstScore == nil {
             afterFirstScore = ProcessMemory.now()
         }
@@ -365,7 +496,10 @@ final class KeyboardLanguageModel: CandidateScoring, LanguageModelLoading {
     }
 
     /// The counts of the C scorer, while a model is loaded.
-    var scorerInfo: duo_lm_scorer_info? { scorer?.info }
+    var scorerInfo: duo_lm_scorer_info? {
+        guard let scorer else { return nil }
+        return worker.sync { scorer.info }
+    }
 
     /// Result lines for the language model test (`duo:lm`), in its format: a name in a column
     /// 12 wide, then the facts. LanguageModelTest.swift describes the "reranker" lines.
@@ -405,6 +539,9 @@ final class KeyboardLanguageModel: CandidateScoring, LanguageModelLoading {
             "reranker    the model changed \(statistics.changedCount) of \(statistics.readCount) choices, "
                 + "\(statistics.notReadyCount) corrections came while the model was not ready, "
                 + "\(statistics.refusedCount) were outside its limits, \(statistics.failedCount) gave a model error")
+        lines.append(
+            "reranker    \(readyFromTypingCount) of \(requestCount) requests had their scores ready from the typing, "
+                + "read while the word was typed")
         if let info = scorerInfo {
             lines.append(
                 "reranker    start token \(info.start_token), \(info.requests) requests, \(info.tokens_read) tokens read, "

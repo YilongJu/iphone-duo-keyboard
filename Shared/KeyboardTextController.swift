@@ -32,6 +32,9 @@ protocol SpellChecking: AnyObject {
     /// the field's text right before the typed text, as the field holds it. The language model
     /// reads it as the context of the readings.
     func reading(previousWord: String, typed: String, textBefore: String) -> String?
+    /// Starts the work of `reading` for the same text ahead of time, while the person still types
+    /// it, so a `reading` right after it is faster. The result of `reading` stays the same.
+    func readAhead(previousWord: String, typed: String, textBefore: String)
     /// Stops the keyboard from changing this word again.
     func learn(_ word: String)
     /// True for a word the person brought back after a correction.
@@ -44,6 +47,7 @@ protocol SpellChecking: AnyObject {
 }
 
 extension SpellChecking {
+    func readAhead(previousWord: String, typed: String, textBefore: String) {}
     var preferredCapitals: PreferredCapitals? { nil }
     func toggleWorkArea() -> String? { nil }
 }
@@ -136,6 +140,14 @@ final class EngineSpellChecker: SpellChecking {
         // The model may not change a typed word that is new in the work area.
         let candidates = preferredCapitals?.keepingNewWords(readings, typed: typed) ?? readings
         return reranker.choose(readings: candidates, textBefore: textBefore, typed: typed)
+    }
+
+    func readAhead(previousWord: String, typed: String, textBefore: String) {
+        guard let reranker,
+            let readings = engine.readings(previousWord: previousWord, typed: typed, limit: EnglishReranker.readingCount)
+        else { return }
+        let candidates = preferredCapitals?.keepingNewWords(readings, typed: typed) ?? readings
+        reranker.readAhead(readings: candidates, textBefore: textBefore, typed: typed)
     }
 
     func learn(_ word: String) {
@@ -1129,23 +1141,16 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
             if followedBySpace { recentWord = RecentWord(typed: word, shown: word, context: contextAfterSpace()) }
             return
         }
-        var typedSpan = word
-        var shownSpan = word
-        if let earlier, !keepsAsTyped(earlier.typed), !keepsAsTyped(earlier.shown),
-            before.hasSuffix(earlier.context + word),
-            KeyboardTextLogic.correctableWord(before: String(before.dropLast(word.count + 1))) == earlier.shown {
-            typedSpan = earlier.typed + " " + word
-            shownSpan = earlier.shown + " " + word
-        }
+        let span = correctionSpan(word: word, before: before, earlier: earlier)
+        let typedSpan = span.typed
+        let shownSpan = span.shown
         let typedWords = typedSpan.split(separator: " ")
 
-        let previousWord = KeyboardTextLogic.wordBeforeSpace(at: String(before.dropLast(shownSpan.count)))
         // One letter alone is a word such as "a" or "I", or a label, so the checker reads a
         // single letter only together with the word before it.
         let reading = typedSpan.count >= 2
             ? spellChecker.reading(
-                previousWord: previousWord, typed: typedSpan.lowercased(),
-                textBefore: String(before.dropLast(shownSpan.count))) : nil
+                previousWord: span.previousWord, typed: typedSpan.lowercased(), textBefore: span.textBefore) : nil
         // A reading of two words together replaces an earlier reading of the first word alone,
         // also when it brings back the letters the person typed. Without a reading the shown
         // text stays, and only a lone "i" gets its capital.
@@ -1175,6 +1180,45 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
             recentWord = RecentWord(
                 typed: sameCount ? word : String(last), shown: String(last), context: contextAfterSpace())
         }
+    }
+
+    /// The text that a correction reads: the last word, and the word before it when the person
+    /// typed that word right before with one space between the two.
+    private struct CorrectionSpan {
+        /// The keys the person pressed, and the text the field holds for them.
+        let typed: String
+        let shown: String
+        /// The lower-case word before the span, or an empty string.
+        let previousWord: String
+        /// The field's text right before the span.
+        let textBefore: String
+    }
+
+    private func correctionSpan(word: String, before: String, earlier: RecentWord?) -> CorrectionSpan {
+        var typed = word
+        var shown = word
+        if let earlier, !keepsAsTyped(earlier.typed), !keepsAsTyped(earlier.shown),
+            before.hasSuffix(earlier.context + word),
+            KeyboardTextLogic.correctableWord(before: String(before.dropLast(word.count + 1))) == earlier.shown {
+            typed = earlier.typed + " " + word
+            shown = earlier.shown + " " + word
+        }
+        let textBefore = String(before.dropLast(shown.count))
+        return CorrectionSpan(
+            typed: typed, shown: shown, previousWord: KeyboardTextLogic.wordBeforeSpace(at: textBefore),
+            textBefore: textBefore)
+    }
+
+    /// Starts the work of the correction that a space right now would make, after a letter key.
+    /// It reads the same span as `correctLastWord`, so the space press finds the model's scores
+    /// ready.
+    private func readAheadOfTheSpace() {
+        guard !chineseMode, pending == nil, document.allowsAutocorrection else { return }
+        let before = document.textBeforeCursor
+        guard let word = KeyboardTextLogic.correctableWord(before: before), !keepsAsTyped(word) else { return }
+        let span = correctionSpan(word: word, before: before, earlier: recentWord)
+        guard span.typed.count >= 2 else { return }
+        spellChecker.readAhead(previousWord: span.previousWord, typed: span.typed.lowercased(), textBefore: span.textBefore)
     }
 
     /// True for a word the person brought back after a correction. A kept word also stays as
@@ -1241,6 +1285,7 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
             return
         }
         typeCharacter(text)
+        if !KeyboardTextLogic.wordTerminators.contains(text) { readAheadOfTheSpace() }
     }
 
     func keyboardView(_ keyboardView: KeyboardView, didSelectTopRowEmoji emoji: String) {

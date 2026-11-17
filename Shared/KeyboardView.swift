@@ -154,9 +154,9 @@ final class KeyboardView: UIView {
         }
     }
 
-    /// The emoji of the English word before the cursor. They show in the top row of keys,
-    /// between the Copy and Paste keys. The drawn backgrounds of those two keys get narrower to
-    /// free the gap, and every icon and text of the row stays at its place.
+    /// The emoji of the English word before the cursor. They show in the top row of keys, on a
+    /// capsule in the color of the Chinese candidate row, centered between the Copy and Paste
+    /// keys. The capsule lies over the inner ends of those two keys, which keep their size.
     var topRowEmoji: [String] = [] {
         didSet {
             guard oldValue != topRowEmoji else { return }
@@ -175,6 +175,7 @@ final class KeyboardView: UIView {
                 return label
             }
             emojiTouches.removeAll()
+            emojiPanel.isHidden = topRowEmoji.isEmpty
             bringSubviewToFront(candidateBar)
             // The boxes change at once, because a touch can arrive before the next layout pass:
             // a second finger commits the first finger's letter, which can take the emoji away.
@@ -182,9 +183,13 @@ final class KeyboardView: UIView {
         }
     }
 
-    /// The width of an emoji's box in the top row, in points, when the row has the room.
+    /// The width of an emoji's box in the top row, in points.
     private static let emojiBoxWidth: CGFloat = 30
+    /// The room of the capsule at each side of the emoji, in points.
+    private static let emojiPanelPadding: CGFloat = 8
 
+    /// The capsule under the emoji. A touch on it goes to the emoji nearest to the touch.
+    private let emojiPanel = UIView()
     private var emojiLabels: [UILabel] = []
     /// The box of each emoji of `topRowEmoji`. A touch in a box types its emoji.
     private var emojiBoxes: [CGRect] = []
@@ -274,6 +279,15 @@ final class KeyboardView: UIView {
             self?.onSelectComposition()
         }
         addSubview(candidateBar)
+        emojiPanel.backgroundColor = KeyColors.function
+        emojiPanel.isUserInteractionEnabled = false
+        emojiPanel.isHidden = true
+        // The capsule has the color of the keys under it, so a shadow sets it apart from them.
+        emojiPanel.layer.shadowColor = UIColor.black.cgColor
+        emojiPanel.layer.shadowOpacity = 0.35
+        emojiPanel.layer.shadowRadius = 3
+        emojiPanel.layer.shadowOffset = .zero
+        addSubview(emojiPanel)
         rebuild()
     }
 
@@ -380,6 +394,7 @@ final class KeyboardView: UIView {
                 return keyView
             }
         }
+        bringSubviewToFront(emojiPanel)
         for label in emojiLabels {
             bringSubviewToFront(label)
         }
@@ -553,11 +568,10 @@ final class KeyboardView: UIView {
         layoutTopRowEmoji()
     }
 
-    /// Places the emoji of `topRowEmoji` between the Copy and Paste keys. The gap first takes the
-    /// room that is already free there, as the empty middle of the split layout. When that room
-    /// is too small, the drawn backgrounds of Copy and Paste move in from their sides that face
-    /// each other, by the same distance, as far as their icons allow. The emoji boxes then share
-    /// the gap. The keys themselves, with their icons, texts and touch cells, do not change.
+    /// Places the emoji of `topRowEmoji` and their capsule, centered between the Copy and Paste
+    /// keys, at the height of the keys. The capsule lies over the inner ends of those keys. Its
+    /// ends belong to the first and the last emoji, so a touch anywhere on it types an emoji and
+    /// never presses Copy or Paste.
     private func layoutTopRowEmoji() {
         let row = rows.first ?? []
         guard let copy = row.first(where: { $0.key.kind == .copy }), let paste = row.first(where: { $0.key.kind == .paste })
@@ -567,34 +581,30 @@ final class KeyboardView: UIView {
             return
         }
         // Before the first layout pass the keys have no frames, and the next pass places the emoji.
-        guard copy.frame.width > 0, paste.frame.width > 0 else {
+        guard copy.frame.width > 0, paste.frame.width > 0, !topRowEmoji.isEmpty else {
             emojiBoxes = []
             return
         }
-        let spacing = Self.spec.gapX
-        var shrink: CGFloat = 0
-        var boxes: [CGRect] = []
-        if !topRowEmoji.isEmpty {
-            let count = CGFloat(topRowEmoji.count)
-            let free = paste.frame.minX - copy.frame.maxX
-            let wanted = Self.emojiBoxWidth * count + 2 * spacing
-            let room = min(copy.roomToShrinkBackground, paste.roomToShrinkBackground)
-            shrink = min(max((wanted - free) / 2, 0), room)
-            let gapStart = copy.frame.maxX - shrink + spacing
-            let gapWidth = free + 2 * shrink - 2 * spacing
-            let boxWidth = min(Self.emojiBoxWidth, gapWidth / count)
-            let firstX = gapStart + (gapWidth - boxWidth * count) / 2
-            boxes = (0..<topRowEmoji.count).map { index in
-                CGRect(x: firstX + boxWidth * CGFloat(index), y: copy.frame.minY, width: boxWidth, height: copy.frame.height)
-            }
+        let count = topRowEmoji.count
+        let width = Self.emojiBoxWidth * CGFloat(count)
+        let firstX = (copy.frame.maxX + paste.frame.minX) / 2 - width / 2
+        let labelBoxes = (0..<count).map { index in
+            CGRect(
+                x: firstX + Self.emojiBoxWidth * CGFloat(index), y: copy.frame.minY, width: Self.emojiBoxWidth,
+                height: copy.frame.height)
         }
-        copy.backgroundInsets = (0, shrink)
-        paste.backgroundInsets = (shrink, 0)
-        for keyView in row where keyView !== copy && keyView !== paste {
-            keyView.backgroundInsets = (0, 0)
+        let panel = CGRect(
+            x: firstX - Self.emojiPanelPadding, y: copy.frame.minY, width: width + 2 * Self.emojiPanelPadding,
+            height: copy.frame.height)
+        emojiPanel.frame = panel
+        emojiPanel.layer.cornerRadius = panel.height / 2
+        emojiPanel.layer.shadowPath = UIBezierPath(roundedRect: emojiPanel.bounds, cornerRadius: panel.height / 2).cgPath
+        emojiBoxes = labelBoxes.enumerated().map { index, box in
+            let left = index == 0 ? panel.minX : box.minX
+            let right = index == count - 1 ? panel.maxX : box.maxX
+            return CGRect(x: left, y: box.minY, width: right - left, height: box.height)
         }
-        emojiBoxes = boxes
-        for (label, box) in zip(emojiLabels, boxes) {
+        for (label, box) in zip(emojiLabels, labelBoxes) {
             label.frame = box
         }
     }
