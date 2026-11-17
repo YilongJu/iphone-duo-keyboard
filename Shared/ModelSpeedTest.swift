@@ -273,7 +273,8 @@ final class FootprintSampler: @unchecked Sendable {
 }
 
 /// The record of the speed test in a folder, kept until "duo:speedreset" deletes the folder.
-/// `progress.txt` holds "run SIGNATURE" first, then "start N" and "end N" for each pair, and
+/// `progress.txt` holds "run SIGNATURE" first, then "start N" and "end N" for each pair ("missing N"
+/// in place of "end N" for a pair that is not downloaded), and
 /// "at N DONE FOOTPRINT ALLOWED" checkpoints: the requests of pair N done so far (-1 while the
 /// model loads), the footprint and the memory still allowed in MB, so a stop leaves its place. Each
 /// `pair-N.txt` holds the result lines of pair N, written as the pair gives them, so a later
@@ -311,6 +312,9 @@ struct ModelSpeedProgress {
                 starts[index, default: 0] += 1
                 places[index] = "before the load"
             case ("end", 2): ended.insert(index)
+            case ("missing", 2):
+                // The run found the pair not downloaded and went on, so this start is not a stop.
+                starts[index, default: 0] -= 1
             case ("at", 3), ("at", 5):
                 guard let done = Int(parts[2]) else {
                     throw ModelSpeedError("the progress file holds the line \"\(line)\"")
@@ -323,7 +327,7 @@ struct ModelSpeedProgress {
             default: throw ModelSpeedError("the progress file holds the line \"\(line)\"")
             }
         }
-        let open = starts.filter { !ended.contains($0.key) }
+        let open = starts.filter { !ended.contains($0.key) && $0.value > 0 }
         return (ended, open, places.filter { open[$0.key] != nil })
     }
 
@@ -593,7 +597,7 @@ struct ModelSpeedRun {
                 continue
             }
             // Each line of this pair also goes to the record. A pair that is not downloaded gets
-            // no "end", so a later run tries it again.
+            // "missing" in place of "end", so a later run tries it again and does not count a stop.
             let pairEmit: (String) -> Void = { line in
                 self.emit(line)
                 do {
@@ -623,12 +627,10 @@ struct ModelSpeedRun {
                 return
             }
             defer {
-                if downloaded {
-                    do {
-                        try progress?.append("end \(index)")
-                    } catch {
-                        emit("failed      the progress file: \(error)")
-                    }
+                do {
+                    try progress?.append(downloaded ? "end \(index)" : "missing \(index)")
+                } catch {
+                    emit("failed      the progress file: \(error)")
                 }
             }
             if stops > 0 {
