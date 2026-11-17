@@ -318,6 +318,14 @@ enum KeyboardTextLogic {
         return shownWords[0] + " " + readWords[1]
     }
 
+    /// True when a reading of the typed span puts a comma in place of the span's last typed
+    /// letter, as "hello," for "hellom". The typing engine reads a letter beside the comma key
+    /// that way (`letter_for_comma` in Engine/duo_engine.h). A typed span never ends in a comma,
+    /// because the comma key ends the word.
+    static func readsLastLetterAsComma(_ reading: String, typed: String) -> Bool {
+        reading.last == "," && typed.last?.isLetter == true
+    }
+
     static let wordTerminators: Set<String> = [" ", ".", ",", "!", "?", ";", ":", "\n"]
 
     /// The symbol and digit keys that sit beside a letter key, in the wide layout or the compact

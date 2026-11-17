@@ -32,6 +32,10 @@ protocol SpellChecking: AnyObject {
     /// the field's text right before the typed text, as the field holds it. The language model
     /// reads it as the context of the readings.
     func reading(previousWord: String, typed: String, textBefore: String) -> String?
+    /// `reading` for typed text that the person ends with a space (`endsWithSpace` true) or with
+    /// a mark or a line break (false). Only before a space may the reading put a comma in place of
+    /// the last typed letter, as "hello," for "hellom".
+    func reading(previousWord: String, typed: String, textBefore: String, endsWithSpace: Bool) -> String?
     /// Starts the work of `reading` for the same text ahead of time, while the person still types
     /// it, so a `reading` right after it is faster. The result of `reading` stays the same.
     func readAhead(previousWord: String, typed: String, textBefore: String)
@@ -47,6 +51,10 @@ protocol SpellChecking: AnyObject {
 }
 
 extension SpellChecking {
+    /// A checker that never puts a mark in place of a typed letter reads both kinds of text alike.
+    func reading(previousWord: String, typed: String, textBefore: String, endsWithSpace: Bool) -> String? {
+        reading(previousWord: previousWord, typed: typed, textBefore: textBefore)
+    }
     func readAhead(previousWord: String, typed: String, textBefore: String) {}
     var preferredCapitals: PreferredCapitals? { nil }
     func toggleWorkArea() -> String? { nil }
@@ -130,8 +138,12 @@ final class EngineSpellChecker: SpellChecking {
     }
 
     func reading(previousWord: String, typed: String, textBefore: String) -> String? {
+        reading(previousWord: previousWord, typed: typed, textBefore: textBefore, endsWithSpace: true)
+    }
+
+    func reading(previousWord: String, typed: String, textBefore: String, endsWithSpace: Bool) -> String? {
         guard let readings = engine.readings(
-            previousWord: previousWord, typed: typed, limit: EnglishReranker.readingCount)
+            previousWord: previousWord, typed: typed, limit: EnglishReranker.readingCount, endsWithSpace: endsWithSpace)
         else { return nil }
         guard let reranker else {
             // EnglishTypingEngine.readings holds exactly one chosen reading.
@@ -1150,22 +1162,31 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
         // single letter only together with the word before it.
         let reading = typedSpan.count >= 2
             ? spellChecker.reading(
-                previousWord: span.previousWord, typed: typedSpan.lowercased(), textBefore: span.textBefore) : nil
+                previousWord: span.previousWord, typed: typedSpan.lowercased(), textBefore: span.textBefore,
+                endsWithSpace: followedBySpace) : nil
+        // A reading can put a comma in place of the last typed letter, as "hello," for "hellom",
+        // and only before a space. The rules of the capitals below read the words without that
+        // comma, and the typed letters without that letter. The comma comes back at the end.
+        let comma = reading.map { KeyboardTextLogic.readsLastLetterAsComma($0, typed: typedSpan) } ?? false
+        precondition(!comma || followedBySpace, "the checker read a comma in place of the letter before \(terminator)")
+        let wordsRead = comma ? reading.map { String($0.dropLast()) } : reading
+        let typedLetters = comma ? String(typedSpan.dropLast()) : typedSpan
         // A reading of two words together replaces an earlier reading of the first word alone.
         // Without a reading the shown text stays, and only a lone "i" gets its capital.
-        let restored = reading.map { KeyboardTextLogic.restoringCapitals(in: $0, from: typedSpan) }
+        let restored = wordsRead.map { KeyboardTextLogic.restoringCapitals(in: $0, from: typedLetters) }
             ?? KeyboardTextLogic.restoringCapitals(in: shownSpan, from: shownSpan)
         // A word whose first letter was typed as a symbol key gets the capital that the
         // keyboard types by itself at that place, as in "[lease" at the start of a sentence.
         let repaired = KeyboardTextLogic.capitalizingRepairedFirstLetters(
-            in: restored, from: typedSpan, textBefore: String(before.dropLast(shownSpan.count)),
+            in: restored, from: typedLetters, textBefore: String(before.dropLast(shownSpan.count)),
             type: document.autocapitalizationType)
         // A word of the work area gets the form that the typed capitals ask for: "Pytorch" and
         // "Pytorhc" become "PyTorch", and "pytorch" stays in lower case.
         let latched = spellChecker.preferredCapitals?.latch(
-            repaired, typed: typedSpan, textBefore: String(before.dropLast(shownSpan.count)),
+            repaired, typed: typedLetters, textBefore: String(before.dropLast(shownSpan.count)),
             type: document.autocapitalizationType) ?? repaired
-        let final = KeyboardTextLogic.keepingFirstCorrection(latched, typed: typedSpan, shown: shownSpan)
+        let final = KeyboardTextLogic.keepingFirstCorrection(latched, typed: typedLetters, shown: shownSpan)
+            + (comma ? "," : "")
         let finalWords = final.split(separator: " ")
         if final != shownSpan {
             deleteBackward(count: shownSpan.count)
@@ -1173,7 +1194,9 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
             lastCorrection = Correction(original: shownSpan, corrected: final, terminator: terminator)
             showNotice("\(shownSpan) \u{2192} \(final)")
         }
-        if followedBySpace, let last = finalWords.last {
+        // A comma ends the reading of words together, as a typed comma does: the next word is
+        // read alone, with no word before it.
+        if followedBySpace, !comma, let last = finalWords.last {
             // After a correction that joined or split words, the last shown word counts as typed
             // that way, so the next correction does not take the same keys apart again.
             let sameCount = finalWords.count == typedWords.count

@@ -120,6 +120,12 @@ jobs:
               --cases "$cases/english-symbols.$half.jsonl" --predictions "$outputs/english-symbols.$half.jsonl" \
               --json "$outputs/english-symbols.$half.summary.json"
           done
+          # The cases with a letter typed in place of the comma key or the period key after a word.
+          for half in dev test; do
+            python3 scripts/typing-evaluation/score.py --task english --engine shipping-keyboard \
+              --cases "$cases/english-comma-slip.$half.jsonl" --predictions "$outputs/english-comma-slip.$half.jsonl" \
+              --json "$outputs/english-comma-slip.$half.summary.json"
+          done
       - uses: actions/upload-artifact@v7
         if: always()
         with:

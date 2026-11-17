@@ -177,6 +177,17 @@ final class TypingEvaluationTests: XCTestCase {
         try typeEnglishCases(named: "english-symbols")
     }
 
+    /// The cases with a letter typed in place of the comma key or the period key right after a
+    /// word, and real words that end in a letter beside the comma key (docs/comma-slip-design.md).
+    /// A cases folder without the files skips them.
+    func testEnglishCommaSlipCasesThroughTheTypingController() throws {
+        let (casesFolder, _) = try folders()
+        guard FileManager.default.fileExists(atPath: casesFolder.appendingPathComponent("english-comma-slip.dev.jsonl").path) else {
+            throw XCTSkip("english-comma-slip.dev.jsonl is not in the cases folder")
+        }
+        try typeEnglishCases(named: "english-comma-slip")
+    }
+
     /// The cases of the vocabulary pack "AI and software": words of the pack typed right and
     /// with a slip, their preferred capitals, and everyday words near them. The field
     /// capitalizes sentences, as most fields do, because the rule of the preferred capitals

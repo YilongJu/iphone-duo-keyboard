@@ -76,6 +76,7 @@ class Engine:
         self.library.shim_open.argtypes = [ctypes.c_char_p]
         self.library.shim_readings.argtypes = [ctypes.c_char_p, ctypes.c_char_p, ctypes.c_int, ctypes.c_char_p, ctypes.c_int]
         self.library.shim_correct.argtypes = [ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p, ctypes.c_int]
+        self.library.shim_set.argtypes = [ctypes.c_char_p, ctypes.c_float]
         if self.library.shim_open(str(lexicon).encode()) != 1:
             raise SystemExit(f"{lexicon} is not a valid lexicon file")
         self.use_supplement = None
@@ -86,14 +87,19 @@ class Engine:
                 raise SystemExit(f"{supplement} is not a valid supplement of {lexicon}")
             self.use_supplement = use_supplement
         self.buffer = ctypes.create_string_buffer(1 << 16)
-        self.cache: dict[tuple[str, str], list[dict] | None] = {}
+        self.cache: dict[tuple[str, str, bool], list[dict] | None] = {}
 
-    def readings(self, previous_word: str, typed: str) -> list[dict] | None:
-        key = (previous_word, typed)
+    def readings(self, previous_word: str, typed: str, ends_with_space: bool) -> list[dict] | None:
+        """The readings of `typed`. `ends_with_space` says that the person typed a space after
+        it. Only then does the engine also read the last letter as a slip for the comma key beside
+        it (last_letter_as_comma), as the keyboard asks (`endsWithSpace` in Shared/TypingEngine.swift)."""
+        key = (previous_word, typed, ends_with_space)
         if key in self.cache:
             return self.cache[key]
         if self.use_supplement is not None and self.library.shim_use_supplement(int(self.use_supplement)) != 1:
             raise SystemExit("the shim holds no supplement")
+        if self.library.shim_set(b"last_letter_as_comma", float(ends_with_space)) != 1:
+            raise SystemExit("the engine does not know the setting last_letter_as_comma")
         count = self.library.shim_readings(previous_word.encode(), typed.encode(), READINGS, self.buffer, len(self.buffer))
         if count < 0:
             raise SystemExit("the readings do not fit the buffer")
@@ -617,22 +623,31 @@ def type_case(case: dict, engine: Engine, chooser, capitals: "PreferredCapitals 
                 text_before = before[:len(before) - len(shown_span)]
                 reading = None
                 if len(typed_span) >= 2:
-                    readings = engine.readings(word_before_space(text_before), typed_span.lower())
+                    readings = engine.readings(word_before_space(text_before), typed_span.lower(), character == " ")
                     if readings is not None:
                         if capitals is not None and protect_new_words:
                             readings = capitals.keeping_new_words(readings, typed_span.lower())
                         reading = chooser(readings, text_before, typed_span.lower())
+                # A comma in place of the last typed letter, as "hello," for "hellom", comes only
+                # before a space. The capitals read the words without it and the typed letters
+                # without that letter, and the comma ends the reading of words together.
+                comma = reading is not None and reading.endswith(",") and typed_span[-1].isalpha()
+                if comma and character != " ":
+                    raise SystemExit(f"the engine read a comma in {typed_span!r} before {character!r}")
+                words_read = reading[:-1] if comma else reading
+                typed_letters = typed_span[:-1] if comma else typed_span
                 final = reading if reading is not None else shown_span
                 if keep_capitals:
-                    final = (restoring_capitals(reading, typed_span) if reading is not None
+                    final = (restoring_capitals(words_read, typed_letters) if reading is not None
                              else restoring_capitals(shown_span, shown_span))
-                    final = capitalizing_repaired_first_letters(final, typed_span, text_before)
+                    final = capitalizing_repaired_first_letters(final, typed_letters, text_before)
                     if capitals is not None:
-                        final = capitals.latch(final, typed_span, text_before)
+                        final = capitals.latch(final, typed_letters, text_before)
+                    final += "," if comma else ""
                 final_words = [w for w in final.split(" ") if w]
                 if final != shown_span:
                     document = text_before + final
-                if character == " " and final_words:
+                if character == " " and final_words and not comma:
                     same_count = len(final_words) == len(typed_words)
                     recent = RecentWord(typed=word if same_count else final_words[-1], shown=final_words[-1],
                                         context=(document + " ")[-RECENT_CONTEXT_LENGTH:])
