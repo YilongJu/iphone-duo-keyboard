@@ -19,6 +19,9 @@ The script reports each category, then groups of categories:
   time cannot repair these, so they stay apart from the letter slips.
 - `symbol_slips` and `clean_symbols` (English, the files english-symbols.*.jsonl): a symbol or
   digit key in place of a letter, and real text with a symbol or digit that must stay as typed.
+- `comma_slips`, `period_slips` and `clean_comma_neighbors` (English, the files
+  english-comma-slip.*.jsonl): a letter key in place of the comma key or the period key right
+  after a word, and real words that end in a letter beside the comma key.
 - Every other category is reported alone.
 
 A slip case can name its clean twin (`twin`): the same text typed without the slip. For those
@@ -35,6 +38,9 @@ GROUPS = {
         "space_slips": ["space_missing", "space_to_letter", "space_transposed", "space_extra", "letter_to_space"],
         "symbol_slips": ["symbol_first_letter", "symbol_inner_letter", "symbol_first_letter_two_words", "symbol_plus_letter_slip"],
         "clean_symbols": ["clean_symbol_token", "clean_bracket_or_dot_word"],
+        "comma_slips": ["comma_slip_wide", "comma_slip_compact"],
+        "period_slips": ["period_slip_wide", "period_slip_compact"],
+        "clean_comma_neighbors": ["clean_comma_neighbor_word"],
     },
     "pinyin": {
         "finger_slips": ["substitution_adjacent", "deletion", "double_letter", "extra_adjacent", "transposition", "two_errors"],
