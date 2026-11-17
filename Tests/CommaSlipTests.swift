@@ -37,6 +37,17 @@ final class CommaSlipEngineTests: XCTestCase {
         XCTAssertEqual(Self.engine.reading(previousWord: "", typed: "hellol"), "hello")
     }
 
+    func testAnEndingOfAContractionBeforeTheLetterGetsNoComma() {
+        // The lexicon holds "ll", "re" and "ve" as the endings of "I'll", "you're" and "I've".
+        // No person writes such an ending as a word before a comma, so "llm" is not "ll,".
+        for typed in ["llm", "rek", "vem"] {
+            let reading = Self.engine.reading(previousWord: "", typed: typed)
+            XCTAssertEqual(reading?.contains(","), false, "\(typed) reads as \(reading ?? "nil")")
+        }
+        // A word of two letters that stands alone keeps its comma.
+        XCTAssertEqual(Self.engine.reading(previousWord: "", typed: "usm"), "us,")
+    }
+
     func testTheWordBeforeTheCommaMustBeTypedExactly() {
         // A slip inside the word as well would turn "itll" into "it," and not "it'll".
         XCTAssertEqual(Self.engine.reading(previousWord: "think", typed: "itll"), "it'll")

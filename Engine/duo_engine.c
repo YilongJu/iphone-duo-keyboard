@@ -1471,11 +1471,19 @@ static float score_as_typed(
    "it," for "itll" in place of "it'll". The typed words before it may be read with slips, as in
    any search. The reading becomes `best` when it beats the text as typed by `margin` and beats
    the best reading so far. A `pool` that is not NULL receives the reading.
-   Two cases get no such reading. A one-letter word before the comma: such a word must match
-   exactly, and a comma right after it is rare. And a last letter that repeats the letter before
-   it or sits beside it, as in "breakl" and "tok": a doubled letter and an extra key beside the
-   intended one explain that letter as well, and the engine charges every extra key the same
-   cost, so it cannot tell them from a slip on the comma key. */
+   Three cases get no such reading. A one-letter word before the comma: such a word must match
+   exactly, and a comma right after it is rare. An ending of a contraction before the comma, as
+   "ll" in "llm": the lexicon holds "ll", "re" and "ve" from text that splits "I'll", "you're"
+   and "I've" at the apostrophe, and no person writes such an ending as a word before a comma.
+   And a last letter that repeats the letter before it or sits beside it, as in "breakl" and
+   "tok": a doubled letter and an extra key beside the intended one explain that letter as well,
+   and the engine charges every extra key the same cost, so it cannot tell them from a slip on
+   the comma key. */
+static int is_contraction_ending(const char *letters, int length) {
+    /* The endings of one letter, "d", "m", "s" and "t", fall under the one-letter rule. */
+    return length == 2 && (memcmp(letters, "ll", 2) == 0 || memcmp(letters, "re", 2) == 0 || memcmp(letters, "ve", 2) == 0);
+}
+
 static void read_last_letter_as_comma(
     const duo_lexicon *lexicon, const duo_params *params, const char *typed, int length, uint32_t previous,
     float typed_score, float margin, duo_result *best, float *best_gain, reading_pool_t *pool) {
@@ -1485,6 +1493,7 @@ static void read_last_letter_as_comma(
     while (word_start > 0 && typed[word_start - 1] != ' ') word_start--;
     int word_length = length - 1 - word_start;
     if (word_length < 2 || !is_known_word(lexicon, typed + word_start, word_length)) return;
+    if (is_contraction_ending(typed + word_start, word_length)) return;
     /* keys_are_neighbors also holds for a key and itself. */
     if (keys_are_neighbors(letter, typed[length - 2])) return;
     char head[DUO_MAX_TYPED + 1];

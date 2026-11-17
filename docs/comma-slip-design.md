@@ -8,7 +8,9 @@ flowchart TD
     B -- no --> X["No comma reading"]
     B -- yes --> C{"Last word without that letter is a lexicon word<br/>of 2 letters or more? hello"}
     C -- no --> X
-    C -- yes --> D{"Letter repeats the letter before it,<br/>or sits beside it?"}
+    C -- yes --> K{"That word is the ending of a contraction?<br/>ll, re or ve"}
+    K -- yes --> X
+    K -- no --> D{"Letter repeats the letter before it,<br/>or sits beside it?"}
     D -- yes --> X
     D -- no --> E["Search the text before the letter.<br/>The last word stays exactly as typed: say hello"]
     E --> F["Comma reading: say hello,<br/>score = search score - letter_for_comma 5.2"]
@@ -115,6 +117,7 @@ Table 4. Options and the dev measurement behind each decision.
 
 | Option | Decision | Dev measurement |
 | --- | --- | --- |
+| No comma reading after "ll", "re" or "ve" | taken | The lexicon holds these endings of "I'll", "you're" and "I've" as words. With the rule, "llm" reads as "ll" with the pack off, as before the comma reading. All 8 case files give the same output for every case with and without the rule. |
 | The word before the comma typed exactly | taken | Slips allowed inside that word turn "itll" into "it," in place of "it'll". At cost 5 that turns 30 of 843 `apostrophe_dropped` cases, 4 letter slips and 1 clean case wrong. |
 | No comma reading for a letter that repeats the letter before it or sits beside it | taken | The reading for those letters adds 40 comma slips (553 of 600) and turns 6 letter slips wrong, as "breakl" to "break," and "tok" to "to,". |
 | `letter_for_comma` 5.2 | taken | 513 of 600 comma slips. From 5.1 to 5.49 every existing dev count stays. 5.0 turns 2 clean cases wrong, as "tom" to "to,". |
@@ -192,13 +195,13 @@ better.
 | `english-domain` | 4,029/7,137 | 4,029/7,137 | 6,357/7,137 | 6,357/7,137 |
 | `english-apostrophe-words`, word alone | 882/1,623 | 882/1,623 | 882/1,623 | 882/1,623 |
 | `english-apostrophe-words`, with the next word | 628/1,623 | 628/1,623 | 628/1,623 | 628/1,623 |
-| technical stream, changed words per 1,000 | 23.43 | 24.11 | 13.55 | 13.61 |
+| technical stream, changed words per 1,000 | 23.43 | 23.50 | 13.55 | 13.61 |
 | written stream, changed words per 1,000 | 11.83 | 11.83 | 8.61 | 8.61 |
 | everyday stream, changed words per 1,000 | 10.80 | 10.80 | 10.80 | 10.80 |
 
-The counts stay. With the pack on, the technical stream changes 1 more word of 14,765: "vsm" to
-"vs,". With the pack off it changes 10 more, mostly "llm" to "ll,". Each is a word that the lexicon
-lacks and that ends in a lexicon word and a letter beside the comma key.
+The counts stay. With the pack on and with the pack off, the technical stream changes 1 more word
+of 14,765: "vsm" to "vs,". The lexicon lacks "vsm", and "vsm" ends in a lexicon word and a letter
+beside the comma key.
 
 On the 6,973 dev inputs of `english` and `english-comma-slip`, the engine takes 7.0 ms of
 processor time per input in WSL. Without the comma reading it takes 6.4 to 6.6 ms. The comma reading
@@ -231,8 +234,8 @@ Python copy of the keyboard rules, follows the same rules.
 - The engine has no statistic of a comma after a word. Some clean words hold a far more frequent
   word, as "tom" holds "to". Such a word stays only because the margin of a known word is 5.
 - A word that the lexicon lacks and that ends in a lexicon word and a letter beside the comma key
-  reads as a comma slip, as "vsm" to "vs,". One existing unit test pins the old reading of "llm"
-  without the work area, "ll". The engine now reads "llm" as "ll," there.
+  reads as a comma slip, as "vsm" to "vs,". The endings of contractions are the exception: "llm"
+  never reads as "ll,". With the work area on, "llm" is a known word and stays as typed.
 - The engine reads only the last letter of the typed text. A comma slip in the first word of two
   words typed together, as "hellom world", stays a slip until the person corrects it.
 
