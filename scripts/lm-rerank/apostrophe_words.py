@@ -64,10 +64,10 @@ class SetEngine(rerank.Engine):
         self.library.shim_set.argtypes = [ctypes.c_char_p, ctypes.c_float]
         self.value = apostrophe_readings
 
-    def readings(self, previous_word, typed):
+    def readings(self, previous_word, typed, ends_with_space):
         if self.library.shim_set(b"apostrophe_readings", float(self.value)) != 1:
             raise SystemExit("the engine does not know the setting apostrophe_readings")
-        return super().readings(previous_word, typed)
+        return super().readings(previous_word, typed, ends_with_space)
 
 
 def with_next_word(case: dict) -> dict:

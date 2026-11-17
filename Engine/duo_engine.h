@@ -11,6 +11,10 @@
  "2hat" as "what". Such a key stands only for a letter beside it. The engine never drops it,
  so punctuation that a person typed on purpose stays in the text.
 
+ The reverse slip also happens: a letter typed in place of the comma key right after a word.
+ "hellom" can read as "hello,", because "m" sits beside the comma key. The engine reads only the
+ last typed letter this way, for text that the person ends with a space.
+
  One code base serves both languages. English: the words are English words and a space separates
  them. Pinyin: the words are Chinese words spelled in Pinyin letters, and they follow each other
  with nothing between them.
@@ -109,6 +113,13 @@ typedef struct {
     float dash_before_word;
     float digit_before_word;
     float digit_after_word;
+    /* A letter key typed in place of the comma key beside it, right after the last typed word
+       (English only), as in "hellom" for "hello,". The text is read as the text before that
+       letter, read with or without slips, and a comma right after its last word, at this cost.
+       The word before the comma must be a lexicon word of two letters or more, typed exactly. A
+       last letter that repeats the letter before it or sits beside it gets no such reading,
+       because a doubled letter or an extra key explains it as well. */
+    float letter_for_comma;
     /* Share of the word-pair statistic in a word's probability, from 0 to 1. A lexicon with a
        back-off model does not use this share. */
     float pair_weight;
@@ -134,6 +145,11 @@ typedef struct {
        apostrophe of one word, such as "it's going" for "its going". 0 leaves them out. The
        choice of duo_correct_english is the same either way. */
     int apostrophe_readings;
+    /* 1 reads the last typed letter also as a slip for the comma key beside it, at the cost
+       letter_for_comma. This is for text that the person ends with a space. 0 leaves that reading
+       out, for text that the person ends with a mark or a line break, where a comma right before
+       that key makes no sense. */
+    int last_letter_as_comma;
 } duo_params;
 
 typedef struct {
@@ -179,7 +195,9 @@ int duo_params_set(duo_params *params, const char *name, float value);
    A word of two or more letters may also hold one symbol or digit key that sits beside a
    letter key: a digit or "[" at any place, or one of "-" ";" "," "." in front of the word.
    `previous_word` is the word before the typed text, in lower case, or an empty string.
-   The result equals `typed` when no other reading is clearly more likely.
+   The result equals `typed` when no other reading is clearly more likely. With
+   last_letter_as_comma, the result can end in a comma that takes the place of the last typed
+   letter, as "hello," for "hellom".
    Returns 1, or 0 when `typed` is empty, too long, or holds other characters. */
 int duo_correct_english(
     const duo_lexicon *lexicon, const duo_params *params,
@@ -203,7 +221,9 @@ typedef struct {
 
 /* Writes the readings of typed English text that the search keeps, best score first, into
    `readings`: the text as typed, and for each search (the text as typed and each shifted space)
-   the best reading for each last word, up to the beam. The same text appears once, at its
+   the best reading for each last word, up to the beam. With last_letter_as_comma, the list
+   also holds the reading with a comma in place of the last typed letter, when the engine reads
+   one. The same text appears once, at its
    best score. A list cut at `capacity` still holds the text as typed and the chosen reading.
    The input rules and the choice are those of duo_correct_english, which this function does
    not change. Returns the count written, or 0 for bad input or a capacity under 2. */

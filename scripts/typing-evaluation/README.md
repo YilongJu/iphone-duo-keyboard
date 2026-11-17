@@ -76,6 +76,11 @@ Table 3. The categories. A name that starts with `clean` holds input without a s
 | `symbol_plus_letter_slip` | English symbols | symbol slips | A symbol or digit key in place of the first letter, and one letter slip after it | 0robabyl to probably |
 | `clean_symbol_token` | English symbols | clean symbols | None, a real token with a digit or a symbol | mp3 to mp3 |
 | `clean_bracket_or_dot_word` | English symbols | clean symbols | None, a real word right after `[`, `.`, `,`, `;` or `-` | [note to [note |
+| `comma_slip_wide` | English comma | comma slips | k, l or m in place of the comma key after a word | hellom to hello, |
+| `comma_slip_compact` | English comma | comma slips | n in place of the comma key after a word | richn to rich, |
+| `period_slip_wide`, `period_slip_compact` | English comma | period slips | l or m in place of the period key after the last word | rooml to room. |
+| `comma_slip_real_word` | English comma | alone | A letter in place of the comma key that gives a common word | took to too, |
+| `clean_comma_neighbor_word` | English comma | clean comma neighbors | None, a word that ends in k, l, m or n | them to them |
 | `clean` | Pinyin | clean | None, clauses of 2 to 20 characters | taduinide to 它对你的 |
 | `fuzzy_sound` | Pinyin | alone | One sound swapped for its dialect twin, such as n and l | lixihuan to 你喜欢 |
 
@@ -143,6 +148,30 @@ or more. Run it with
 A comma, a period or a semicolon typed inside or after a word ends that word, and the keyboard
 corrects the letters before it at once. The cases do not hold that slip.
 
+## Cases with a letter in place of the comma key or the period key
+
+A finger that aims at the comma key right after a word can land on a letter beside it: "hellom"
+for "hello,". `build_english_comma_cases.py` writes `cases/english-comma-slip.dev.jsonl` and
+`cases/english-comma-slip.test.jsonl`, 1,800 cases per half, 300 per category. The other case files
+do not change. `docs/comma-slip-design.md` describes the reading of the engine and its results.
+
+- A slip case is a word that a Tatoeba sentence writes with the mark right after it. The typed
+  text is the word and one letter beside the mark key, and the intended text is the word and
+  the mark.
+- In the wide layout, "m" shares the whole side edge of the comma key, and "k" and "l" touch part
+  of its top edge. So `comma_slip_wide` types "m" with weight 2 and "k" and "l" with weight 1
+  each. In the compact layout the comma key sits under "n". The period key sits beside "l" in the
+  wide layout and under "m" in the compact layout.
+- A typed text that wordfreq lists at Zipf 3.0 or more is a common word, and its case goes to
+  `comma_slip_real_word`. The word before the mark has two letters or more.
+- `clean_comma_neighbor_word` holds words of three letters or more that end in k, l, m or n,
+  with a space after them in the sentence. Half of them hold a common word without their last
+  letter, as "them" holds "the".
+- A test sentence with the words of a dev sentence stays out, as in the apostrophe cases.
+
+Run our engine on them with
+`python3 scripts/typing-evaluation/run_duo_engine.py --task english-comma-slip --half dev`.
+
 ## Cases of the vocabulary pack "AI and software"
 
 `build_english_domain_cases.py` writes `cases/english-domain.{dev,test}.jsonl`, 7,137 dev and
@@ -202,6 +231,7 @@ the engine's `output`. A case without an output counts as wrong.
 | `build_english_cases.py`, `build_pinyin_cases.py` | The case generators |
 | `build_english_symbol_cases.py` | The generator of the cases with a symbol or digit key in place of a letter |
 | `build_english_domain_cases.py` | The generator of the cases of the vocabulary pack "AI and software" |
+| `build_english_comma_cases.py` | The generator of the cases with a letter in place of the comma key or the period key |
 | `build_external_english_cases.py` | Cases from published misspelling lists, written to `build/` and kept out of git |
 | `inputs/names_and_terms.txt` | The hand-written list behind `clean_names_and_terms` |
 | `inputs/symbol_tokens.txt` | The list behind `clean_symbol_token` |

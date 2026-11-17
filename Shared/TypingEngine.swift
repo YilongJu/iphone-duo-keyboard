@@ -82,7 +82,9 @@ final class EnglishTypingEngine {
     }
 
     /// Reads typed text and returns the text the person most likely meant. The result equals
-    /// `typed` when the engine reads the text as typed.
+    /// `typed` when the engine reads the text as typed. The engine reads the text as text that
+    /// the person ends with a space, so the result can end in a comma that takes the place of the
+    /// last typed letter, as "hello," for "hellom".
     ///
     /// `typed` holds one or two words in lower case: letters, apostrophes and single spaces.
     /// A word of two or more letters may also hold one symbol or digit key that sits beside a
@@ -95,15 +97,29 @@ final class EnglishTypingEngine {
         return TypingLexicon.text(of: &result)
     }
 
+    /// The readings of typed text that the person ends with a space: `readings` with
+    /// `endsWithSpace` true.
+    func readings(previousWord: String, typed: String, limit: Int) -> [EnglishReading]? {
+        readings(previousWord: previousWord, typed: typed, limit: limit, endsWithSpace: true)
+    }
+
     /// The readings of typed text that the engine's search keeps, best score first, up to
     /// `limit`: the text as typed, and the best reading for each last word. Exactly one reading
-    /// is the text as typed, and exactly one is the reading that `reading` returns. The input
-    /// rules are those of `reading`, and the result is nil for text outside them.
-    func readings(previousWord: String, typed: String, limit: Int) -> [EnglishReading]? {
+    /// is the text as typed, and exactly one is the reading that `reading` returns for the same
+    /// text before a space. The input rules are those of `reading`, and the result is nil for
+    /// text outside them.
+    ///
+    /// `endsWithSpace` says that the person typed a space after the text. Only then does the
+    /// engine also read the last typed letter as a slip for the comma key beside it, as "hello,"
+    /// for "hellom" (`last_letter_as_comma`). A person who ends the text with a mark or a line
+    /// break did not mean a comma right before it.
+    func readings(previousWord: String, typed: String, limit: Int, endsWithSpace: Bool) -> [EnglishReading]? {
         precondition(limit >= 2, "the list holds the text as typed and the engine's choice")
         var buffer = [duo_reading](repeating: duo_reading(), count: limit)
+        var callParams = params
+        callParams.last_letter_as_comma = endsWithSpace ? 1 : 0
         let count = buffer.withUnsafeMutableBufferPointer { pointer in
-            duo_english_readings(&tables, &params, previousWord, typed, pointer.baseAddress, Int32(limit))
+            duo_english_readings(&tables, &callParams, previousWord, typed, pointer.baseAddress, Int32(limit))
         }
         guard count > 0 else { return nil }
         let readings = (0..<Int(count)).map { index in
