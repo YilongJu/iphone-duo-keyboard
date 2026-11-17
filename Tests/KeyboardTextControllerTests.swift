@@ -808,13 +808,34 @@ final class KeyboardTextControllerTests: XCTestCase {
         XCTAssertEqual(spellChecker.requests.last, "form|teh")
     }
 
-    func testTwoWordsReadTogetherCanBringBackTheTypedLetters() {
+    func testTwoWordsReadTogetherKeepTheCorrectionOfTheFirstWord() {
+        // Only a delete brings back the typed letters of a corrected word. The next word does not.
         makeController(before: "")
         spellChecker.corrections = ["fro": "for", "fro yo": "fro yo"]
         type("fro ")
         XCTAssertEqual(document.text, "for ")
         type("yo ")
-        XCTAssertEqual(document.text, "fro yo ")
+        XCTAssertEqual(document.text, "for yo ")
+    }
+
+    func testTwoWordsReadTogetherKeepTheFirstCorrectionAndCorrectTheSecondWord() {
+        makeController(before: "")
+        spellChecker.corrections = ["fro": "for", "fro teh": "fro the"]
+        type("fro ")
+        type("teh ")
+        XCTAssertEqual(document.text, "for the ")
+        // One delete brings back the two words as the field showed them before.
+        controller.keyboardViewDeleteBackward(keyboardView)
+        XCTAssertEqual(document.text, "for teh")
+    }
+
+    func testTheKeptCorrectionRuleLeavesOtherReadingsAlone() {
+        // Another first word, a join and a first word that was not corrected all stay as read.
+        XCTAssertEqual(KeyboardTextLogic.keepingFirstCorrection("from the", typed: "form teh", shown: "form teh"), "from the")
+        XCTAssertEqual(KeyboardTextLogic.keepingFirstCorrection("from the", typed: "fro teh", shown: "for teh"), "from the")
+        XCTAssertEqual(KeyboardTextLogic.keepingFirstCorrection("frozen", typed: "fro zen", shown: "for zen"), "frozen")
+        XCTAssertEqual(KeyboardTextLogic.keepingFirstCorrection("fro yo", typed: "fro yo", shown: "fro yo"), "fro yo")
+        XCTAssertEqual(KeyboardTextLogic.keepingFirstCorrection("Fro yo", typed: "Fro yo", shown: "For yo"), "For yo")
     }
 
     func testOneLetterAloneDoesNotGoToTheChecker() {

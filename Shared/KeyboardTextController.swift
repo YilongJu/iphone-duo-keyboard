@@ -1151,9 +1151,8 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
         let reading = typedSpan.count >= 2
             ? spellChecker.reading(
                 previousWord: span.previousWord, typed: typedSpan.lowercased(), textBefore: span.textBefore) : nil
-        // A reading of two words together replaces an earlier reading of the first word alone,
-        // also when it brings back the letters the person typed. Without a reading the shown
-        // text stays, and only a lone "i" gets its capital.
+        // A reading of two words together replaces an earlier reading of the first word alone.
+        // Without a reading the shown text stays, and only a lone "i" gets its capital.
         let restored = reading.map { KeyboardTextLogic.restoringCapitals(in: $0, from: typedSpan) }
             ?? KeyboardTextLogic.restoringCapitals(in: shownSpan, from: shownSpan)
         // A word whose first letter was typed as a symbol key gets the capital that the
@@ -1163,9 +1162,10 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
             type: document.autocapitalizationType)
         // A word of the work area gets the form that the typed capitals ask for: "Pytorch" and
         // "Pytorhc" become "PyTorch", and "pytorch" stays in lower case.
-        let final = spellChecker.preferredCapitals?.latch(
+        let latched = spellChecker.preferredCapitals?.latch(
             repaired, typed: typedSpan, textBefore: String(before.dropLast(shownSpan.count)),
             type: document.autocapitalizationType) ?? repaired
+        let final = KeyboardTextLogic.keepingFirstCorrection(latched, typed: typedSpan, shown: shownSpan)
         let finalWords = final.split(separator: " ")
         if final != shownSpan {
             deleteBackward(count: shownSpan.count)

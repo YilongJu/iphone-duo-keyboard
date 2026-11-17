@@ -301,6 +301,23 @@ enum KeyboardTextLogic {
     // MARK: Autocorrection
 
     /// A character that ends a word. Autocorrection looks at the word when one of these arrives.
+    /// A correction stays until the person deletes it. A reading of two words that would bring
+    /// back the typed letters of a first word that the keyboard corrected keeps that word as the
+    /// field shows it, and takes only the second word of the reading: "fro " became "for ", and
+    /// "fro yo" read together gives "for yo", not "fro yo". A reading that changes the first word
+    /// into another word, as "form teh" into "from the", stays as it is. So does a reading that
+    /// joins or splits the words.
+    static func keepingFirstCorrection(_ reading: String, typed: String, shown: String) -> String {
+        let readWords = reading.split(separator: " ", omittingEmptySubsequences: false)
+        let typedWords = typed.split(separator: " ", omittingEmptySubsequences: false)
+        let shownWords = shown.split(separator: " ", omittingEmptySubsequences: false)
+        guard readWords.count == 2, typedWords.count == 2, shownWords.count == 2,
+            shownWords[0].lowercased() != typedWords[0].lowercased(),
+            readWords[0].lowercased() == typedWords[0].lowercased()
+        else { return reading }
+        return shownWords[0] + " " + readWords[1]
+    }
+
     static let wordTerminators: Set<String> = [" ", ".", ",", "!", "?", ";", ":", "\n"]
 
     /// The symbol and digit keys that sit beside a letter key, in the wide layout or the compact
