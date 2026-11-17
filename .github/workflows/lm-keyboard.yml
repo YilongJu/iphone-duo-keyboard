@@ -205,8 +205,9 @@ jobs:
   keyboard:
     name: Unit tests, and the dev cases through the keyboard code with the model
     runs-on: xcode-27
-    # The unit tests, with the speed test of the language models, take about 2.5 hours.
-    timeout-minutes: 240
+    # The unit tests, with the speed test of the language models and the dev cases, take about
+    # 3.6 hours.
+    timeout-minutes: 300
     steps:
       - uses: actions/checkout@v7
       - name: Install XcodeGen
