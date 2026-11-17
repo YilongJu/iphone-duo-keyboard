@@ -299,6 +299,9 @@ struct ModelSpeedProgress {
         guard lines.first == "run \(signature)" else { return nil }
         var ended = Set<Int>(), starts: [Int: Int] = [:], places: [Int: String] = [:]
         for line in lines.dropFirst() {
+            // A run that reached its last pair ends its record with "done". The pairs it ended
+            // still count, so the next run shows their kept lines.
+            if line == "done" { continue }
             let parts = line.split(separator: " ").map(String.init)
             guard parts.count >= 2, let index = Int(parts[1]) else {
                 throw ModelSpeedError("the progress file holds the line \"\(line)\"")
