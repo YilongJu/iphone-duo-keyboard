@@ -240,15 +240,11 @@ final class KeyboardTextControllerTests: XCTestCase {
         controller.speedTestStart = { starts.append($0) }
         type("duo:speed16 ")
         await controller.languageModelTask?.value
-        type("
-duo:speed ")
+        type("\nduo:speed ")
         await controller.languageModelTask?.value
         XCTAssertEqual(speed.runs, 2)
         XCTAssertEqual(starts, [16, nil])
-        XCTAssertEqual(document.text, "duo:speed16 
-done        fake
-duo:speed 
-done        fake")
+        XCTAssertEqual(document.text, "duo:speed16 \ndone        fake\nduo:speed \ndone        fake")
     }
 
     func testTheResetTriggerRunsTheResetAndNotTheSpeedTest() async {

@@ -155,8 +155,8 @@ final class KeyboardView: UIView {
     }
 
     /// The emoji of the English word before the cursor. They show in the top row of keys, on a
-    /// capsule in the color of the Chinese candidate row, centered between the Copy and Paste
-    /// keys. The capsule lies over the inner ends of those two keys, which keep their size.
+    /// capsule centered between the Copy and Paste keys. The capsule lies over the inner ends of
+    /// those two keys, which keep their size.
     var topRowEmoji: [String] = [] {
         didSet {
             guard oldValue != topRowEmoji else { return }
@@ -265,9 +265,9 @@ final class KeyboardView: UIView {
         super.init(frame: frame)
         isMultipleTouchEnabled = true
         // iOS does not deliver a touch on a fully transparent point to a keyboard extension
-        // (Apple Developer Forums thread 702798). This faint background makes the gaps between
-        // the keys receive touches, and each touch then goes to the nearest key.
-        backgroundColor = UIColor(white: 0.5, alpha: 0.02)
+        // (Apple Developer Forums thread 702798). The keyboard's own background makes the gaps
+        // between the keys receive touches, and each touch then goes to the nearest key.
+        backgroundColor = KeyColors.surface
         globeButton.accessibilityLabel = "Next keyboard"
         addSubview(globeButton)
         candidateBar.isHidden = true
@@ -279,10 +279,10 @@ final class KeyboardView: UIView {
             self?.onSelectComposition()
         }
         addSubview(candidateBar)
-        emojiPanel.backgroundColor = KeyColors.function
+        emojiPanel.backgroundColor = KeyColors.capsule
         emojiPanel.isUserInteractionEnabled = false
         emojiPanel.isHidden = true
-        // The capsule has the color of the keys under it, so a shadow sets it apart from them.
+        // The capsule lies over the Copy and Paste keys, so a shadow sets it apart from them.
         emojiPanel.layer.shadowColor = UIColor.black.cgColor
         emojiPanel.layer.shadowOpacity = 0.35
         emojiPanel.layer.shadowRadius = 3

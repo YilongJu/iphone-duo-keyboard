@@ -39,14 +39,53 @@ enum KeyColors {
     /// The symbol and the text on the blue return key.
     static let actionText = UIColor.white
 
+    // The light appearance is the "Keycap" look and the dark appearance the "Dark glass" look of
+    // the key shape designs. The keyboard follows the phone's light or dark setting, which the
+    // phone can switch at sunset and sunrise.
+
+    /// The keyboard's own background, under the keys.
+    static let surface = UIColor { traits in
+        traits.userInterfaceStyle == .dark ? KeyColors.hex(0x17181C) : KeyColors.hex(0xDADDE3)
+    }
+
+    /// A letter key. In dark mode the key is a light tint over the dark background.
     static let character = UIColor { traits in
-        traits.userInterfaceStyle == .dark ? UIColor(white: 0.42, alpha: 1) : UIColor.white
+        traits.userInterfaceStyle == .dark ? UIColor(white: 1, alpha: 0.11) : UIColor.white
     }
 
     static let function = UIColor { traits in
-        traits.userInterfaceStyle == .dark
-            ? UIColor(white: 0.27, alpha: 1)
-            : UIColor(red: 0.68, green: 0.70, blue: 0.74, alpha: 1)
+        traits.userInterfaceStyle == .dark ? UIColor(white: 1, alpha: 0.05) : KeyColors.hex(0xC3C8D1)
+    }
+
+    /// The lower edge under a letter key and under a function key in light mode, which gives
+    /// the key its depth. Dark mode draws no edge.
+    static let characterEdge = UIColor { traits in
+        traits.userInterfaceStyle == .dark ? .clear : KeyColors.hex(0xB9BEC8)
+    }
+
+    static let functionEdge = UIColor { traits in
+        traits.userInterfaceStyle == .dark ? .clear : KeyColors.hex(0x9DA3AE)
+    }
+
+    /// The thin light line along the top of a key in dark mode. Light mode draws no line.
+    static let topLine = UIColor { traits in
+        traits.userInterfaceStyle == .dark ? UIColor(white: 1, alpha: 0.10) : .clear
+    }
+
+    /// The upper text of a two-character key, as the "!" of the "1" key.
+    static let secondaryText = UIColor { traits in
+        traits.userInterfaceStyle == .dark ? KeyColors.hex(0x9CA3AF) : KeyColors.hex(0x5B616C)
+    }
+
+    /// The capsule under the emoji of the top row.
+    static let capsule = UIColor { traits in
+        traits.userInterfaceStyle == .dark ? KeyColors.hex(0x2A2C32) : UIColor.white
+    }
+
+    private static func hex(_ value: Int) -> UIColor {
+        UIColor(
+            red: CGFloat((value >> 16) & 0xFF) / 255, green: CGFloat((value >> 8) & 0xFF) / 255,
+            blue: CGFloat(value & 0xFF) / 255, alpha: 1)
     }
 }
 
@@ -56,14 +95,44 @@ final class KeyView: UIView {
     /// The key's full cell, including the gaps around the drawn key. Touches map to cells.
     var hitFrame: CGRect = .zero
 
+    /// A pressed key keeps its pressed color at least this long, so a quick tap still shows.
+    static let shortestPressSeconds = 0.08
+    /// After the lift the pressed color fades back over this time.
+    static let releaseFadeSeconds = 0.2
+
     var isHighlighted = false {
-        didSet { updateBackground() }
+        didSet {
+            guard isHighlighted != oldValue else {
+                updateBackground()
+                return
+            }
+            if isHighlighted {
+                pressedAt = CACurrentMediaTime()
+                background.layer.removeAllAnimations()
+                updateBackground()
+            } else {
+                // The color the key has now goes in at once, so `drawnColor` reads it; only the
+                // drawing on screen fades.
+                let held = CACurrentMediaTime() - pressedAt
+                UIView.animate(
+                    withDuration: Self.releaseFadeSeconds, delay: max(0, Self.shortestPressSeconds - held),
+                    options: [.curveEaseOut, .allowUserInteraction, .beginFromCurrentState]
+                ) {
+                    self.updateBackground()
+                }
+            }
+        }
     }
+
+    private var pressedAt: CFTimeInterval = 0
 
     private var emphasized = false
     private var performsAction = false
-    /// The drawn key: its color, its round corners and its shadow.
+    /// The drawn key: its color, its round corners and its lower edge, which is a shadow.
     private let background = UIView()
+    /// Clips the top line to the key's round corners.
+    private let topLineClip = UIView()
+    private let topLine = UIView()
     private let primaryLabel = UILabel()
     private let secondaryLabel = UILabel()
     private let slideCharacterLabel = UILabel()
@@ -74,12 +143,14 @@ final class KeyView: UIView {
         super.init(frame: .zero)
         isUserInteractionEnabled = false
         background.isUserInteractionEnabled = false
-        background.layer.cornerRadius = 5
-        background.layer.shadowColor = UIColor.black.cgColor
-        background.layer.shadowOpacity = 0.3
+        background.layer.shadowOpacity = 1
         background.layer.shadowRadius = 0
-        background.layer.shadowOffset = CGSize(width: 0, height: 1)
         addSubview(background)
+        topLineClip.isUserInteractionEnabled = false
+        topLineClip.clipsToBounds = true
+        topLine.backgroundColor = KeyColors.topLine
+        topLineClip.addSubview(topLine)
+        addSubview(topLineClip)
 
         for label in [primaryLabel, secondaryLabel] {
             label.textAlignment = .center
@@ -88,6 +159,7 @@ final class KeyView: UIView {
             label.minimumScaleFactor = 0.5
             addSubview(label)
         }
+        secondaryLabel.textColor = KeyColors.secondaryText
         slideCharacterLabel.textAlignment = .center
         slideCharacterLabel.textColor = .secondaryLabel
         slideCharacterLabel.font = .systemFont(ofSize: Self.slideCharacterFontSize)
@@ -96,6 +168,10 @@ final class KeyView: UIView {
         iconView.tintColor = KeyColors.text
         addSubview(iconView)
         updateBackground()
+        // A shadow takes a fixed color, so the edge changes by hand with light and dark mode.
+        registerForTraitChanges([UITraitUserInterfaceStyle.self]) { (key: KeyView, _: UITraitCollection) in
+            key.updateEdge()
+        }
     }
 
     @available(*, unavailable)
@@ -163,8 +239,14 @@ final class KeyView: UIView {
     override func layoutSubviews() {
         super.layoutSubviews()
         background.frame = bounds
-        background.layer.shadowPath = UIBezierPath(
-            roundedRect: background.bounds, cornerRadius: background.layer.cornerRadius).cgPath
+        // Round corners of up to 12 points, less on the small keys of the compact layout.
+        let radius = min(12, min(bounds.width, bounds.height) * 0.22)
+        background.layer.cornerRadius = radius
+        background.layer.shadowOffset = CGSize(width: 0, height: bounds.height >= 50 ? 3 : 2)
+        background.layer.shadowPath = UIBezierPath(roundedRect: background.bounds, cornerRadius: radius).cgPath
+        topLineClip.frame = bounds
+        topLineClip.layer.cornerRadius = radius
+        topLine.frame = CGRect(x: 0, y: 0, width: bounds.width, height: 1)
         let content = bounds.insetBy(dx: 2, dy: 2)
         defer {
             for label in [primaryLabel, secondaryLabel, slideCharacterLabel] {
@@ -197,7 +279,13 @@ final class KeyView: UIView {
         }
     }
 
+    private func updateEdge() {
+        let edge = key.kind.isFunctionKey || performsAction ? KeyColors.functionEdge : KeyColors.characterEdge
+        background.layer.shadowColor = edge.resolvedColor(with: traitCollection).cgColor
+    }
+
     private func updateBackground() {
+        updateEdge()
         let pressed = isHighlighted != emphasized
         if performsAction {
             background.backgroundColor = pressed ? KeyColors.actionPressed : KeyColors.action

@@ -188,8 +188,7 @@ final class ModelSpeedTestTests: XCTestCase {
         // Of the 8 processor pairs, pairs 1 and 2 come before the start, pairs 3 to 7 are not
         // downloaded, and pair 8 holds the bundled model.
         let lines = await run(from: 3)
-        let report = lines.joined(separator: "
-")
+        let report = lines.joined(separator: "\n")
         XCTAssertEqual(lines.filter { $0.hasSuffix(": skipped: before the start pair 3") }.count, 2, report)
         XCTAssertEqual(lines.last, "done        1 pairs ran, 5 not downloaded, 0 failed, 2 before the start pair", report)
         let outside = await run(from: 9)

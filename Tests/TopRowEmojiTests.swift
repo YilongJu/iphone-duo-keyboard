@@ -3,10 +3,10 @@ import XCTest
 
 @testable import DuoKeyboard
 
-/// The English emoji in the top row of keys. The emoji sit between the Copy and Paste keys. The
-/// drawn backgrounds of those two keys shrink to free the gap, and every icon and label of the
-/// row stays at its place. A touch in an emoji's box types the emoji, and every other touch on
-/// the row reaches its key at once, with no pause after the emoji leave.
+/// The English emoji in the top row of keys. The emoji sit on a capsule centered between the Copy
+/// and Paste keys. The capsule lies over the inner ends of those two keys, which keep their size,
+/// and every icon and label of the row stays at its place. A touch on the capsule types an emoji,
+/// and every other touch on the row reaches its key at once, with no pause after the emoji leave.
 @MainActor
 final class TopRowEmojiTests: XCTestCase {
     private var keyboardView: KeyboardView!
@@ -101,6 +101,18 @@ final class TopRowEmojiTests: XCTestCase {
         let kind: KeyKind
     }
 
+    /// The capsule under the emoji: the visible view of the keyboard with a color that is no key,
+    /// no label, no control and not the candidate row.
+    private func capsule() throws -> CGRect {
+        keyboardView.layoutIfNeeded()
+        let views = keyboardView.subviews.filter { view in
+            !(view is KeyView) && !(view is CandidateBar) && !(view is UILabel) && !(view is UIControl) && !view.isHidden
+                && (view.backgroundColor?.cgColor.alpha ?? 0) > 0
+        }
+        XCTAssertEqual(views.count, 1, "one capsule")
+        return frame(of: try XCTUnwrap(views.first, "no capsule"))
+    }
+
     private func allContentFrames() throws -> [[CGRect]] {
         try Self.topKinds.map { contentFrames(try keyView($0)) }
     }
@@ -122,7 +134,7 @@ final class TopRowEmojiTests: XCTestCase {
 
     // MARK: Place
 
-    func testTheEmojiShowBetweenTheCopyAndPasteKeys() throws {
+    func testTheEmojiSitOnACapsuleCenteredBetweenTheCopyAndPasteKeys() throws {
         for width in try widths() {
             makeKeyboard(width: width)
             type("good ")
@@ -131,10 +143,14 @@ final class TopRowEmojiTests: XCTestCase {
             let copy = try drawnFrame(try keyView(.copy))
             let paste = try drawnFrame(try keyView(.paste))
             let row = try keyView(.copy).hitFrame
+            let capsule = try capsule()
+            // The capsule has the height of the keys and its middle halfway between Copy and Paste.
+            XCTAssertEqual(capsule.minY, copy.minY, accuracy: 0.5, "\(width)")
+            XCTAssertEqual(capsule.maxY, copy.maxY, accuracy: 0.5, "\(width)")
+            XCTAssertEqual(capsule.midX, (copy.maxX + paste.minX) / 2, accuracy: 0.5, "\(width)")
             for label in labels {
                 let box = frame(of: label)
-                XCTAssertGreaterThanOrEqual(box.minX, copy.maxX, "\(width)")
-                XCTAssertLessThanOrEqual(box.maxX, paste.minX, "\(width)")
+                XCTAssertTrue(capsule.contains(box), "\(width)")
                 XCTAssertGreaterThanOrEqual(box.minY, row.minY - 0.5, "\(width)")
                 XCTAssertLessThanOrEqual(box.maxY, row.maxY + 0.5, "\(width)")
             }
@@ -154,34 +170,15 @@ final class TopRowEmojiTests: XCTestCase {
         }
     }
 
-    func testOnlyTheCopyAndPasteBackgroundsShrinkAndTheyGrowBack() throws {
+    func testEveryTopRowKeyKeepsItsBackgroundWhenEmojiComeAndGo() throws {
         for width in try widths() {
             makeKeyboard(width: width)
             let before = try allDrawnFrames()
             type("good ")
-            let during = try allDrawnFrames()
-            // Select All, Cut, Home and End keep their backgrounds.
-            for index in [0, 1, 4, 5] {
-                XCTAssertEqual(during[index], before[index], "\(width) \(Self.topKinds[index])")
-            }
-            // Copy keeps its left edge and Paste its right edge. Both get narrower toward the emoji.
-            XCTAssertEqual(during[2].minX, before[2].minX, accuracy: 0.001, "\(width)")
-            XCTAssertLessThan(during[2].maxX, before[2].maxX, "\(width)")
-            XCTAssertEqual(during[3].maxX, before[3].maxX, accuracy: 0.001, "\(width)")
-            XCTAssertGreaterThan(during[3].minX, before[3].minX, "\(width)")
-            // Each icon stays inside its own background, and no emoji covers a background.
-            for kind in [KeyKind.copy, .paste] {
-                let background = try drawnFrame(try keyView(kind))
-                for content in contentFrames(try keyView(kind)) {
-                    XCTAssertTrue(background.contains(content), "\(width) \(kind)")
-                }
-            }
-            for label in emojiLabels() {
-                for background in during {
-                    XCTAssertFalse(frame(of: label).intersects(background), "\(width)")
-                }
-            }
+            XCTAssertEqual(emojiLabels().count, 2, "\(width)")
+            XCTAssertEqual(try allDrawnFrames(), before, "\(width)")
             type("x")
+            XCTAssertEqual(emojiLabels().count, 0, "\(width)")
             XCTAssertEqual(try allDrawnFrames(), before, "\(width)")
         }
     }
@@ -222,10 +219,12 @@ final class TopRowEmojiTests: XCTestCase {
             makeKeyboard(width: width)
             type("good ")
             XCTAssertEqual(emojiLabels().count, 2)
-            // The Paste key reacts at the edge of its smaller background, next to the emoji.
+            // The Paste key reacts in the part of its background that the capsule leaves free.
             UIPasteboard.general.string = "x"
             let paste = try drawnFrame(try keyView(.paste))
-            tap(CGPoint(x: paste.minX + 1, y: paste.midY))
+            let capsule = try capsule()
+            XCTAssertLessThan(capsule.maxX, paste.maxX, "\(width)")
+            tap(CGPoint(x: (capsule.maxX + paste.maxX) / 2, y: paste.midY))
             XCTAssertEqual(document.text, "good x", "\(width)")
             // Select All reacts while emoji show.
             type(" good ")
@@ -236,20 +235,19 @@ final class TopRowEmojiTests: XCTestCase {
         }
     }
 
-    func testTheCopyKeyKeepsTheTouchesOfItsFreedPart() throws {
-        // The part of the Copy key's cell between its smaller background and the first emoji
-        // box still belongs to the Copy key. Copy with nothing selected names the problem on
-        // the space bar.
-        makeKeyboard(width: Self.compactWidth)
-        type("good ")
-        let copy = try drawnFrame(try keyView(.copy))
-        let firstEmoji = frame(of: try XCTUnwrap(emojiLabels().first))
-        XCTAssertLessThanOrEqual(copy.maxX, firstEmoji.minX)
-        UIPasteboard.general.string = "old"
-        tap(CGPoint(x: (copy.maxX + firstEmoji.minX) / 2, y: copy.midY))
-        XCTAssertEqual(document.text, "good ")
-        XCTAssertEqual(UIPasteboard.general.string, "old")
-        XCTAssertEqual(try keyView(.space).shownTexts.primary, "Select text first")
+    func testATouchAtTheLeftEndOfTheCapsuleTypesTheFirstEmojiAndDoesNotCopy() throws {
+        // Where the capsule lies over the inner end of the Copy key, a touch on the capsule types
+        // the first emoji. The emoji takes the place of the word, as a tap on its box does.
+        for width in try widths() {
+            makeKeyboard(width: width)
+            type("good ")
+            let copy = try drawnFrame(try keyView(.copy))
+            let capsule = try capsule()
+            UIPasteboard.general.string = "old"
+            tap(CGPoint(x: capsule.minX + 1, y: copy.midY))
+            XCTAssertEqual(document.text, "\u{1F44D} ", "\(width)")
+            XCTAssertEqual(UIPasteboard.general.string, "old", "\(width)")
+        }
     }
 
     func testTheTopRowWorksRightAfterTheEmojiLeave() throws {
