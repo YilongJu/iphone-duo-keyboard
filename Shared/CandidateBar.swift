@@ -23,7 +23,7 @@ final class CandidateBar: UIView {
 
     override init(frame: CGRect) {
         super.init(frame: frame)
-        backgroundColor = KeyColors.function
+        backgroundColor = KeyColors.candidateRow
         layer.cornerRadius = 5
         clipsToBounds = true
         compositionLabel.font = .systemFont(ofSize: 15)

@@ -1753,6 +1753,15 @@ final class ReturnKeyColorTests: XCTestCase {
         XCTAssertEqual(key.trailStrength, 0)
     }
 
+    func testTheCandidateRowCoversTheKeysUnderItInLightAndDarkMode() {
+        // The row lies over the top row of keys, so a see-through color would show the keys.
+        XCTAssertEqual(CandidateBar().backgroundColor, KeyColors.candidateRow)
+        for style in [UIUserInterfaceStyle.light, .dark] {
+            let color = KeyColors.candidateRow.resolvedColor(with: UITraitCollection(userInterfaceStyle: style))
+            XCTAssertEqual(color.cgColor.alpha, 1, "\(style.rawValue)")
+        }
+    }
+
     func testThePressedBlueReturnKeyGetsNoTrail() throws {
         let view = makeView(width: 669)
         view.returnKeyType = .send

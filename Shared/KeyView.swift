@@ -90,6 +90,12 @@ enum KeyColors {
             : UIColor(red: 217 / 255, green: 119 / 255, blue: 6 / 255, alpha: 0.32)
     }
 
+    /// The candidate row of Chinese mode and the row of a sentence fix. The row lies over the top
+    /// row of keys, so its color is opaque in both modes; the dark function key color is a tint.
+    static let candidateRow = UIColor { traits in
+        traits.userInterfaceStyle == .dark ? KeyColors.hex(0x26272C) : KeyColors.hex(0xC3C8D1)
+    }
+
     /// The capsule under the emoji of the top row.
     static let capsule = UIColor { traits in
         traits.userInterfaceStyle == .dark ? KeyColors.hex(0x2A2C32) : UIColor.white
