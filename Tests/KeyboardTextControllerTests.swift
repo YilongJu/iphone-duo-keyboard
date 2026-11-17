@@ -1746,6 +1746,8 @@ final class ReturnKeyColorTests: XCTestCase {
         view.touchesBegan([touch], with: nil)
         XCTAssertEqual(key.trailStrength, 1)
         XCTAssertEqual(view.rippleCount, UIAccessibility.isReduceMotionEnabled ? 0 : 1)
+        // The ripple lies in the pressed key, which clips it to its own shape.
+        XCTAssertEqual(key.rippleCount, view.rippleCount)
         view.touchesEnded([touch], with: nil)
         // The fade runs on screen. The value it ends at goes in at the lift.
         XCTAssertEqual(key.trailStrength, 0)

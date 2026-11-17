@@ -156,6 +156,8 @@ final class KeyView: UIView {
     private let background = UIView()
     /// The trail tint over the drawn key. It shows while the key is pressed and fades after the lift.
     private let trailView = UIView()
+    /// Clips the ripples to the key's round corners.
+    private let rippleClip = UIView()
     /// Clips the top line to the key's round corners.
     private let topLineClip = UIView()
     private let topLine = UIView()
@@ -176,6 +178,9 @@ final class KeyView: UIView {
         trailView.backgroundColor = KeyColors.trail
         trailView.alpha = 0
         addSubview(trailView)
+        rippleClip.isUserInteractionEnabled = false
+        rippleClip.clipsToBounds = true
+        addSubview(rippleClip)
         topLineClip.isUserInteractionEnabled = false
         topLineClip.clipsToBounds = true
         topLine.backgroundColor = KeyColors.topLine
@@ -228,6 +233,41 @@ final class KeyView: UIView {
     /// How strong the trail tint is now, from 0 to 1. The unit tests read this value.
     var trailStrength: CGFloat { trailView.alpha }
 
+    /// The ripple of a key press (key press feedback design C): a circle that grows from the
+    /// touch point and fades, inside the key's round shape only.
+    static let rippleSeconds = 0.46
+
+    /// Starts a ripple at `point`, in the key's coordinates. With Reduce Motion on, the key shows
+    /// only its trail tint.
+    func showRipple(at point: CGPoint) {
+        guard !UIAccessibility.isReduceMotionEnabled, !performsAction else { return }
+        // The circle reaches every corner of the key from any touch point.
+        let radius = hypot(bounds.width, bounds.height)
+        let ripple = CAShapeLayer()
+        ripple.path = UIBezierPath(ovalIn: CGRect(x: -radius, y: -radius, width: 2 * radius, height: 2 * radius)).cgPath
+        ripple.fillColor = KeyColors.ripple.resolvedColor(with: traitCollection).cgColor
+        ripple.position = point
+        ripple.opacity = 0
+        rippleClip.layer.addSublayer(ripple)
+        CATransaction.begin()
+        CATransaction.setCompletionBlock { ripple.removeFromSuperlayer() }
+        let grow = CABasicAnimation(keyPath: "transform.scale")
+        grow.fromValue = 0.1
+        grow.toValue = 1
+        let fade = CABasicAnimation(keyPath: "opacity")
+        fade.fromValue = 0.9
+        fade.toValue = 0
+        let group = CAAnimationGroup()
+        group.animations = [grow, fade]
+        group.duration = Self.rippleSeconds
+        group.timingFunction = CAMediaTimingFunction(name: .easeOut)
+        ripple.add(group, forKey: "ripple")
+        CATransaction.commit()
+    }
+
+    /// Count of ripples in this key now. The unit tests read this value.
+    var rippleCount: Int { rippleClip.layer.sublayers?.count ?? 0 }
+
     func apply(_ display: KeyDisplay) {
         primaryLabel.font = .systemFont(ofSize: display.primaryFontSize)
         // The color goes before the text, because styled text brings its own colors and a color
@@ -279,6 +319,8 @@ final class KeyView: UIView {
         background.layer.shadowPath = UIBezierPath(roundedRect: background.bounds, cornerRadius: radius).cgPath
         trailView.frame = bounds
         trailView.layer.cornerRadius = radius
+        rippleClip.frame = bounds
+        rippleClip.layer.cornerRadius = radius
         topLineClip.frame = bounds
         topLineClip.layer.cornerRadius = radius
         topLine.frame = CGRect(x: 0, y: 0, width: bounds.width, height: 1)
