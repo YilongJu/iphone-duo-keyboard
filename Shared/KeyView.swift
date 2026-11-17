@@ -77,6 +77,19 @@ enum KeyColors {
         traits.userInterfaceStyle == .dark ? KeyColors.hex(0x9CA3AF) : KeyColors.hex(0x5B616C)
     }
 
+    /// The tint that a pressed key takes and that fades after the lift (the "trail" of the key
+    /// press feedback design C).
+    static let trail = UIColor { traits in
+        traits.userInterfaceStyle == .dark ? UIColor(red: 1, green: 170 / 255, blue: 60 / 255, alpha: 0.42) : KeyColors.hex(0xFFE2B8)
+    }
+
+    /// The ripple that spreads from the touch point of a key press.
+    static let ripple = UIColor { traits in
+        traits.userInterfaceStyle == .dark
+            ? UIColor(red: 1, green: 196 / 255, blue: 120 / 255, alpha: 0.5)
+            : UIColor(red: 217 / 255, green: 119 / 255, blue: 6 / 255, alpha: 0.32)
+    }
+
     /// The capsule under the emoji of the top row.
     static let capsule = UIColor { traits in
         traits.userInterfaceStyle == .dark ? KeyColors.hex(0x2A2C32) : UIColor.white
@@ -99,6 +112,8 @@ final class KeyView: UIView {
     static let shortestPressSeconds = 0.08
     /// After the lift the pressed color fades back over this time.
     static let releaseFadeSeconds = 0.2
+    /// After the lift the trail tint fades over this time.
+    static let trailFadeSeconds = 0.8
 
     var isHighlighted = false {
         didSet {
@@ -109,8 +124,17 @@ final class KeyView: UIView {
             if isHighlighted {
                 pressedAt = CACurrentMediaTime()
                 background.layer.removeAllAnimations()
+                trailView.layer.removeAllAnimations()
+                // The blue return key keeps its own pressed blue and gets no tint.
+                trailView.alpha = performsAction ? 0 : 1
                 updateBackground()
             } else {
+                UIView.animate(
+                    withDuration: Self.trailFadeSeconds, delay: 0,
+                    options: [.curveEaseInOut, .allowUserInteraction, .beginFromCurrentState]
+                ) {
+                    self.trailView.alpha = 0
+                }
                 // The color the key has now goes in at once, so `drawnColor` reads it; only the
                 // drawing on screen fades.
                 let held = CACurrentMediaTime() - pressedAt
@@ -130,6 +154,8 @@ final class KeyView: UIView {
     private var performsAction = false
     /// The drawn key: its color, its round corners and its lower edge, which is a shadow.
     private let background = UIView()
+    /// The trail tint over the drawn key. It shows while the key is pressed and fades after the lift.
+    private let trailView = UIView()
     /// Clips the top line to the key's round corners.
     private let topLineClip = UIView()
     private let topLine = UIView()
@@ -146,6 +172,10 @@ final class KeyView: UIView {
         background.layer.shadowOpacity = 1
         background.layer.shadowRadius = 0
         addSubview(background)
+        trailView.isUserInteractionEnabled = false
+        trailView.backgroundColor = KeyColors.trail
+        trailView.alpha = 0
+        addSubview(trailView)
         topLineClip.isUserInteractionEnabled = false
         topLineClip.clipsToBounds = true
         topLine.backgroundColor = KeyColors.topLine
@@ -194,6 +224,9 @@ final class KeyView: UIView {
     /// The color of the drawn key now. The unit tests read this value, so the tests do not
     /// depend on which view draws the key.
     var drawnColor: UIColor? { background.backgroundColor }
+
+    /// How strong the trail tint is now, from 0 to 1. The unit tests read this value.
+    var trailStrength: CGFloat { trailView.alpha }
 
     func apply(_ display: KeyDisplay) {
         primaryLabel.font = .systemFont(ofSize: display.primaryFontSize)
@@ -244,6 +277,8 @@ final class KeyView: UIView {
         background.layer.cornerRadius = radius
         background.layer.shadowOffset = CGSize(width: 0, height: bounds.height >= 50 ? 3 : 2)
         background.layer.shadowPath = UIBezierPath(roundedRect: background.bounds, cornerRadius: radius).cgPath
+        trailView.frame = bounds
+        trailView.layer.cornerRadius = radius
         topLineClip.frame = bounds
         topLineClip.layer.cornerRadius = radius
         topLine.frame = CGRect(x: 0, y: 0, width: bounds.width, height: 1)

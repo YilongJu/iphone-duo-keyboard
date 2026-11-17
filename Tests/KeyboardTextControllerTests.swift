@@ -1717,6 +1717,29 @@ final class ReturnKeyColorTests: XCTestCase {
         }
     }
 
+    func testAPressedKeyShowsItsTrailAndARippleAndTheTrailFadesAfterTheLift() throws {
+        let view = makeView(width: 669)
+        let key = try XCTUnwrap(view.subviews.compactMap { $0 as? KeyView }.first { $0.key.kind.isTextKey && !$0.isHidden })
+        XCTAssertEqual(key.trailStrength, 0)
+        let touch = FakeTouch(at: CGPoint(x: key.hitFrame.midX, y: key.hitFrame.midY))
+        view.touchesBegan([touch], with: nil)
+        XCTAssertEqual(key.trailStrength, 1)
+        XCTAssertEqual(view.rippleCount, UIAccessibility.isReduceMotionEnabled ? 0 : 1)
+        view.touchesEnded([touch], with: nil)
+        // The fade runs on screen. The value it ends at goes in at the lift.
+        XCTAssertEqual(key.trailStrength, 0)
+    }
+
+    func testThePressedBlueReturnKeyGetsNoTrail() throws {
+        let view = makeView(width: 669)
+        view.returnKeyType = .send
+        let key = try returnKey(of: view)
+        let touch = FakeTouch(at: CGPoint(x: key.hitFrame.midX, y: key.hitFrame.midY))
+        view.touchesBegan([touch], with: nil)
+        XCTAssertEqual(key.trailStrength, 0)
+        view.touchesEnded([touch], with: nil)
+    }
+
     func testAPressedBlueReturnKeyIsASlightlyDarkerBlue() throws {
         for width: CGFloat in [466, 669] {
             let view = makeView(width: width)

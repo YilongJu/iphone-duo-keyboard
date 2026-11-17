@@ -188,6 +188,43 @@ final class KeyboardView: UIView {
     /// The room of the capsule at each side of the emoji, in points.
     private static let emojiPanelPadding: CGFloat = 8
 
+    /// The ripple of a key press: a circle of this diameter that grows from the touch point over
+    /// the neighboring keys and fades (key press feedback design C).
+    static let rippleDiameter: CGFloat = 210
+    static let rippleSeconds = 0.46
+
+    /// Holds the ripples above the keys. It takes no touches.
+    private let rippleHost = UIView()
+
+    /// Starts a ripple at `point`. With Reduce Motion on, the key shows only its trail tint.
+    private func showRipple(at point: CGPoint) {
+        guard !UIAccessibility.isReduceMotionEnabled else { return }
+        let ripple = CAShapeLayer()
+        let radius = Self.rippleDiameter / 2
+        ripple.path = UIBezierPath(ovalIn: CGRect(x: -radius, y: -radius, width: 2 * radius, height: 2 * radius)).cgPath
+        ripple.fillColor = KeyColors.ripple.resolvedColor(with: traitCollection).cgColor
+        ripple.position = point
+        ripple.opacity = 0
+        rippleHost.layer.addSublayer(ripple)
+        CATransaction.begin()
+        CATransaction.setCompletionBlock { ripple.removeFromSuperlayer() }
+        let grow = CABasicAnimation(keyPath: "transform.scale")
+        grow.fromValue = 0.1
+        grow.toValue = 1
+        let fade = CABasicAnimation(keyPath: "opacity")
+        fade.fromValue = 0.9
+        fade.toValue = 0
+        let group = CAAnimationGroup()
+        group.animations = [grow, fade]
+        group.duration = Self.rippleSeconds
+        group.timingFunction = CAMediaTimingFunction(name: .easeOut)
+        ripple.add(group, forKey: "ripple")
+        CATransaction.commit()
+    }
+
+    /// Count of ripples on screen now. The unit tests read this value.
+    var rippleCount: Int { rippleHost.layer.sublayers?.count ?? 0 }
+
     /// The capsule under the emoji. A touch on it goes to the emoji nearest to the touch.
     private let emojiPanel = UIView()
     private var emojiLabels: [UILabel] = []
@@ -288,6 +325,9 @@ final class KeyboardView: UIView {
         emojiPanel.layer.shadowRadius = 3
         emojiPanel.layer.shadowOffset = .zero
         addSubview(emojiPanel)
+        rippleHost.isUserInteractionEnabled = false
+        rippleHost.clipsToBounds = true
+        addSubview(rippleHost)
         rebuild()
     }
 
@@ -394,6 +434,7 @@ final class KeyboardView: UIView {
                 return keyView
             }
         }
+        bringSubviewToFront(rippleHost)
         bringSubviewToFront(emojiPanel)
         for label in emojiLabels {
             bringSubviewToFront(label)
@@ -521,6 +562,7 @@ final class KeyboardView: UIView {
 
     override func layoutSubviews() {
         super.layoutSubviews()
+        rippleHost.frame = bounds
         let wantedStyle = Self.style(forWidth: bounds.width)
         // On an iPad the empty middle of the split layout depends on the width, so a new width
         // can need new keys although the style stays. On an iPhone the middle is always nil.
@@ -660,6 +702,7 @@ final class KeyboardView: UIView {
             state.latestX = point.x
             activeTouches[touch] = state
             keyView.isHighlighted = true
+            showRipple(at: point)
             delegate?.keyboardViewDidPressKey(self)
 
             let kind = keyView.key.kind
