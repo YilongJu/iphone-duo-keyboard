@@ -327,6 +327,11 @@ duo_params duo_english_params(void) {
     params.dash_before_word = 9.0f;
     params.digit_before_word = 12.0f;
     params.digit_after_word = 13.0f;
+    /* letter_for_comma comes from a sweep on the dev half of
+       scripts/typing-evaluation/cases/english-comma-slip.dev.jsonl. From 5.1 to 5.49 the existing
+       dev cases keep their scores, and 5.2 repairs the most comma slips in that range. At 5.5 and
+       up, the reading that drops the last letter as an extra key (insertion) always wins. */
+    params.letter_for_comma = 5.2f;
     params.pair_weight = 0.6f;
     params.unknown_word = -13.0f;
     params.unknown_letter = -1.2f;
@@ -337,6 +342,7 @@ duo_params duo_english_params(void) {
     params.spaces_between_words = 1;
     params.beam = 8;
     params.apostrophe_readings = 1;
+    params.last_letter_as_comma = 1;
     return params;
 }
 
@@ -361,6 +367,8 @@ duo_params duo_pinyin_params(void) {
     /* Many Chinese words share one spelling, and each of them is its own reading. */
     params.beam = 32;
     params.apostrophe_readings = 0;
+    params.letter_for_comma = BIG;
+    params.last_letter_as_comma = 0;
     return params;
 }
 
@@ -390,6 +398,7 @@ int duo_params_set(duo_params *params, const char *name, float value) {
     FIELD(dash_before_word)
     FIELD(digit_before_word)
     FIELD(digit_after_word)
+    FIELD(letter_for_comma)
     FIELD(pair_weight)
     FIELD(unknown_word)
     FIELD(unknown_letter)
@@ -400,6 +409,7 @@ int duo_params_set(duo_params *params, const char *name, float value) {
 #undef FIELD
     if (strcmp(name, "beam") == 0) { params->beam = (int)value; return 1; }
     if (strcmp(name, "apostrophe_readings") == 0) { params->apostrophe_readings = value != 0.0f; return 1; }
+    if (strcmp(name, "last_letter_as_comma") == 0) { params->last_letter_as_comma = value != 0.0f; return 1; }
     return 0;
 }
 
@@ -1184,14 +1194,30 @@ static int reach_targets(
     return added;
 }
 
+/* Whether a reading that ends in `state` at the end of typed[0..length) reads the typed word
+   from `word_start` to the end as one lexicon word with exactly its letters. Text kept as typed,
+   also a known word beside a symbol key, is not a lexicon word. */
+static int reads_last_word_as_typed(
+    const duo_lexicon *lexicon, const char *typed, int length, int word_start, const state_t *state) {
+    if (state->kept_start >= 0 || state->word == NO_WORD || state->from_position != word_start) return 0;
+    const char *text = in_supplement(state->word)
+        ? word_text(lexicon->supplement, state->word & ~SUPPLEMENT_BIT) : word_text(lexicon, state->word);
+    size_t word_length = (size_t)(length - word_start);
+    return strlen(text) == word_length && memcmp(text, typed + word_start, word_length) == 0;
+}
+
 /* Finds the best reading of typed[0..length). `original` is the text as the person typed it,
    which differs from `typed` in a search that moved a space. Returns 1 and fills `result`, or 0 on failure.
    When the lexicon cannot read the text to its end, the unreadable parts are kept as typed.
+   `last_word_start` -1 chooses among all readings. Any other value is the start of the last
+   typed word, and the search then chooses only among the readings that read that whole word as
+   a lexicon word exactly as typed, and fails when it has none. `slips`, when not NULL, receives
+   the slip cost of the result.
    A `pool` that is not NULL also receives every reading that the search keeps at the end of
    the text, one per last word. The pool does not change the result. */
 static int decode(
     const duo_lexicon *lexicon, const duo_params *params, const char *typed, const char *original, int length,
-    uint32_t previous_word, duo_result *result, reading_pool_t *pool) {
+    uint32_t previous_word, int last_word_start, duo_result *result, float *slips, reading_pool_t *pool) {
     int beam = params->beam < 1 ? 1 : (params->beam > MAX_BEAM ? MAX_BEAM : params->beam);
     cell_t *cells = (cell_t *)calloc((size_t)length + 1, sizeof(cell_t));
     edge_t *edges = (edge_t *)malloc(sizeof(edge_t) * MAX_EDGES);
@@ -1326,20 +1352,24 @@ static int decode(
 
     int ok = 0;
     const cell_t *last = &cells[length];
-    if (last->count > 0) {
-        int best = 0;
-        float best_score = -BIG;
-        for (int index = 0; index < last->count; index++) {
-            const state_t *state = &last->states[index];
-            float score = state->score;
-            if (end_mark != NO_WORD && state->word != NO_WORD) {
-                score += params->sentence_end_weight * word_after(lexicon, params, state->word, state->pair, end_mark);
-            }
-            if (score > best_score) {
-                best_score = score;
-                best = index;
-            }
+    int best = -1;
+    float best_score = -BIG;
+    for (int index = 0; index < last->count; index++) {
+        const state_t *state = &last->states[index];
+        if (last_word_start >= 0 && !reads_last_word_as_typed(lexicon, typed, length, last_word_start, state)) {
+            continue;
         }
+        float score = state->score;
+        if (end_mark != NO_WORD && state->word != NO_WORD) {
+            score += params->sentence_end_weight * word_after(lexicon, params, state->word, state->pair, end_mark);
+        }
+        if (best < 0 || score > best_score) {
+            best_score = score;
+            best = index;
+        }
+    }
+    if (best >= 0) {
+        if (slips != NULL) *slips = last->states[best].slips;
         result->score = best_score;
         result->consumed = length;
         ok = write_reading(lexicon, params, typed, length, cells, length, best, result->text);
@@ -1434,6 +1464,53 @@ static float score_as_typed(
     return score;
 }
 
+/* Reads the typed text with its last letter as a slip for the comma key beside that letter, at
+   the cost letter_for_comma: "hellom" reads as "hello,". The typed letters of the last word
+   before that letter must spell a lexicon word of two letters or more, and the reading keeps that
+   word exactly as typed. A slip inside that word as well would let a frequent short word win, as
+   "it," for "itll" in place of "it'll". The typed words before it may be read with slips, as in
+   any search. The reading becomes `best` when it beats the text as typed by `margin` and beats
+   the best reading so far. A `pool` that is not NULL receives the reading.
+   Two cases get no such reading. A one-letter word before the comma: such a word must match
+   exactly, and a comma right after it is rare. And a last letter that repeats the letter before
+   it or sits beside it, as in "breakl" and "tok": a doubled letter and an extra key beside the
+   intended one explain that letter as well, and the engine charges every extra key the same
+   cost, so it cannot tell them from a slip on the comma key. */
+static void read_last_letter_as_comma(
+    const duo_lexicon *lexicon, const duo_params *params, const char *typed, int length, uint32_t previous,
+    float typed_score, float margin, duo_result *best, float *best_gain, reading_pool_t *pool) {
+    char letter = typed[length - 1];
+    if (!is_letter(letter) || !symbol_is_beside(',', letter)) return;
+    int word_start = length - 1;
+    while (word_start > 0 && typed[word_start - 1] != ' ') word_start--;
+    int word_length = length - 1 - word_start;
+    if (word_length < 2 || !is_known_word(lexicon, typed + word_start, word_length)) return;
+    /* keys_are_neighbors also holds for a key and itself. */
+    if (keys_are_neighbors(letter, typed[length - 2])) return;
+    char head[DUO_MAX_TYPED + 1];
+    memcpy(head, typed, (size_t)(length - 1));
+    head[length - 1] = 0;
+    if (english_input_length(head) != length - 1) return;
+
+    duo_result reading;
+    float slips = 0.0f;
+    if (!decode(lexicon, params, head, head, length - 1, previous, word_start, &reading, &slips, NULL)) return;
+    size_t text_length = strlen(reading.text);
+    if (text_length + 2 > DUO_TEXT_SIZE) return;
+    char text[DUO_TEXT_SIZE];
+    memcpy(text, reading.text, text_length);
+    text[text_length] = ',';
+    text[text_length + 1] = 0;
+    float score = reading.score - params->letter_for_comma;
+    if (pool != NULL) pool_add(pool, text, score, slips + params->letter_for_comma);
+    float gain = score - typed_score;
+    if (gain >= margin && gain > *best_gain) {
+        memcpy(best->text, text, text_length + 2);
+        best->score = score;
+        *best_gain = gain;
+    }
+}
+
 /* The work of duo_correct_english. A `pool` that is not NULL also receives the readings of
    every search, for duo_english_readings. The pool does not change the result. */
 static int correct_english(
@@ -1460,7 +1537,7 @@ static int correct_english(
 
     duo_result reading;
     if (pool != NULL) pool->extra_slip = 0.0f;
-    if (decode(lexicon, params, typed, typed, length, previous, &reading, pool)) {
+    if (decode(lexicon, params, typed, typed, length, previous, -1, &reading, NULL, pool)) {
         float gain = reading.score - typed_score;
         if (strcmp(reading.text, typed) != 0 && gain >= margin && gain > best_gain) {
             best = reading;
@@ -1481,7 +1558,7 @@ static int correct_english(
             shifted[index] = typed[other];
             shifted[other] = ' ';
             if (english_input_length(shifted) == 0) continue;
-            if (!decode(lexicon, params, shifted, typed, length, previous, &reading, pool)) continue;
+            if (!decode(lexicon, params, shifted, typed, length, previous, -1, &reading, NULL, pool)) continue;
             float gain = reading.score - params->shifted_space - typed_score;
             if (strcmp(reading.text, typed) != 0 && gain >= margin && gain > best_gain) {
                 best = reading;
@@ -1489,6 +1566,12 @@ static int correct_english(
                 best_gain = gain;
             }
         }
+    }
+
+    /* The last letter typed in place of the comma key beside it. */
+    if (params->last_letter_as_comma) {
+        read_last_letter_as_comma(
+            lexicon, params, typed, length, previous, typed_score, margin, &best, &best_gain, pool);
     }
     *result = best;
     result->consumed = length;
@@ -1661,7 +1744,7 @@ int duo_convert_pinyin(
     }
 
     int count = 0;
-    if (decode(lexicon, params, typed, typed, (int)length, NO_WORD, &results[0], NULL)) count = 1;
+    if (decode(lexicon, params, typed, typed, (int)length, NO_WORD, -1, &results[0], NULL, NULL)) count = 1;
     if (count == capacity) return count;
 
     /* The words that stand for the first letters only: exact spellings longest first, then
