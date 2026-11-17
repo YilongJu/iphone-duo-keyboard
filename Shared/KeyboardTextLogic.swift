@@ -326,6 +326,12 @@ enum KeyboardTextLogic {
         reading.last == "," && typed.last?.isLetter == true
     }
 
+    /// True when a reading of typed words differs from them only in its spaces, as "let me" for
+    /// "letm e" and "asleep" for "asl eep": a space typed one key late, early or in a word.
+    static func movesOnlySpaces(_ reading: String, typed: String) -> Bool {
+        reading != typed && reading.filter { $0 != " " } == typed.filter { $0 != " " }
+    }
+
     static let wordTerminators: Set<String> = [" ", ".", ",", "!", "?", ";", ":", "\n"]
 
     /// The symbol and digit keys that sit beside a letter key, in the wide layout or the compact

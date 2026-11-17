@@ -207,6 +207,10 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
         /// The end of the text before the cursor right after the word and its space. The next
         /// word is read together with this word only when the person typed it right here.
         let context: String
+        /// True when the keyboard read the last typed letter of this word as a comma, as
+        /// "hello," for "hellom". The next word is then read together with it only to find a
+        /// slip of the space, as "letm e" for "let me".
+        var readsComma = false
     }
 
     /// Count of characters that `RecentWord.context` holds.
@@ -1153,17 +1157,29 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
             if followedBySpace { recentWord = RecentWord(typed: word, shown: word, context: contextAfterSpace()) }
             return
         }
-        let span = correctionSpan(word: word, before: before, earlier: earlier)
+        // One letter alone is a word such as "a" or "I", or a label, so the checker reads a
+        // single letter only together with the word before it.
+        func read(_ span: CorrectionSpan) -> String? {
+            span.typed.count >= 2
+                ? spellChecker.reading(
+                    previousWord: span.previousWord, typed: span.typed.lowercased(), textBefore: span.textBefore,
+                    endsWithSpace: followedBySpace) : nil
+        }
+        var span = correctionSpan(word: word, before: before, earlier: earlier)
+        var reading = read(span)
+        // After a comma read from a letter, the reading of the two words together counts only
+        // when it moves or takes out a space and keeps every typed letter, as "let me" for
+        // "letm e". Such a reading shows that the letter was a slip of the space. Any other
+        // reading would take the comma back out, so the comma stays and the word is read alone,
+        // as after a typed comma.
+        if span.followsComma,
+            !(reading.map { KeyboardTextLogic.movesOnlySpaces($0, typed: span.typed.lowercased()) } ?? false) {
+            span = correctionSpan(word: word, before: before, earlier: nil)
+            reading = read(span)
+        }
         let typedSpan = span.typed
         let shownSpan = span.shown
         let typedWords = typedSpan.split(separator: " ")
-
-        // One letter alone is a word such as "a" or "I", or a label, so the checker reads a
-        // single letter only together with the word before it.
-        let reading = typedSpan.count >= 2
-            ? spellChecker.reading(
-                previousWord: span.previousWord, typed: typedSpan.lowercased(), textBefore: span.textBefore,
-                endsWithSpace: followedBySpace) : nil
         // A reading can put a comma in place of the last typed letter, as "hello," for "hellom",
         // and only before a space. The rules of the capitals below read the words without that
         // comma, and the typed letters without that letter. The comma comes back at the end.
@@ -1194,14 +1210,13 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
             lastCorrection = Correction(original: shownSpan, corrected: final, terminator: terminator)
             showNotice("\(shownSpan) \u{2192} \(final)")
         }
-        // A comma ends the reading of words together, as a typed comma does: the next word is
-        // read alone, with no word before it.
-        if followedBySpace, !comma, let last = finalWords.last {
+        if followedBySpace, let last = finalWords.last {
             // After a correction that joined or split words, the last shown word counts as typed
             // that way, so the next correction does not take the same keys apart again.
             let sameCount = finalWords.count == typedWords.count
             recentWord = RecentWord(
-                typed: sameCount ? word : String(last), shown: String(last), context: contextAfterSpace())
+                typed: sameCount ? word : String(last), shown: String(last), context: contextAfterSpace(),
+                readsComma: comma)
         }
     }
 
@@ -1215,21 +1230,28 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
         let previousWord: String
         /// The field's text right before the span.
         let textBefore: String
+        /// True when the span holds a word whose last typed letter the keyboard read as a comma.
+        let followsComma: Bool
     }
 
     private func correctionSpan(word: String, before: String, earlier: RecentWord?) -> CorrectionSpan {
         var typed = word
         var shown = word
+        var followsComma = false
+        // The context of the earlier word ends with its shown text and a space. A word with a
+        // comma is not a correctable word, so only the context marks it.
         if let earlier, !keepsAsTyped(earlier.typed), !keepsAsTyped(earlier.shown),
             before.hasSuffix(earlier.context + word),
-            KeyboardTextLogic.correctableWord(before: String(before.dropLast(word.count + 1))) == earlier.shown {
+            earlier.readsComma
+                || KeyboardTextLogic.correctableWord(before: String(before.dropLast(word.count + 1))) == earlier.shown {
             typed = earlier.typed + " " + word
             shown = earlier.shown + " " + word
+            followsComma = earlier.readsComma
         }
         let textBefore = String(before.dropLast(shown.count))
         return CorrectionSpan(
             typed: typed, shown: shown, previousWord: KeyboardTextLogic.wordBeforeSpace(at: textBefore),
-            textBefore: textBefore)
+            textBefore: textBefore, followsComma: followsComma)
     }
 
     /// Starts the work of the correction that a space right now would make, after a letter key.

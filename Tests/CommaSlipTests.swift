@@ -112,6 +112,19 @@ final class CommaSlipKeyboardTests: XCTestCase {
         XCTAssertEqual(document.text, "hello, wrold")
     }
 
+    func testASpaceTypedOneKeyLateAfterTheLetterTakesTheCommaBackOut() {
+        // "letm" alone reads as "let,". With the next word, "letm e" reads as "let me", which
+        // keeps every typed letter, so the letter was a slip of the space.
+        makeController(before: "")
+        type("letm ")
+        XCTAssertEqual(document.text, "let, ")
+        type("e ")
+        XCTAssertEqual(document.text, "let me ")
+        makeController(before: "")
+        type("asl eep ")
+        XCTAssertEqual(document.text, "asleep ")
+    }
+
     func testTheCapitalOfTheTypedWordStays() {
         makeController(before: "")
         type("Hellom ")
@@ -198,10 +211,24 @@ final class CommaSlipControllerTests: XCTestCase {
 
     func testTheNextWordIsNotReadTogetherWithTheComma() {
         makeController(before: "")
+        spellChecker.corrections["hellom world"] = "hello world"
         type("hellom world ")
         XCTAssertEqual(document.text, "hello, world ")
-        // The comma ends the reading of two words together, and no word comes before "world".
-        XCTAssertEqual(spellChecker.requests, ["|hellom|space", "|world|space"])
+        // The reading of the two words together takes out the typed "m", so the comma stays.
+        // The word is then read alone, and no word comes before it.
+        XCTAssertEqual(spellChecker.requests, ["|hellom|space", "|hellom world|space", "|world|space"])
+    }
+
+    func testAReadingThatMovesTheSpaceReplacesTheComma() {
+        makeController(before: "")
+        spellChecker.corrections["letm"] = "let,"
+        spellChecker.corrections["letm e"] = "let me"
+        type("letm e ")
+        XCTAssertEqual(document.text, "let me ")
+        XCTAssertEqual(spellChecker.requests, ["|letm|space", "|letm e|space"])
+        // A backspace brings back the text that the field showed before this correction.
+        controller.keyboardViewDeleteBackward(keyboardView)
+        XCTAssertEqual(document.text, "let, e")
     }
 
     func testACommaAfterTwoWordsReadTogetherKeepsTheFirstWordsCorrection() {
@@ -217,5 +244,12 @@ final class CommaSlipControllerTests: XCTestCase {
         XCTAssertTrue(KeyboardTextLogic.readsLastLetterAsComma("say hello,", typed: "sya hellom"))
         XCTAssertFalse(KeyboardTextLogic.readsLastLetterAsComma("hello", typed: "hellom"))
         XCTAssertFalse(KeyboardTextLogic.readsLastLetterAsComma("more", typed: ",ore"))
+    }
+
+    func testMovesOnlySpaces() {
+        XCTAssertTrue(KeyboardTextLogic.movesOnlySpaces("let me", typed: "letm e"))
+        XCTAssertTrue(KeyboardTextLogic.movesOnlySpaces("asleep", typed: "asl eep"))
+        XCTAssertFalse(KeyboardTextLogic.movesOnlySpaces("hello world", typed: "hellom world"))
+        XCTAssertFalse(KeyboardTextLogic.movesOnlySpaces("letm e", typed: "letm e"))
     }
 }
