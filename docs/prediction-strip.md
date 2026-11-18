@@ -21,8 +21,7 @@ keys as `typingSpeed` and `predictionStrip`.
 The four small keys have one width in each layout. One key unit is the width of one letter key. In the split layout the strip crosses the empty
 middle, so the top row has no empty middle of its own.
 
-The row has no Home key and no End key. The wide and split layouts move the cursor with their
-arrow keys, and a held space bar moves the cursor in every layout.
+The row has no Home key and no End key. A held space bar moves the cursor in every layout.
 
 ## Select All and the typing speed
 
@@ -37,9 +36,11 @@ The typing speed is a number of words per minute with "WPM" below it
 | Term | Rule |
 | --- | --- |
 | Word | 5 characters. |
-| Counted characters | Each character that goes into the text, less each character that a delete takes out. A tapped predicted word counts with all its characters. Pasted text does not count. |
-| Run | Typing without a pause of more than 3 seconds. The first character of a run starts its clock. |
-| Speed | The counted characters after the first one, over the time since the first one. A run longer than 10 seconds counts its last 10 seconds only. |
+| Change | One action of the person: a key press, a tap on a predicted word or on a candidate, or a tap on the proofreader's fix. |
+| Counted characters | The characters that a change puts into the text, less the characters that the change takes out. A tapped predicted word counts with all its characters. The proofreader's fix counts only with the characters that it adds. Pasted text and the lines of a test's report do not count. |
+| Delete | A change that takes characters out takes the latest counted characters out of the count. A delete of older text changes nothing. |
+| Run | Typing without a pause of more than 3 seconds. The first change of a run starts its clock. Pinyin letters keep a run going, although they wait outside the text. |
+| Speed | The counted characters after the first change, over the time since the first change. A run longer than 10 seconds counts its last 10 seconds only. |
 | Shown number | The speed of the current run once the run is 2 seconds long. Before that, and during a pause, the last number stays. A dash shows before the first number. |
 
 The keyboard keeps the times and the counts of the last 10 seconds in memory. The keyboard

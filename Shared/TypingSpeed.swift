@@ -3,51 +3,66 @@ import UIKit
 /// The typing speed of the last seconds, in words per minute. One word is 5 characters, as in
 /// the usual measure of typing speed.
 ///
-/// The meter counts the characters that go into the text, less the characters that come out
-/// again. A tapped predicted word counts with all its characters, so the number shows what the
-/// predictions save. The meter keeps the times and the counts of the last seconds only. It keeps
-/// no text.
+/// The meter counts the new characters of the text. Each action of the person is one change of
+/// the text: a key press, a tap on a predicted word or on a candidate, or a tap on the
+/// proofreader's fix. A change counts with the characters that went in less the characters that
+/// came out. So a tapped word counts with all its characters, and a fix of a sentence counts
+/// only with the characters that the fix adds. A change that takes characters out, such as a
+/// delete, takes the latest counted characters out of the count. The meter keeps the times and
+/// the counts of the last seconds only. It keeps no text.
 ///
-/// A run of typing starts with its first character and ends with a pause. The speed of a run is
-/// its characters after the first one, over the time since the first one. A run longer than the
-/// window counts only the characters and the time of the window.
+/// A run of typing starts with its first action and ends with a pause. The speed of a run is
+/// its characters after the first action, over the time since the first action. A run longer
+/// than the window counts only the characters and the time of the window.
 struct TypingSpeedMeter {
-    /// The speed covers at most this many seconds before the last character.
+    /// The speed covers at most this many seconds before the last action.
     static let windowSeconds = 10.0
-    /// A time without a character that ends a run.
+    /// A time without an action that ends a run.
     static let pauseSeconds = 3.0
     /// A run gives a speed once it is this long, so two fast characters do not show 300.
     static let leastSeconds = 2.0
     static let charactersPerWord = 5.0
 
-    /// The characters of the run, each with its time. The first entry is the start of the run
-    /// and holds no character.
+    /// The changes of the run inside the window, each with its time and its counted characters.
+    /// The first entry is the start of the run or of the window, and holds no character.
     private var events: [(time: TimeInterval, characters: Int)] = []
     /// The speed of the current run, or of the last run that was long enough. It is nil before
     /// the first such run.
     private(set) var wordsPerMinute: Int?
 
-    /// Counts `characters` that went into the text at `time`. A negative count is a deletion.
+    /// Counts one change of the text at `time`: `characters` went in, less those that came out.
     mutating func record(characters: Int, at time: TimeInterval) {
         if let last = events.last, time - last.time > Self.pauseSeconds {
             events = []
         }
         if events.isEmpty {
-            // The first character of a run starts the clock, and the speed counts what follows.
+            // The first action of a run starts the clock, and the speed counts what follows.
             events = [(time, 0)]
             return
         }
-        events.append((time, characters))
         let start = max(events[0].time, time - Self.windowSeconds)
-        let seconds = time - start
-        guard seconds >= Self.leastSeconds else { return }
-        let count = events.reduce(0) { $0 + ($1.time > start ? $1.characters : 0) }
-        events.removeAll { $0.time < start }
-        if events.first?.time != start {
+        if events[0].time < start {
             // The window left the start of the run behind, so the window's edge is the new start.
+            events.removeAll { $0.time <= start }
             events.insert((start, 0), at: 0)
         }
-        wordsPerMinute = Int((Double(max(count, 0)) / Self.charactersPerWord * 60 / seconds).rounded())
+        if characters >= 0 {
+            events.append((time, characters))
+        } else {
+            // The characters that came out are the latest ones, so the latest counts go first.
+            // Text from before the window is not in the count, and its deletion changes nothing.
+            var left = -characters
+            for index in events.indices.reversed() where left > 0 {
+                let taken = min(events[index].characters, left)
+                events[index].characters -= taken
+                left -= taken
+            }
+            events.append((time, 0))
+        }
+        let seconds = time - start
+        guard seconds >= Self.leastSeconds else { return }
+        let count = events.reduce(0) { $0 + $1.characters }
+        wordsPerMinute = Int((Double(count) / Self.charactersPerWord * 60 / seconds).rounded())
     }
 }
 

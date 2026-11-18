@@ -88,7 +88,9 @@ The keyboard measures its own width and picks a layout. The wide layout starts a
 
 The more width the keyboard gets, the more keys each row holds: 10 in the compact layout and
 14 in the wide layout. The wide layout adds a number row with shifted symbols, tab, caps
-lock, brackets, a second shift key and two arrow keys.
+lock, brackets and a second shift key. The wide layout has no arrow keys. Its comma, period
+and slash keys are as wide as a letter key, and the right end of its bottom row is an empty
+place that is kept for later keys.
 
 ## Measurements to send back after the first test
 
@@ -101,4 +103,4 @@ screenshot of the keyboard in each of the four phone positions.
 - Autocorrect and word suggestions
 - Emoji and dictation keys
 - Accent menus on a long press
-- Up and down arrow keys, because iOS gives a keyboard extension only left and right movement
+- Arrow keys. A held space bar moves the cursor left and right, and no key moves it up or down

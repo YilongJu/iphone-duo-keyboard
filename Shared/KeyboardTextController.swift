@@ -532,7 +532,10 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
         keyboardView.delegate = self
         // A tap on the typed Pinyin letters types them as plain letters.
         keyboardView.onSelectComposition = { [weak self] in
-            self?.commitPinyinLetters()
+            guard let self else { return }
+            self.beginTypingAction(typing: true)
+            self.commitPinyinLetters()
+            self.endTypingAction()
         }
     }
 
@@ -542,15 +545,53 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
     private(set) var typingSpeed = TypingSpeedMeter()
     /// The clock of the typing speed, in seconds. A test passes a clock of its own.
     var typingClock: () -> TimeInterval = { ProcessInfo.processInfo.systemUptime }
-    /// False while pasted text goes into the document. Pasted text is not typed, so the typing
-    /// speed does not count it.
+    /// False while text that the person did not type goes into the document: pasted text, and
+    /// the lines of a test's report. The typing speed does not count such text.
     private var countsTyping = true
+    /// The count of the person's actions that run now. An action is a key press or a tap on a
+    /// word, and its edits of the document count as one change of the text.
+    private var openTypingActions = 0
+    /// The characters that the open action put into the document, less those it took out.
+    private var actionCharacters = 0
+    /// True when the open action is typing: it changed the document, or it is a key of the text.
+    private var actionIsTyping = false
 
-    /// Counts characters that went into the document, or out of it for a negative count.
+    /// Starts an action of the person. `typing` is true for a key or a tap that writes text,
+    /// also when its letters wait outside the document, as Pinyin letters do.
+    private func beginTypingAction(typing: Bool) {
+        openTypingActions += 1
+        if typing { actionIsTyping = true }
+    }
+
+    /// Ends an action of the person, and counts the change of the text that the action made.
+    private func endTypingAction() {
+        openTypingActions -= 1
+        if openTypingActions == 0 { countTypingAction() }
+    }
+
+    /// Counts characters that went into the document, or out of it for a negative count. An
+    /// edit outside an action of the person is a change of its own.
     private func countTyping(_ characters: Int) {
         guard countsTyping else { return }
-        typingSpeed.record(characters: characters, at: typingClock())
+        actionCharacters += characters
+        actionIsTyping = true
+        if openTypingActions == 0 { countTypingAction() }
+    }
+
+    private func countTypingAction() {
+        guard actionIsTyping else { return }
+        typingSpeed.record(characters: actionCharacters, at: typingClock())
+        actionCharacters = 0
+        actionIsTyping = false
         keyboardView.showTypingSpeed(typingSpeed.wordsPerMinute)
+    }
+
+    /// Runs edits of the document that are not typing.
+    private func withoutTypingCount(_ body: () -> Void) {
+        let counted = countsTyping
+        countsTyping = false
+        body()
+        countsTyping = counted
     }
 
     /// The owner calls this when the app's text or cursor changed.
@@ -879,7 +920,7 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
     private func insertResultLine(_ line: String) {
         let progress = progressLine
         writeProgressLine(nil)
-        document.insertText("\n" + line)
+        withoutTypingCount { document.insertText("\n" + line) }
         if let progress { writeProgressLine(progress) }
     }
 
@@ -897,10 +938,10 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
                 progressLineStopped = true
                 return
             }
-            deleteBackward(count: old.count + 1)
+            withoutTypingCount { deleteBackward(count: old.count + 1) }
         }
         guard let text, !progressLineStopped else { return }
-        document.insertText("\n" + text)
+        withoutTypingCount { document.insertText("\n" + text) }
         progressLine = text
     }
 
@@ -1523,6 +1564,8 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
     // MARK: KeyboardViewDelegate
 
     func keyboardView(_ keyboardView: KeyboardView, insert text: String) {
+        beginTypingAction(typing: true)
+        defer { endTypingAction() }
         // A person types a space after a period out of habit, so a space keeps the fix on the
         // row. The fix then replaces the sentence and keeps the spaces after it.
         if text != " " { clearProofreadSuggestion() }
@@ -1545,6 +1588,8 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
     }
 
     func keyboardView(_ keyboardView: KeyboardView, didSelectPredictedWord word: String) {
+        beginTypingAction(typing: true)
+        defer { endTypingAction() }
         defer { proofreadAfterAPause() }
         // The strip shows predicted words for typed English letters only, so Chinese mode or a
         // running replacement mean the strip changed under the finger.
@@ -1553,6 +1598,8 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
     }
 
     func keyboardView(_ keyboardView: KeyboardView, didSelectTopRowEmoji emoji: String) {
+        beginTypingAction(typing: true)
+        defer { endTypingAction() }
         defer { proofreadAfterAPause() }
         // The strip shows English emoji only, so Pinyin letters or a running replacement
         // mean the strip changed under the finger.
@@ -1562,6 +1609,10 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
     }
 
     func keyboardView(_ keyboardView: KeyboardView, didSelectCandidateAt index: Int) {
+        // The proofreader's fix takes a sentence out and puts a sentence in. As one change, the
+        // fix counts for the typing speed only with the characters that it adds.
+        beginTypingAction(typing: true)
+        defer { endTypingAction() }
         defer { proofreadAfterAPause() }
         clearSpaceRemoval()
         guard rowItems.indices.contains(index) else { return }
@@ -1576,6 +1627,8 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
     }
 
     func keyboardViewDeleteBackward(_ keyboardView: KeyboardView) {
+        beginTypingAction(typing: true)
+        defer { endTypingAction() }
         clearProofreadSuggestion()
         defer { proofreadAfterAPause() }
         guard pending == nil else { return }
@@ -1617,6 +1670,8 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
     }
 
     func keyboardView(_ keyboardView: KeyboardView, edit command: EditCommand) {
+        beginTypingAction(typing: false)
+        defer { endTypingAction() }
         clearProofreadSuggestion()
         guard pending == nil else { return }
         previousInsertWasSpace = false

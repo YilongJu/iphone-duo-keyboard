@@ -403,7 +403,7 @@ final class KeyboardView: UIView {
             row.map { key in
                 let keyView = KeyView(key: key)
                 // The empty middle and the place of the prediction strip are no keys.
-                keyView.isHidden = key.kind == .gap || key.kind == .predictionStrip || key.kind == .typingSpeed
+                keyView.isHidden = key.kind == .gap || key.kind.isPlace
                 addSubview(keyView)
                 return keyView
             }
@@ -475,7 +475,7 @@ final class KeyboardView: UIView {
             return KeyDisplay(imageName: "select-all", emphasized: selectAllActive)
         case .forwardDelete:
             return KeyDisplay(symbolName: "delete.right")
-        case .gap, .predictionStrip, .typingSpeed:
+        case .gap, .predictionStrip, .typingSpeed, .empty:
             return KeyDisplay()
         case .language:
             return KeyDisplay(styledPrimary: Self.languageKeyText(chineseActive: chineseActive))
@@ -616,21 +616,15 @@ final class KeyboardView: UIView {
             return 0
         }
         let row = rows[rowIndex]
-        // A touch in the cell of the prediction strip belongs to the strip. The key beside the
-        // strip is Select All or Cut, so such a touch never goes to the nearest key.
-        if let strip = row.first(where: { $0.key.kind == .predictionStrip }),
-            point.x >= strip.hitFrame.minX, point.x < strip.hitFrame.maxX {
-            return nil
-        }
-        // The typing speed is no key. A touch in its cell presses no key, so a finger that
-        // misses Select All does not press it by the rule of the nearest key.
-        if let speed = row.first(where: { $0.key.kind == .typingSpeed }),
-            point.x >= speed.hitFrame.minX, point.x < speed.hitFrame.maxX {
-            return nil
-        }
+        // A touch in a place that is no key presses no key. The strip takes its own touches. The
+        // keys beside these places are Select All, Cut and the key that hides the keyboard, so
+        // such a touch never goes to the nearest key.
+        // The same holds for a touch beside the row whose nearest cell is such a place, as a
+        // touch in the corner beside the empty place of the bottom row.
         // A touch in the empty middle of the split layout goes to the nearest real key.
-        return row.filter { $0.key.kind != .gap && $0.key.kind != .predictionStrip && $0.key.kind != .typingSpeed }
-            .min { distance($0) < distance($1) }
+        let nearest = row.filter { $0.key.kind != .gap }.min { distance($0) < distance($1) }
+        if let nearest, nearest.key.kind.isPlace { return nil }
+        return nearest
     }
 
     // MARK: Touches
@@ -942,7 +936,7 @@ final class KeyboardView: UIView {
         case .switchLayer(let target):
             currentLayer = target
             rebuild()
-        case .shift, .capsLock, .globe, .gap, .predictionStrip, .typingSpeed:
+        case .shift, .capsLock, .globe, .gap, .predictionStrip, .typingSpeed, .empty:
             // Shift and caps lock act on finger down. The globe button handles the globe key.
             // The prediction strip handles the touches in its own place.
             break

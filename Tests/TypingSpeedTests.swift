@@ -62,6 +62,26 @@ final class TypingSpeedMeterTests: XCTestCase {
         XCTAssertEqual(meter.wordsPerMinute, 24)
     }
 
+    func testADeletionOfOlderTextDoesNotLowerTheSpeedOfTheTypingAfterIt() {
+        var meter = TypingSpeedMeter()
+        // 2 seconds of deletes take out text from before the run, and 16 characters follow.
+        type(&meter, at: (0...16).map { Double($0) * 0.125 }, characters: -1)
+        XCTAssertEqual(meter.wordsPerMinute, 0)
+        type(&meter, at: (1...16).map { 2 + Double($0) * 0.25 })
+        // 16 characters in the 6 seconds of the run.
+        XCTAssertEqual(meter.wordsPerMinute, 32)
+    }
+
+    func testAChangeThatTakesOutAndPutsInCountsWithTheDifference() {
+        var meter = TypingSpeedMeter()
+        type(&meter, at: (0...20).map { Double($0) * 0.25 })
+        XCTAssertEqual(meter.wordsPerMinute, 48)
+        // A fix of a sentence that makes the text 2 characters longer, as one change.
+        meter.record(characters: 2, at: 6)
+        // 22 characters in 6 seconds.
+        XCTAssertEqual(meter.wordsPerMinute, 44)
+    }
+
     func testAWordThatGoesInAtOnceCountsWithAllItsCharacters() {
         var meter = TypingSpeedMeter()
         // A tap on a predicted word puts the rest of the word and a space in at once.
@@ -70,6 +90,23 @@ final class TypingSpeedMeterTests: XCTestCase {
         meter.record(characters: 9, at: 2)
         XCTAssertEqual(meter.wordsPerMinute, 60)
     }
+}
+
+/// A spell checker that reads every word as typed and has fixed predicted words. Each list sits
+/// under "previous word|typed letters".
+@MainActor
+private final class WordsChecker: SpellChecking {
+    var words: [String: [String]] = [:]
+
+    func reading(previousWord: String, typed: String, textBefore: String) -> String? { typed }
+
+    func predictedWords(previousWord: String, typed: String, limit: Int) -> [String] {
+        Array((words["\(previousWord)|\(typed)"] ?? []).prefix(limit))
+    }
+
+    func learn(_ word: String) {}
+
+    func keeps(_ word: String) -> Bool { false }
 }
 
 /// The typing speed in the top row: its place, what it counts, and the small Select All key
@@ -84,12 +121,12 @@ final class TypingSpeedTests: XCTestCase {
 
     private static let widths: [CGFloat] = [466, 669, 951]
 
-    private func makeKeyboard(width: CGFloat = 466, before: String = "") {
+    private func makeKeyboard(width: CGFloat = 466, before: String = "", spellChecker: SpellChecking? = nil) {
         let height = KeyboardView.preferredHeight(forWidth: width, compactHeight: false, device: .phone, landscape: false)
         keyboardView = KeyboardView(frame: CGRect(x: 0, y: 0, width: width, height: height))
         document = FakeDocument(before: before)
         controller = KeyboardTextController(
-            keyboardView: keyboardView, document: document, spellChecker: FakeSpellChecker(),
+            keyboardView: keyboardView, document: document, spellChecker: spellChecker ?? FakeSpellChecker(),
             pinyinEngine: { PinyinEngine(dictionaryText: testDictionary) })
         now = 0
         controller.typingClock = { [unowned self] in self.now }
@@ -191,6 +228,74 @@ final class TypingSpeedTests: XCTestCase {
         XCTAssertEqual(document.text.count, 11)
         XCTAssertEqual(keyboardView.typingSpeedView.wordsPerMinute, 48)
         XCTAssertEqual(keyboardView.typingSpeedView.valueLabel.text, "48")
+    }
+
+    func testATappedPredictedWordCountsWithAllItsCharacters() {
+        let checker = WordsChecker()
+        checker.words["you|to"] = ["tomorrow"]
+        makeKeyboard(spellChecker: checker)
+        // 10 characters: 9 after the first, in 2.25 seconds.
+        type("See you to")
+        XCTAssertEqual(keyboardView.typingSpeedView.wordsPerMinute, 48)
+        XCTAssertEqual(keyboardView.predictedWords, ["tomorrow"])
+        controller.keyboardView(keyboardView, didSelectPredictedWord: "tomorrow")
+        XCTAssertEqual(document.text, "See you tomorrow ")
+        // The tap adds 7 characters to the 2 typed letters of the word. All 17 characters of
+        // the text count but the first: 16 characters in 2.5 seconds.
+        XCTAssertEqual(keyboardView.typingSpeedView.wordsPerMinute, 77)
+    }
+
+    func testTheProofreadersFixCountsOnlyWithTheCharactersItAdds() async {
+        makeKeyboard()
+        let proofreader = FakeProofreader()
+        proofreader.answers = ["I came form the office": "I came from the office"]
+        controller.proofreader = proofreader
+        controller.proofreadPauseSeconds = 0.05
+        // 23 characters: 22 after the first, in 5.5 seconds.
+        type("I came form the office ")
+        XCTAssertEqual(keyboardView.typingSpeedView.wordsPerMinute, 48)
+        await controller.pauseTask?.value
+        await controller.proofreadTask?.value
+        // The person taps the fix 8 seconds after the first character. The fix puts 23
+        // characters in place of 23 characters, so the fix adds no character.
+        now = 8
+        controller.keyboardView(keyboardView, didSelectCandidateAt: 0)
+        XCTAssertEqual(document.text, "I came from the office ")
+        // Still 22 characters, now in 8 seconds. A fix counted as new text would give 68.
+        XCTAssertEqual(keyboardView.typingSpeedView.wordsPerMinute, 33)
+    }
+
+    func testTheFirstActionOfARunCountsNoCharacterAlsoWhenItEditsTheTextTwice() {
+        let checker = WordsChecker()
+        checker.words["you|to"] = ["tomorrow"]
+        makeKeyboard(spellChecker: checker)
+        type("See you to")
+        // A pause ends the run. The clock of this test moves at every reading, as a real clock
+        // does, so the two edits of the tap would get two times.
+        now = 20
+        controller.typingClock = { [unowned self] in
+            self.now += 0.0001
+            return self.now
+        }
+        controller.keyboardView(keyboardView, didSelectPredictedWord: "tomorrow")
+        XCTAssertEqual(document.text, "See you tomorrow ")
+        now += 0.25
+        type("at noon st")
+        // The tap starts the new run, and the 10 characters after it take 2.5 seconds. With
+        // the characters of the tap, the speed would be over 80.
+        XCTAssertEqual(keyboardView.typingSpeedView.wordsPerMinute, 48)
+    }
+
+    func testPinyinLettersKeepARunOfTypingGoing() {
+        makeKeyboard()
+        controller.keyboardView(keyboardView, edit: .toggleLanguage)
+        // The letters wait outside the text, so they add no character, and the run goes on.
+        type("ni")
+        now = 2.5
+        controller.keyboardView(keyboardView, insert: " ")
+        XCTAssertEqual(document.text, "\u{4F60}")
+        // One character in the 2.5 seconds after the first key press.
+        XCTAssertEqual(keyboardView.typingSpeedView.wordsPerMinute, 5)
     }
 
     func testPastedTextDoesNotCount() throws {

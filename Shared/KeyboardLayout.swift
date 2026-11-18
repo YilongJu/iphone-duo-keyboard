@@ -92,9 +92,21 @@ enum KeyKind: Equatable {
     /// The place of the typing speed in the top row, between Select All and the prediction
     /// strip (`TypingSpeedView`). The view draws the speed there and no key.
     case typingSpeed
+    /// A place of a row that stays empty. The view draws no key there, and a touch there presses
+    /// no key. The wide layout keeps such a place at the right end of its bottom row.
+    case empty
     /// Switches between English and Simplified Chinese (Pinyin).
     case language
     case switchLayer(KeyboardLayer)
+
+    /// True for a place of a row that is no key: the prediction strip, the typing speed and an
+    /// empty place. A touch in such a place presses no key.
+    var isPlace: Bool {
+        switch self {
+        case .predictionStrip, .typingSpeed, .empty: return true
+        default: return false
+        }
+    }
 
     /// Text keys commit on finger lift, and a finger can slide between them before lifting.
     var isTextKey: Bool {
@@ -155,6 +167,7 @@ enum KeyKind: Equatable {
         case "paste": return .paste
         case "predictionStrip": return .predictionStrip
         case "typingSpeed": return .typingSpeed
+        case "empty": return .empty
         case "language": return .language
         case "symbols": return .switchLayer(.symbols)
         case "letters": return .switchLayer(.letters)
