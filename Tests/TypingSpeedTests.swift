@@ -179,12 +179,35 @@ final class TypingSpeedTests: XCTestCase {
         }
     }
 
-    func testSelectAllHasTheWidthOfCutAndTheTypingSpeedIsWider() throws {
+    func testSelectAllOfTheClosedPhoneHasTheWidthOfCutAndTheTypingSpeedIsWider() throws {
+        makeKeyboard(width: 466)
+        let selectAll = try keyView(.selectAll).hitFrame.width
+        XCTAssertEqual(selectAll, try keyView(.cut).hitFrame.width, accuracy: 0.5)
+        XCTAssertGreaterThan(keyboardView.typingSpeedView.frame.width, selectAll)
+    }
+
+    func testSelectAllOfTheOpenPhoneIsTwiceAsWideAsCutAndTheTypingSpeed() throws {
+        try XCTSkipUnless(KeyboardDevice.current == .phone)
+        for width in Self.widths where width > 466 {
+            makeKeyboard(width: width)
+            let cut = try keyView(.cut).hitFrame.width
+            XCTAssertEqual(try keyView(.selectAll).hitFrame.width, 2 * cut, accuracy: 1, "\(width)")
+            XCTAssertEqual(keyboardView.typingSpeedView.frame.width, cut, accuracy: 0.5, "\(width)")
+        }
+    }
+
+    func testAThreeDigitTypingSpeedFitsItsPlaceAtEveryWidth() throws {
         for width in widths() {
             makeKeyboard(width: width)
-            let selectAll = try keyView(.selectAll).hitFrame.width
-            XCTAssertEqual(selectAll, try keyView(.cut).hitFrame.width, accuracy: 0.5, "\(width)")
-            XCTAssertGreaterThan(keyboardView.typingSpeedView.frame.width, selectAll, "\(width)")
+            let speed = keyboardView.typingSpeedView
+            speed.wordsPerMinute = 188
+            speed.layoutIfNeeded()
+            let label = speed.valueLabel
+            let smallest = label.font.withSize(label.font.pointSize * label.minimumScaleFactor)
+            let needed = ("188" as NSString).size(withAttributes: [.font: smallest]).width
+            XCTAssertGreaterThanOrEqual(label.frame.width, needed, "\(width)")
+            XCTAssertGreaterThanOrEqual(label.frame.minX, -0.5, "\(width)")
+            XCTAssertLessThanOrEqual(label.frame.maxX, speed.bounds.maxX + 0.5, "\(width)")
         }
     }
 

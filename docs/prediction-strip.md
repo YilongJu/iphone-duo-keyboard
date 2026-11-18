@@ -7,19 +7,20 @@ before the cursor. A tap on a predicted word types the word and a space.
 
 ## The top row
 
-The top row holds the small keys Select All, Cut, Copy and Paste, the typing speed and the
+The top row holds the keys Select All, Cut, Copy and Paste, the typing speed and the
 prediction strip, in all three layers. Select All and the typing speed are at the left, and Cut,
 Copy and Paste are at the right. `Shared/keyboard-layout.json` names the two places that are no
 keys as `typingSpeed` and `predictionStrip`.
 
-| Layout | Select All, Cut, Copy, Paste, each | Typing speed | Prediction strip |
-| --- | --- | --- | --- |
-| Compact, 10 key units | 0.75 | 1 | 6 |
-| Wide, 13.5 key units | one third of 2.3 | two thirds of 2.3 | 8.9 |
-| Split, 19.5 key units | one third of 2.3 | two thirds of 2.3 | 14.9 |
+| Layout | Select All | Typing speed | Prediction strip | Cut, Copy, Paste, each |
+| --- | --- | --- | --- | --- |
+| Compact, 10 key units | 0.75 | 1 | 6 | 0.75 |
+| Wide, 13.5 key units | two thirds of 2.3 | one third of 2.3 | 8.9 | one third of 2.3 |
+| Split, 19.5 key units | two thirds of 2.3 | one third of 2.3 | 14.9 | one third of 2.3 |
 
-The four small keys have one width in each layout. One key unit is the width of one letter key. In the split layout the strip crosses the empty
-middle, so the top row has no empty middle of its own.
+In the wide and the split layout, Select All is twice as wide as Cut, so the number of the
+typing speed sits close to the key. One key unit is the width of one letter key. In the split
+layout the strip crosses the empty middle, so the top row has no empty middle of its own.
 
 The row has no Home key and no End key. A held space bar moves the cursor in every layout.
 

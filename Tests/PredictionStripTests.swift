@@ -49,14 +49,14 @@ final class TopRowLayoutTests: XCTestCase {
         }
     }
 
-    func testTheFourSmallKeysOfTheWideLayoutHaveOneWidthAndTheTypingSpeedHasTwice() throws {
-        // Select All had 2.3 key units. The key now takes one third of them, as Cut, Copy and
-        // Paste do, and the typing speed takes the two thirds that became free.
+    func testSelectAllOfTheWideLayoutIsTwiceAsWideAsCutAndTheTypingSpeed() throws {
+        // Select All and the typing speed share 2.3 key units. Select All takes two thirds of
+        // them, and the typing speed takes one third, the width of Cut, Copy and Paste.
         let row = KeyboardLayout.make(style: .wide, layer: .letters, showsGlobe: true).rows[0]
-        for kind in [KeyKind.selectAll, .cut, .copy, .paste] {
+        for kind in [KeyKind.typingSpeed, .cut, .copy, .paste] {
             XCTAssertEqual(try XCTUnwrap(row.first { $0.kind == kind }).weight, 2.3 / 3, accuracy: 0.0001, "\(kind)")
         }
-        XCTAssertEqual(try XCTUnwrap(row.first { $0.kind == .typingSpeed }).weight, 2.3 * 2 / 3, accuracy: 0.0001)
+        XCTAssertEqual(try XCTUnwrap(row.first { $0.kind == .selectAll }).weight, 2.3 * 2 / 3, accuracy: 0.0001)
         XCTAssertEqual(row.reduce(0) { $0 + $1.weight }, KeyboardSpec.shared.wide.units, accuracy: 0.0001)
     }
 
