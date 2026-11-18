@@ -209,7 +209,10 @@ final class ModelPredictedWordsTests: XCTestCase {
         XCTAssertEqual(Array(keyboardView.predictedWords.prefix(2)), ["tonight", "tomorrow"])
         type("o")
         XCTAssertEqual(Array(keyboardView.predictedWords.prefix(2)), ["tonight", "tomorrow"])
-        XCTAssertTrue(keyboardView.predictedWords.allSatisfy { $0.hasPrefix("to") }, "\(keyboardView.predictedWords)")
+        // Each word starts with the typed letters. With letters in lower case, the model may
+        // still pick a form with a capital, as "Toledo".
+        XCTAssertTrue(
+            keyboardView.predictedWords.allSatisfy { $0.lowercased().hasPrefix("to") }, "\(keyboardView.predictedWords)")
         // The text before the word did not change, so the model was asked once.
         XCTAssertEqual(predictor.contexts, ["See you"])
     }
