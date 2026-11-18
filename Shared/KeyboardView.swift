@@ -455,6 +455,8 @@ final class KeyboardView: UIView {
             return KeyDisplay(
                 symbolName: KeyboardTextLogic.returnKeySymbol(for: returnKeyType),
                 performsAction: KeyboardTextLogic.returnKeyPerformsAction(for: returnKeyType))
+        case .newline:
+            return KeyDisplay(symbolName: KeyboardTextLogic.newlineKeySymbol)
         case .globe:
             return KeyDisplay(symbolName: "globe")
         case .dismiss:
@@ -907,6 +909,8 @@ final class KeyboardView: UIView {
             delegate?.keyboardViewDeleteBackward(self)
         case .returnKey:
             delegate?.keyboardViewReturn(self)
+        case .newline:
+            delegate?.keyboardView(self, insert: KeyboardTextLogic.newlineText(for: returnKeyType))
         case .cursorLeft:
             delegate?.keyboardView(self, moveCursorBy: -1)
         case .cursorRight:

@@ -1188,7 +1188,7 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
                 if pinyinCandidates.isEmpty { commitPinyinLetters() } else { selectCandidate(at: 0) }
                 return true
             }
-            if text == "\n" {
+            if text == "\n" || text == KeyboardTextLogic.lineSeparator {
                 commitPinyinLetters()
                 return true
             }

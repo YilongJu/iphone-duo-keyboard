@@ -70,7 +70,12 @@ enum KeyKind: Equatable {
     case shift
     case capsLock
     case tab
+    /// The key of the field's action, such as search or send. In a field without an action the
+    /// key types a line break.
     case returnKey
+    /// The newline key. The key types a line break in every field, also where the return key
+    /// does the field's action (`KeyboardTextLogic.newlineText(for:)`).
+    case newline
     case globe
     case dismiss
     case cursorLeft
@@ -93,7 +98,7 @@ enum KeyKind: Equatable {
     /// strip (`TypingSpeedView`). The view draws the speed there and no key.
     case typingSpeed
     /// A place of a row that stays empty. The view draws no key there, and a touch there presses
-    /// no key. The wide layout keeps such a place at the right end of its bottom row.
+    /// no key. The layout file holds no such place now.
     case empty
     /// Switches between English and Simplified Chinese (Pinyin).
     case language
@@ -152,6 +157,7 @@ enum KeyKind: Equatable {
         case "capsLock": return .capsLock
         case "tab": return .tab
         case "return": return .returnKey
+        case "newline": return .newline
         case "globe": return .globe
         case "dismiss": return .dismiss
         case "left": return .cursorLeft

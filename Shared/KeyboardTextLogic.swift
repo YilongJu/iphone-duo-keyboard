@@ -332,7 +332,7 @@ enum KeyboardTextLogic {
         reading != typed && reading.filter { $0 != " " } == typed.filter { $0 != " " }
     }
 
-    static let wordTerminators: Set<String> = [" ", ".", ",", "!", "?", ";", ":", "\n"]
+    static let wordTerminators: Set<String> = [" ", ".", ",", "!", "?", ";", ":", "\n", "\u{2028}"]
 
     /// The symbol and digit keys that sit beside a letter key, in the wide layout or the compact
     /// layout of keyboard-layout.json. A finger that aims at the letter can land on one of them,
@@ -730,5 +730,18 @@ enum KeyboardTextLogic {
         // action too, as every type other than `.default` does, so it counts as an action.
         @unknown default: return true
         }
+    }
+
+    /// The Unicode character LINE SEPARATOR. A text view shows a line break at this character.
+    static let lineSeparator = "\u{2028}"
+
+    /// The SF Symbol on the newline key.
+    static let newlineKeySymbol = "arrow.turn.down.left"
+
+    /// The text that the newline key types. A field without an action takes "\n". A field with
+    /// an action, such as send, reads "\n" as the request for that action, so the key types
+    /// `lineSeparator` there.
+    static func newlineText(for type: UIReturnKeyType) -> String {
+        returnKeyPerformsAction(for: type) ? lineSeparator : "\n"
     }
 }

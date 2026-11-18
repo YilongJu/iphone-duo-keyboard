@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>Keys for the Empty Place</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600&display=swap">
+<style>
+/* Layout: one column. The bottom row of the keyboard stays in view at the top, drawn to key units.
+   Option cards below fill the empty place of that row when picked. */
+:root {
+  color-scheme: light;
+  --tray: #e3e6eb;
+  --page: #f3f4f7;
+  --key: #ffffff;
+  --key-edge: #c3c8d1;
+  --ink: #1b2230;
+  --ink-soft: #566074;
+  --accent: #0b6b6b;
+  --accent-soft: #d5ecea;
+  --warn: #8a5a00;
+  --warn-soft: #f6ead0;
+  --display: "Space Grotesk", "Segoe UI", system-ui, sans-serif;
+  --text: "Inter", "Segoe UI", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --tray: #1d2127; --page: #14171b; --key: #2b313a; --key-edge: #434b58;
+    --ink: #e9ecf1; --ink-soft: #a3acbb; --accent: #5cc9c4; --accent-soft: #173836;
+    --warn: #e5b85c; --warn-soft: #3a2f16;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --tray: #1d2127; --page: #14171b; --key: #2b313a; --key-edge: #434b58;
+  --ink: #e9ecf1; --ink-soft: #a3acbb; --accent: #5cc9c4; --accent-soft: #173836;
+  --warn: #e5b85c; --warn-soft: #3a2f16;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--page); color: var(--ink);
+  font: 400 16px/1.5 var(--text);
+  padding-block: 28px 56px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 920px; margin: 0 auto; display: flex; flex-direction: column; gap: 28px; }
+h1 { font: 600 30px/1.15 var(--display); margin: 0; text-wrap: balance; }
+h2 { font: 600 20px/1.2 var(--display); margin: 0; }
+p { margin: 0; max-width: 65ch; }
+.lead { color: var(--ink-soft); }
+header { display: flex; flex-direction: column; gap: 10px; }
+
+.board {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5;
+  background: var(--tray); border-radius: 14px; padding: 12px;
+  display: flex; flex-direction: column; gap: 10px;
+  box-shadow: 0 6px 18px rgb(0 0 0 / 0.12);
+}
+.row { display: flex; gap: 5px; }
+.k {
+  flex-basis: 0; min-width: 0; height: 46px; border-radius: 8px;
+  background: var(--key); border-bottom: 2px solid var(--key-edge);
+  display: flex; align-items: center; justify-content: center;
+  font: 500 13px/1 var(--text); color: var(--ink-soft);
+  overflow: hidden; white-space: nowrap; text-overflow: ellipsis; padding: 0 4px;
+}
+.k.new { background: var(--accent); border-bottom-color: transparent; color: var(--page); font-weight: 600; }
+.k.none { background: transparent; border: 2px dashed var(--key-edge); }
+.choice { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; font-size: 14px; }
+.choice output { flex: 1 1 260px; color: var(--ink); user-select: all; }
+button {
+  font: 600 14px/1 var(--text); border-radius: 8px; padding: 9px 14px; cursor: pointer;
+  border: 1.5px solid var(--accent); background: transparent; color: var(--accent);
+}
+button[aria-pressed="true"] { background: var(--accent); color: var(--page); }
+button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+section { display: flex; flex-direction: column; gap: 12px; }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 12px; }
+.card {
+  background: var(--key); border-radius: 12px; padding: 16px;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.card.on { box-shadow: inset 0 0 0 2px var(--accent); }
+.top { display: flex; gap: 12px; align-items: center; }
+.face {
+  flex: none; min-width: 52px; max-width: 120px; height: 40px; padding: 0 8px; border-radius: 8px;
+  background: var(--tray); border-bottom: 2px solid var(--key-edge);
+  display: flex; align-items: center; justify-content: center;
+  font: 600 14px/1 var(--text); white-space: nowrap; overflow: hidden;
+}
+.card h3 { font: 600 17px/1.2 var(--display); margin: 0; }
+.card p { font-size: 14.5px; }
+.card .more { color: var(--ink-soft); }
+.tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.tag { font: 600 11.5px/1 var(--text); letter-spacing: 0.03em; padding: 5px 8px; border-radius: 999px; background: var(--tray); color: var(--ink-soft); }
+.tag.pick { background: var(--accent-soft); color: var(--accent); }
+.tag.open { background: var(--warn-soft); color: var(--warn); }
+.card button { align-self: flex-start; margin-top: auto; }
+.plain { background: transparent; border: 1.5px dashed var(--key-edge); }
+footer { color: var(--ink-soft); font-size: 14px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Keys for the empty place</h1>
+    <p class="lead">Build 67 left 2 key units empty at the lower right of the open phone's bottom row. Pick one key of 2 units, or two keys of 1 unit each. The row below shows your pick.</p>
+  </header>
+
+  <div class="board" aria-label="Bottom row of the open phone's letters layout">
+    <div class="row" id="row"></div>
+    <div class="choice">
+      <output id="reply"></output>
+      <button id="copy" type="button">Copy the line</button>
+    </div>
+  </div>
+
+  <div id="groups"></div>
+
+  <section>
+    <h2>Without a new key</h2>
+    <div class="cards">
+      <div class="card plain">
+        <h3>Space bar slide for lines</h3>
+        <p>A held space bar already moves the cursor left and right. A slide up or down on the held space bar can move the cursor by lines.</p>
+        <p class="more">This gesture goes with any pick above. Tell me "yes" or "no".</p>
+      </div>
+      <div class="card plain">
+        <h3>Keep the corner empty</h3>
+        <p>The base of the right thumb rests near this corner. An empty corner gives no false key press.</p>
+        <p class="more">A week of use on the phone would show how often the thumb touches the corner.</p>
+      </div>
+      <div class="card plain">
+        <h3>Give the room to the keys beside it</h3>
+        <p>The hide key grows to 2 units and the space bar gets 1 more unit. The row gets no new function.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <p>"Work" is my estimate of the size of the change: small is about one build, large needs new model work and a measurement first. A tag "not checked" marks a point that I have not tried on iOS.</p>
+  </footer>
+</div>
+
+<script>
+const GROUPS = [
+  ["Use the predicted words", "These keys bring the strip's words down to the thumb."],
+  ["Edit the text", "These keys change or move through text that is already there."],
+  ["Ask the models", "These keys start the proofreader or the language model on request."],
+  ["Bring in other text", "These keys fill the strip with text from another source."],
+];
+const OPTIONS = [
+  { id: "accept", g: 0, name: "Accept first word", face: "tomorrow", short: "word",
+    tap: "The key shows the first predicted word. A tap types that word and a space.",
+    more: "A slide up types the word with no space, for a mark after it. On the dev halves of the benchmark, the first word alone saves 41.5% of key presses.",
+    work: "Small", pick: "My first pick" },
+  { id: "phrase", g: 0, name: "Next phrase", face: "at the office", short: "phrase",
+    tap: "The key shows the model's next two or three words. A tap types all of them.",
+    more: "The model must write several tokens per request. No measurement gives the time on the phone yet.",
+    work: "Large" },
+  { id: "mark", g: 0, name: "Expected mark", face: "?", short: "?",
+    tap: "The key shows the mark that the model expects next: period, comma or question mark. A tap types the mark.",
+    more: "The benchmark has no number for marks, so a measurement comes first.",
+    work: "Medium" },
+
+  { id: "delword", g: 1, name: "Delete word", face: "⌫ word", short: "⌫ w",
+    tap: "A tap deletes back to the start of the word. A held key repeats.",
+    more: "A slide to the left deletes the sentence being written.",
+    work: "Small", pick: "My second pick" },
+  { id: "undo", g: 1, name: "Undo", face: "↶ undo", short: "↶",
+    tap: "A tap takes back the keyboard's last action: a tapped word, a fix, a delete or a paste.",
+    more: "A slide to the right does the action again. The key takes back only actions of this keyboard.",
+    work: "Medium" },
+  { id: "cursor", g: 1, name: "Cursor pad", face: "◂ ▴▾ ▸", short: "◂▸",
+    tap: "One key in place of the four arrow keys. A slide in a direction moves the cursor that way.",
+    more: "A held finger that drags keeps the cursor moving. This key brings back the moves up and down.",
+    work: "Medium" },
+  { id: "ends", g: 1, name: "Line ends", face: "⇤ ⇥", short: "⇥",
+    tap: "A tap moves the cursor to the end of the line. A slide to the left moves it to the start.",
+    more: "The Home key and the End key left the top row in build 62. This key gives both back in one place.",
+    work: "Small" },
+  { id: "select", g: 1, name: "Select more", face: "[ab]", short: "[ab]",
+    tap: "A tap selects the word at the cursor. The next taps select the sentence, then the paragraph.",
+    more: "Cut and Copy of the top row then work on the selection.",
+    work: "Medium", open: "Not checked: iOS may not let a keyboard select a part of the text" },
+  { id: "fwd", g: 1, name: "Forward delete", face: "⌦", short: "⌦",
+    tap: "A tap deletes the character after the cursor. A held key repeats.",
+    more: "The symbol layers have this key already. The letters do not.",
+    work: "Small" },
+
+  { id: "fix", g: 2, name: "Fix now", face: "✓ fix", short: "✓",
+    tap: "A tap asks the proofreader at once, without the pause of 1 second. The fix shows in the strip.",
+    more: "A second tap puts the fix in the text.",
+    work: "Small" },
+  { id: "rewrite", g: 2, name: "Rewrite", face: "✎ rewrite", short: "✎",
+    tap: "A tap shows two or three rewrites of the sentence in the strip: shorter, more formal, more friendly.",
+    more: "A tap on a rewrite puts it in place of the sentence.",
+    work: "Large", open: "Not checked: quality and time of Apple's model for rewrites" },
+  { id: "translate", g: 2, name: "Translate", face: "A ⇄ 文", short: "A文",
+    tap: "A tap shows the sentence in the other language, English or Chinese, in the strip.",
+    more: "A tap on the translated sentence puts it in place of the sentence.",
+    work: "Large", open: "Not checked: quality and time of Apple's model for translation" },
+
+  { id: "emoji", g: 3, name: "Emoji in the strip", face: "☺", short: "☺",
+    tap: "A tap fills the strip with emoji: those of the last words first, then the ones you use most.",
+    more: "The keyboard needs no emoji page for this. The strip scrolls.",
+    work: "Medium" },
+  { id: "clips", g: 3, name: "Clipboard list", face: "⧉ clips", short: "⧉",
+    tap: "A tap shows the last texts that you cut or copied with the keyboard, in the strip.",
+    more: "A tap on one text pastes it. The list can stay in memory only, so no copied text goes to a file.",
+    work: "Medium" },
+  { id: "phrases", g: 3, name: "Saved phrases", face: "❝ saved", short: "❝",
+    tap: "A tap shows your saved phrases in the strip, such as an address or a common reply.",
+    more: "You enter the phrases in the app. The phrases stay on the phone.",
+    work: "Medium" },
+];
+
+const ROW = [["globe", 1.1], ["123", 1.1], ["中 / En", 1.1], ["space", 7.2], ["hide", 1.0]];
+let picked = ["accept", "delword"];
+const byId = Object.fromEntries(OPTIONS.map(o => [o.id, o]));
+
+function el(tag, cls, text) {
+  const node = document.createElement(tag);
+  if (cls) node.className = cls;
+  if (text !== undefined) node.textContent = text;
+  return node;
+}
+
+function drawRow() {
+  const row = document.getElementById("row");
+  row.replaceChildren();
+  const add = (label, weight, cls) => {
+    const key = el("div", "k" + (cls ? " " + cls : ""), label);
+    key.style.flexGrow = weight;
+    row.append(key);
+  };
+  ROW.forEach(([label, weight]) => add(label, weight));
+  if (picked.length === 0) add("empty", 2.0, "none");
+  if (picked.length === 1) add(byId[picked[0]].face, 2.0, "new");
+  if (picked.length === 2) picked.forEach(id => add(byId[id].short, 1.0, "new"));
+
+  const reply = document.getElementById("reply");
+  if (picked.length === 0) reply.textContent = "No key picked. The place stays empty.";
+  if (picked.length === 1) reply.textContent = "Key for the empty place: " + byId[picked[0]].name + " at 2 units.";
+  if (picked.length === 2) reply.textContent = "Keys for the empty place: " + byId[picked[0]].name + " (left) and " + byId[picked[1]].name + " (right), 1 unit each.";
+}
+
+function drawCards() {
+  const groups = document.getElementById("groups");
+  groups.replaceChildren();
+  groups.style.cssText = "display:flex;flex-direction:column;gap:28px";
+  GROUPS.forEach(([title, lead], g) => {
+    const section = el("section");
+    section.append(el("h2", "", title), el("p", "lead", lead));
+    const cards = el("div", "cards");
+    OPTIONS.filter(o => o.g === g).forEach(o => {
+      const on = picked.includes(o.id);
+      const card = el("div", "card" + (on ? " on" : ""));
+      const top = el("div", "top");
+      top.append(el("div", "face", o.face), el("h3", "", o.name));
+      const tags = el("div", "tags");
+      tags.append(el("span", "tag", "Work: " + o.work));
+      if (o.pick) tags.append(el("span", "tag pick", o.pick));
+      if (o.open) tags.append(el("span", "tag open", o.open));
+      const button = el("button", "", on ? "Picked" : "Pick");
+      button.type = "button";
+      button.id = "pick-" + o.id;
+      button.setAttribute("aria-pressed", on ? "true" : "false");
+      button.addEventListener("click", () => {
+        if (picked.includes(o.id)) picked = picked.filter(id => id !== o.id);
+        else picked = [...picked, o.id].slice(-2);
+        drawRow();
+        drawCards();
+      });
+      card.append(top, el("p", "", o.tap), el("p", "more", o.more), tags, button);
+      cards.append(card);
+    });
+    section.append(cards);
+    groups.append(section);
+  });
+}
+
+document.getElementById("copy").addEventListener("click", async event => {
+  const text = document.getElementById("reply").textContent;
+  try {
+    await navigator.clipboard.writeText(text);
+    event.target.textContent = "Copied";
+  } catch (error) {
+    event.target.textContent = "Select the line to copy";
+  }
+});
+
+drawRow();
+drawCards();
+</script>
+</body>
+</html>

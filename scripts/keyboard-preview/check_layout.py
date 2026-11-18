@@ -25,6 +25,8 @@ The script exits with an error and lists every broken rule. The rules:
    layout.
 10. The first row of every layer holds exactly one typing speed, right before the prediction
     strip, and no other row holds one. The typing speed is a place for a number, and no key.
+11. Every layer of the wide layout has exactly one newline key. The return key of the wide
+    layout does the field's action, so the newline key is the key for a line break.
 """
 import json
 import string
@@ -132,6 +134,8 @@ def check(layout):
             for required in ("space", "backspace", "return"):
                 if required not in functions:
                     problems.append(f"{where}: the '{required}' key is missing")
+            if style_name == "wide" and functions.count("newline") != 1:
+                problems.append(f"{where}: {functions.count('newline')} newline keys, expected 1")
             for target in sorted(LAYER_KEYS):
                 found = functions.count(target)
                 wanted = EXPECTED_LAYER_KEYS[layer_name].get(target, 0)

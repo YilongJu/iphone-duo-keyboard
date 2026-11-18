@@ -107,7 +107,7 @@ const PRESETS = [
 const FN_LABEL = {
   backspace: "⌫", forwardDelete: "⌦", shift: "⇧", capsLock: "⇪", tab: "⇥", globe: "🌐", dismiss: "⌨↓",
   left: "←", right: "→", up: "↑", down: "↓", home: "Home", end: "End", selectAll: "\u2B1A",
-  cut: "✂", copy: "⧉", paste: "📋", symbols: ".?123", letters: "ABC", more: "#+=", language: "\u4E2D", space: "", return: "⏎",
+  cut: "✂", copy: "⧉", paste: "📋", symbols: ".?123", letters: "ABC", more: "#+=", language: "\u4E2D", space: "", return: "⏎", newline: "↵",
 };
 const state = {
   width: 669, compactHeight: false, pad: false, landscape: false, shift: "off", autoShift: false,
@@ -451,6 +451,7 @@ function act(key, alt, keepLayerView) {
       case "space": insert(" "); autoShift(); break;
       case "tab": insert("\t"); autoShift(); break;
       case "return": insert("\n"); autoShift(); break;
+      case "newline": insert("\n"); autoShift(); break;
       case "backspace":
         if (!deleteAllIfSelected() && state.cursor > 0) {
           state.text = state.text.slice(0, state.cursor - 1) + state.text.slice(state.cursor);
