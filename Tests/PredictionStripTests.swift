@@ -240,8 +240,7 @@ final class PredictionStripTests: XCTestCase {
 
     func testTextWithoutAWordBeforeTheCursorShowsNoPredictedWords() {
         // The start of the text, a mark, two spaces and a line break have no word before them.
-        for before in ["", "See you. ", "See you, ", "See you  ", "See you
-"] {
+        for before in ["", "See you. ", "See you, ", "See you  ", "See you\n"] {
             makeKeyboard(before: before)
             spellChecker.requests = []
             controller.documentDidChange()
