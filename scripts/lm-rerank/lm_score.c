@@ -3,6 +3,7 @@
 
  Usage: lm_score MODEL.gguf THREADS < requests > answers
         lm_score MODEL.gguf THREADS tokens < requests > token lines
+        lm_score MODEL.gguf THREADS next < requests > answers and next-token blocks
 
  Request line:  context <TAB> candidate 1 <TAB> candidate 2 ...
  Answer line:   log probability 1 <SPACE> space after 1 <TAB> log probability 2 <SPACE> space after 2 ...
@@ -10,6 +11,12 @@
                 start token and the context, then one field per candidate. With "tokens" the
                 program loads the vocabulary only, and scripts/lm-finetune/check_parity.py compares
                 these ids with the ids of the training code.
+ Next-token block: with "next", a request line that holds a context and no candidate gets no
+                answer line. The program writes one 32-bit float per token of the vocabulary, in
+                the byte order of the machine and with no line break: the natural log of the
+                probability that this token comes right after the context. A request line with
+                candidates gets its answer line as without "next".
+                scripts/prediction-strip/measure.py ranks the predicted words with these numbers.
 
  The context is the text before the candidates. The model reads the start-of-text token, then
  the context. A candidate follows the context after one space, or right after the start-of-text
@@ -144,8 +151,9 @@ static int tokenize(const struct llama_vocab *vocab, const char *text, llama_tok
 
 int main(int argc, char **argv) {
     int tokens_only = argc == 4 && strcmp(argv[3], "tokens") == 0;
-    if (argc != 3 && !tokens_only) {
-        fprintf(stderr, "usage: lm_score MODEL.gguf THREADS [tokens]\n");
+    int next_mode = argc == 4 && strcmp(argv[3], "next") == 0;
+    if (argc != 3 && !tokens_only && !next_mode) {
+        fprintf(stderr, "usage: lm_score MODEL.gguf THREADS [tokens|next]\n");
         return 2;
     }
     int threads = atoi(argv[2]);
@@ -185,6 +193,13 @@ int main(int argc, char **argv) {
         }
     }
     if (space_tokens == 0) die("no token starts with a space");
+
+    /* The numbers of one next-token block. */
+    float *next_scores = NULL;
+    if (next_mode) {
+        next_scores = (float *)malloc(sizeof(float) * (size_t)vocabulary);
+        if (next_scores == NULL) die("out of memory");
+    }
 
     struct llama_context *model_context = NULL;
     struct llama_batch batch = {0};
@@ -232,7 +247,7 @@ int main(int argc, char **argv) {
             *tab = 0;
             cursor = tab + 1;
         }
-        if (field_count < 2) die("a request needs a context and one candidate or more");
+        if (field_count < 2 && !next_mode) die("a request needs a context and one candidate or more");
         const char *context = fields[0];
         int candidates = field_count - 1;
 
@@ -277,6 +292,19 @@ int main(int argc, char **argv) {
         const float *after_context = llama_get_logits_ith(model_context, context_count - 1);
         if (after_context == NULL) die("the model gave no scores after a context");
         double context_all = log_of_sum(after_context, vocabulary);
+        if (candidates == 0) {
+            /* "next": the log probability of every token right after the context. */
+            for (int index = 0; index < vocabulary; index++) {
+                next_scores[index] = (float)((double)after_context[index] - context_all);
+            }
+            if (fwrite(next_scores, sizeof(float), (size_t)vocabulary, stdout) != (size_t)vocabulary) {
+                die("a next-token block did not go out");
+            }
+            fflush(stdout);
+            tokens_read += context_count;
+            model_ms += now_ms() - started;
+            continue;
+        }
         double first_token[MAX_CANDIDATES];
         for (int candidate = 0; candidate < candidates; candidate++) {
             first_token[candidate] = (double)after_context[candidate_tokens[candidate][0]] - context_all;
@@ -331,5 +359,6 @@ int main(int argc, char **argv) {
     }
     llama_model_free(model);
     free(space_first);
+    free(next_scores);
     return 0;
 }
