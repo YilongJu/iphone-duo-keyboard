@@ -77,9 +77,9 @@ final class KeyboardViewController: UIInputViewController {
             self?.textController.show(.modelError(reason))
         }
         textController.rememberLanguage()
-        // iPadOS draws undo, redo and paste buttons over the keyboard's top left corner. This
-        // request to drop them is honored for a text field's own input view. For a keyboard
-        // extension the documentation does not say, so the first row also leaves that corner free.
+        // iPadOS has undo, redo and paste buttons for a keyboard, in a bar above it. This
+        // request drops them for a text field's own input view. For a keyboard extension the
+        // documentation does not say whether the request counts.
         inputAssistantItem.leadingBarButtonGroups = []
         inputAssistantItem.trailingBarButtonGroups = []
         textController.onDismiss = { [weak self] in

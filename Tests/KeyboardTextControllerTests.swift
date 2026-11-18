@@ -1502,13 +1502,14 @@ final class KeyboardLayoutTests: XCTestCase {
         XCTAssertEqual(KeyboardView.style(forWidth: 320, device: .pad, landscape: true), .compact)
     }
 
-    func testTheFirstRowOfAnIPadLeavesTheCornerOfTheSystemButtons() {
-        XCTAssertEqual(KeyboardView.shortcutButtonsWidth(style: .wide, device: .pad), 140)
-        XCTAssertEqual(KeyboardView.shortcutButtonsWidth(style: .split, device: .pad), 140)
-        XCTAssertEqual(KeyboardView.shortcutButtonsWidth(style: .compact, device: .pad), 0)
+    func testTheFirstRowOfAnIPadStartsAtTheLeftEdge() {
+        // The system's undo, redo and paste buttons have a bar of their own above the keyboard,
+        // so no layout leaves a corner free for them.
         for style in [LayoutStyle.compact, .wide, .split] {
+            XCTAssertEqual(KeyboardView.shortcutButtonsWidth(style: style, device: .pad), 0)
             XCTAssertEqual(KeyboardView.shortcutButtonsWidth(style: style, device: .phone), 0)
         }
+        // A width above 0 in the layout file still moves the left group of the row to the right.
         // Three keys of 100 points, then the empty middle, then one key.
         let row = [0, 100, 200, 300, 700].map { CGRect(x: CGFloat($0), y: 0, width: 100, height: 40) }
         let moved = KeyboardView.cells(row, leftGroupCount: 3, movedRightBy: 150)

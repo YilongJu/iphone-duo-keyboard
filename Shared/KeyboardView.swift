@@ -315,8 +315,8 @@ final class KeyboardView: UIView {
         return width >= wideMinimumWidth ? .wide : .compact
     }
 
-    /// Width of the first row's left end that stays empty, in points. On an iPad the system
-    /// draws its undo, redo and paste buttons there. An iPhone does not have these buttons.
+    /// Width of the first row's left end that stays empty, in points: the layout file's width
+    /// for an iPad, which is 0 today, and 0 on an iPhone.
     static func shortcutButtonsWidth(style: LayoutStyle, device: KeyboardDevice = .current) -> CGFloat {
         device == .pad && style != .compact ? spec.padShortcutButtonsWidth : 0
     }
