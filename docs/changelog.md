@@ -4,6 +4,17 @@ This file lists what changed in each TestFlight build, the newest build first. E
 the build number, the commit, and the upload time in UTC. An entry says what a person notices
 on the phone first, and then what changed behind it.
 
+## Build 69
+
+Commit `8e04041`, uploaded 2026-11-18 18:27 UTC.
+
+**What you notice**
+
+- The newline key shows the same symbol as a return key that types a line break. In a field
+  without an action the two keys do the same, so they look the same.
+- In a field with an action, the return key shows the action, and the newline key keeps the
+  symbol of the line break.
+
 ## Build 68
 
 Commit `5031aad`, uploaded 2026-11-18 17:25 UTC.
