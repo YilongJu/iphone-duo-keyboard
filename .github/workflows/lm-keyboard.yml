@@ -64,6 +64,14 @@ jobs:
             cat "$out/scorer_cli.log"
           } | tee "$out/scorer-check.txt"
           cmp "$out/lm_score.answers" "$out/scorer_cli.answers"
+      - name: Compare the next-token numbers of the keyboard's scorer with lm_score
+        run: |
+          set -euo pipefail
+          export LD_LIBRARY_PATH="$PWD/build/lm-rerank/llama/lib"
+          # The prediction strip orders its words with these numbers (duo_lm_scorer_next).
+          python3 scripts/prediction-strip/check_scorer_next.py --lm build/lm-rerank/lm_score \
+            --scorer build/lm-keyboard/scorer_cli --model "$(cat build/lm-keyboard/model-path.txt)" \
+            | tee build/lm-keyboard/harness/scorer-next-check.txt
       - name: Score the harness requests in order with the prefix reuse of the cache, against lm_score
         run: |
           set -euo pipefail

@@ -97,3 +97,17 @@ uv run --with numpy python scripts/prediction-strip/measure.py --lm ~/predstrip/
 | `results/dev.md`, `results/dev.json` | The result tables of the dev half. |
 
 The large files go to `build/prediction-strip/`: the tables, the places per word and the logs.
+
+## Check of the keyboard's scorer
+
+`check_scorer_next.py` compares the next-token numbers of the keyboard's scorer
+(`duo_lm_scorer_next` in `LanguageModel/duo_lm_scorer.c`) with the mode "next" of `lm_score`,
+byte for byte. The scorer runs from an empty cache, with the prefix reuse of the cache, and with
+the keyboard's reuse. The workflow "Language model in the keyboard" runs the check on Linux.
+
+```
+gcc -std=c11 -O2 -Wall -Wextra -Werror -I LLAMA/include -I LanguageModel LanguageModel/duo_lm_scorer.c \
+  scripts/lm-keyboard/scorer_cli.c -L LLAMA/lib -lllama -lggml -lggml-cpu -lggml-base -lm -o ~/predstrip/bin/scorer_cli
+python3 scripts/prediction-strip/check_scorer_next.py --lm ~/predstrip/bin/lm_score \
+  --scorer ~/predstrip/bin/scorer_cli --model MODEL.gguf
+```

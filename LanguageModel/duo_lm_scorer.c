@@ -152,6 +152,8 @@ struct duo_lm_scorer {
     /* The second state of the check, or NULL without the check. */
     struct llama_context *check_context;
     double check_tolerance;
+    /* Room for the next-token numbers of the check's fresh read, or NULL without the check. */
+    float *check_next;
     duo_lm_scorer_info info;
 };
 
@@ -497,6 +499,13 @@ int duo_lm_scorer_set_check(duo_lm_scorer *scorer, double tolerance, char *error
             return 0;
         }
     }
+    if (scorer->check_next == NULL) {
+        scorer->check_next = (float *)malloc(sizeof(float) * (size_t)scorer->vocabulary);
+        if (scorer->check_next == NULL) {
+            set_error(error, error_size, "out of memory for the next-token numbers of the check");
+            return 0;
+        }
+    }
     scorer->check_tolerance = tolerance;
     return 1;
 }
@@ -536,11 +545,12 @@ struct candidate_tokens {
 
 /* Reads the window from token `kept` on into the sequence `sequence` of `state`, whose cache
    holds the tokens before `kept` at their positions, and then reads the candidates and writes
-   their scores. The candidate sequences must be empty. */
+   their scores. The candidate sequences must be empty. With `next`, the function also writes
+   the log probability of every token right after the window into it. */
 static int read_window_and_candidates(duo_lm_scorer *scorer, struct llama_context *state, llama_seq_id sequence,
                                       const llama_token *window, int window_count, int kept,
-                                      const struct candidate_tokens *candidates, duo_lm_score *scores, char *error,
-                                      size_t error_size) {
+                                      const struct candidate_tokens *candidates, duo_lm_score *scores, float *next,
+                                      char *error, size_t error_size) {
     /* The window after the kept tokens, in calls of at most CALL_TOKENS tokens. Only its last
        token needs scores. */
     int unread = window_count - kept;
@@ -564,6 +574,12 @@ static int read_window_and_candidates(duo_lm_scorer *scorer, struct llama_contex
     if (counts) scorer->info.window_milliseconds += read_window - started;
     int count = candidates->count;
     double context_all = log_of_sum(after_context, scorer->vocabulary);
+    if (next != NULL) {
+        /* The same step as the mode "next" of lm_score.c, so both programs give the same numbers. */
+        for (int index = 0; index < scorer->vocabulary; index++) {
+            next[index] = (float)((double)after_context[index] - context_all);
+        }
+    }
     for (int candidate = 0; candidate < count; candidate++) {
         scores[candidate].log_probability = (double)after_context[candidates->tokens[candidate][0]] - context_all;
         scores[candidate].space_after = 0;
@@ -720,17 +736,27 @@ static int remember_context(struct slot *slot, const llama_token *context_tokens
 }
 
 /* Reads the same window and candidates in the state of the check, from an empty cache, and
-   compares the numbers with `scores`. */
+   compares the numbers with `scores`, and with the next-token numbers `next` of a request that
+   asked for them. */
 static int check_scores(duo_lm_scorer *scorer, const llama_token *window, int window_count,
-                        const struct candidate_tokens *candidates, const duo_lm_score *scores, char *error,
-                        size_t error_size) {
+                        const struct candidate_tokens *candidates, const duo_lm_score *scores, const float *next,
+                        char *error, size_t error_size) {
     duo_lm_score fresh[DUO_LM_MAX_CANDIDATES];
     cache_clear(scorer->check_context);
-    if (read_window_and_candidates(scorer, scorer->check_context, 0, window, window_count, 0, candidates, fresh, error,
-                                   error_size) != 1) {
+    if (read_window_and_candidates(scorer, scorer->check_context, 0, window, window_count, 0, candidates, fresh,
+                                   next != NULL ? scorer->check_next : NULL, error, error_size) != 1) {
         return -1;
     }
     scorer->info.checked_requests++;
+    for (int index = 0; next != NULL && index < scorer->vocabulary; index++) {
+        double difference = fabs((double)next[index] - (double)scorer->check_next[index]);
+        if (difference > scorer->info.checked_widest) scorer->info.checked_widest = difference;
+        if (difference > scorer->check_tolerance) {
+            set_error(error, error_size, "the cache gave %.9g for token %d after the context, a fresh read %.9g",
+                      (double)next[index], index, (double)scorer->check_next[index]);
+            return -1;
+        }
+    }
     for (int candidate = 0; candidate < candidates->count; candidate++) {
         double pair[2][2] = {{scores[candidate].log_probability, fresh[candidate].log_probability},
                              {scores[candidate].space_after, fresh[candidate].space_after}};
@@ -747,17 +773,11 @@ static int check_scores(duo_lm_scorer *scorer, const llama_token *window, int wi
     return 1;
 }
 
-int duo_lm_scorer_score(duo_lm_scorer *scorer, const char *context, const char *const *candidates, int count,
-                        duo_lm_score *scores, char *error, size_t error_size) {
-    if (scorer == NULL || context == NULL || candidates == NULL || scores == NULL) {
-        set_error(error, error_size, "a pointer of the request is NULL");
-        return -1;
-    }
-    if (count < 1 || count > DUO_LM_MAX_CANDIDATES) {
-        set_error(error, error_size, "a request holds %d candidates, and the limit is 1 to %d", count,
-                  DUO_LM_MAX_CANDIDATES);
-        return 0;
-    }
+/* One request: the scores of `count` candidates after `context`, or with `next` and no candidate
+   the log probability of every token right after `context`. The callers checked the pointers
+   and the counts. */
+static int answer_request(duo_lm_scorer *scorer, const char *context, const char *const *candidates, int count,
+                          duo_lm_score *scores, float *next, char *error, size_t error_size) {
     scorer->info.requests++;
     double tokenize_started = now_milliseconds();
 
@@ -860,7 +880,7 @@ int duo_lm_scorer_score(duo_lm_scorer *scorer, const char *context, const char *
     }
     slot->count = 0;
     int result = read_window_and_candidates(scorer, scorer->context, 0, window, window_count, kept,
-                                            &candidate_tokens, scores, error, error_size);
+                                            &candidate_tokens, scores, next, error, error_size);
     if (result != 1) {
         free(context_tokens);
         forget_cache(scorer);
@@ -883,13 +903,41 @@ int duo_lm_scorer_score(duo_lm_scorer *scorer, const char *context, const char *
         return -1;
     }
     if (scorer->check_context != NULL
-        && check_scores(scorer, window, window_count, &candidate_tokens, scores, error, error_size) != 1) {
+        && check_scores(scorer, window, window_count, &candidate_tokens, scores, next, error, error_size) != 1) {
         /* The cache gave other numbers than a fresh read, or the fresh read failed, so no later
            request may build on it. */
         forget_cache(scorer);
         return -1;
     }
     return 1;
+}
+
+int duo_lm_scorer_score(duo_lm_scorer *scorer, const char *context, const char *const *candidates, int count,
+                        duo_lm_score *scores, char *error, size_t error_size) {
+    if (scorer == NULL || context == NULL || candidates == NULL || scores == NULL) {
+        set_error(error, error_size, "a pointer of the request is NULL");
+        return -1;
+    }
+    if (count < 1 || count > DUO_LM_MAX_CANDIDATES) {
+        set_error(error, error_size, "a request holds %d candidates, and the limit is 1 to %d", count,
+                  DUO_LM_MAX_CANDIDATES);
+        return 0;
+    }
+    return answer_request(scorer, context, candidates, count, scores, NULL, error, error_size);
+}
+
+int duo_lm_scorer_next(duo_lm_scorer *scorer, const char *context, float *log_probabilities, int capacity,
+                       char *error, size_t error_size) {
+    if (scorer == NULL || context == NULL || log_probabilities == NULL) {
+        set_error(error, error_size, "a pointer of the request is NULL");
+        return -1;
+    }
+    if (capacity != scorer->vocabulary) {
+        set_error(error, error_size, "the request has room for %d numbers, and the vocabulary holds %d tokens",
+                  capacity, scorer->vocabulary);
+        return 0;
+    }
+    return answer_request(scorer, context, NULL, 0, NULL, log_probabilities, error, error_size);
 }
 
 int duo_lm_scorer_tokenize(duo_lm_scorer *scorer, const char *text, int *tokens, int capacity, char *error,
@@ -935,5 +983,6 @@ void duo_lm_scorer_close(duo_lm_scorer *scorer) {
     }
     if (scorer->model != NULL) llama_model_free(scorer->model);
     free(scorer->space_first);
+    free(scorer->check_next);
     free(scorer);
 }

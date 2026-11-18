@@ -156,6 +156,19 @@ int duo_lm_scorer_set_check(duo_lm_scorer *scorer, double tolerance, char *error
 int duo_lm_scorer_score(duo_lm_scorer *scorer, const char *context, const char *const *candidates, int count,
                         duo_lm_score *scores, char *error, size_t error_size);
 
+/* Writes the natural log of the probability of every token right after `context` into
+   `log_probabilities`: one number per token of the vocabulary, at the place of the token's
+   number. The prediction strip orders its predicted words with these numbers.
+   `capacity` is the count of numbers that `log_probabilities` holds. It must be the size of the
+   vocabulary, which duo_lm_scorer_get_info gives.
+   The scorer reads the window of the context as duo_lm_scorer_score does, with the same reuse of
+   the cache, and reads no candidate. scripts/lm-rerank/lm_score.c gives the same numbers in its
+   mode "next".
+   Returns 1 on success, 0 for another capacity, and -1 when the model or the tokenizer did not
+   do its part. On 0 and -1 the reason goes into `error`. */
+int duo_lm_scorer_next(duo_lm_scorer *scorer, const char *context, float *log_probabilities, int capacity,
+                       char *error, size_t error_size);
+
 duo_lm_scorer_info duo_lm_scorer_get_info(const duo_lm_scorer *scorer);
 
 /* The last line of llama.cpp's Metal code since the last open that says whether it keeps

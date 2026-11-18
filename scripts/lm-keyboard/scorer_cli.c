@@ -3,7 +3,7 @@
  scripts/lm-rerank/lm_score.c, so both programs can read the same requests on Linux and their
  answers can be compared byte for byte.
 
- Usage: scorer_cli MODEL.gguf THREADS [full] [prefix|shift|anchor] [slots2] [check] [long FILE] < requests > answers
+ Usage: scorer_cli MODEL.gguf THREADS [full] [prefix|shift|anchor] [slots2] [check] [next] [long FILE] < requests > answers
 
  Request line:  context <TAB> candidate 1 <TAB> candidate 2 ...
  Answer line:   log probability 1 <SPACE> space after 1 <TAB> ...
@@ -16,6 +16,11 @@
  scorer also reads every request again from an empty cache and stops on any difference in the
  numbers. With "long FILE" the program writes the line number of each request whose context holds
  more than 96 tokens into FILE, one per line, counted from 1.
+
+ With the word "next", a request line that holds a context and no candidate gets no answer line.
+ The program writes the next-token block of duo_lm_scorer_next in its place, as the mode "next"
+ of lm_score.c does: one 32-bit float per token of the vocabulary, in the byte order of the
+ machine and with no line break.
  */
 #define _POSIX_C_SOURCE 200809L
 
@@ -28,7 +33,7 @@
 #define MAX_LINE 65536
 
 int main(int argc, char **argv) {
-    int full = 0, check = 0;
+    int full = 0, check = 0, next = 0;
     FILE *long_lines = NULL;
     duo_lm_reuse reuse = {DUO_LM_REUSE_NONE, 1};
     int valid = argc >= 3;
@@ -51,12 +56,14 @@ int main(int argc, char **argv) {
             reuse.slots = 2;
         } else if (strcmp(argv[index], "check") == 0) {
             check = 1;
+        } else if (strcmp(argv[index], "next") == 0) {
+            next = 1;
         } else {
             valid = 0;
         }
     }
     if (!valid) {
-        fprintf(stderr, "usage: scorer_cli MODEL.gguf THREADS [full] [prefix|shift|anchor] [slots2] [check] [long FILE]\n");
+        fprintf(stderr, "usage: scorer_cli MODEL.gguf THREADS [full] [prefix|shift|anchor] [slots2] [check] [next] [long FILE]\n");
         return 2;
     }
     char error[DUO_LM_ERROR_SIZE];
@@ -68,6 +75,16 @@ int main(int argc, char **argv) {
     if (check && !duo_lm_scorer_set_check(scorer, 0, error, sizeof error)) {
         fprintf(stderr, "scorer_cli: %s\n", error);
         return 1;
+    }
+    /* The numbers of one next-token block. */
+    int vocabulary = duo_lm_scorer_get_info(scorer).vocabulary;
+    float *next_scores = NULL;
+    if (next) {
+        next_scores = (float *)malloc(sizeof(float) * (size_t)vocabulary);
+        if (next_scores == NULL) {
+            fprintf(stderr, "scorer_cli: out of memory\n");
+            return 1;
+        }
     }
     static char line[MAX_LINE];
     static char texts[DUO_LM_MAX_CANDIDATES][4096];
@@ -93,12 +110,30 @@ int main(int argc, char **argv) {
             *tab = 0;
             cursor = tab + 1;
         }
-        if (field_count < 2) {
+        if (field_count < 2 && !next) {
             fprintf(stderr, "scorer_cli: a request needs a context and one candidate or more\n");
             return 1;
         }
         const char *context = fields[0];
         int count = field_count - 1;
+        if (count == 0) {
+            long long_before = duo_lm_scorer_get_info(scorer).long_contexts;
+            int result = duo_lm_scorer_next(scorer, context, next_scores, vocabulary, error, sizeof error);
+            if (long_lines != NULL && duo_lm_scorer_get_info(scorer).long_contexts != long_before) {
+                fprintf(long_lines, "%ld\n", requests + 1);
+            }
+            if (result != 1) {
+                fprintf(stderr, "scorer_cli: request %ld gave %d: %s\n", requests + 1, result, error);
+                return 1;
+            }
+            if (fwrite(next_scores, sizeof(float), (size_t)vocabulary, stdout) != (size_t)vocabulary) {
+                fprintf(stderr, "scorer_cli: a next-token block did not go out\n");
+                return 1;
+            }
+            fflush(stdout);
+            requests++;
+            continue;
+        }
         const char *candidates[DUO_LM_MAX_CANDIDATES];
         for (int candidate = 0; candidate < count; candidate++) {
             snprintf(texts[candidate], sizeof texts[candidate], "%s%s", context[0] != 0 ? " " : "",
@@ -137,6 +172,7 @@ int main(int argc, char **argv) {
                 DUO_LM_MAX_CONTEXT_TOKENS);
     }
     if (long_lines != NULL) fclose(long_lines);
+    free(next_scores);
     duo_lm_scorer_close(scorer);
     return 0;
 }
