@@ -4,6 +4,30 @@ This file lists what changed in each TestFlight build, the newest build first. E
 the build number, the commit, and the upload time in UTC. An entry says what a person notices
 on the phone first, and then what changed behind it.
 
+## Build 66
+
+Commit `6ec01c3`, uploaded 2026-11-18 09:29 UTC.
+
+**What you notice**
+
+- Select All is a small key with an icon: three lines of text in a dashed frame. The key has
+  the width of Cut, Copy and Paste.
+- The room that became free shows your typing speed: a number with "WPM" below it. After a few
+  seconds of typing at 5 characters per second, the number is 60.
+- The number counts what goes into the text. A tapped predicted word counts with all its
+  characters, a delete takes one character out, and pasted text does not count.
+- The number stays while you pause. A dash shows before the first number.
+
+**Behind it**
+
+- One word is 5 characters. The speed covers the last 10 seconds of a run of typing, and a
+  pause of more than 3 seconds ends a run. A run gives a number once it is 2 seconds long.
+- The image model gpt-image made four candidates for the icon. `scripts/select-all-icon` holds
+  the prompts, the chosen candidate and a sheet of all four.
+- A touch on the typing speed presses no key, so a finger that misses Select All does not
+  select all the text.
+- Chinese text gives a low number, because the speed counts characters.
+
 ## Build 65
 
 Commit `25eb14b`, uploaded 2026-11-18 08:41 UTC.
