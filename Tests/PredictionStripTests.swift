@@ -430,6 +430,27 @@ final class PredictionStripTests: XCTestCase {
         XCTAssertEqual(document.text, "See you")
     }
 
+    func testTapsChainFromOnePredictedWordToTheNext() {
+        // Each tap leaves a word and one space before the cursor, so the strip predicts again.
+        makeKeyboard(before: "See ")
+        spellChecker.words["see|"] = ["you", "the"]
+        spellChecker.words["you|"] = ["tomorrow", "soon"]
+        spellChecker.words["tomorrow|"] = ["morning", "at"]
+        controller.documentDidChange()
+        tapEntry(0)
+        XCTAssertEqual(document.text, "See you ")
+        XCTAssertEqual(keyboardView.predictedWords, ["tomorrow", "soon"])
+        tapEntry(0)
+        XCTAssertEqual(document.text, "See you tomorrow ")
+        XCTAssertEqual(keyboardView.predictedWords, ["morning", "at"])
+        tapEntry(1)
+        XCTAssertEqual(document.text, "See you tomorrow at ")
+        // One backspace takes back the last tap only.
+        controller.keyboardViewDeleteBackward(keyboardView)
+        XCTAssertEqual(document.text, "See you tomorrow ")
+        XCTAssertEqual(keyboardView.predictedWords, ["morning", "at"])
+    }
+
     func testATapOnAWordForOtherTextTypesNothing() {
         // Other letters before the cursor, and text that the strip predicts no word for.
         makeKeyboard(before: "See you xy")
