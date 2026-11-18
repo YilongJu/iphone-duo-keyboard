@@ -1733,7 +1733,7 @@ typedef struct {
 /* Puts a word into the list. The list stays sorted, the most probable word first, and words of
    one value keep the order in which they came. A text that the list holds already keeps the
    higher of its two values. */
-static void prediction_add(prediction_list_t *list, const char *text, float value) {
+static void prediction_add(prediction_list_t *list, const char *text, float value, int form) {
     /* Most words of a walk are less probable than every word of a full list. */
     if (list->count == list->capacity && value <= list->words[list->count - 1].log_probability) return;
     size_t length = strlen(text);
@@ -1755,6 +1755,7 @@ static void prediction_add(prediction_list_t *list, const char *text, float valu
     }
     memcpy(list->words[place].text, text, length + 1);
     list->words[place].log_probability = value;
+    list->words[place].form = form;
     list->count++;
 }
 
@@ -1765,7 +1766,7 @@ static void predict_below(
     const duo_lexicon *tree, uint32_t node_index, int depth, float base, prediction_list_t *list) {
     node_t node = node_at(tree, node_index);
     for (uint32_t word = node.first_word; word < node.first_word + node.word_count; word++) {
-        prediction_add(list, word_text(tree, word), word_log_probability(tree, word) + base);
+        prediction_add(list, word_text(tree, word), word_log_probability(tree, word) + base, DUO_FORM_LOWER);
     }
     if (depth >= MAX_DEPTH) return;
     for (uint32_t child = node.first_child; child < node.first_child + node.child_count; child++) {
@@ -1828,7 +1829,203 @@ int duo_predict_english(
             const char *text = word_text(lexicon, second);
             if (strncmp(text, typed, typed_length) != 0 || strlen(text) <= typed_length) continue;
             if (length == 0 && !is_letter(text[0])) continue;
-            prediction_add(&list, text, word_after(lexicon, params, previous, NO_PAIR, second));
+            prediction_add(&list, text, word_after(lexicon, params, previous, NO_PAIR, second), DUO_FORM_LOWER);
+        }
+    }
+    return list.count;
+}
+
+/* ---- Predicted words with the numbers of a language model ---- */
+
+#define WORD_TABLE_MAGIC 0x574F5544u
+#define WORD_TABLE_VERSION 1u
+#define WORD_TABLE_HEADER_BYTES 32
+#define FORM_BYTES 4
+#define MAIN_FORMS 2
+#define SUPPLEMENT_FORMS 3
+#define NO_FORM_TOKEN 0xFFFFu
+#define FORM_IS_CAPITAL 0x8000u
+#define FORM_SHARE_STEPS 1024.0f
+
+int duo_word_table_open(duo_word_table *table, const void *data, size_t size) {
+    if (table == NULL || data == NULL || size < WORD_TABLE_HEADER_BYTES) return 0;
+    const uint8_t *bytes = (const uint8_t *)data;
+    if (read_u32(bytes) != WORD_TABLE_MAGIC || read_u32(bytes + 4) != WORD_TABLE_VERSION) return 0;
+    uint32_t vocabulary = read_u32(bytes + 8);
+    uint32_t main_words = read_u32(bytes + 12);
+    uint32_t supplement_words = read_u32(bytes + 16);
+    if (read_u32(bytes + 20) != MAIN_FORMS || read_u32(bytes + 24) != SUPPLEMENT_FORMS) return 0;
+    /* A token takes 16 bits, and NO_FORM_TOKEN marks a missing form. */
+    if (vocabulary == 0 || vocabulary >= NO_FORM_TOKEN) return 0;
+    size_t main_bytes = (size_t)main_words * MAIN_FORMS * FORM_BYTES;
+    size_t supplement_bytes = (size_t)supplement_words * SUPPLEMENT_FORMS * FORM_BYTES;
+    if (size != WORD_TABLE_HEADER_BYTES + main_bytes + supplement_bytes) return 0;
+    table->vocabulary = vocabulary;
+    table->main_words = main_words;
+    table->supplement_words = supplement_words;
+    table->words_hash = read_u32(bytes + 28);
+    table->main_forms = bytes + WORD_TABLE_HEADER_BYTES;
+    table->supplement_forms = table->main_forms + main_bytes;
+    return 1;
+}
+
+static uint32_t hash_words(const duo_lexicon *lexicon, uint32_t hash) {
+    for (uint32_t word = 0; word < lexicon->word_count; word++) {
+        const char *text = word_text(lexicon, word);
+        size_t length = strlen(text) + 1;
+        for (size_t index = 0; index < length; index++) {
+            hash ^= (uint8_t)text[index];
+            hash *= 16777619u;
+        }
+    }
+    return hash;
+}
+
+uint32_t duo_word_table_hash(const duo_lexicon *lexicon) {
+    uint32_t hash = hash_words(lexicon, 2166136261u);
+    return lexicon->supplement != NULL ? hash_words(lexicon->supplement, hash) : hash;
+}
+
+/* Whether the table has an entry for every word of the lexicon and of its supplement. */
+static int word_table_fits(const duo_lexicon *lexicon, const duo_word_table *table) {
+    if (table->main_words != lexicon->word_count) return 0;
+    return lexicon->supplement == NULL || table->supplement_words == lexicon->supplement->word_count;
+}
+
+/* The forms of a word of the lexicon (`in_extra` 0) or of its supplement (1), and their count. */
+static const uint8_t *word_forms(const duo_word_table *table, int in_extra, uint32_t word, int *count) {
+    *count = in_extra ? SUPPLEMENT_FORMS : MAIN_FORMS;
+    const uint8_t *forms = in_extra ? table->supplement_forms : table->main_forms;
+    return forms + (size_t)word * (size_t)*count * FORM_BYTES;
+}
+
+int duo_word_table_token(const duo_lexicon *lexicon, const duo_word_table *table, const char *word, int form) {
+    if (lexicon == NULL || table == NULL || word == NULL || form < 0 || !word_table_fits(lexicon, table)) return -1;
+    uint32_t found = find_word(lexicon, word, (int)strlen(word));
+    if (found == NO_WORD) return -1;
+    int count;
+    const uint8_t *forms = word_forms(table, in_supplement(found), found & ~SUPPLEMENT_BIT, &count);
+    if (form >= count) {
+        /* A word of both files has its preferred form in the supplement's part of the table. */
+        if (in_supplement(found) || lexicon->supplement == NULL) return -1;
+        uint32_t node = find_exact_node(lexicon->supplement, word, (int)strlen(word));
+        if (node == NO_WORD) return -1;
+        forms = word_forms(table, 1, node_at(lexicon->supplement, node).first_word, &count);
+        if (form >= count) return -1;
+    }
+    uint16_t token = read_u16(forms + (size_t)form * FORM_BYTES);
+    return token == NO_FORM_TOKEN ? -1 : (int)token;
+}
+
+typedef struct {
+    const duo_word_table *table;
+    const float *next;
+    int capital_only;
+    float engine_weight;
+    /* The engine's value of a word without a listed pair is its own log probability plus this. */
+    float base;
+    prediction_list_t *list;
+} model_walk_t;
+
+/* The highest model value of the allowed forms of a word, and that form. Returns 0 when the
+   word has no allowed form. */
+static int model_value(const model_walk_t *walk, int in_extra, uint32_t word, float *value, int *form) {
+    int count, found = 0;
+    const uint8_t *forms = word_forms(walk->table, in_extra, word, &count);
+    for (int index = 0; index < count; index++) {
+        uint16_t token = read_u16(forms + (size_t)index * FORM_BYTES);
+        uint16_t packed = read_u16(forms + (size_t)index * FORM_BYTES + 2);
+        if (token == NO_FORM_TOKEN || token >= walk->table->vocabulary) continue;
+        if (walk->capital_only && (packed & FORM_IS_CAPITAL) == 0) continue;
+        float candidate = walk->next[token] - (float)(packed & ~FORM_IS_CAPITAL) / FORM_SHARE_STEPS;
+        if (!found || candidate > *value) {
+            *value = candidate;
+            *form = index;
+            found = 1;
+        }
+    }
+    return found;
+}
+
+/* Adds one word at the mix of its model value and the engine's value `engine_value`. */
+static void model_add(
+    const model_walk_t *walk, const duo_lexicon *tree, int in_extra, uint32_t word, float engine_value) {
+    float value;
+    int form;
+    if (!model_value(walk, in_extra, word, &value, &form)) return;
+    prediction_add(
+        walk->list, word_text(tree, word),
+        (1.0f - walk->engine_weight) * value + walk->engine_weight * engine_value, form);
+}
+
+static void predict_model_below(
+    const model_walk_t *walk, const duo_lexicon *tree, int in_extra, uint32_t node_index, int depth) {
+    node_t node = node_at(tree, node_index);
+    for (uint32_t word = node.first_word; word < node.first_word + node.word_count; word++) {
+        model_add(walk, tree, in_extra, word, word_log_probability(tree, word) + walk->base);
+    }
+    if (depth >= MAX_DEPTH) return;
+    for (uint32_t child = node.first_child; child < node.first_child + node.child_count; child++) {
+        predict_model_below(walk, tree, in_extra, child, depth + 1);
+    }
+}
+
+/* The words of one file that start with the typed letters and are longer than them. */
+static void predict_model_in_tree(
+    const model_walk_t *walk, const duo_lexicon *tree, int in_extra, const char *typed, int length) {
+    uint32_t index = 0;
+    for (int position = 0; position < length; position++) {
+        node_t node = node_at(tree, index);
+        uint32_t next = NO_WORD;
+        for (uint32_t child = node.first_child; child < node.first_child + node.child_count; child++) {
+            if (node_letter(tree, child) == typed[position]) {
+                next = child;
+                break;
+            }
+        }
+        if (next == NO_WORD) return;
+        index = next;
+    }
+    node_t start = node_at(tree, index);
+    for (uint32_t child = start.first_child; child < start.first_child + start.child_count; child++) {
+        if (length == 0 && !is_letter(node_letter(tree, child))) continue;
+        predict_model_below(walk, tree, in_extra, child, length + 1);
+    }
+}
+
+int duo_predict_english_with_model(
+    const duo_lexicon *lexicon, const duo_params *params, const duo_word_table *table,
+    const float *next, int next_count, float engine_weight,
+    const char *previous_word, const char *typed, int capital_only, duo_predicted_word *words, int capacity) {
+    if (lexicon == NULL || params == NULL || table == NULL || next == NULL) return 0;
+    if (previous_word == NULL || typed == NULL || words == NULL || capacity < 1 || lexicon->model != 0) return 0;
+    if (!word_table_fits(lexicon, table) || next_count < 0 || (uint32_t)next_count != table->vocabulary) return 0;
+    if (!(engine_weight >= 0.0f && engine_weight <= 1.0f)) return 0;
+    size_t typed_length = strlen(typed);
+    if (typed_length > DUO_MAX_TYPED_LETTERS) return 0;
+    for (size_t index = 0; index < typed_length; index++) {
+        if (!is_letter(typed[index]) && typed[index] != '\'') return 0;
+    }
+    int length = (int)typed_length;
+    size_t previous_length = strlen(previous_word);
+    uint32_t previous = previous_length > 0 && previous_length <= DUO_MAX_TYPED
+        ? find_word(lexicon, previous_word, (int)previous_length) : NO_WORD;
+    int after_a_word = previous != NO_WORD && lexicon->pair_count > 0 && params->pair_weight > 0.0f;
+
+    prediction_list_t list = { words, 0, capacity };
+    model_walk_t walk = { table, next, capital_only, engine_weight,
+                          after_a_word ? logf(1.0f - params->pair_weight) : 0.0f, &list };
+    predict_model_in_tree(&walk, lexicon, 0, typed, length);
+    if (lexicon->supplement != NULL) predict_model_in_tree(&walk, lexicon->supplement, 1, typed, length);
+    /* A listed pair of the word before raises the engine's value of its second word, as in
+       duo_predict_english. Without a weight of the engine the pairs change no value. */
+    if (after_a_word && !in_supplement(previous) && engine_weight > 0.0f) {
+        for (uint32_t pair = pair_start(lexicon, previous); pair < pair_start(lexicon, previous + 1); pair++) {
+            uint32_t second = pair_second(lexicon, pair);
+            const char *text = word_text(lexicon, second);
+            if (strncmp(text, typed, typed_length) != 0 || strlen(text) <= typed_length) continue;
+            if (length == 0 && !is_letter(text[0])) continue;
+            model_add(&walk, lexicon, 0, second, word_after(lexicon, params, previous, NO_PAIR, second));
         }
     }
     return list.count;

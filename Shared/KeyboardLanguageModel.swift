@@ -55,6 +55,20 @@ final class LanguageModelScorer: @unchecked Sendable {
         }
     }
 
+    /// The natural log of the probability of every token right after the context
+    /// (`duo_lm_scorer_next`), one number per token of the vocabulary. The error holds the reason
+    /// when the model or the tokenizer did not do its part.
+    func nextTokens(after context: String) -> Result<[Float], LanguageModelError> {
+        let count = Int(duo_lm_scorer_get_info(handle).vocabulary)
+        var numbers = [Float](repeating: 0, count: count)
+        let errorSize = Int(DUO_LM_ERROR_SIZE)
+        var error = [CChar](repeating: 0, count: errorSize)
+        let result = numbers.withUnsafeMutableBufferPointer { buffer in
+            duo_lm_scorer_next(handle, context, buffer.baseAddress, Int32(count), &error, errorSize)
+        }
+        return result == 1 ? .success(numbers) : .failure(LanguageModelError(reason: String(cString: error)))
+    }
+
     var info: duo_lm_scorer_info { duo_lm_scorer_get_info(handle) }
 }
 
@@ -139,6 +153,24 @@ private final class ScoresReadAhead: @unchecked Sendable {
     var ready: [(prompt: LanguageModelPrompt, scores: CandidateScoringResult)] = []
 }
 
+/// Gives the numbers of a language model for the predicted words of the prediction strip.
+@MainActor
+protocol NextTokenScoring: AnyObject {
+    /// Asks for the natural log of the probability of every token right after `context`, one
+    /// number per token of the vocabulary. `completion` runs on the main thread with the numbers.
+    /// It runs with nil when no model is loaded, and when the model fails. A later request takes
+    /// the place of a request that the model has not started yet, and the completion of that
+    /// earlier request never runs.
+    func nextTokens(after context: String, completion: @escaping @MainActor @Sendable ([Float]?) -> Void)
+}
+
+/// The request for next-token numbers that the worker reads next. `wanted` is shared between
+/// threads under the lock.
+private final class NextTokenRequest: @unchecked Sendable {
+    let lock = NSLock()
+    var wanted: (context: String, scorer: LanguageModelScorer, completion: @MainActor @Sendable ([Float]?) -> Void)?
+}
+
 /// The memory of this process, as iOS counts it against the limit of a keyboard.
 struct ProcessMemory: Equatable, Sendable {
     static let bytesPerMB = 1_048_576.0
@@ -221,7 +253,7 @@ protocol LanguageModelLoading: AnyObject {
 /// English, so Chinese typing never loads the model. A correction made before the model is
 /// ready keeps the engine's choice. A model that does not load is named on the space bar.
 @MainActor
-final class KeyboardLanguageModel: CandidateScoring, LanguageModelLoading {
+final class KeyboardLanguageModel: CandidateScoring, LanguageModelLoading, NextTokenScoring {
     /// Threads of each call of the model, the count measured on the iPhone Duo. On the GPU the
     /// processor runs only the operations that the GPU device refuses.
     nonisolated static let threads = 2
@@ -268,6 +300,9 @@ final class KeyboardLanguageModel: CandidateScoring, LanguageModelLoading {
     /// Requests that reached the loaded model, and those whose scores were ready from the typing.
     private(set) var requestCount = 0
     private(set) var readyFromTypingCount = 0
+    private let nextTokenRequest = NextTokenRequest()
+    /// Requests for next-token numbers that reached the loaded model.
+    private(set) var nextTokenRequestCount = 0
     /// Counts the loads, so a load that ends after a memory warning freed its model is dropped.
     private var generation = 0
     /// The model file, or nil when the bundle does not hold it.
@@ -435,11 +470,15 @@ final class KeyboardLanguageModel: CandidateScoring, LanguageModelLoading {
             generation += 1
             scorer = nil
             let readAhead = readAheadScores
+            let nextRequest = nextTokenRequest
             worker.sync {
                 readAhead.lock.lock()
                 readAhead.wanted = nil
                 readAhead.lock.unlock()
                 readAhead.ready.removeAll()
+                nextRequest.lock.lock()
+                nextRequest.wanted = nil
+                nextRequest.lock.unlock()
             }
             state = .freed(reason)
             onEvent(.freed(reason))
@@ -467,6 +506,37 @@ final class KeyboardLanguageModel: CandidateScoring, LanguageModelLoading {
             guard case .scores = result else { return }
             readAhead.ready.append((wanted.prompt, result))
             if readAhead.ready.count > ScoresReadAhead.keptCount { readAhead.ready.removeFirst() }
+        }
+    }
+
+    /// Asks the worker thread for the model's numbers of the predicted words. The worker reads
+    /// the latest request only: the strip shows the words of one text at a time.
+    func nextTokens(after context: String, completion: @escaping @MainActor @Sendable ([Float]?) -> Void) {
+        guard let scorer else {
+            completion(nil)
+            return
+        }
+        nextTokenRequestCount += 1
+        let request = nextTokenRequest
+        request.lock.lock()
+        request.wanted = (context, scorer, completion)
+        request.lock.unlock()
+        worker.async {
+            request.lock.lock()
+            let wanted = request.wanted
+            request.wanted = nil
+            request.lock.unlock()
+            guard let wanted else { return }
+            let result = wanted.scorer.nextTokens(after: wanted.context)
+            Task { @MainActor in
+                switch result {
+                case .success(let numbers):
+                    wanted.completion(numbers)
+                case .failure(let error):
+                    self.onEvent(.modelError(error.reason))
+                    wanted.completion(nil)
+                }
+            }
         }
     }
 

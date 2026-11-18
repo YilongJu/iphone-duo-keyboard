@@ -41,6 +41,24 @@ final class LanguageModelScorerTests: XCTestCase {
         XCTAssertEqual(info.vocabulary, 49152)
     }
 
+    func testTheNextTokenNumbersOrderThePredictedWords() async throws {
+        let model = try model()
+        let answer = await withCheckedContinuation { (continuation: CheckedContinuation<[Float]?, Never>) in
+            model.nextTokens(after: "Thank you so") { continuation.resume(returning: $0) }
+        }
+        let numbers = try XCTUnwrap(answer)
+        // One log probability per token of the vocabulary, and the probabilities add up to 1.
+        XCTAssertEqual(numbers.count, 49152)
+        XCTAssertEqual(numbers.reduce(0.0) { $0 + exp(Double($1)) }, 1, accuracy: 1e-3)
+        // The engine orders the words of the lexicon with these numbers and the word table.
+        let engine = EnglishTypingEngine(
+            lexicon: TypingLexicon(resource: "lexicon-english", fullCheck: false),
+            wordTable: WordTable(resource: EngineSpellChecker.wordTableResource))
+        let words = try XCTUnwrap(engine.predictedWords(
+            previousWord: "so", typed: "", next: numbers, engineWeight: 0, capitalOnly: false, limit: 5))
+        XCTAssertEqual(words.first?.word, "much", "\(words)")
+    }
+
     func testScoresReadAheadEqualTheScoresOfARead() throws {
         let model = try model()
         let prompt = LanguageModelPrompt(context: context, candidates: eight)

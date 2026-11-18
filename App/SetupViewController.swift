@@ -37,7 +37,7 @@ final class SetupViewController: UIViewController, UITextViewDelegate {
     private lazy var reranker = EnglishReranker(scorer: languageModel, rule: KeyboardLanguageModel.rule)
     private lazy var textController = KeyboardTextController(
         keyboardView: previewKeyboard, document: previewDocument,
-        spellChecker: EngineSpellChecker.bundled(reranker: reranker), pinyinEngine: { PinyinEngine.bundled() })
+        spellChecker: EngineSpellChecker.bundled(reranker: reranker, predictor: languageModel), pinyinEngine: { PinyinEngine.bundled() })
     private var didAutoFocus = false
 
     override func viewDidLoad() {

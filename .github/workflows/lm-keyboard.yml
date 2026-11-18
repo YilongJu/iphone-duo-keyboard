@@ -64,6 +64,13 @@ jobs:
             cat "$out/scorer_cli.log"
           } | tee "$out/scorer-check.txt"
           cmp "$out/lm_score.answers" "$out/scorer_cli.answers"
+      - name: Check that the word table belongs to the lexicon and the model
+        run: |
+          set -euo pipefail
+          export LD_LIBRARY_PATH="$PWD/build/lm-rerank/llama/lib"
+          # The engine orders the predicted words with Shared/word-table-smollm2.bin.
+          python3 scripts/typing-engine/build_word_table.py --lm build/lm-rerank/lm_score \
+            --model "$(cat build/lm-keyboard/model-path.txt)" --check
       - name: Compare the next-token numbers of the keyboard's scorer with lm_score
         run: |
           set -euo pipefail

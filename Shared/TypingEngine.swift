@@ -39,10 +39,43 @@ final class TypingLexicon {
     }
 }
 
+/// A word table of the C typing engine (`duo_word_table`), mapped into memory. For each word of
+/// the English lexicon and of the work area's supplement, and for each form of the word, the
+/// table holds the first token that the language model reads for the form, and the word share.
+/// The engine orders the predicted words by the model's numbers with it
+/// (`duo_predict_english_with_model`). scripts/typing-engine/build_word_table.py writes the file.
+final class WordTable {
+    /// The mapped file. The C table points into these bytes, so the object keeps them alive.
+    private let file: NSData
+    fileprivate var table = duo_word_table()
+
+    /// Maps `<resource>.bin` from the bundle. The file ships inside the app, so a missing or
+    /// invalid file is a fault of the build and stops the process.
+    init(resource: String) {
+        guard let url = Bundle(for: WordTable.self).url(forResource: resource, withExtension: "bin") else {
+            fatalError("\(resource).bin is missing from the bundle")
+        }
+        do {
+            file = try NSData(contentsOf: url, options: .alwaysMapped)
+        } catch {
+            fatalError("\(resource).bin is unreadable: \(error)")
+        }
+        guard duo_word_table_open(&table, file.bytes, file.length) == 1 else {
+            fatalError("\(resource).bin is not a valid word table")
+        }
+    }
+
+    /// Count of tokens of the vocabulary that the table belongs to.
+    var vocabulary: Int { Int(table.vocabulary) }
+}
+
 /// English autocorrection through the C typing engine.
 final class EnglishTypingEngine {
     /// The mapped lexicon file. The engine's tables point into its bytes.
     private let lexicon: TypingLexicon
+    /// The word table for the model's order of the predicted words, or nil for an engine that
+    /// orders them by its own statistics only.
+    private let wordTable: WordTable?
     /// The engine's own copy of the lexicon's tables, with the supplement laid over them. Two
     /// engines can share one lexicon file and differ in their supplement.
     private var tables: duo_lexicon
@@ -55,8 +88,9 @@ final class EnglishTypingEngine {
 
     /// `supplement` is a small lexicon of words that the main lexicon lacks or holds at too low
     /// a frequency, as the words of a work area (`duo_lexicon_set_supplement`).
-    init(lexicon: TypingLexicon, supplement: TypingLexicon? = nil) {
+    init(lexicon: TypingLexicon, supplement: TypingLexicon? = nil, wordTable: WordTable? = nil) {
         self.lexicon = lexicon
+        self.wordTable = wordTable
         tables = lexicon.lexicon
         supplementTables.initialize(to: duo_lexicon())
         setSupplement(supplement)
@@ -155,6 +189,62 @@ final class EnglishTypingEngine {
             }
         }
     }
+
+    /// One predicted word in the order of the language model: the word as the lexicon holds it,
+    /// and the form with the highest value for the model, one of `DUO_FORM_LOWER`,
+    /// `DUO_FORM_CAPITAL` and `DUO_FORM_PREFERRED`.
+    struct ModelWord: Equatable {
+        let word: String
+        let form: Int32
+    }
+
+    /// The predicted words in the order of the language model (`duo_predict_english_with_model`),
+    /// highest value first, up to `limit` words. `next` holds the model's log probability of
+    /// every token right after the text before the word. `engineWeight` is the share of the
+    /// engine's own value in the order, from 0 to 1. With `capitalOnly`, only a form that starts
+    /// with a capital counts.
+    ///
+    /// The result is nil for an engine without a word table, and for numbers of another
+    /// vocabulary than the table's. Typed text outside the engine's input gives no words.
+    func predictedWords(
+        previousWord: String, typed: String, next: [Float], engineWeight: Float, capitalOnly: Bool, limit: Int
+    ) -> [ModelWord]? {
+        guard let wordTable, limit > 0, next.count == wordTable.vocabulary else { return nil }
+        var buffer = [duo_predicted_word](repeating: duo_predicted_word(), count: limit)
+        let count = next.withUnsafeBufferPointer { numbers in
+            buffer.withUnsafeMutableBufferPointer { pointer in
+                duo_predict_english_with_model(
+                    &tables, &params, &wordTable.table, numbers.baseAddress, Int32(next.count), engineWeight,
+                    previousWord, typed, capitalOnly ? 1 : 0, pointer.baseAddress, Int32(limit))
+            }
+        }
+        return (0..<Int(count)).map { index in
+            let text = withUnsafePointer(to: &buffer[index].text) { pointer in
+                pointer.withMemoryRebound(to: CChar.self, capacity: Int(DUO_PREDICTED_WORD_SIZE)) { String(cString: $0) }
+            }
+            return ModelWord(word: text, form: buffer[index].form)
+        }
+    }
+
+    /// The first token of a form of a word in the word table, or nil when the engine has no
+    /// table, does not hold the word, or the word has no such form. The unit tests build the
+    /// numbers of a model with it.
+    func firstToken(ofWord word: String, form: Int32) -> Int? {
+        guard let wordTable else { return nil }
+        let token = duo_word_table_token(&tables, &wordTable.table, word, form)
+        return token >= 0 ? Int(token) : nil
+    }
+
+    /// True when the word table was built for the words of this lexicon and of the supplement
+    /// that is laid over it now: the table's hash of all word texts equals theirs. The unit
+    /// tests check the files that ship. The engine itself compares only the counts of words.
+    var wordTableBelongsToTheLexicon: Bool {
+        guard let wordTable else { return false }
+        return duo_word_table_hash(&tables) == wordTable.table.words_hash
+    }
+
+    /// Count of tokens of the vocabulary of the word table, or nil without a table.
+    var wordTableVocabulary: Int? { wordTable?.vocabulary }
 }
 
 /// One reading of typed Pinyin letters by the C typing engine.

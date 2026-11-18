@@ -17,7 +17,7 @@ final class KeyboardViewController: UIInputViewController {
     private let languageModel = KeyboardLanguageModel.bundled(device: DUO_LM_DEVICE_GPU, cacheCheckTolerance: nil)
     private lazy var reranker = EnglishReranker(scorer: languageModel, rule: KeyboardLanguageModel.rule)
     private lazy var textController = KeyboardTextController(
-        keyboardView: keyboardView, document: document, spellChecker: EngineSpellChecker.bundled(reranker: reranker),
+        keyboardView: keyboardView, document: document, spellChecker: EngineSpellChecker.bundled(reranker: reranker, predictor: languageModel),
         pinyinEngine: { PinyinEngine.bundled() })
     private var heightConstraint: NSLayoutConstraint?
     /// Keeps the MetricKit diagnostics, such as a stop at the memory limit, for the speed test.

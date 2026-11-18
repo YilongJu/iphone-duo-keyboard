@@ -76,6 +76,11 @@ struct PreferredCapitals {
         return PreferredCapitals(table: table)
     }
 
+    /// The preferred form of a word of the table in lower case, as "PyTorch" for "pytorch", or nil.
+    func preferredForm(of word: String) -> String? {
+        entries[word]?.preferred
+    }
+
     /// The form of `word` to show. `word` is the keyboard's text for the typed word `typed`,
     /// with the capital that `KeyboardTextLogic.restoringCapitals` or
     /// `capitalizingRepairedFirstLetters` gave it. `automaticFirst` says that the keyboard typed

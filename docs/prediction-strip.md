@@ -64,6 +64,42 @@ flowchart TD
 - **Other rows.** The Chinese candidates and the proofreader's fix lie over the top row while
   they show, so they cover the strip.
 
+## Order of the predicted words
+
+The strip has two orders for its words. The engine's order needs no model. The model's order
+takes its place as soon as the language model has read the text before the word.
+
+```mermaid
+flowchart TD
+    A[Text before the word changes] --> B[Strip shows the engine's order at once]
+    A --> C{Model loaded, and a text with one space at its end}
+    C -- no --> D[Engine's order stays]
+    C -- yes --> E[Model reads the text once: one number per token]
+    E --> F[Engine values each word: number of its first token plus word share]
+    F --> G[Strip shows the model's order]
+    G --> H[Each typed letter filters the words, with the same numbers]
+```
+
+| Order | Value of a word | Where the code is |
+| --- | --- | --- |
+| Engine's order | The engine's log probability of the word after the word before. | `duo_predict_english` |
+| Model's order | The model's log probability of the first token of the word's form, plus the log of the word share. | `duo_predict_english_with_model` |
+
+- **Numbers of the model.** The model gives the log probability of every token right after the
+  text (`duo_lm_scorer_next`). The model reads once per word. `scripts/prediction-strip/check_scorer_next.py`
+  shows that the phone's scorer gives the numbers of the Linux scorer.
+- **Word table.** `Shared/word-table-smollm2.bin` holds the first token and the word share of
+  each form of each word. The word share is the word's probability over the summed probability
+  of the forms with the same first token. `scripts/typing-engine/build_word_table.py` builds
+  the file from the lexicon, the work area and the model's tokenizer.
+- **Forms.** A word has up to three forms: lower case, first letter capital, and the preferred
+  capitals of the work area. The model's order writes a word in its form with the highest
+  value, as "Python" after "I use". A typed capital allows only forms with a capital.
+- **First word of a field.** The model has no text to read there, so the engine's order stays.
+- **Settings.** `EngineSpellChecker.PredictionSettings` holds the share of the engine's value
+  in the order, and the form rule. The benchmark of
+  [prediction-strip-benchmark-design.md](prediction-strip-benchmark-design.md) chooses them.
+
 ## A tap on a predicted word
 
 1. The word takes the place of the typed letters, and one space follows the word. A word
@@ -88,8 +124,10 @@ nothing.
 
 ## Limits
 
-- The engine orders the words by its word and word-pair statistics. The strip does not read
-  the language model yet.
+- The model's order is weak after a very short text. After the one word "Thank" at the start
+  of a field, the model's first words are not "you".
+- The strip shows the engine's order for a moment after each space, until the model answers.
+  No phone run has measured that time yet.
 - The strip predicts no first word of a text or of a sentence, because no word comes before
   the cursor there.
 - The strip holds only words that start with the typed letters. A typed word with a wrong
@@ -102,4 +140,6 @@ nothing.
 | --- | --- |
 | Layout rules, with the rule for the strip | `python scripts/keyboard-preview/check_layout.py` |
 | Predicted words of the engine on the PC | `duo_cli predict` (`Engine/duo_cli.c`) |
-| Unit tests | `Tests/PredictionStripTests.swift`, `Tests/TopRowEmojiTests.swift`, `Tests/TypingEngineTests.swift` |
+| Model's order of the engine against a second computation | `scripts/typing-engine-check/check_model_order.py` |
+| Word table against the lexicon and the model | `python3 scripts/typing-engine/build_word_table.py --check` |
+| Unit tests | `Tests/PredictionStripTests.swift`, `Tests/ModelPredictedWordsTests.swift`, `Tests/TopRowEmojiTests.swift`, `Tests/TypingEngineTests.swift` |

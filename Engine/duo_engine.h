@@ -236,12 +236,21 @@ int duo_english_readings(
 /* Size of a predicted word's text buffer, in bytes. */
 #define DUO_PREDICTED_WORD_SIZE 48
 
+/* The forms in which the prediction strip can write a word. */
+#define DUO_FORM_LOWER 0     /* as the lexicon holds the word, with the capital of "I" and its contractions */
+#define DUO_FORM_CAPITAL 1   /* the first letter as a capital */
+#define DUO_FORM_PREFERRED 2 /* the preferred capitals of the work area, as "PyTorch" */
+
 /* One word that starts with the typed letters. */
 typedef struct {
     char text[DUO_PREDICTED_WORD_SIZE];
-    /* Log probability of the word after the word before it, by the lexicon's word and word-pair
-       statistics: the value that the engine gives the word at that place. */
+    /* The value that orders the words. duo_predict_english: the log probability of the word
+       after the word before it, by the lexicon's word and word-pair statistics.
+       duo_predict_english_with_model: the value that its comment describes. */
     float log_probability;
+    /* The form with the highest value for the language model, one of DUO_FORM_*.
+       duo_predict_english always gives DUO_FORM_LOWER. */
+    int form;
 } duo_predicted_word;
 
 /* Writes the English words that start with the letters `typed` and are longer than `typed`
@@ -258,6 +267,57 @@ typedef struct {
 int duo_predict_english(
     const duo_lexicon *lexicon, const duo_params *params,
     const char *previous_word, const char *typed, duo_predicted_word *words, int capacity);
+
+/* A word table in memory: for each word of a lexicon and of its supplement, and for each form
+   of the word, the first token that a language model reads for the form after a space, and the
+   word share. The word share is the word's probability over the summed probability of the
+   forms that start with the same token. scripts/typing-engine/build_word_table.py writes the
+   file and describes it. The engine reads the caller's bytes in place. */
+typedef struct {
+    const uint8_t *main_forms;
+    const uint8_t *supplement_forms;
+    /* Count of tokens of the model's vocabulary. */
+    uint32_t vocabulary;
+    uint32_t main_words;
+    uint32_t supplement_words;
+    /* A hash of the texts of all words, in the order of the two word tables. */
+    uint32_t words_hash;
+} duo_word_table;
+
+/* Checks the header and the size of a word table file and fills `table`. Returns 1 on success
+   and 0 when the bytes are not a word table file. */
+int duo_word_table_open(duo_word_table *table, const void *data, size_t size);
+
+/* The hash that a word table holds for this lexicon and its supplement: FNV-1a over the text
+   of every word with its ending zero, the lexicon first. A table fits a lexicon when its
+   `words_hash` and its word counts are those of the lexicon. */
+uint32_t duo_word_table_hash(const duo_lexicon *lexicon);
+
+/* The first token of a form of the word `word`, or -1 when the lexicon and its supplement do
+   not hold the word, or the word has no such form. The tests of the keyboard build the
+   numbers of a model with it. */
+int duo_word_table_token(const duo_lexicon *lexicon, const duo_word_table *table, const char *word, int form);
+
+/* duo_predict_english with the numbers of a language model: writes the English words that
+   start with the letters `typed` and are longer than `typed` into `words`, highest value first.
+
+   `next` holds the natural log of the probability of every token right after the text before
+   the word, as duo_lm_scorer_next gives it, and `next_count` is its count of numbers. The model
+   value of a form is the number of its first token plus the log of its word share. The model
+   value of a word is the highest model value of its allowed forms, and `form` names that form.
+   With `capital_only`, only a form that starts with a capital is allowed: the person typed the
+   first letter as a capital.
+
+   The value of a word is (1 - engine_weight) times its model value plus engine_weight times
+   the value of duo_predict_english. An engine_weight of 0 gives the model's order alone.
+
+   The table must fit the lexicon: the same count of words in the lexicon and in the supplement
+   that is laid over it, and as many tokens as `next_count`. The other rules are those of
+   duo_predict_english. Returns the count written, or 0 for input outside these rules. */
+int duo_predict_english_with_model(
+    const duo_lexicon *lexicon, const duo_params *params, const duo_word_table *table,
+    const float *next, int next_count, float engine_weight,
+    const char *previous_word, const char *typed, int capital_only, duo_predicted_word *words, int capacity);
 
 /* Reads typed Pinyin letters and writes candidates into `results`.
    The first result is the most likely reading of all the letters. The results after it are

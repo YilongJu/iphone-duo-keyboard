@@ -27,6 +27,9 @@ on:
       - 'Tests/ChineseMarkLabelTests.swift'
       - 'Tests/TopRowEmojiTests.swift'
       - 'Tests/PredictionStripTests.swift'
+      - 'Tests/ModelPredictedWordsTests.swift'
+      - 'Shared/KeyboardLanguageModel.swift'
+      - 'Shared/word-table-smollm2.bin'
       - 'App/SetupViewController.swift'
       - 'Tests/TypingEngineTests.swift'
       - 'scripts/keyboard-preview/**'
@@ -79,7 +82,7 @@ jobs:
           for class in $(grep -h -o -E '^final class [A-Za-z]+: XCTestCase' \
               Tests/SlideKey*.swift Tests/KeyboardTextControllerTests.swift Tests/SpaceBeforeMarkTests.swift \
               Tests/EmojiSuggestionTests.swift Tests/ChineseMarkLabelTests.swift Tests/TopRowEmojiTests.swift \
-              Tests/PredictionStripTests.swift Tests/TypingEngineTests.swift | awk '{ print $3 }' | tr -d ':'); do
+              Tests/PredictionStripTests.swift Tests/ModelPredictedWordsTests.swift Tests/TypingEngineTests.swift | awk '{ print $3 }' | tr -d ':'); do
             only+=("-only-testing:DuoKeyboardTests/$class")
           done
           test "${#only[@]}" -ge 5

@@ -45,6 +45,18 @@ protocol SpellChecking: AnyObject {
     /// them, or an empty string. Without a typed letter, the result holds the most probable
     /// words after `previousWord`.
     func predictedWords(previousWord: String, typed: String, limit: Int) -> [String]
+    /// The predicted words in the order of the language model, each in the form that the strip
+    /// shows, or nil when the checker has no numbers of the model for this text. The keyboard
+    /// then shows the words of `predictedWords`.
+    ///
+    /// `typed` holds the typed letters with their capitals, and `textBefore` the field's text
+    /// before them. `automaticFirst` says that the keyboard types the first letter of the word
+    /// as a capital by itself. When the checker asks the model for the numbers of this text, it
+    /// calls `whenReady` on the main thread once they are there, and the keyboard asks again.
+    func modelPredictedWords(
+        typed: String, previousWord: String, textBefore: String, automaticFirst: Bool, limit: Int,
+        whenReady: @escaping @MainActor @Sendable () -> Void
+    ) -> [String]?
     /// Stops the keyboard from changing this word again.
     func learn(_ word: String)
     /// True for a word the person brought back after a correction.
@@ -64,6 +76,11 @@ extension SpellChecking {
     func readAhead(previousWord: String, typed: String, textBefore: String) {}
     /// A checker without a lexicon predicts no words.
     func predictedWords(previousWord: String, typed: String, limit: Int) -> [String] { [] }
+    /// A checker without a language model has no order of the model.
+    func modelPredictedWords(
+        typed: String, previousWord: String, textBefore: String, automaticFirst: Bool, limit: Int,
+        whenReady: @escaping @MainActor @Sendable () -> Void
+    ) -> [String]? { nil }
     var preferredCapitals: PreferredCapitals? { nil }
     func toggleWorkArea() -> String? { nil }
 }
@@ -109,11 +126,36 @@ final class EngineSpellChecker: SpellChecking {
     /// back do not reach the keyboard or another test.
     private let store: UserDefaults
 
+    /// How the checker orders and writes the predicted words with the numbers of the model. The
+    /// benchmark of docs/prediction-strip-benchmark-design.md chooses these values.
+    struct PredictionSettings: Equatable {
+        /// The share of the engine's own value in the order, from 0 to 1. With 0 the model orders
+        /// the words alone (`duo_predict_english_with_model`).
+        var engineWeight: Float = 0
+        /// True writes each word in the form with the highest value for the model, as "Python"
+        /// after "I use". False writes the form that the typed capitals ask for, as the engine's
+        /// order does.
+        var modelPicksTheForm = true
+    }
+
+    var predictionSettings = PredictionSettings()
+    /// Gives the model's numbers for the predicted words. Without it the engine orders them.
+    private let predictor: NextTokenScoring?
+    /// The model's numbers for one text before a predicted word, with the text as the model
+    /// read it. The strip predicts for one text at a time, so the checker keeps one answer.
+    private var nextTokens: (context: String, numbers: [Float])?
+    /// The text of the last request for numbers, so one text is asked once.
+    private var requestedContext: String?
+
     /// With a work area, the checker lays the area's supplement over the engine's lexicon, unless
     /// the store says that the person turned the area off. The checker then owns the engine's
     /// supplement, so another checker must not share that engine.
-    init(engine: EnglishTypingEngine, reranker: EnglishReranker?, store: UserDefaults, workArea: WorkArea? = nil) {
+    init(
+        engine: EnglishTypingEngine, reranker: EnglishReranker?, store: UserDefaults, workArea: WorkArea? = nil,
+        predictor: NextTokenScoring? = nil
+    ) {
         self.engine = engine
+        self.predictor = predictor
         self.reranker = reranker
         self.store = store
         self.workArea = workArea
@@ -126,11 +168,18 @@ final class EngineSpellChecker: SpellChecking {
         }
     }
 
+    /// The word table of the bundle: the words of the English lexicon and of the work area "AI and
+    /// software", for the vocabulary of the bundled SmolLM2-135M model.
+    static let wordTableResource = "word-table-smollm2"
+
     /// The engine with the English lexicon and the work area "AI and software" of the app bundle.
-    static func bundled(reranker: EnglishReranker?) -> EngineSpellChecker {
+    /// `predictor` is the language model that orders the predicted words, or nil.
+    static func bundled(reranker: EnglishReranker?, predictor: NextTokenScoring? = nil) -> EngineSpellChecker {
         EngineSpellChecker(
-            engine: EnglishTypingEngine(lexicon: TypingLexicon(resource: "lexicon-english", fullCheck: false)),
-            reranker: reranker, store: .standard, workArea: .aiAndSoftware())
+            engine: EnglishTypingEngine(
+                lexicon: TypingLexicon(resource: "lexicon-english", fullCheck: false),
+                wordTable: WordTable(resource: wordTableResource)),
+            reranker: reranker, store: .standard, workArea: .aiAndSoftware(), predictor: predictor)
     }
 
     var preferredCapitals: PreferredCapitals? {
@@ -172,6 +221,66 @@ final class EngineSpellChecker: SpellChecking {
 
     func predictedWords(previousWord: String, typed: String, limit: Int) -> [String] {
         engine.predictedWords(previousWord: previousWord, typed: typed, limit: limit)
+    }
+
+    func modelPredictedWords(
+        typed: String, previousWord: String, textBefore: String, automaticFirst: Bool, limit: Int,
+        whenReady: @escaping @MainActor @Sendable () -> Void
+    ) -> [String]? {
+        // The model reads a word after a text and one space, as the word table holds the forms.
+        // The first word of a field has no text before it, and the engine orders its words.
+        guard let predictor, textBefore.hasSuffix(" "), !textBefore.dropLast().hasSuffix(" ") else { return nil }
+        let context = LanguageModelPrompt.makeStock(textBefore: textBefore, readings: []).context
+        guard !context.isEmpty else { return nil }
+        guard let known = nextTokens, known.context == context else {
+            if requestedContext != context {
+                requestedContext = context
+                predictor.nextTokens(after: context) { [weak self] numbers in
+                    // A later text took the place of this one, or the model gave no numbers.
+                    guard let self, let numbers, self.requestedContext == context else { return }
+                    self.nextTokens = (context, numbers)
+                    whenReady()
+                }
+            }
+            return nil
+        }
+        let letters = typed.filter { $0.isLetter }
+        guard let words = engine.predictedWords(
+            previousWord: previousWord, typed: typed.lowercased(), next: known.numbers,
+            engineWeight: predictionSettings.engineWeight, capitalOnly: typed.first?.isUppercase == true, limit: limit)
+        else { return nil }
+        let allCapitals = letters.count >= 2 && letters.allSatisfy { $0.isUppercase }
+        var shown: [String] = []
+        for entry in words {
+            let text: String
+            if allCapitals {
+                text = entry.word.uppercased()
+            } else if predictionSettings.modelPicksTheForm {
+                text = self.text(of: entry)
+            } else {
+                let cased = KeyboardTextLogic.predictedWord(entry.word, typed: typed)
+                text = preferredCapitals?.form(of: cased, typed: typed, automaticFirst: automaticFirst) ?? cased
+            }
+            if !shown.contains(text) { shown.append(text) }
+        }
+        return shown
+    }
+
+    /// A word in the form that the model's order picked for it (`DUO_FORM_*`).
+    private func text(of entry: EnglishTypingEngine.ModelWord) -> String {
+        let lower = LanguageModelPrompt.withAutomaticCapitals(entry.word, opensField: false)
+        switch entry.form {
+        case DUO_FORM_CAPITAL:
+            return lower.prefix(1).uppercased() + lower.dropFirst()
+        case DUO_FORM_PREFERRED:
+            // Only a word of the work area has this form, and the area's table names it.
+            guard let preferred = preferredCapitals?.preferredForm(of: entry.word) else {
+                preconditionFailure("\(entry.word) has no preferred form in the work area")
+            }
+            return preferred
+        default:
+            return lower
+        }
     }
 
     func learn(_ word: String) {
@@ -873,10 +982,18 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
         guard let context = KeyboardTextLogic.predictionContext(before: before, after: document.textAfterCursor)
         else { return [] }
         let typed = context.typed
+        let textBefore = String(before.dropLast(typed.count))
+        let automaticFirst = KeyboardTextLogic.shouldAutoCapitalize(
+            before: textBefore, type: document.autocapitalizationType)
+        // The model's order, when the checker has the model's numbers for this text. Until the
+        // numbers are there, the strip shows the engine's order, and then it shows this one.
+        if let words = spellChecker.modelPredictedWords(
+            typed: typed, previousWord: context.previousWord, textBefore: textBefore, automaticFirst: automaticFirst,
+            limit: Self.predictedWordCount, whenReady: { [weak self] in self?.showRow() }) {
+            return words
+        }
         let words = spellChecker.predictedWords(
             previousWord: context.previousWord, typed: typed.lowercased(), limit: Self.predictedWordCount)
-        let automaticFirst = KeyboardTextLogic.shouldAutoCapitalize(
-            before: String(before.dropLast(typed.count)), type: document.autocapitalizationType)
         var shown: [String] = []
         for word in words {
             let cased = KeyboardTextLogic.predictedWord(word, typed: typed)
