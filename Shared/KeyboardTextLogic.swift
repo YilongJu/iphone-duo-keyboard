@@ -735,8 +735,9 @@ enum KeyboardTextLogic {
     /// The Unicode character LINE SEPARATOR. A text view shows a line break at this character.
     static let lineSeparator = "\u{2028}"
 
-    /// The SF Symbol on the newline key.
-    static let newlineKeySymbol = "arrow.turn.down.left"
+    /// The SF Symbol on the newline key: the symbol of a return key that types a line break,
+    /// because the two keys do the same there.
+    static let newlineKeySymbol = returnKeySymbol(for: .default)
 
     /// The text that the newline key types. A field without an action takes "\n". A field with
     /// an action, such as send, reads "\n" as the request for that action, so the key types

@@ -104,6 +104,9 @@ final class WideBottomRowsTests: XCTestCase {
         XCTAssertEqual(Character("\u{2028}").isNewline, true)
         XCTAssertTrue(KeyboardTextLogic.wordTerminators.contains("\u{2028}"))
         XCTAssertNotNil(UIImage(systemName: KeyboardTextLogic.newlineKeySymbol))
+        // In a field without an action the two keys do the same, so they show one symbol.
+        XCTAssertEqual(KeyboardTextLogic.newlineKeySymbol, "return.left")
+        XCTAssertEqual(KeyboardTextLogic.newlineKeySymbol, KeyboardTextLogic.returnKeySymbol(for: .default))
     }
 
     // MARK: Touches
