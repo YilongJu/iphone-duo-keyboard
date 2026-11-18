@@ -180,6 +180,14 @@ final class KeyboardView: UIView {
         predictionStrip.show(emoji.map { PredictionStrip.Item.emoji($0) } + words.map { PredictionStrip.Item.word($0) })
     }
 
+    /// The typing speed of the top row, in the place of the layout's `.typingSpeed` key.
+    let typingSpeedView = TypingSpeedView()
+
+    /// Shows the typing speed in words per minute, or no speed for nil.
+    func showTypingSpeed(_ wordsPerMinute: Int?) {
+        typingSpeedView.wordsPerMinute = wordsPerMinute
+    }
+
     /// Count of ripples on screen now, in all keys. The unit tests read this value.
     var rippleCount: Int {
         subviews.compactMap { $0 as? KeyView }.reduce(0) { $0 + $1.rippleCount }
@@ -292,6 +300,7 @@ final class KeyboardView: UIView {
             }
         }
         addSubview(predictionStrip)
+        addSubview(typingSpeedView)
         rebuild()
     }
 
@@ -394,11 +403,12 @@ final class KeyboardView: UIView {
             row.map { key in
                 let keyView = KeyView(key: key)
                 // The empty middle and the place of the prediction strip are no keys.
-                keyView.isHidden = key.kind == .gap || key.kind == .predictionStrip
+                keyView.isHidden = key.kind == .gap || key.kind == .predictionStrip || key.kind == .typingSpeed
                 addSubview(keyView)
                 return keyView
             }
         }
+        bringSubviewToFront(typingSpeedView)
         bringSubviewToFront(predictionStrip)
         bringSubviewToFront(globeButton)
         bringSubviewToFront(candidateBar)
@@ -462,10 +472,10 @@ final class KeyboardView: UIView {
         case .end:
             return KeyDisplay(primary: "End", primaryFontSize: wordSize)
         case .selectAll:
-            return KeyDisplay(primary: "Select All", primaryFontSize: wordSize, emphasized: selectAllActive)
+            return KeyDisplay(imageName: "select-all", emphasized: selectAllActive)
         case .forwardDelete:
             return KeyDisplay(symbolName: "delete.right")
-        case .gap, .predictionStrip:
+        case .gap, .predictionStrip, .typingSpeed:
             return KeyDisplay()
         case .language:
             return KeyDisplay(styledPrimary: Self.languageKeyText(chineseActive: chineseActive))
@@ -541,6 +551,7 @@ final class KeyboardView: UIView {
             width: metrics.width - shortcutButtons, height: metrics.rowEdges[1] - metrics.rowEdges[0]
         ).insetBy(dx: spec.gapX + 4, dy: gapY)
         var stripCell: CGRect?
+        var speedCell: CGRect?
         for (rowIndex, row) in rows.enumerated() {
             let rowWeight = row.reduce(0) { $0 + $1.key.weight }
             let rowInset = rowIndex == rows.count - 1 ? spec.bottomRowCornerInset : 0
@@ -565,6 +576,9 @@ final class KeyboardView: UIView {
                 if keyView.key.kind == .predictionStrip {
                     stripCell = cell
                 }
+                if keyView.key.kind == .typingSpeed {
+                    speedCell = cell
+                }
                 if keyView.key.kind == .globe {
                     globeButton.frame = cell
                     globeButton.isHidden = false
@@ -583,6 +597,12 @@ final class KeyboardView: UIView {
             candidateBar.frame = stripCell.insetBy(dx: spec.gapX, dy: gapY)
         }
         predictionStrip.isHidden = stripCell == nil
+        // The typing speed takes its cell and the keyboard's edge above it, as the strip does.
+        if let speedCell {
+            typingSpeedView.frame = CGRect(x: speedCell.minX, y: 0, width: speedCell.width, height: speedCell.maxY)
+            typingSpeedView.topInset = speedCell.minY
+        }
+        typingSpeedView.isHidden = speedCell == nil
     }
 
     private func keyView(at point: CGPoint) -> KeyView? {
@@ -602,8 +622,15 @@ final class KeyboardView: UIView {
             point.x >= strip.hitFrame.minX, point.x < strip.hitFrame.maxX {
             return nil
         }
+        // The typing speed is no key. A touch in its cell presses no key, so a finger that
+        // misses Select All does not press it by the rule of the nearest key.
+        if let speed = row.first(where: { $0.key.kind == .typingSpeed }),
+            point.x >= speed.hitFrame.minX, point.x < speed.hitFrame.maxX {
+            return nil
+        }
         // A touch in the empty middle of the split layout goes to the nearest real key.
-        return row.filter { $0.key.kind != .gap && $0.key.kind != .predictionStrip }.min { distance($0) < distance($1) }
+        return row.filter { $0.key.kind != .gap && $0.key.kind != .predictionStrip && $0.key.kind != .typingSpeed }
+            .min { distance($0) < distance($1) }
     }
 
     // MARK: Touches
@@ -915,7 +942,7 @@ final class KeyboardView: UIView {
         case .switchLayer(let target):
             currentLayer = target
             rebuild()
-        case .shift, .capsLock, .globe, .gap, .predictionStrip:
+        case .shift, .capsLock, .globe, .gap, .predictionStrip, .typingSpeed:
             // Shift and caps lock act on finger down. The globe button handles the globe key.
             // The prediction strip handles the touches in its own place.
             break

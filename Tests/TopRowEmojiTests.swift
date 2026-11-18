@@ -51,7 +51,10 @@ final class TopRowEmojiTests: XCTestCase {
     /// The emoji labels outside the keys and the candidate row, from left to right.
     private func emojiLabels() -> [UILabel] {
         keyboardView.layoutIfNeeded()
-        var views: [UIView] = keyboardView.subviews.filter { !($0 is KeyView) && !($0 is CandidateBar) }
+        var views: [UIView] = keyboardView.subviews.filter {
+            // The typing speed holds a number and its unit, and no emoji.
+            !($0 is KeyView) && !($0 is CandidateBar) && !($0 is TypingSpeedView)
+        }
         var labels: [UILabel] = []
         while let view = views.popLast() {
             if view.isHidden { continue }
@@ -141,7 +144,7 @@ final class TopRowEmojiTests: XCTestCase {
             let cut = try drawnFrame(try keyView(.cut))
             let row = try keyView(.selectAll).hitFrame
             let strip = keyboardView.predictionStrip.frame
-            // The first emoji starts at the left end of the strip, right after Select All.
+            // The first emoji starts at the left end of the strip, right after the typing speed.
             let first = frame(of: emojiEntries()[0])
             XCTAssertEqual(first.minX, strip.minX, accuracy: 4, "\(width)")
             for label in labels {

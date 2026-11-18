@@ -106,7 +106,7 @@ const PRESETS = [
 ];
 const FN_LABEL = {
   backspace: "⌫", forwardDelete: "⌦", shift: "⇧", capsLock: "⇪", tab: "⇥", globe: "🌐", dismiss: "⌨↓",
-  left: "←", right: "→", up: "↑", down: "↓", home: "Home", end: "End", selectAll: "Select All",
+  left: "←", right: "→", up: "↑", down: "↓", home: "Home", end: "End", selectAll: "\u2B1A",
   cut: "✂", copy: "⧉", paste: "📋", symbols: ".?123", letters: "ABC", more: "#+=", language: "\u4E2D", space: "", return: "⏎",
 };
 const state = {
@@ -123,6 +123,8 @@ function normalize(key, layer) {
   if (key.c !== undefined) return { type: "char", base: key.c, w: key.w ?? 1, layer };
   // The prediction strip is a place in the top row and no key.
   if (key.f === "predictionStrip") return { type: "strip", w: key.w ?? 1, layer };
+  // The typing speed is a place in the top row and no key.
+  if (key.f === "typingSpeed") return { type: "speed", w: key.w ?? 1, layer };
   if (FN_LABEL[key.f] === undefined) throw new Error("Unknown key: " + key.f);
   return { type: "fn", name: key.f, w: key.w ?? 1, layer };
 }
@@ -222,6 +224,20 @@ function render() {
       const h = row.height * rowHeight;
       for (const key of row.keys) {
         if (key.type === "gap") { x += key.w * unit; continue; }
+        if (key.type === "speed") {
+          const speed = document.createElement("div");
+          speed.className = "strip";
+          speed.style.left = x + "px";
+          speed.style.top = (y + gapY) + "px";
+          speed.style.width = (key.w * unit) + "px";
+          speed.style.height = (h - 2 * gapY) + "px";
+          speed.style.padding = "0";
+          speed.style.justifyContent = "center";
+          speed.textContent = "WPM";
+          board.appendChild(speed);
+          x += key.w * unit;
+          continue;
+        }
         if (key.type === "strip") {
           const strip = document.createElement("div");
           strip.className = "strip";
@@ -302,7 +318,7 @@ function paint(el, key, style) {
       // The preview types English only, so "A" is the active one here.
       main.innerHTML = '<span style="font-size:15px;opacity:.6">\u4E2D/</span><span style="font-size:20px;font-weight:700">A</span>';
     }
-    const small = (key.name === "space" && caption) || key.name === "selectAll";
+    const small = key.name === "space" && caption;
     main.style.fontSize = small ? "13px" : label.length > 2 ? "16px" : "20px";
     const on = (key.name === "shift" && state.shift !== "off")
       || (key.name === "capsLock" && state.shift === "locked")

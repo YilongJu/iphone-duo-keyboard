@@ -1,27 +1,49 @@
 # Prediction strip
 
-The prediction strip is the part of the top row of keys between Select All and Cut. It shows
+The prediction strip is the part of the top row of keys between the typing speed and Cut. It shows
 the emoji of the word before the cursor, and then the predicted words. A predicted word is a
 word that starts with the letters the person is typing, or a word that often follows the word
 before the cursor. A tap on a predicted word types the word and a space.
 
 ## The top row
 
-The top row holds Select All, the prediction strip and the small keys Cut, Copy and Paste, in
-all three layers. `Shared/keyboard-layout.json` names the strip's place as the key
-`predictionStrip`.
+The top row holds the small keys Select All, Cut, Copy and Paste, the typing speed and the
+prediction strip, in all three layers. Select All and the typing speed are at the left, and Cut,
+Copy and Paste are at the right. `Shared/keyboard-layout.json` names the two places that are no
+keys as `typingSpeed` and `predictionStrip`.
 
-| Layout | Select All | Cut, Copy, Paste, each | Prediction strip |
+| Layout | Select All, Cut, Copy, Paste, each | Typing speed | Prediction strip |
 | --- | --- | --- | --- |
-| Compact, 10 key units | 1.75 | 0.75 | 6 |
-| Wide, 13.5 key units | 2.3 | one third of 2.3 | 8.9 |
-| Split, 19.5 key units | 2.3 | one third of 2.3 | 14.9 |
+| Compact, 10 key units | 0.75 | 1 | 6 |
+| Wide, 13.5 key units | one third of 2.3 | two thirds of 2.3 | 8.9 |
+| Split, 19.5 key units | one third of 2.3 | two thirds of 2.3 | 14.9 |
 
-One key unit is the width of one letter key. In the split layout the strip crosses the empty
+The four small keys have one width in each layout. One key unit is the width of one letter key. In the split layout the strip crosses the empty
 middle, so the top row has no empty middle of its own.
 
 The row has no Home key and no End key. The wide and split layouts move the cursor with their
 arrow keys, and a held space bar moves the cursor in every layout.
+
+## Select All and the typing speed
+
+Select All shows an icon: three lines of text in a dashed frame. `scripts/select-all-icon`
+holds the script that made the candidates with an image model, the chosen candidate, and the
+script that turns the candidate into the images `Shared/select-all@2x.png` and
+`Shared/select-all@3x.png`. The key tints the icon with the color of its text.
+
+The typing speed is a number of words per minute with "WPM" below it
+(`Shared/TypingSpeed.swift`). The typing speed is no key, and a touch on it presses no key.
+
+| Term | Rule |
+| --- | --- |
+| Word | 5 characters. |
+| Counted characters | Each character that goes into the text, less each character that a delete takes out. A tapped predicted word counts with all its characters. Pasted text does not count. |
+| Run | Typing without a pause of more than 3 seconds. The first character of a run starts its clock. |
+| Speed | The counted characters after the first one, over the time since the first one. A run longer than 10 seconds counts its last 10 seconds only. |
+| Shown number | The speed of the current run once the run is 2 seconds long. Before that, and during a pause, the last number stays. A dash shows before the first number. |
+
+The keyboard keeps the times and the counts of the last 10 seconds in memory. The keyboard
+keeps no text for the typing speed and writes no file.
 
 ## What the strip shows
 
@@ -141,6 +163,8 @@ nothing.
   the cursor there.
 - The strip holds only words that start with the typed letters. A typed word with a wrong
   letter gets its correction at the space.
+- The typing speed counts characters, so Chinese text gives a low number: a Chinese word of
+  two characters counts as two fifths of a word.
 - The strip predicts English words only. Chinese mode shows its candidates in the candidate row.
 - The candidate row has the width of the strip: about 60% of the top row on the closed phone.
   A long fix of the proofreader scrolls sideways there.
@@ -153,4 +177,4 @@ nothing.
 | Predicted words of the engine on the PC | `duo_cli predict` (`Engine/duo_cli.c`) |
 | Model's order of the engine against a second computation | `scripts/typing-engine-check/check_model_order.py` |
 | Word table against the lexicon and the model | `python3 scripts/typing-engine/build_word_table.py --check` |
-| Unit tests | `Tests/PredictionStripTests.swift`, `Tests/ModelPredictedWordsTests.swift`, `Tests/TopRowEmojiTests.swift`, `Tests/TypingEngineTests.swift` |
+| Unit tests | `Tests/PredictionStripTests.swift`, `Tests/ModelPredictedWordsTests.swift`, `Tests/TypingSpeedTests.swift`, `Tests/TopRowEmojiTests.swift`, `Tests/TypingEngineTests.swift` |

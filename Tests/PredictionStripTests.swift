@@ -28,11 +28,12 @@ private final class PredictingSpellChecker: SpellChecking {
     func keeps(_ word: String) -> Bool { false }
 }
 
-/// The top row of keys: Select All at the left, the prediction strip, and the small keys Cut, Copy
-/// and Paste at the right. The row has no Home key and no End key.
+/// The top row of keys: the small Select All key at the left, the typing speed, the prediction
+/// strip, and the small keys Cut, Copy and Paste at the right. The row has no Home key and no
+/// End key.
 @MainActor
 final class TopRowLayoutTests: XCTestCase {
-    private static let topKinds: [KeyKind] = [.selectAll, .predictionStrip, .cut, .copy, .paste]
+    private static let topKinds: [KeyKind] = [.selectAll, .typingSpeed, .predictionStrip, .cut, .copy, .paste]
 
     func testTheTopRowHoldsSelectAllTheStripAndTheSmallKeysInEveryLayer() {
         for style in [LayoutStyle.compact, .wide, .split] {
@@ -48,19 +49,23 @@ final class TopRowLayoutTests: XCTestCase {
         }
     }
 
-    func testASmallKeyOfTheWideLayoutTakesOneThirdOfSelectAll() throws {
+    func testTheFourSmallKeysOfTheWideLayoutHaveOneWidthAndTheTypingSpeedHasTwice() throws {
+        // Select All had 2.3 key units. The key now takes one third of them, as Cut, Copy and
+        // Paste do, and the typing speed takes the two thirds that became free.
         let row = KeyboardLayout.make(style: .wide, layer: .letters, showsGlobe: true).rows[0]
-        let selectAll = try XCTUnwrap(row.first { $0.kind == .selectAll }).weight
-        XCTAssertEqual(selectAll, 2.3, accuracy: 0.0001)
-        for kind in [KeyKind.cut, .copy, .paste] {
-            XCTAssertEqual(try XCTUnwrap(row.first { $0.kind == kind }).weight, selectAll / 3, accuracy: 0.0001, "\(kind)")
+        for kind in [KeyKind.selectAll, .cut, .copy, .paste] {
+            XCTAssertEqual(try XCTUnwrap(row.first { $0.kind == kind }).weight, 2.3 / 3, accuracy: 0.0001, "\(kind)")
         }
+        XCTAssertEqual(try XCTUnwrap(row.first { $0.kind == .typingSpeed }).weight, 2.3 * 2 / 3, accuracy: 0.0001)
         XCTAssertEqual(row.reduce(0) { $0 + $1.weight }, KeyboardSpec.shared.wide.units, accuracy: 0.0001)
     }
 
     func testASmallKeyOfTheCompactLayoutTakesThreeQuartersOfAKeyUnit() throws {
         let row = KeyboardLayout.make(style: .compact, layer: .letters, showsGlobe: true).rows[0]
-        XCTAssertEqual(try XCTUnwrap(row.first { $0.kind == .selectAll }).weight, 1.75, accuracy: 0.0001)
+        // Select All had 1.75 key units. The key now has the width of Cut, Copy and Paste, and
+        // the typing speed takes the unit that became free.
+        XCTAssertEqual(try XCTUnwrap(row.first { $0.kind == .selectAll }).weight, 0.75, accuracy: 0.0001)
+        XCTAssertEqual(try XCTUnwrap(row.first { $0.kind == .typingSpeed }).weight, 1, accuracy: 0.0001)
         for kind in [KeyKind.cut, .copy, .paste] {
             XCTAssertEqual(try XCTUnwrap(row.first { $0.kind == kind }).weight, 0.75, accuracy: 0.0001, "\(kind)")
         }
@@ -154,14 +159,16 @@ final class PredictionStripTests: XCTestCase {
 
     // MARK: Place
 
-    func testTheStripLiesBetweenSelectAllAndCutAtEveryWidth() throws {
+    func testTheStripLiesBetweenTheTypingSpeedAndCutAtEveryWidth() throws {
         for width in widths() {
             makeKeyboard(width: width)
             let strip = keyboardView.predictionStrip
             XCTAssertFalse(strip.isHidden, "\(width)")
             let selectAll = try keyView(.selectAll).hitFrame
             let cut = try keyView(.cut).hitFrame
-            XCTAssertEqual(strip.frame.minX, selectAll.maxX, accuracy: 0.5, "\(width)")
+            // The typing speed stands between Select All and the strip.
+            XCTAssertEqual(strip.frame.minX, try keyView(.typingSpeed).hitFrame.maxX, accuracy: 0.5, "\(width)")
+            XCTAssertGreaterThan(strip.frame.minX, selectAll.maxX, "\(width)")
             XCTAssertEqual(strip.frame.maxX, cut.minX, accuracy: 0.5, "\(width)")
             // The strip reaches from the keyboard's upper edge to the lower edge of the top row.
             XCTAssertEqual(strip.frame.minY, 0, accuracy: 0.5, "\(width)")

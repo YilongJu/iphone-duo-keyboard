@@ -10,6 +10,9 @@ struct KeyDisplay {
     /// or down on the key types this character.
     var slideCharacter: String?
     var symbolName: String?
+    /// The name of an image of the bundle that the key shows as its icon, in the color of the
+    /// key's text. The Select All key has an image of its own (scripts/select-all-icon).
+    var imageName: String?
     var primaryFontSize: CGFloat = 22
     /// A key drawn in the pressed color while a mode is on, such as shift.
     var emphasized = false
@@ -226,6 +229,8 @@ final class KeyView: UIView {
 
     /// The name of the SF Symbol the key shows now, or nil. The unit tests read this value.
     private(set) var shownSymbolName: String?
+    /// The name of the bundle image that the key shows, or nil. The unit tests read this value.
+    private(set) var shownImageName: String?
 
     /// The color of the drawn key now. The unit tests read this value, so the tests do not
     /// depend on which view draws the key.
@@ -271,9 +276,15 @@ final class KeyView: UIView {
             // A wrong symbol name would leave the key blank, so a debug build stops here.
             assert(image != nil, "Unknown SF Symbol: \(symbolName)")
             iconView.image = image
+        } else if let imageName = display.imageName {
+            let image = UIImage(named: imageName)?.withRenderingMode(.alwaysTemplate)
+            // A wrong image name would leave the key blank, so a debug build stops here.
+            assert(image != nil, "No image \(imageName) in the bundle")
+            iconView.image = image
         } else {
             iconView.image = nil
         }
+        shownImageName = display.imageName
         shownSymbolName = display.symbolName
         emphasized = display.emphasized
         performsAction = display.performsAction

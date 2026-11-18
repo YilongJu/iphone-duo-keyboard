@@ -23,6 +23,8 @@ The script exits with an error and lists every broken rule. The rules:
    The strip is a place for the emoji and the predicted words, and no key. A wide first row
    names the strip as its split point, because the strip crosses the empty middle of the split
    layout.
+10. The first row of every layer holds exactly one typing speed, right before the prediction
+    strip, and no other row holds one. The typing speed is a place for a number, and no key.
 """
 import json
 import string
@@ -35,6 +37,8 @@ LAYERS = ("letters", "symbols", "more")
 LAYER_KEYS = {"letters", "symbols", "more"}
 # The function name of the prediction strip's place in the first row.
 STRIP = "predictionStrip"
+# The function name of the typing speed's place in the first row.
+SPEED = "typingSpeed"
 # The layer keys each layer must hold, with the count of each.
 EXPECTED_LAYER_KEYS = {
     "letters": {"symbols": 1},
@@ -99,6 +103,8 @@ def check(layout):
                         functions.append(function)
                     if function == STRIP and row_index != 0:
                         problems.append(f"{where} row {row_index}: the prediction strip sits outside the first row")
+                    if function == SPEED and row_index != 0:
+                        problems.append(f"{where} row {row_index}: the typing speed sits outside the first row")
                     if main is not None:
                         main_characters.append(main)
                     reachable.update(typed)
@@ -108,6 +114,11 @@ def check(layout):
                         problems.append(f"{where} row 0: {len(strips)} prediction strips, expected 1")
                     elif style_name == "wide" and row.get("split") != strips[0]:
                         problems.append(f"{where} row 0: the split value {row.get('split')!r} is not the place of the prediction strip")
+                    speeds = [index for index, key in enumerate(row["keys"]) if key_parts(key)[0] == SPEED]
+                    if len(speeds) != 1:
+                        problems.append(f"{where} row 0: {len(speeds)} typing speeds, expected 1")
+                    elif len(strips) == 1 and speeds[0] != strips[0] - 1:
+                        problems.append(f"{where} row 0: the typing speed does not sit right before the prediction strip")
                 if style_name == "wide":
                     split = row.get("split")
                     if not isinstance(split, int) or not 0 < split < len(row["keys"]):

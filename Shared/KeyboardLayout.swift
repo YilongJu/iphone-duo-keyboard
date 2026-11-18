@@ -89,6 +89,9 @@ enum KeyKind: Equatable {
     /// The place of the prediction strip in the top row: the emoji of the word before the cursor
     /// and the predicted words (`PredictionStrip`). The view draws the strip there and no key.
     case predictionStrip
+    /// The place of the typing speed in the top row, between Select All and the prediction
+    /// strip (`TypingSpeedView`). The view draws the speed there and no key.
+    case typingSpeed
     /// Switches between English and Simplified Chinese (Pinyin).
     case language
     case switchLayer(KeyboardLayer)
@@ -151,6 +154,7 @@ enum KeyKind: Equatable {
         case "copy": return .copy
         case "paste": return .paste
         case "predictionStrip": return .predictionStrip
+        case "typingSpeed": return .typingSpeed
         case "language": return .language
         case "symbols": return .switchLayer(.symbols)
         case "letters": return .switchLayer(.letters)

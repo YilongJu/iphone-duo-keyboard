@@ -56,7 +56,10 @@ final class EmojiSuggestionTests: XCTestCase {
     /// The emoji labels of the keyboard view outside the keys and the candidate row, from left to right.
     private func emojiLabels() -> [UILabel] {
         keyboardView.layoutIfNeeded()
-        var views: [UIView] = keyboardView.subviews.filter { !($0 is KeyView) && !($0 is CandidateBar) }
+        var views: [UIView] = keyboardView.subviews.filter {
+            // The typing speed holds a number and its unit, and no emoji.
+            !($0 is KeyView) && !($0 is CandidateBar) && !($0 is TypingSpeedView)
+        }
         var labels: [UILabel] = []
         while let view = views.popLast() {
             if view.isHidden { continue }

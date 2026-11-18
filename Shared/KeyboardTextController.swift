@@ -520,16 +520,37 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
         emojiSuggestions: EmojiSuggestions = .bundled
     ) {
         self.keyboardView = keyboardView
-        self.document = document
+        let metered = MeteredDocument(base: document)
+        self.document = metered
         self.spellChecker = spellChecker
         self.makePinyinEngine = pinyinEngine
         self.emojiSuggestions = emojiSuggestions
         super.init()
+        metered.onChange = { [weak self] characters in
+            self?.countTyping(characters)
+        }
         keyboardView.delegate = self
         // A tap on the typed Pinyin letters types them as plain letters.
         keyboardView.onSelectComposition = { [weak self] in
             self?.commitPinyinLetters()
         }
+    }
+
+    // MARK: Typing speed
+
+    /// The typing speed of the last seconds, which the top row shows (`TypingSpeedView`).
+    private(set) var typingSpeed = TypingSpeedMeter()
+    /// The clock of the typing speed, in seconds. A test passes a clock of its own.
+    var typingClock: () -> TimeInterval = { ProcessInfo.processInfo.systemUptime }
+    /// False while pasted text goes into the document. Pasted text is not typed, so the typing
+    /// speed does not count it.
+    private var countsTyping = true
+
+    /// Counts characters that went into the document, or out of it for a negative count.
+    private func countTyping(_ characters: Int) {
+        guard countsTyping else { return }
+        typingSpeed.record(characters: characters, at: typingClock())
+        keyboardView.showTypingSpeed(typingSpeed.wordsPerMinute)
     }
 
     /// The owner calls this when the app's text or cursor changed.
@@ -1668,6 +1689,8 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
                 showNotice("Clipboard is empty")
                 return
             }
+            countsTyping = false
+            defer { countsTyping = true }
             if let snapshot = confirmedAllText() {
                 replaceAllText(snapshot, rawInsert: text)
             } else {
