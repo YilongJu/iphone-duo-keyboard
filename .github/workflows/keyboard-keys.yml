@@ -5,7 +5,7 @@ name: Keyboard keys
 # workflow "Language model in the keyboard" runs every unit test, and takes more than three hours.
 on:
   push:
-    branches: [ui/swipe-punctuation, engine/domain-model, ui/space-before-mark, ui/closing-quotes, ui/quote-spaces, ui/emoji-marks, ui/action-return, engine/kv-reuse, engine/model-speed]
+    branches: [ui/swipe-punctuation, engine/domain-model, ui/space-before-mark, ui/closing-quotes, ui/quote-spaces, ui/emoji-marks, ui/action-return, engine/kv-reuse, engine/model-speed, ui/prediction-strip]
     paths:
       - 'Shared/keyboard-layout.json'
       - 'Shared/KeyboardLayout.swift'
@@ -14,9 +14,11 @@ on:
       - 'Shared/KeyboardTextController.swift'
       - 'Shared/KeyboardTextLogic.swift'
       - 'Shared/CandidateBar.swift'
+      - 'Shared/PredictionStrip.swift'
       - 'Shared/EmojiSuggestions.swift'
       - 'Shared/emoji-suggestions.tsv'
       - 'Engine/duo_engine.c'
+      - 'Engine/duo_engine.h'
       - 'Shared/TypingEngine.swift'
       - 'Tests/SlideKey*.swift'
       - 'Tests/KeyboardTextControllerTests.swift'
@@ -24,6 +26,7 @@ on:
       - 'Tests/EmojiSuggestionTests.swift'
       - 'Tests/ChineseMarkLabelTests.swift'
       - 'Tests/TopRowEmojiTests.swift'
+      - 'Tests/PredictionStripTests.swift'
       - 'App/SetupViewController.swift'
       - 'Tests/TypingEngineTests.swift'
       - 'scripts/keyboard-preview/**'
@@ -76,7 +79,7 @@ jobs:
           for class in $(grep -h -o -E '^final class [A-Za-z]+: XCTestCase' \
               Tests/SlideKey*.swift Tests/KeyboardTextControllerTests.swift Tests/SpaceBeforeMarkTests.swift \
               Tests/EmojiSuggestionTests.swift Tests/ChineseMarkLabelTests.swift Tests/TopRowEmojiTests.swift \
-              Tests/TypingEngineTests.swift | awk '{ print $3 }' | tr -d ':'); do
+              Tests/PredictionStripTests.swift Tests/TypingEngineTests.swift | awk '{ print $3 }' | tr -d ':'); do
             only+=("-only-testing:DuoKeyboardTests/$class")
           done
           test "${#only[@]}" -ge 5

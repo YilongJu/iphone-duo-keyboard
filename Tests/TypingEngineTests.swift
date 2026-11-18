@@ -43,6 +43,62 @@ final class TypingEngineTests: XCTestCase {
         XCTAssertNil(Self.english.reading(previousWord: "", typed: ""))
     }
 
+    // MARK: Predicted words
+
+    func testPredictedWordsStartWithTheTypedLettersAndAreLongerThanThem() {
+        let words = Self.english.predictedWords(previousWord: "", typed: "to", limit: 20)
+        XCTAssertEqual(words.count, 20)
+        XCTAssertTrue(words.allSatisfy { $0.hasPrefix("to") && $0.count > 2 }, "\(words)")
+        XCTAssertEqual(Set(words).count, words.count, "\(words)")
+        XCTAssertTrue(words.contains("today"), "\(words)")
+        XCTAssertTrue(words.contains("tomorrow"), "\(words)")
+        XCTAssertEqual(Self.english.predictedWords(previousWord: "", typed: "to", limit: 3), Array(words.prefix(3)))
+    }
+
+    func testPredictedWordsFollowTheWordBeforeThem() {
+        // The word pairs of the lexicon put "you" first after "thank".
+        XCTAssertEqual(Self.english.predictedWords(previousWord: "thank", typed: "y", limit: 5).first, "you")
+        let alone = Self.english.predictedWords(previousWord: "", typed: "to", limit: 20)
+        let afterYou = Self.english.predictedWords(previousWord: "you", typed: "to", limit: 20)
+        let placeAlone = alone.firstIndex(of: "tomorrow") ?? alone.count
+        let placeAfterYou = afterYou.firstIndex(of: "tomorrow") ?? afterYou.count
+        XCTAssertLessThan(placeAfterYou, placeAlone, "\(afterYou) and \(alone)")
+        // A word before that the lexicon does not hold changes nothing.
+        XCTAssertEqual(Self.english.predictedWords(previousWord: "qqqq", typed: "to", limit: 20), alone)
+    }
+
+    func testPredictedWordsReadAnApostrophe() {
+        XCTAssertEqual(Self.english.predictedWords(previousWord: "", typed: "don'", limit: 5), ["don't"])
+        XCTAssertTrue(Self.english.predictedWords(previousWord: "i", typed: "don", limit: 5).contains("don't"))
+    }
+
+    func testTextOutsideTheInputOfThePredictedWordsGivesNoWords() {
+        // A capital, a digit, a space, more letters than the engine reads, and letters that no
+        // word starts with.
+        for typed in ["To", "t0", "to be", String(repeating: "a", count: 33), "zzzq"] {
+            XCTAssertEqual(Self.english.predictedWords(previousWord: "", typed: typed, limit: 5), [], typed)
+        }
+        XCTAssertEqual(Self.english.predictedWords(previousWord: "", typed: "to", limit: 0), [])
+    }
+
+    func testPredictedWordsHoldTheWordsOfTheSupplement() {
+        let lexicon = TypingLexicon(resource: "lexicon-english", fullCheck: false)
+        let withArea = EnglishTypingEngine(
+            lexicon: lexicon, supplement: TypingLexicon(resource: "supplement-ai-software", fullCheck: false))
+        let words = withArea.predictedWords(previousWord: "use", typed: "py", limit: 20)
+        XCTAssertTrue(words.contains("pytorch"), "\(words)")
+        XCTAssertTrue(words.contains("python"), "\(words)")
+        // A word that both files hold appears once.
+        XCTAssertEqual(Set(words).count, words.count, "\(words)")
+        // Without the supplement the lexicon gives its own words only.
+        let own = Self.english.predictedWords(previousWord: "use", typed: "py", limit: 20)
+        XCTAssertFalse(own.contains("pytorch"), "\(own)")
+        XCTAssertTrue(own.contains("python"), "\(own)")
+        // The supplement comes off again.
+        withArea.setSupplement(nil)
+        XCTAssertEqual(withArea.predictedWords(previousWord: "use", typed: "py", limit: 20), own)
+    }
+
     func testEnglishRepairsASymbolOrDigitKeyInPlaceOfTheFirstLetter() {
         XCTAssertEqual(Self.english.reading(previousWord: "", typed: "[lease"), "please")
         XCTAssertEqual(Self.english.reading(previousWord: "", typed: "0lease"), "please")

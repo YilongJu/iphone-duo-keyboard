@@ -68,8 +68,8 @@ sys.exit("simulator not found: " + prefix)
     sleep 10
     capture "$udid" "$output_dir/$slug-$layer-chinese-light"
   done
-  # The letters with the word "good" typed, so the top row of keys shows its emoji between
-  # Copy and Paste. The letters screenshot above shows the same row without emoji.
+  # The letters with the word "good" typed, so the prediction strip of the top row shows the
+  # emoji of the word and its predicted words. The letters screenshot above shows an empty strip.
   xcrun simctl terminate "$udid" "$bundle_id" 2>/dev/null || true
   xcrun simctl launch "$udid" "$bundle_id" -focusPreviewField -layer letters -previewText good
   sleep 10

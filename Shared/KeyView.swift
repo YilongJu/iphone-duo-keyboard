@@ -96,11 +96,6 @@ enum KeyColors {
         traits.userInterfaceStyle == .dark ? KeyColors.hex(0x26272C) : KeyColors.hex(0xC3C8D1)
     }
 
-    /// The capsule under the emoji of the top row.
-    static let capsule = UIColor { traits in
-        traits.userInterfaceStyle == .dark ? KeyColors.hex(0x2A2C32) : UIColor.white
-    }
-
     private static func hex(_ value: Int) -> UIColor {
         UIColor(
             red: CGFloat((value >> 16) & 0xFF) / 255, green: CGFloat((value >> 8) & 0xFF) / 255,

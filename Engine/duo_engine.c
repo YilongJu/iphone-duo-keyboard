@@ -1722,6 +1722,118 @@ int duo_english_readings(
     return count;
 }
 
+/* ---- Predicted words: the words that start with the typed letters ---- */
+
+typedef struct {
+    duo_predicted_word *words;
+    int count;
+    int capacity;
+} prediction_list_t;
+
+/* Puts a word into the list. The list stays sorted, the most probable word first, and words of
+   one value keep the order in which they came. A text that the list holds already keeps the
+   higher of its two values. */
+static void prediction_add(prediction_list_t *list, const char *text, float value) {
+    /* Most words of a walk are less probable than every word of a full list. */
+    if (list->count == list->capacity && value <= list->words[list->count - 1].log_probability) return;
+    size_t length = strlen(text);
+    if (length == 0 || length >= DUO_PREDICTED_WORD_SIZE) return;
+    for (int index = 0; index < list->count; index++) {
+        if (strcmp(list->words[index].text, text) != 0) continue;
+        if (value <= list->words[index].log_probability) return;
+        memmove(
+            &list->words[index], &list->words[index + 1],
+            (size_t)(list->count - index - 1) * sizeof(duo_predicted_word));
+        list->count--;
+        break;
+    }
+    if (list->count == list->capacity) list->count--;
+    int place = list->count;
+    while (place > 0 && list->words[place - 1].log_probability < value) {
+        list->words[place] = list->words[place - 1];
+        place--;
+    }
+    memcpy(list->words[place].text, text, length + 1);
+    list->words[place].log_probability = value;
+    list->count++;
+}
+
+/* Adds the words of a node and of every node below it, in one file: the lexicon or its
+   supplement. Each word gets its own log probability plus `base`, the value of a word that has
+   no listed pair with the word before. */
+static void predict_below(
+    const duo_lexicon *tree, uint32_t node_index, int depth, float base, prediction_list_t *list) {
+    node_t node = node_at(tree, node_index);
+    for (uint32_t word = node.first_word; word < node.first_word + node.word_count; word++) {
+        prediction_add(list, word_text(tree, word), word_log_probability(tree, word) + base);
+    }
+    if (depth >= MAX_DEPTH) return;
+    for (uint32_t child = node.first_child; child < node.first_child + node.child_count; child++) {
+        predict_below(tree, child, depth + 1, base, list);
+    }
+}
+
+/* Adds the words of one file that start with the typed letters and are longer than them. */
+static void predict_in_tree(
+    const duo_lexicon *tree, const char *typed, int length, float base, prediction_list_t *list) {
+    uint32_t index = 0;
+    for (int position = 0; position < length; position++) {
+        node_t node = node_at(tree, index);
+        uint32_t next = NO_WORD;
+        for (uint32_t child = node.first_child; child < node.first_child + node.child_count; child++) {
+            if (node_letter(tree, child) == typed[position]) {
+                next = child;
+                break;
+            }
+        }
+        if (next == NO_WORD) return;
+        index = next;
+    }
+    node_t start = node_at(tree, index);
+    for (uint32_t child = start.first_child; child < start.first_child + start.child_count; child++) {
+        /* Under the root, only a letter starts a word that a person types first. */
+        if (length == 0 && !is_letter(node_letter(tree, child))) continue;
+        predict_below(tree, child, length + 1, base, list);
+    }
+}
+
+int duo_predict_english(
+    const duo_lexicon *lexicon, const duo_params *params,
+    const char *previous_word, const char *typed, duo_predicted_word *words, int capacity) {
+    if (lexicon == NULL || params == NULL || previous_word == NULL || typed == NULL) return 0;
+    if (words == NULL || capacity < 1 || lexicon->model != 0) return 0;
+    size_t typed_length = strlen(typed);
+    if (typed_length > DUO_MAX_TYPED_LETTERS) return 0;
+    for (size_t index = 0; index < typed_length; index++) {
+        if (!is_letter(typed[index]) && typed[index] != '\'') return 0;
+    }
+    int length = (int)typed_length;
+    size_t previous_length = strlen(previous_word);
+    uint32_t previous = previous_length > 0 && previous_length <= DUO_MAX_TYPED
+        ? find_word(lexicon, previous_word, (int)previous_length) : NO_WORD;
+    /* The value of a word without a listed pair, as word_after and supplement_word_value give
+       it: the word's own log probability, and after a word the share of the mixed model that
+       the word's own probability has. */
+    int after_a_word = previous != NO_WORD && lexicon->pair_count > 0 && params->pair_weight > 0.0f;
+    float base = after_a_word ? logf(1.0f - params->pair_weight) : 0.0f;
+
+    prediction_list_t list = { words, 0, capacity };
+    predict_in_tree(lexicon, typed, length, base, &list);
+    if (lexicon->supplement != NULL) predict_in_tree(lexicon->supplement, typed, length, base, &list);
+    /* A listed pair of the word before gives its second word a higher value than the walk gave
+       it. The pairs of one word are few, so each of them is read here. */
+    if (after_a_word && !in_supplement(previous)) {
+        for (uint32_t pair = pair_start(lexicon, previous); pair < pair_start(lexicon, previous + 1); pair++) {
+            uint32_t second = pair_second(lexicon, pair);
+            const char *text = word_text(lexicon, second);
+            if (strncmp(text, typed, typed_length) != 0 || strlen(text) <= typed_length) continue;
+            if (length == 0 && !is_letter(text[0])) continue;
+            prediction_add(&list, text, word_after(lexicon, params, previous, NO_PAIR, second));
+        }
+    }
+    return list.count;
+}
+
 /* ---- Pinyin ---- */
 
 /* Order of the word candidates. The words that the typed letters spell exactly come first,

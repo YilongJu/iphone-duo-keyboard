@@ -449,6 +449,71 @@ enum KeyboardTextLogic {
         return body[start...].lowercased()
     }
 
+    // MARK: Predicted words
+
+    /// The letters that the person is typing right before the cursor, for the predicted words of
+    /// the prediction strip, or nil. The letters are ASCII letters and apostrophes. They start
+    /// the text, or a space, a line break or an opening bracket or quote comes right before
+    /// them, as before the word of `wordForEmoji(before:)`.
+    ///
+    /// The result is nil in three cases. No letter is typed. A letter, a digit or an apostrophe
+    /// follows the cursor, so the cursor sits inside a word. The letters hold a capital after the
+    /// first letter and are not all capitals, as "iPh", so they are probably not plain prose.
+    static func typedLetters(before: String, after: String) -> String? {
+        if let next = after.first, isLetterOrDigit(next) || next == "'" { return nil }
+        var start = before.endIndex
+        while start > before.startIndex {
+            let previous = before.index(before: start)
+            let character = before[previous]
+            guard character.isASCII, character.isLetter || character == "'" else { break }
+            start = previous
+        }
+        let letters = before[start...]
+        guard let first = letters.first, first.isLetter else { return nil }
+        if start > before.startIndex {
+            let preceding = before[before.index(before: start)]
+            guard preceding.isWhitespace || "([{\"\u{201C}\u{2018}".contains(preceding) else { return nil }
+        }
+        let capitals = letters.filter { $0.isUppercase }.count
+        let onlyTheFirst = capitals == 0 || (capitals == 1 && first.isUppercase)
+        guard onlyTheFirst || capitals == letters.filter({ $0.isLetter }).count else { return nil }
+        return String(letters)
+    }
+
+    /// The text that the prediction strip predicts a word for, or nil when the strip shows no
+    /// predicted words: the lower-case word before the predicted word, or an empty string, and
+    /// the letters that the person typed of the predicted word so far.
+    ///
+    /// 1. With typed letters right before the cursor (`typedLetters`), the strip predicts the
+    ///    words that start with them. The word before is the word before one space in front of
+    ///    the letters, as the typing engine reads it for a correction.
+    /// 2. Right after a word and one space, the strip predicts the next word, and no letter is
+    ///    typed. Without a word before that space, as at the start of the text, after a mark and
+    ///    after two spaces, the result is nil.
+    /// A letter, a digit or an apostrophe right after the cursor gives nil, because the cursor
+    /// then sits inside a word.
+    static func predictionContext(before: String, after: String) -> (previousWord: String, typed: String)? {
+        if let next = after.first, isLetterOrDigit(next) || next == "'" { return nil }
+        if let typed = typedLetters(before: before, after: after) {
+            return (wordBeforeSpace(at: String(before.dropLast(typed.count))), typed)
+        }
+        let previous = wordBeforeSpace(at: before)
+        return previous.isEmpty ? nil : (previous, "")
+    }
+
+    /// A predicted word in the form that the typed letters `typed` ask for. `word` is a word of
+    /// the lexicon in lower case. Typed letters that start with a capital give the word its
+    /// capital, as "Tomorrow" for "To". Two or more typed letters that are all capitals give the
+    /// word in capitals. The word "i" and its contractions always get their capital.
+    static func predictedWord(_ word: String, typed: String) -> String {
+        let letters = typed.filter { $0.isLetter }
+        if letters.count >= 2, letters.allSatisfy({ $0.isUppercase }) { return word.uppercased() }
+        if typed.first?.isUppercase == true || word == "i" || word.hasPrefix("i'") {
+            return word.prefix(1).uppercased() + word.dropFirst()
+        }
+        return word
+    }
+
     /// Gives corrected lower-case words the capitals of the typed words. A typed word that
     /// starts with a capital gives its capital to the word in the same place, or to the first
     /// word when the correction changed the count of words. The word "i" and its contractions

@@ -231,6 +231,34 @@ int duo_english_readings(
     const duo_lexicon *lexicon, const duo_params *params,
     const char *previous_word, const char *typed, duo_reading *readings, int capacity);
 
+/* The most typed letters that duo_predict_english reads. */
+#define DUO_MAX_TYPED_LETTERS 32
+/* Size of a predicted word's text buffer, in bytes. */
+#define DUO_PREDICTED_WORD_SIZE 48
+
+/* One word that starts with the typed letters. */
+typedef struct {
+    char text[DUO_PREDICTED_WORD_SIZE];
+    /* Log probability of the word after the word before it, by the lexicon's word and word-pair
+       statistics: the value that the engine gives the word at that place. */
+    float log_probability;
+} duo_predicted_word;
+
+/* Writes the English words that start with the letters `typed` and are longer than `typed`
+   into `words`, most probable first. The prediction strip of the keyboard shows these words.
+   The words come from the lexicon and its supplement. A word that both hold appears once, at
+   the higher of its two values. Words of one value keep the order of the letter tree.
+   `typed` holds 0 to DUO_MAX_TYPED_LETTERS lower-case letters and apostrophes. Without a typed
+   letter the list holds the most probable words after `previous_word`, and a word that starts
+   with an apostrophe is left out.
+   `previous_word` is the word before the typed letters, in lower case, or an empty string.
+   A word of DUO_PREDICTED_WORD_SIZE bytes or more is left out.
+   The lexicon must use model 0, the mixed model of English.
+   Returns the count written, or 0 for input outside these rules or a capacity under 1. */
+int duo_predict_english(
+    const duo_lexicon *lexicon, const duo_params *params,
+    const char *previous_word, const char *typed, duo_predicted_word *words, int capacity);
+
 /* Reads typed Pinyin letters and writes candidates into `results`.
    The first result is the most likely reading of all the letters. The results after it are
    words that stand for the first letters only, longest first, and `consumed` says how many

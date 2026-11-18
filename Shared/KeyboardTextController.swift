@@ -39,6 +39,12 @@ protocol SpellChecking: AnyObject {
     /// Starts the work of `reading` for the same text ahead of time, while the person still types
     /// it, so a `reading` right after it is faster. The result of `reading` stays the same.
     func readAhead(previousWord: String, typed: String, textBefore: String)
+    /// The predicted words of the prediction strip: the words that start with the letters
+    /// `typed` and are longer than them, most probable first, up to `limit` words. `typed` holds
+    /// lower-case letters and apostrophes, and `previousWord` is the lower-case word before
+    /// them, or an empty string. Without a typed letter, the result holds the most probable
+    /// words after `previousWord`.
+    func predictedWords(previousWord: String, typed: String, limit: Int) -> [String]
     /// Stops the keyboard from changing this word again.
     func learn(_ word: String)
     /// True for a word the person brought back after a correction.
@@ -56,6 +62,8 @@ extension SpellChecking {
         reading(previousWord: previousWord, typed: typed, textBefore: textBefore)
     }
     func readAhead(previousWord: String, typed: String, textBefore: String) {}
+    /// A checker without a lexicon predicts no words.
+    func predictedWords(previousWord: String, typed: String, limit: Int) -> [String] { [] }
     var preferredCapitals: PreferredCapitals? { nil }
     func toggleWorkArea() -> String? { nil }
 }
@@ -162,6 +170,10 @@ final class EngineSpellChecker: SpellChecking {
         reranker.readAhead(readings: candidates, textBefore: textBefore, typed: typed)
     }
 
+    func predictedWords(previousWord: String, typed: String, limit: Int) -> [String] {
+        engine.predictedWords(previousWord: previousWord, typed: typed, limit: limit)
+    }
+
     func learn(_ word: String) {
         guard keptWords.insert(word.lowercased()).inserted else { return }
         store.set(Array(keptWords), forKey: Self.keptWordsKey)
@@ -184,8 +196,9 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
     private let document: KeyboardDocument
     private let spellChecker: SpellChecking
 
-    /// The last autocorrection, or the last word that a tap on its emoji replaced. One backspace
-    /// right after it brings the typed word back.
+    /// The last autocorrection, the last word that a tap on its emoji replaced, or the typed
+    /// letters that a tap on a predicted word replaced. One backspace right after it brings the
+    /// typed text back.
     private struct Correction {
         let original: String
         let corrected: String
@@ -791,17 +804,18 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
 
     // MARK: The candidate row
 
-    /// Shows the candidate row and the English emoji of the top row of keys. While Pinyin
+    /// Shows the candidate row and the prediction strip of the top row of keys. While Pinyin
     /// letters wait in the buffer, the row holds the candidates, with the emoji of the first
     /// candidate right after it. Otherwise the row shows only while the proofreader has a fix:
     /// the fix, then the emoji of the English word before the cursor, because the row covers
-    /// the top row of keys. The top row of keys shows the emoji of the English word before the
-    /// cursor. A field without autocorrection gets no emoji.
+    /// the top row of keys. The prediction strip shows the emoji of the English word before the
+    /// cursor, and then the predicted words for the letters the person is typing. A field
+    /// without autocorrection gets no emoji and no predicted words.
     private func showRow() {
         var items: [RowItem]
         let composition: String?
         if !pinyinBuffer.isEmpty {
-            keyboardView.topRowEmoji = []
+            keyboardView.showPredictionStrip(emoji: [], words: [])
             items = pinyinCandidates.indices.map { RowItem.pinyin($0) }
             if let first = pinyinCandidates.first, document.allowsAutocorrection {
                 items.insert(contentsOf: emojiSuggestions.chinese(for: first.word).map { RowItem.emoji($0) }, at: 1)
@@ -809,7 +823,7 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
             composition = pinyinEngine.display(for: pinyinBuffer)
         } else {
             let emoji = englishEmoji()
-            keyboardView.topRowEmoji = emoji
+            keyboardView.showPredictionStrip(emoji: emoji, words: predictedWords())
             if proofreadSuggestion == nil {
                 items = []
                 composition = nil
@@ -840,6 +854,63 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
             pending == nil, let word = KeyboardTextLogic.wordForEmoji(before: document.textBeforeCursor)
         else { return [] }
         return emojiSuggestions.english(for: word)
+    }
+
+    /// The most predicted words that the prediction strip holds.
+    static let predictedWordCount = 20
+
+    /// The predicted words of the prediction strip, most probable first: the words that start
+    /// with the letters the person is typing right before the cursor, or the words after the
+    /// word before one space (`KeyboardTextLogic.predictionContext`). Each word has the form that
+    /// the typed capitals ask for, and a word of the work area gets its form by the rule of
+    /// `PreferredCapitals.form`. Chinese mode, a field without autocorrection, a selection,
+    /// select all and a cursor inside a word give none.
+    private func predictedWords() -> [String] {
+        guard !chineseMode, document.allowsAutocorrection, document.selectedText == nil, allText == nil,
+            pending == nil
+        else { return [] }
+        let before = document.textBeforeCursor
+        guard let context = KeyboardTextLogic.predictionContext(before: before, after: document.textAfterCursor)
+        else { return [] }
+        let typed = context.typed
+        let words = spellChecker.predictedWords(
+            previousWord: context.previousWord, typed: typed.lowercased(), limit: Self.predictedWordCount)
+        let automaticFirst = KeyboardTextLogic.shouldAutoCapitalize(
+            before: String(before.dropLast(typed.count)), type: document.autocapitalizationType)
+        var shown: [String] = []
+        for word in words {
+            let cased = KeyboardTextLogic.predictedWord(word, typed: typed)
+            let form = spellChecker.preferredCapitals?.form(of: cased, typed: typed, automaticFirst: automaticFirst)
+                ?? cased
+            if !shown.contains(form) { shown.append(form) }
+        }
+        return shown
+    }
+
+    /// Types a predicted word of the prediction strip in place of the letters the person typed
+    /// for it, and a space after the word. A word that the strip showed right after a space goes
+    /// in as it is. One backspace right after the tap brings the text before the tap back, as
+    /// after a correction. The word is the person's own choice, so no correction reads it, alone
+    /// or together with the next word. The space counts as a typed space, so a second space
+    /// right after it gives a period.
+    private func insertPredictedWord(_ word: String) {
+        guard document.selectedText == nil, allText == nil else { return }
+        let before = document.textBeforeCursor
+        // The strip showed the word for the letters before the cursor. Other letters there mean
+        // that the text changed under the finger, and the tap then types nothing. A form of the
+        // work area can hold a sign, as "Next.js", so the letters alone are compared.
+        guard let typed = KeyboardTextLogic.predictionContext(before: before, after: document.textAfterCursor)?.typed,
+            word.lowercased().filter({ $0.isLetter || $0 == "'" }).hasPrefix(typed.lowercased())
+        else { return }
+        clearProofreadSuggestion()
+        clearSpaceRemoval()
+        recentWord = nil
+        deleteBackward(count: typed.count)
+        document.insertText(word + " ")
+        lastCorrection = Correction(original: typed, corrected: word, terminator: " ", learnsOriginal: false)
+        previousInsertWasSpace = true
+        lastSpaceTime = ProcessInfo.processInfo.systemUptime
+        updateAutoShift()
     }
 
     /// Types an emoji of the candidate row. In Chinese the emoji takes the place of the first
@@ -1288,13 +1359,15 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
         let typed = correction.corrected + correction.terminator
         guard document.textBeforeCursor.hasSuffix(typed) else { return false }
         deleteBackward(count: typed.count)
-        document.insertText(correction.original)
+        if !correction.original.isEmpty { document.insertText(correction.original) }
         if correction.learnsOriginal {
             for word in correction.original.split(separator: " ") {
                 spellChecker.learn(String(word))
             }
         }
-        showNotice("Kept \(correction.original)")
+        // A predicted word that went in right after a space replaced no text, so the way back
+        // has no text to name.
+        if !correction.original.isEmpty { showNotice("Kept \(correction.original)") }
         return true
     }
 
@@ -1333,10 +1406,18 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
         if !KeyboardTextLogic.wordTerminators.contains(text) { readAheadOfTheSpace() }
     }
 
+    func keyboardView(_ keyboardView: KeyboardView, didSelectPredictedWord word: String) {
+        defer { proofreadAfterAPause() }
+        // The strip shows predicted words for typed English letters only, so Chinese mode or a
+        // running replacement mean the strip changed under the finger.
+        guard pending == nil, !chineseMode, pinyinBuffer.isEmpty else { return }
+        insertPredictedWord(word)
+    }
+
     func keyboardView(_ keyboardView: KeyboardView, didSelectTopRowEmoji emoji: String) {
         defer { proofreadAfterAPause() }
-        // The top row shows English emoji only, so Pinyin letters or a running replacement
-        // mean the row changed under the finger.
+        // The strip shows English emoji only, so Pinyin letters or a running replacement
+        // mean the strip changed under the finger.
         guard pending == nil, pinyinBuffer.isEmpty else { return }
         clearSpaceRemoval()
         insertEmoji(emoji)

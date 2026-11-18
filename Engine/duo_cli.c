@@ -4,10 +4,16 @@
  Usage:
      duo_cli english LEXICON [supplement=FILE] [name=value ...] < input.tsv > output.tsv
      duo_cli pinyin  LEXICON [name=value ...] < input.tsv > output.tsv
+     duo_cli predict LEXICON [supplement=FILE] [words=COUNT] [name=value ...] < input.tsv > output.tsv
 
  English input lines:  id <TAB> previous word (may be empty) <TAB> typed text
  Pinyin input lines:   id <TAB> typed letters
  Output lines:         id <TAB> the engine's text
+
+ Predict input lines:  id <TAB> previous word (may be empty) <TAB> typed letters (may be empty)
+ Predict output lines: id <TAB> the predicted words of duo_predict_english, most probable first,
+                       with one space between them. words=COUNT sets how many, from 1 to 64,
+                       and 20 without it.
 
  A name=value argument sets one field of duo_params, such as missing_space=4.5.
  The argument supplement=FILE lays the lexicon file FILE over the English lexicon as its
@@ -54,11 +60,13 @@ static int split_tabs(char *line, char **fields, int capacity) {
 }
 
 int main(int argc, char **argv) {
-    if (argc < 3 || (strcmp(argv[1], "english") != 0 && strcmp(argv[1], "pinyin") != 0)) {
-        fprintf(stderr, "usage: duo_cli english|pinyin LEXICON [name=value ...]\n");
+    int predict = argc >= 2 && strcmp(argv[1], "predict") == 0;
+    if (argc < 3 || (!predict && strcmp(argv[1], "english") != 0 && strcmp(argv[1], "pinyin") != 0)) {
+        fprintf(stderr, "usage: duo_cli english|pinyin|predict LEXICON [name=value ...]\n");
         return 2;
     }
-    int english = strcmp(argv[1], "english") == 0;
+    int english = predict || strcmp(argv[1], "english") == 0;
+    int word_count = 20;
     size_t size;
     void *data = read_file(argv[2], &size);
     duo_lexicon lexicon;
@@ -85,6 +93,14 @@ int main(int argc, char **argv) {
             }
             continue;
         }
+        if (predict && strcmp(argv[index], "words") == 0) {
+            word_count = atoi(equals + 1);
+            if (word_count < 1 || word_count > 64) {
+                fprintf(stderr, "duo_cli: words takes a count from 1 to 64, got %s\n", equals + 1);
+                return 2;
+            }
+            continue;
+        }
         if (!duo_params_set(&params, argv[index], (float)atof(equals + 1))) {
             fprintf(stderr, "duo_cli: unknown parameter %s\n", argv[index]);
             return 2;
@@ -100,7 +116,19 @@ int main(int argc, char **argv) {
         line[strcspn(line, "\r\n")] = 0;
         char *fields[3];
         int count = split_tabs(line, fields, 3);
-        if (english) {
+        if (predict) {
+            if (count != 3) {
+                fprintf(stderr, "duo_cli: expected 3 fields: %s\n", line);
+                return 1;
+            }
+            duo_predicted_word words[64];
+            int found = duo_predict_english(&lexicon, &params, fields[1], fields[2], words, word_count);
+            printf("%s\t", fields[0]);
+            for (int word = 0; word < found; word++) {
+                printf(word == 0 ? "%s" : " %s", words[word].text);
+            }
+            printf("\n");
+        } else if (english) {
             if (count != 3) {
                 fprintf(stderr, "duo_cli: expected 3 fields: %s\n", line);
                 return 1;

@@ -19,6 +19,10 @@ The script exits with an error and lists every broken rule. The rules:
    character of a key in that layer, because a tap on that key already types it. A slide
    character can repeat the upper character of a two-character key: the slide characters of the
    compact letters repeat those of the number row on purpose.
+9. The first row of every layer holds exactly one prediction strip, and no other row holds one.
+   The strip is a place for the emoji and the predicted words, and no key. A wide first row
+   names the strip as its split point, because the strip crosses the empty middle of the split
+   layout.
 """
 import json
 import string
@@ -29,6 +33,8 @@ ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_LAYOUT = ROOT / "Shared" / "keyboard-layout.json"
 LAYERS = ("letters", "symbols", "more")
 LAYER_KEYS = {"letters", "symbols", "more"}
+# The function name of the prediction strip's place in the first row.
+STRIP = "predictionStrip"
 # The layer keys each layer must hold, with the count of each.
 EXPECTED_LAYER_KEYS = {
     "letters": {"symbols": 1},
@@ -91,9 +97,17 @@ def check(layout):
                     width += key_width
                     if function:
                         functions.append(function)
+                    if function == STRIP and row_index != 0:
+                        problems.append(f"{where} row {row_index}: the prediction strip sits outside the first row")
                     if main is not None:
                         main_characters.append(main)
                     reachable.update(typed)
+                if row_index == 0:
+                    strips = [index for index, key in enumerate(row["keys"]) if key_parts(key)[0] == STRIP]
+                    if len(strips) != 1:
+                        problems.append(f"{where} row 0: {len(strips)} prediction strips, expected 1")
+                    elif style_name == "wide" and row.get("split") != strips[0]:
+                        problems.append(f"{where} row 0: the split value {row.get('split')!r} is not the place of the prediction strip")
                 if style_name == "wide":
                     split = row.get("split")
                     if not isinstance(split, int) or not 0 < split < len(row["keys"]):

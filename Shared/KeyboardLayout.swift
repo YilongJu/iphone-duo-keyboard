@@ -86,6 +86,9 @@ enum KeyKind: Equatable {
     case paste
     /// The empty middle of the split layout. The view does not draw this key.
     case gap
+    /// The place of the prediction strip in the top row: the emoji of the word before the cursor
+    /// and the predicted words (`PredictionStrip`). The view draws the strip there and no key.
+    case predictionStrip
     /// Switches between English and Simplified Chinese (Pinyin).
     case language
     case switchLayer(KeyboardLayer)
@@ -147,6 +150,7 @@ enum KeyKind: Equatable {
         case "cut": return .cut
         case "copy": return .copy
         case "paste": return .paste
+        case "predictionStrip": return .predictionStrip
         case "language": return .language
         case "symbols": return .switchLayer(.symbols)
         case "letters": return .switchLayer(.letters)
@@ -251,7 +255,8 @@ struct KeyboardSpec: Decodable {
         /// Row height as a fraction of a letter row.
         let height: CGFloat
         /// Count of keys in the left half of the split layout. A space bar at this place is
-        /// cut in two, so each half gets a space bar. Only the wide rows carry this value.
+        /// cut in two, so each half gets a space bar. A prediction strip at this place takes
+        /// the width of the empty middle too. Only the wide rows carry this value.
         let split: Int?
         let keys: [Key]
     }
@@ -334,7 +339,8 @@ struct KeyboardLayout {
         return max(spec.metrics.splitGapUnits, width / spec.metrics.padSplitMaxKeyWidth - spec.wide.units)
     }
 
-    /// Puts the empty middle into a row at the row's split point.
+    /// Puts the empty middle into a row at the row's split point. A prediction strip at that
+    /// point gets the width of the middle and stays one piece.
     private static func splitRow(_ row: KeyboardSpec.Row, gap: CGFloat) -> [Key] {
         guard let split = row.split, row.keys.indices.contains(split) else {
             fatalError("A wide row in keyboard-layout.json needs a valid split value")
@@ -347,6 +353,9 @@ struct KeyboardLayout {
             let before = keys.reduce(0) { $0 + $1.weight }
             let left = min(max(total / 2 - before, 1), middle.weight - 1)
             keys += [Key(.space, left), Key(.gap, gap), Key(.space, middle.weight - left)]
+        } else if middle.kind == .predictionStrip {
+            // The strip crosses the empty middle, so the row gets no gap of its own.
+            keys += [Key(.predictionStrip, middle.weight + gap)]
         } else {
             keys += [Key(.gap, gap), middle]
         }

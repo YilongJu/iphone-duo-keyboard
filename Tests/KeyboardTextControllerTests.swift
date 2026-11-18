@@ -1555,8 +1555,10 @@ final class KeyboardLayoutTests: XCTestCase {
         for layer in [KeyboardLayer.letters, .symbols, .more] {
             let layout = KeyboardLayout.make(style: .split, layer: layer, showsGlobe: true)
             XCTAssertEqual(layout.units, units, accuracy: 0.0001)
-            for row in layout.rows {
-                XCTAssertEqual(row.filter { $0.kind == .gap }.count, 1)
+            for (index, row) in layout.rows.enumerated() {
+                // The prediction strip of the first row crosses the middle, so that row has no
+                // empty middle of its own.
+                XCTAssertEqual(row.filter { $0.kind == .gap }.count, index == 0 ? 0 : 1)
                 XCTAssertEqual(row.reduce(0) { $0 + $1.weight }, units, accuracy: 0.0001)
             }
         }

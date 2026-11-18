@@ -135,6 +135,26 @@ final class EnglishTypingEngine {
         precondition(readings.filter { $0.asTyped }.count == 1, "readings of \(typed) need the text as typed")
         return readings
     }
+
+    /// The words of the lexicon and its supplement that start with the letters `typed` and are
+    /// longer than them, most probable first after the word `previousWord`, up to `limit` words
+    /// (`duo_predict_english`). The prediction strip shows these words.
+    ///
+    /// `typed` holds lower-case letters and apostrophes, and `previousWord` is the word before
+    /// them in lower case, or an empty string. Other typed text, and more letters than the
+    /// engine reads, give no words.
+    func predictedWords(previousWord: String, typed: String, limit: Int) -> [String] {
+        guard limit > 0 else { return [] }
+        var buffer = [duo_predicted_word](repeating: duo_predicted_word(), count: limit)
+        let count = buffer.withUnsafeMutableBufferPointer { pointer in
+            duo_predict_english(&tables, &params, previousWord, typed, pointer.baseAddress, Int32(limit))
+        }
+        return (0..<Int(count)).map { index in
+            withUnsafePointer(to: &buffer[index].text) { pointer in
+                pointer.withMemoryRebound(to: CChar.self, capacity: Int(DUO_PREDICTED_WORD_SIZE)) { String(cString: $0) }
+            }
+        }
+    }
 }
 
 /// One reading of typed Pinyin letters by the C typing engine.

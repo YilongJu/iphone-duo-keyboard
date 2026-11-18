@@ -5,19 +5,17 @@ The keyboard offers one or two emoji for a common word, as the iOS keyboard does
 
 ## Where the emoji show
 
-The candidate row is the row of words that lies over the top row of keys (Select All, Cut,
-Copy, Paste, Home, End) while it shows.
+The candidate row is the row of words that lies over the top row of keys (Select All, the
+prediction strip, Cut, Copy, Paste) while it shows. The prediction strip is the part of the top
+row between Select All and Cut, and [prediction-strip.md](prediction-strip.md) describes it.
 
-- **English:** when the word right before the cursor is in the table, the top row of keys
-  shows its emoji between the Copy and Paste keys. The word is the word the person is typing,
-  or the word before one space. The emoji take no row of their own.
-  - The drawn backgrounds of Copy and Paste get narrower on the sides that face each other,
-    by the same distance, to free a gap for the emoji. The empty middle of the split layout
-    is wide enough, so there no background changes. The icons and labels of the row do not
-    move, and the backgrounds grow back when the emoji leave.
-  - A touch inside an emoji's box types that emoji. The box takes the full height of the row.
-    Every other touch on the row reaches its key, also the part of the Copy or Paste cell
-    that its background freed, and the row reacts at once after the emoji leave.
+- **English:** when the word right before the cursor is in the table, its emoji take the first
+  places of the prediction strip. The word is the word the person is typing, or the word
+  before one space. The predicted words follow the emoji. The emoji take no row of their own.
+  - The keys of the top row keep their place and their size when emoji come and go.
+  - A tap on an emoji types that emoji. The emoji takes touches over the full height of the
+    row and up to the keyboard's upper edge. Every other touch on the row reaches its key, and
+    the row reacts at once after the emoji leave.
   - A tap puts the emoji in place of the word, as the iOS keyboard does: "good " and a tap on
     👍 give "👍 ". The space after the word stays. One delete right after the tap brings the
     word back, as one delete after an autocorrection does, and the word stays open to later

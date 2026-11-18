@@ -3,7 +3,7 @@ import XCTest
 
 @testable import DuoKeyboard
 
-/// The emoji of a word: in the top row of keys, between the Copy and Paste keys, for the
+/// The emoji of a word: in the top row of keys, at the start of the prediction strip, for the
 /// English word right before the cursor, and on the candidate row right after the first Pinyin
 /// candidate. A tap on an English emoji puts the emoji in place of the word, as the iOS
 /// keyboard does. The tests read the bundled table
@@ -71,17 +71,16 @@ final class EmojiSuggestionTests: XCTestCase {
         emojiLabels().compactMap(\.text)
     }
 
-    /// A finger tap on the middle of the emoji at `index` in the top row of keys.
+    /// A finger tap on the emoji at `index` in the top row of keys. The emoji is an entry of the
+    /// prediction strip, and the finger comes down and lifts inside that entry.
     private func tapEmoji(_ index: Int, file: StaticString = #filePath, line: UInt = #line) {
         let labels = emojiLabels()
-        guard labels.indices.contains(index) else {
+        guard labels.indices.contains(index), let entry = labels[index].superview as? PredictionStripEntry else {
             XCTFail("The top row shows \(labels.count) emoji", file: file, line: line)
             return
         }
-        let frame = labels[index].convert(labels[index].bounds, to: keyboardView)
-        let touch = FakeTouch(at: CGPoint(x: frame.midX, y: frame.midY))
-        keyboardView.touchesBegan([touch], with: nil)
-        keyboardView.touchesEnded([touch], with: nil)
+        entry.sendActions(for: .touchDown)
+        entry.sendActions(for: .touchUpInside)
     }
 
     private func pinyinWords(_ letters: String) -> [String] {

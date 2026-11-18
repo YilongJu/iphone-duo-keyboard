@@ -40,6 +40,8 @@
     justify-content: center; border-radius: 5px; background: var(--key); color: var(--key-ink);
     box-shadow: 0 1px 0 rgba(0, 0, 0, 0.3); overflow: hidden; white-space: nowrap; }
   .key.fn { background: var(--fn); }
+  .strip { position: absolute; display: flex; align-items: center; padding: 0 10px; box-sizing: border-box;
+    border: 1px dashed var(--line); border-radius: 6px; color: var(--muted); font-size: 13px; white-space: nowrap; overflow: hidden; }
   .key.pressed { background: var(--fn); }
   .key.fn.pressed, .key.fn.on { background: var(--key); }
   .key .top { font-size: 14px; line-height: 1; margin-bottom: 3px; }
@@ -83,6 +85,7 @@ it opens.</p>
   <tr><td>Cut, copy, paste</td><td>A notice on the space bar</td><td>The system clipboard, with Full Access on</td></tr>
   <tr><td>Space bar hold</td><td>Not simulated</td><td>Moves the cursor</td></tr>
   <tr><td>Chinese key</td><td>A notice on the space bar</td><td>Switches to Pinyin, with candidates in the top row</td></tr>
+  <tr><td>Prediction strip</td><td>An empty place with a dashed outline</td><td>The emoji of a word, and the predicted words</td></tr>
 </table>
 
 <script>
@@ -118,6 +121,8 @@ function normalize(key, layer) {
   if (key.c !== undefined && key.a !== undefined) return { type: "slide", base: key.c, alt: key.a, w: key.w ?? 1, layer };
   if (key.c !== undefined && key.s !== undefined) return { type: "dual", base: key.c, alt: key.s, w: key.w ?? 1, layer };
   if (key.c !== undefined) return { type: "char", base: key.c, w: key.w ?? 1, layer };
+  // The prediction strip is a place in the top row and no key.
+  if (key.f === "predictionStrip") return { type: "strip", w: key.w ?? 1, layer };
   if (FN_LABEL[key.f] === undefined) throw new Error("Unknown key: " + key.f);
   return { type: "fn", name: key.f, w: key.w ?? 1, layer };
 }
@@ -153,6 +158,9 @@ function splitRow(row, keys) {
     const before = left.reduce((sum, k) => sum + k.w, 0);
     const leftWidth = Math.min(Math.max(total / 2 - before, 1), middle.w - 1);
     left.push({ ...middle, w: leftWidth }, gap, { ...middle, w: middle.w - leftWidth });
+  } else if (middle.type === "strip") {
+    // The prediction strip crosses the empty middle, so the row gets no gap.
+    left.push({ ...middle, w: middle.w + gap.w });
   } else {
     left.push(gap, middle);
   }
@@ -214,6 +222,18 @@ function render() {
       const h = row.height * rowHeight;
       for (const key of row.keys) {
         if (key.type === "gap") { x += key.w * unit; continue; }
+        if (key.type === "strip") {
+          const strip = document.createElement("div");
+          strip.className = "strip";
+          strip.style.left = (x + M.gapX) + "px";
+          strip.style.top = (y + gapY) + "px";
+          strip.style.width = (key.w * unit - 2 * M.gapX) + "px";
+          strip.style.height = (h - 2 * gapY) + "px";
+          strip.textContent = "emoji and predicted words";
+          board.appendChild(strip);
+          x += key.w * unit;
+          continue;
+        }
         const el = document.createElement("div");
         el.className = "key" + (key.type === "fn" && key.name !== "space" ? " fn" : "");
         el.style.left = (x + M.gapX) + "px";
