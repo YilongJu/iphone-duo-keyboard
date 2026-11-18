@@ -6,7 +6,29 @@ import os
 /// One thread at a time uses an object: the thread that loads the model creates it, and the
 /// model's worker thread (`LanguageModelWorker`) uses it after that. The object is marked
 /// Sendable for that handover.
+/// A count that any thread can change and read, such as the loaded models of the process.
+final class LiveCount: @unchecked Sendable {
+    private let lock = NSLock()
+    private var count = 0
+
+    func change(by amount: Int) {
+        lock.lock()
+        count += amount
+        lock.unlock()
+    }
+
+    var now: Int {
+        lock.lock()
+        defer { lock.unlock() }
+        return count
+    }
+}
+
 final class LanguageModelScorer: @unchecked Sendable {
+    /// The loaded models in the process now. Each one holds its weights and its cache in memory,
+    /// so more than one can pass the memory limit of the keyboard.
+    static let live = LiveCount()
+
     private let handle: OpaquePointer
 
     /// Loads the model on `device` with the reuse mode `reuse` of the cache. With
@@ -24,10 +46,12 @@ final class LanguageModelScorer: @unchecked Sendable {
             throw LanguageModelError(reason: String(cString: error))
         }
         handle = opened
+        Self.live.change(by: 1)
     }
 
     deinit {
         duo_lm_scorer_close(handle)
+        Self.live.change(by: -1)
     }
 
     /// Scores the candidates after the context, as `duo_lm_scorer_score` describes.
@@ -272,6 +296,10 @@ final class KeyboardLanguageModel: CandidateScoring, LanguageModelLoading, NextT
     /// The reuse of the model's cache between requests, picked by the rule of
     /// docs/kv-reuse-design.md: the anchored window with two slots (docs/kv-reuse-results.md).
     nonisolated static let reuse = duo_lm_reuse(mode: DUO_LM_REUSE_ANCHOR, slots: 2)
+
+    /// The keyboards (`KeyboardViewController`) alive in the process now. iOS makes a new one
+    /// each time the keyboard appears, in the same process, and may keep the earlier ones.
+    nonisolated static let keyboards = LiveCount()
 
     /// The name of the reuse mode in the report of the language model test.
     nonisolated static var reuseName: String {
@@ -599,6 +627,11 @@ final class KeyboardLanguageModel: CandidateScoring, LanguageModelLoading, NextT
                 memory += String(format: ", %.1f MB after the first correction", first.footprintMB)
             }
             lines.append(memory)
+        }
+        if let memory = ProcessMemory.now() {
+            lines.append(
+                "reranker    memory now: \(memory.description), \(LanguageModelScorer.live.now) models loaded "
+                    + "in the process, \(Self.keyboards.now) keyboards alive")
         }
         lines.append(
             "reranker    \(statistics.readCount) corrections read by the model, time added to each space press: "

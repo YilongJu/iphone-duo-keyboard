@@ -240,7 +240,7 @@ final class EmojiSuggestionTests: XCTestCase {
     }
 
     func testAProofreadFixComesBeforeTheEmoji() async {
-        // The fix has a row of its own, which covers the top row of keys, so that row also
+        // The fix has a row of its own, which covers the prediction strip, so that row also
         // offers the emoji after the fix.
         makeController()
         let proofreader = FakeProofreader()

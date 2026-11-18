@@ -5,8 +5,8 @@ The keyboard offers one or two emoji for a common word, as the iOS keyboard does
 
 ## Where the emoji show
 
-The candidate row is the row of words that lies over the top row of keys (Select All, the
-prediction strip, Cut, Copy, Paste) while it shows. The prediction strip is the part of the top
+The candidate row is the row of words that lies over the prediction strip while it shows.
+Select All, Cut, Copy and Paste stay in view beside it. The prediction strip is the part of the top
 row between Select All and Cut, and [prediction-strip.md](prediction-strip.md) describes it.
 
 - **English:** when the word right before the cursor is in the table, its emoji take the first
@@ -20,7 +20,7 @@ row between Select All and Cut, and [prediction-strip.md](prediction-strip.md) d
     👍 give "👍 ". The space after the word stays. One delete right after the tap brings the
     word back, as one delete after an autocorrection does, and the word stays open to later
     corrections. The tap runs no autocorrection, and typing keeps its autocorrection.
-  - While the proofreader's fix shows, the candidate row covers the top row of keys, so the
+  - While the proofreader's fix shows, the candidate row covers the prediction strip, so the
     row shows the emoji after the fix.
 - **Chinese:** when the first Pinyin candidate is a word in the table, its emoji come right
   after that candidate. A tap types the emoji in place of the word, and the emoji takes the

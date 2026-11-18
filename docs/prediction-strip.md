@@ -61,8 +61,10 @@ flowchart TD
   "Tomorrow", and "TO" gives "TOMORROW". The word "i" and its contractions always get their
   capital. A word of the work area gets its form by the rule of the preferred capitals, as
   "PyTorch" for "Py" ([domain-pack-design.md](domain-pack-design.md)).
-- **Other rows.** The Chinese candidates and the proofreader's fix lie over the top row while
-  they show, so they cover the strip.
+- **Candidate row.** The Chinese candidates and the proofreader's fix of a sentence show in
+  the candidate row. The candidate row lies in the place of the strip, between Select All and
+  Cut, and covers the strip while it shows. Select All, Cut, Copy and Paste stay in view and
+  react.
 
 ## Order of the predicted words
 
@@ -116,6 +118,10 @@ space keeps the typed word and corrects it as before.
 
 ## Touches
 
+A finger on an entry of the strip, or on a candidate of the candidate row, starts a ripple at
+the finger's place. The ripple is the ripple of a key press, and the drawn row clips it. With
+Reduce Motion on, no ripple shows.
+
 The strip takes the full cell of its place in the row and the keyboard's edge above it. A
 touch in that cell never reaches a key, so a finger that misses a word cannot press Select All
 or Cut. A finger that comes down on the strip first types the letter of a finger that still
@@ -132,7 +138,9 @@ nothing.
   the cursor there.
 - The strip holds only words that start with the typed letters. A typed word with a wrong
   letter gets its correction at the space.
-- The strip predicts English words only. Chinese mode keeps its own candidate row.
+- The strip predicts English words only. Chinese mode shows its candidates in the candidate row.
+- The candidate row has the width of the strip: about 60% of the top row on the closed phone.
+  A long fix of the proofreader scrolls sideways there.
 
 ## Checks
 

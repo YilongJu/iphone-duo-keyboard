@@ -1,5 +1,35 @@
 import UIKit
 
+/// The ripple of a tap (key press feedback design C): a circle that grows from the touch point
+/// and fades. The keys, the prediction strip and the candidate row draw the same ripple.
+enum TapRipple {
+    static let seconds = 0.46
+
+    /// Starts a ripple of `radius` points at `point` in `layer`. The layer's owner clips it.
+    static func show(in layer: CALayer, at point: CGPoint, radius: CGFloat, traits: UITraitCollection) {
+        let ripple = CAShapeLayer()
+        ripple.path = UIBezierPath(ovalIn: CGRect(x: -radius, y: -radius, width: 2 * radius, height: 2 * radius)).cgPath
+        ripple.fillColor = KeyColors.ripple.resolvedColor(with: traits).cgColor
+        ripple.position = point
+        ripple.opacity = 0
+        layer.addSublayer(ripple)
+        CATransaction.begin()
+        CATransaction.setCompletionBlock { ripple.removeFromSuperlayer() }
+        let grow = CABasicAnimation(keyPath: "transform.scale")
+        grow.fromValue = 0.1
+        grow.toValue = 1
+        let fade = CABasicAnimation(keyPath: "opacity")
+        fade.fromValue = 0.9
+        fade.toValue = 0
+        let group = CAAnimationGroup()
+        group.animations = [grow, fade]
+        group.duration = seconds
+        group.timingFunction = CAMediaTimingFunction(name: .easeOut)
+        ripple.add(group, forKey: "ripple")
+        CATransaction.commit()
+    }
+}
+
 /// One entry of the prediction strip: an emoji or a predicted word. The entry is a control, so a
 /// lift of the finger inside it selects it, and a drag hands the touch to the strip's scroll view.
 final class PredictionStripEntry: UIControl {
@@ -104,7 +134,17 @@ final class PredictionStrip: UIView {
         didSet { if oldValue != topInset { setNeedsLayout() } }
     }
 
+    /// The gap that a drawn key has above and below it, in points. The ripple of a tap stays
+    /// inside the drawn height of the row.
+    var rowInset: CGFloat = 0 {
+        didSet { if oldValue != rowInset { setNeedsLayout() } }
+    }
+
     private let scrollView = CandidateScrollView()
+    /// Clips the ripples of the taps to the drawn row of the strip.
+    private let rippleClip = UIView()
+    /// Count of ripples in the strip now. The unit tests read this value.
+    var rippleCount: Int { rippleClip.layer.sublayers?.count ?? 0 }
     /// The controls of `items`, in the same order.
     private(set) var entries: [PredictionStripEntry] = []
     /// The thin lines between two neighbor entries.
@@ -119,6 +159,9 @@ final class PredictionStrip: UIView {
         scrollView.canCancelContentTouches = true
         scrollView.alwaysBounceHorizontal = true
         addSubview(scrollView)
+        rippleClip.isUserInteractionEnabled = false
+        rippleClip.clipsToBounds = true
+        addSubview(rippleClip)
     }
 
     @available(*, unavailable)
@@ -141,7 +184,7 @@ final class PredictionStrip: UIView {
         }
         entries = newItems.map { item in
             let entry = PredictionStripEntry(item: item)
-            entry.addTarget(self, action: #selector(entryPressed(_:)), for: .touchDown)
+            entry.addTarget(self, action: #selector(entryPressed(_:event:)), for: .touchDown)
             entry.addTarget(self, action: #selector(entryTapped(_:)), for: .touchUpInside)
             scrollView.addSubview(entry)
             return entry
@@ -159,8 +202,21 @@ final class PredictionStrip: UIView {
         layoutEntries()
     }
 
-    @objc private func entryPressed(_ sender: PredictionStripEntry) {
+    @objc private func entryPressed(_ sender: PredictionStripEntry, event: UIEvent?) {
+        showRipple(for: sender, event: event)
         onPress?()
+    }
+
+    /// Starts a ripple at the finger's place on `entry`. The circle reaches every corner of the
+    /// entry, and the drawn row of the strip clips it. With Reduce Motion on, the entry only fades.
+    private func showRipple(for entry: PredictionStripEntry, event: UIEvent?) {
+        guard !UIAccessibility.isReduceMotionEnabled else { return }
+        // An action that the code sends has no touch. Its ripple starts in the middle of the text.
+        let touch = event?.touches(for: entry)?.first?.location(in: rippleClip)
+        let row = rippleClip.convert(entry.bounds, from: entry)
+        let point = touch ?? CGPoint(x: row.midX, y: rippleClip.bounds.midY)
+        TapRipple.show(
+            in: rippleClip.layer, at: point, radius: hypot(row.width, rippleClip.bounds.height), traits: traitCollection)
     }
 
     @objc private func entryTapped(_ sender: PredictionStripEntry) {
@@ -178,6 +234,10 @@ final class PredictionStrip: UIView {
 
     private func layoutEntries() {
         scrollView.frame = bounds.insetBy(dx: min(sideInset, bounds.width / 2), dy: 0)
+        let drawnHeight = max(bounds.height - topInset - 2 * rowInset, 0)
+        rippleClip.frame = CGRect(
+            x: scrollView.frame.minX, y: topInset + rowInset, width: scrollView.frame.width, height: drawnHeight)
+        rippleClip.layer.cornerRadius = min(12, min(rippleClip.bounds.width, drawnHeight) * 0.22)
         let height = scrollView.bounds.height
         var x: CGFloat = 0
         for (index, entry) in entries.enumerated() {

@@ -473,6 +473,85 @@ final class PredictionStripTests: XCTestCase {
         XCTAssertEqual(document.text, "Next.js ")
     }
 
+    // MARK: The candidate row in the strip's place
+
+    func testTheCandidateRowOfChineseLiesInTheStripsPlaceAtEveryWidth() throws {
+        for width in widths() {
+            makeKeyboard(width: width)
+            controller.keyboardView(keyboardView, edit: .toggleLanguage)
+            type("hao")
+            let row = keyboardView.candidateBar
+            XCTAssertFalse(row.isHidden, "\(width)")
+            // The row stays between Select All and Cut, and those keys stay in view.
+            XCTAssertGreaterThanOrEqual(row.frame.minX, try keyView(.selectAll).hitFrame.maxX, "\(width)")
+            XCTAssertLessThanOrEqual(row.frame.maxX, try keyView(.cut).hitFrame.minX, "\(width)")
+            XCTAssertTrue(keyboardView.predictionStrip.frame.contains(row.frame), "\(width)")
+            for kind in [KeyKind.selectAll, .cut, .copy, .paste] {
+                XCTAssertFalse(try keyView(kind).isHidden, "\(kind) \(width)")
+            }
+        }
+    }
+
+    func testTheKeysOfTheTopRowReactWhileTheCandidateRowShows() throws {
+        for width in widths() {
+            makeKeyboard(width: width)
+            controller.keyboardView(keyboardView, edit: .toggleLanguage)
+            type("hao")
+            XCTAssertFalse(keyboardView.candidateBar.isHidden, "\(width)")
+            UIPasteboard.general.string = "x"
+            let paste = try keyView(.paste).hitFrame
+            tap(CGPoint(x: paste.midX, y: paste.midY))
+            XCTAssertTrue(document.text.hasSuffix("x"), "\(width): \(document.text)")
+        }
+    }
+
+    func testTheProofreadersFixLiesInTheStripsPlace() async throws {
+        makeKeyboard()
+        let proofreader = FakeProofreader()
+        proofreader.answers = ["I came form the office": "I came from the office"]
+        controller.proofreader = proofreader
+        controller.proofreadPauseSeconds = 0.05
+        type("I came form the office ")
+        await controller.pauseTask?.value
+        await controller.proofreadTask?.value
+        keyboardView.layoutIfNeeded()
+        let row = keyboardView.candidateBar
+        XCTAssertFalse(row.isHidden)
+        XCTAssertGreaterThanOrEqual(row.frame.minX, try keyView(.selectAll).hitFrame.maxX)
+        XCTAssertLessThanOrEqual(row.frame.maxX, try keyView(.cut).hitFrame.minX)
+        for kind in [KeyKind.selectAll, .cut, .copy, .paste] {
+            XCTAssertFalse(try keyView(kind).isHidden, "\(kind)")
+        }
+    }
+
+    // MARK: The ripple of a tap
+
+    func testAFingerOnAnEntryStartsARippleInTheStrip() {
+        makeKeyboard(before: "See you ")
+        spellChecker.words["you|to"] = ["tomorrow", "today", "tonight"]
+        type("to")
+        let strip = keyboardView.predictionStrip
+        XCTAssertEqual(strip.rippleCount, 0)
+        strip.entries[1].sendActions(for: .touchDown)
+        XCTAssertEqual(strip.rippleCount, UIAccessibility.isReduceMotionEnabled ? 0 : 1)
+    }
+
+    func testAFingerOnACandidateStartsARippleInTheCandidateRow() throws {
+        makeKeyboard()
+        controller.keyboardView(keyboardView, edit: .toggleLanguage)
+        type("hao")
+        let row = keyboardView.candidateBar
+        var views: [UIView] = [row]
+        var buttons: [UIButton] = []
+        while let view = views.popLast() {
+            if let button = view as? UIButton { buttons.append(button) } else { views += view.subviews }
+        }
+        let first = try XCTUnwrap(buttons.first { $0.tag == 0 }, "The dictionary of the tests has a word for hao")
+        XCTAssertEqual(row.rippleCount, 0)
+        first.sendActions(for: .touchDown)
+        XCTAssertEqual(row.rippleCount, UIAccessibility.isReduceMotionEnabled ? 0 : 1)
+    }
+
     // MARK: Touches
 
     func testATouchInTheCellOfTheStripPressesNoKey() throws {

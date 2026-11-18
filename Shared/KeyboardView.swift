@@ -145,8 +145,10 @@ final class KeyboardView: UIView {
             forKey: character, doubleQuoteIsOpen: chineseDoubleQuoteIsOpen, singleQuoteIsOpen: chineseSingleQuoteIsOpen)
     }
 
-    /// The bar of Chinese candidates. The bar covers the top row while the user composes a word.
-    private let candidateBar = CandidateBar()
+    /// The candidate row: the Chinese candidates while the user composes a word, or the
+    /// proofreader's fix. The row lies over the prediction strip, between Select All and Cut, so
+    /// the keys of the top row stay in view and react.
+    let candidateBar = CandidateBar()
 
     /// Shows the typed Pinyin and its candidate words, or hides the bar when `composition` is nil.
     func showCandidates(composition: String?, words: [String]) {
@@ -189,20 +191,22 @@ final class KeyboardView: UIView {
     /// The moment the candidate row last left the screen, on the clock of `UITouch.timestamp`.
     private var candidatesHiddenTime: TimeInterval = -1
 
-    /// True for a touch on the first row that must not press a key. The candidate row lies
-    /// over the first row's keys. A touch on an empty part of the candidate row would reach
-    /// the key under it, and a tap aimed at a candidate would reach that key when the row has
-    /// just left. The key at the left is Select All, and the next typed character would then
-    /// replace all the text. So the first row's keys do not react while the candidate row
-    /// shows, and for half a second after it leaves.
+    /// True for a touch on the first row that must not press a key: a touch in a layout without
+    /// the strip's place, where the candidate row lies over the first row's keys. A touch on an
+    /// empty part of the candidate row would reach the key under it, and a tap aimed at a
+    /// candidate would reach that key when the row has just left. The key at the left is Select
+    /// All, and the next typed character would then replace all the text. In a layout with the
+    /// strip's place the candidate row covers no key, and a touch in the strip's cell never
+    /// reaches a key.
     private func candidateRowTakesTouch(at point: CGPoint, time: TimeInterval) -> Bool {
+        guard !rows.joined().contains(where: { $0.key.kind == .predictionStrip }) else { return false }
         guard let metrics = metrics(), point.y < metrics.rowEdges[1] else { return false }
         return !candidateBar.isHidden || time - candidatesHiddenTime < 0.5
     }
 
     /// True while the candidate row shows, and for half a second after it leaves. The row lies
-    /// over the prediction strip too, so a tap aimed at a candidate must not select an entry of
-    /// the strip, as it must not press a key of the first row.
+    /// over the prediction strip, so a tap aimed at a candidate must not select an entry of the
+    /// strip.
     private var candidateRowCoversTheStrip: Bool {
         !candidateBar.isHidden || ProcessInfo.processInfo.systemUptime - candidatesHiddenTime < 0.5
     }
@@ -573,6 +577,10 @@ final class KeyboardView: UIView {
             predictionStrip.frame = CGRect(x: stripCell.minX, y: 0, width: stripCell.width, height: stripCell.maxY)
             predictionStrip.sideInset = spec.gapX
             predictionStrip.topInset = stripCell.minY
+            predictionStrip.rowInset = gapY
+            // The candidate row takes the drawn part of the strip's cell, so Select All, Cut,
+            // Copy and Paste stay in view beside it.
+            candidateBar.frame = stripCell.insetBy(dx: spec.gapX, dy: gapY)
         }
         predictionStrip.isHidden = stripCell == nil
     }

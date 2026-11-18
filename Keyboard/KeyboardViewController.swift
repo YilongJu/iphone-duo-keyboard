@@ -12,9 +12,15 @@ final class KeyboardViewController: UIInputViewController {
     /// (Apple feedback FB25073949), and the Duo does not draw a globe button of its own.
     private let keyboardView = KeyboardView()
     private lazy var document = ProxyDocument(controller: self)
-    /// The model that re-ranks the English corrections. It loads when the keyboard appears in
-    /// English, and a memory warning frees it.
-    private let languageModel = KeyboardLanguageModel.bundled(device: DUO_LM_DEVICE_GPU, cacheCheckTolerance: nil)
+    /// The one language model of the keyboard's process. iOS makes a new `KeyboardViewController`
+    /// each time the keyboard appears and keeps the process, so a model per controller puts a
+    /// second model in memory while an earlier controller is still alive. On 2026-11-17 iOS
+    /// stopped the keyboard at its memory limit of about 177 MB.
+    private static let sharedLanguageModel = KeyboardLanguageModel.bundled(
+        device: DUO_LM_DEVICE_GPU, cacheCheckTolerance: nil)
+    /// The model that re-ranks the English corrections and orders the predicted words. It loads
+    /// when the keyboard appears in English, and a memory warning frees it.
+    private let languageModel = KeyboardViewController.sharedLanguageModel
     private lazy var reranker = EnglishReranker(scorer: languageModel, rule: KeyboardLanguageModel.rule)
     private lazy var textController = KeyboardTextController(
         keyboardView: keyboardView, document: document, spellChecker: EngineSpellChecker.bundled(reranker: reranker, predictor: languageModel),
@@ -22,6 +28,20 @@ final class KeyboardViewController: UIInputViewController {
     private var heightConstraint: NSLayoutConstraint?
     /// Keeps the MetricKit diagnostics, such as a stop at the memory limit, for the speed test.
     private var speedDiagnostics: ModelSpeedDiagnostics?
+
+    override init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: Bundle?) {
+        super.init(nibName: nibNameOrNil, bundle: nibBundleOrNil)
+        KeyboardLanguageModel.keyboards.change(by: 1)
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        fatalError("KeyboardViewController is built in code only")
+    }
+
+    deinit {
+        KeyboardLanguageModel.keyboards.change(by: -1)
+    }
 
     override func viewDidLoad() {
         super.viewDidLoad()

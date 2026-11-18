@@ -9,8 +9,10 @@ final class CandidateScrollView: UIScrollView {
     }
 }
 
-/// The row of Chinese candidates. The typed Pinyin sits at the left, and the candidate words
-/// scroll sideways to its right. The first word is the one the space bar types.
+/// The candidate row: the Chinese candidates, or the proofreader's fix of a sentence. The row
+/// lies in the place of the prediction strip, so the keys of the top row stay in view. The typed
+/// Pinyin sits at the left, and the candidate words scroll sideways to its right. The first word
+/// is the one the space bar types.
 final class CandidateBar: UIView {
     /// Called with the index of the word the user tapped.
     var onSelect: ((Int) -> Void)?
@@ -20,6 +22,10 @@ final class CandidateBar: UIView {
     private let compositionLabel = UILabel()
     private let scrollView = CandidateScrollView()
     private var buttons: [UIButton] = []
+    /// Holds the ripples of the taps. The row clips them to its capsule.
+    private let rippleHost = UIView()
+    /// Count of ripples in the row now. The unit tests read this value.
+    var rippleCount: Int { rippleHost.layer.sublayers?.count ?? 0 }
 
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -37,6 +43,8 @@ final class CandidateBar: UIView {
         scrollView.canCancelContentTouches = true
         scrollView.alwaysBounceHorizontal = true
         addSubview(scrollView)
+        rippleHost.isUserInteractionEnabled = false
+        addSubview(rippleHost)
     }
 
     @available(*, unavailable)
@@ -62,6 +70,7 @@ final class CandidateBar: UIView {
             configuration.baseForegroundColor = index == 0 ? .tintColor : .label
             let button = UIButton(configuration: configuration)
             button.tag = index
+            button.addTarget(self, action: #selector(candidatePressed(_:event:)), for: .touchDown)
             button.addTarget(self, action: #selector(candidateTapped(_:)), for: .touchUpInside)
             scrollView.addSubview(button)
             return button
@@ -74,6 +83,18 @@ final class CandidateBar: UIView {
         onSelectComposition?()
     }
 
+    /// Starts a ripple at the finger's place on a candidate. The circle reaches every corner of
+    /// the candidate, and the row clips it. With Reduce Motion on, the row shows no ripple.
+    @objc private func candidatePressed(_ sender: UIButton, event: UIEvent?) {
+        guard !UIAccessibility.isReduceMotionEnabled else { return }
+        // An action that the code sends has no touch. Its ripple starts in the middle of the word.
+        let touch = event?.touches(for: sender)?.first?.location(in: rippleHost)
+        let frame = rippleHost.convert(sender.bounds, from: sender)
+        let point = touch ?? CGPoint(x: frame.midX, y: frame.midY)
+        TapRipple.show(
+            in: rippleHost.layer, at: point, radius: hypot(frame.width, frame.height), traits: traitCollection)
+    }
+
     @objc private func candidateTapped(_ sender: UIButton) {
         onSelect?(sender.tag)
     }
@@ -82,6 +103,7 @@ final class CandidateBar: UIView {
         super.layoutSubviews()
         // The row is a capsule, so its ends follow the round top corners of the keyboard.
         layer.cornerRadius = bounds.height / 2
+        rippleHost.frame = bounds
         let labelWidth = min(compositionLabel.intrinsicContentSize.width, bounds.width * 0.4)
         compositionLabel.frame = CGRect(x: 14, y: 0, width: labelWidth, height: bounds.height)
         let scrollX = compositionLabel.frame.maxX + 8

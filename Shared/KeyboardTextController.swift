@@ -917,7 +917,7 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
     /// letters wait in the buffer, the row holds the candidates, with the emoji of the first
     /// candidate right after it. Otherwise the row shows only while the proofreader has a fix:
     /// the fix, then the emoji of the English word before the cursor, because the row covers
-    /// the top row of keys. The prediction strip shows the emoji of the English word before the
+    /// the prediction strip. The prediction strip shows the emoji of the English word before the
     /// cursor, and then the predicted words for the letters the person is typing. A field
     /// without autocorrection gets no emoji and no predicted words.
     private func showRow() {
