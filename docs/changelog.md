@@ -4,6 +4,31 @@ This file lists what changed in each TestFlight build, the newest build first. E
 the build number, the commit, and the upload time in UTC. An entry says what a person notices
 on the phone first, and then what changed behind it.
 
+## Build 68
+
+Commit `5031aad`, uploaded 2026-11-18 17:25 UTC.
+
+**What you notice**
+
+- The open phone's layout has the return key in the lower right corner, with the width of two
+  letter keys. The return key shows the field's action, such as send or search.
+- A newline key has the return key's former place, at the right end of the row of "a" to "l"
+  and of the fourth row of the symbol layers. The newline key always types a line break and
+  never does the field's action.
+- Select All of the open phone is twice as wide. The typing speed beside it has the width of
+  Cut, so the number sits close to Select All.
+- The closed phone's layout is unchanged.
+
+**Behind it**
+
+- In a field without an action, the newline key types "\n". In a field with an action, the key
+  types the Unicode character LINE SEPARATOR (U+2028), because such a field reads "\n" as the
+  request for its action.
+- No test on the phone has shown yet how each app shows and sends the line separator.
+- With Pinyin letters waiting, the newline key puts the letters in the text and adds no line
+  break, as the return key does.
+- The layout check has a new rule: every layer of the wide layout has exactly one newline key.
+
 ## Build 67
 
 Commit `ade3caa`, uploaded 2026-11-18 09:57 UTC.
