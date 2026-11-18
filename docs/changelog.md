@@ -4,6 +4,36 @@ This file lists what changed in each TestFlight build, the newest build first. E
 the build number, the commit, and the upload time in UTC. An entry says what a person notices
 on the phone first, and then what changed behind it.
 
+## Build 67
+
+Commit `ade3caa`, uploaded 2026-11-18 09:57 UTC.
+
+**What you notice**
+
+- The open phone's layout has no arrow keys. A held space bar still moves the cursor left and
+  right. No key moves the cursor up or down.
+- Comma, period and slash of the letters are as wide as a letter key. The shift key at the
+  right is wider.
+- The space bar of the bottom row is longer: 7.2 key units in place of 6.5 in the letters, and
+  8.3 in place of 7.6 in the symbol layers.
+- The lower right corner is empty, with room for two keys of the width of a letter key. A touch
+  there does nothing.
+- In the symbol layers, the forward delete key is twice as wide.
+- The typing speed is steadier. A tap on a predicted word after a pause no longer shows a
+  number that is too high, and a delete of older text no longer holds the number at 0.
+
+**Behind it**
+
+- The typing speed counts one change per action: the characters that went in less those that
+  came out. A tapped word counts with all its characters. The proofreader's fix counts only
+  with the characters that it adds.
+- A delete takes the latest counted characters out of the count. A delete of text from before
+  the last 10 seconds changes nothing.
+- The first action of a run of typing starts the clock and counts no character.
+- Pinyin letters keep a run going, although they wait outside the text.
+- The lines of a test's report, as after "duo:lm", do not count.
+- The closed phone's layout is unchanged. It never had arrow keys.
+
 ## Build 66
 
 Commit `6ec01c3`, uploaded 2026-11-18 09:29 UTC.
