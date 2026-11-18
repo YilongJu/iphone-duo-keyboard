@@ -163,7 +163,9 @@ final class WideBottomRowsTests: XCTestCase {
     func testTheNewlineKeyTypesALineBreakInAFieldWithoutAnAction() throws {
         try XCTSkipUnless(KeyboardDevice.current == .phone)
         for width in [CGFloat(669), 951] {
-            let (keyboardView, document, _) = makeKeyboard(width: width)
+            // The view holds its controller weakly, so the test keeps the controller.
+            let (keyboardView, document, controller) = makeKeyboard(width: width)
+            XCTAssertTrue(keyboardView.delegate === controller)
             XCTAssertEqual(keyboardView.returnKeyType, .default)
             for layer in Self.layers {
                 keyboardView.show(layer: layer)
@@ -179,7 +181,8 @@ final class WideBottomRowsTests: XCTestCase {
 
     func testTheNewlineKeyTypesTheLineSeparatorInAFieldWithAnAction() throws {
         try XCTSkipUnless(KeyboardDevice.current == .phone)
-        let (keyboardView, document, _) = makeKeyboard(width: 669)
+        let (keyboardView, document, controller) = makeKeyboard(width: 669)
+        XCTAssertTrue(keyboardView.delegate === controller)
         keyboardView.returnKeyType = .send
         let newline = try key(.newline, of: keyboardView, "send")
         // The newline key keeps its symbol while the return key shows the field's action.
