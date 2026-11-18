@@ -1,0 +1,36 @@
+{
+ "texts": 200,
+ "threads": 2,
+ "models": {
+  "shipped": {
+   "file": "/root/lmdom/models/dom-s100-seed1.Q4_K_M.gguf",
+   "bytes": 105453504,
+   "vocabulary": 49152,
+   "read_ms_median": 26.476577997527784,
+   "read_ms_p95": 58.29299050019469,
+   "request_ms_median": 52.88171150095877,
+   "request_ms_p95": 81.78285480244085
+  },
+  "base135": {
+   "file": "/root/modelspeed/gguf/smollm2-135m.Q4_K_M.gguf",
+   "bytes": 105453600,
+   "vocabulary": 49152,
+   "read_ms_median": 25.61230299761519,
+   "read_ms_p95": 52.762253102628144
+  },
+  "smol360": {
+   "file": "/root/modelspeed/gguf/smollm2-360m.Q4_K_M.gguf",
+   "bytes": 270590048,
+   "vocabulary": 49152,
+   "read_ms_median": 58.7903505002032,
+   "read_ms_p95": 133.6045324533188
+  },
+  "qwen05": {
+   "file": "/root/modelspeed/gguf/qwen2.5-0.5b.Q4_K_M.gguf",
+   "bytes": 397807392,
+   "vocabulary": 151936,
+   "read_ms_median": 63.214442005119054,
+   "read_ms_p95": 142.32708849449398
+  }
+ }
+}

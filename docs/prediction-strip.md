@@ -99,8 +99,11 @@ flowchart TD
   value, as "Python" after "I use". A typed capital allows only forms with a capital.
 - **First word of a field.** The model has no text to read there, so the engine's order stays.
 - **Settings.** `EngineSpellChecker.PredictionSettings` holds the share of the engine's value
-  in the order, and the form rule. The benchmark of
-  [prediction-strip-benchmark-design.md](prediction-strip-benchmark-design.md) chooses them.
+  in the order, and the form rule. The keyboard uses the share 0.3 and the form that the typed
+  capitals ask for. The benchmark chose these values
+  ([prediction-strip-benchmark-results.md](prediction-strip-benchmark-results.md)). On its test
+  halves this order saves 57.0% of the key presses with 4 to 7 shown words, against 47.6% for
+  the engine's order.
 
 ## A tap on a predicted word
 

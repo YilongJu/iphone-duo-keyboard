@@ -168,6 +168,9 @@ final class ModelPredictedWordsTests: XCTestCase {
         checker = EngineSpellChecker(
             engine: engine, reranker: nil, store: UserDefaults(suiteName: Self.storeName)!, workArea: .aiAndSoftware(),
             predictor: predictor)
+        // These tests describe the parts of the model's order one at a time, so they start from
+        // the model alone and the model's form. The keyboard's own settings have a test below.
+        checker.predictionSettings = EngineSpellChecker.PredictionSettings(engineWeight: 0, modelPicksTheForm: true)
         controller = KeyboardTextController(
             keyboardView: keyboardView, document: document, spellChecker: checker,
             pinyinEngine: { PinyinEngine(dictionaryText: testDictionary) })
@@ -288,6 +291,14 @@ final class ModelPredictedWordsTests: XCTestCase {
         XCTAssertEqual(keyboardView.predictedWords, before)
         predictor.answer(try numbers(favoring: [("enough", DUO_FORM_LOWER)]))
         XCTAssertEqual(keyboardView.predictedWords.first, "enough")
+    }
+
+    func testTheKeyboardsSettingsAreTheChoiceOfTheBenchmark() {
+        // docs/prediction-strip-benchmark-results.md: the engine's value at the weight 0.3, and
+        // the form that the typed capitals ask for.
+        let settings = EngineSpellChecker.PredictionSettings()
+        XCTAssertEqual(settings.engineWeight, 0.3)
+        XCTAssertFalse(settings.modelPicksTheForm)
     }
 
     func testTheEngineWeightAndTheFormRuleAreSettings() throws {

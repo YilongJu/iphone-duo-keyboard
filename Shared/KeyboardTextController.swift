@@ -127,15 +127,15 @@ final class EngineSpellChecker: SpellChecking {
     private let store: UserDefaults
 
     /// How the checker orders and writes the predicted words with the numbers of the model. The
-    /// benchmark of docs/prediction-strip-benchmark-design.md chooses these values.
+    /// values are the choice of the benchmark (docs/prediction-strip-benchmark-results.md).
     struct PredictionSettings: Equatable {
         /// The share of the engine's own value in the order, from 0 to 1. With 0 the model orders
         /// the words alone (`duo_predict_english_with_model`).
-        var engineWeight: Float = 0
+        var engineWeight: Float = 0.3
         /// True writes each word in the form with the highest value for the model, as "Python"
         /// after "I use". False writes the form that the typed capitals ask for, as the engine's
         /// order does.
-        var modelPicksTheForm = true
+        var modelPicksTheForm = false
     }
 
     var predictionSettings = PredictionSettings()

@@ -111,3 +111,9 @@ gcc -std=c11 -O2 -Wall -Wextra -Werror -I LLAMA/include -I LanguageModel Languag
 python3 scripts/prediction-strip/check_scorer_next.py --lm ~/predstrip/bin/lm_score \
   --scorer ~/predstrip/bin/scorer_cli --model MODEL.gguf
 ```
+
+## Benchmark of the word order
+
+The folder `benchmark/` holds the benchmark that chooses the order of the predicted words.
+`benchmark/README.md` lists its scripts and commands, and
+`docs/prediction-strip-benchmark-results.md` holds its results.
