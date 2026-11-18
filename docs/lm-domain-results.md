@@ -42,7 +42,7 @@ Figure 1. The candidate changes 47 correctly typed technical and written words, 
 The first pick named `soup-mix` at its ceiling setting (weight 1.5, margins 1 / 8 / 2, lead 4). Its condition 6 was a set of fixed dev counts from another run, and `dom-s100-seed1` at its ceiling setting missed that condition alone.
 With the paired dev comparison as condition 6, three entries of 53 pass the nine conditions. The pick then names `dom-s100-seed1` at its ceiling setting (weight 1.5, margins 1 / 4 / 2, lead 0.5). It changes 38 technical and written dev words, against 140 for `soup-mix`.
 On the 6,799 dev cases `ship` alone has 47 cases right, and the candidate alone has 41. That net loss of 6 cases passes the margin of 34: the bootstrap share is 0.0018, and the score test gives p = 0.0023.
-The commit e3685db holds the rule, and `docs/lm-domain-confirmation-review.md` holds the Codex review of it.
+The commit bcd45ca holds the rule, and `docs/lm-domain-confirmation-review.md` holds the Codex review of it.
 
 Table 1. Selection sets, work area on. A changed count is changed correct words.
 
@@ -60,7 +60,7 @@ The more domain lists an arm trains on, the fewer technical words it changes: 14
 ## One read of the confirmation set
 
 The candidate passes all seven conditions of the replacement rule on the confirmation set.
-The plan was committed at 6749cbf before the read, with the SHA-256 value `6313db6c70c9a8a6bf14783d7a087b3d06be64bf356b5a7f5df37e24c926a467`. No model scored the set before that commit.
+The plan was committed at 2a634f9 before the read, with the SHA-256 value `6313db6c70c9a8a6bf14783d7a087b3d06be64bf356b5a7f5df37e24c926a467`. No model scored the set before that commit.
 
 Table 2. Confirmation set, with the size of each part beside its count. `ship` is the reference.
 
@@ -105,7 +105,7 @@ The conditions on clean text are the ones that turn on a few cases. `dom-s100-se
 ## One read of the fresh held-out set
 
 The first candidate, `soup-mix` at its ceiling setting, missed condition 3 on the fresh held-out set: 941 clean generated cases right, against 946 for `ship`. It passed the other six conditions.
-The plan was committed at c0bdee5 before the read, with the SHA-256 value `9df4367654841b0b4e4edf39cb53bda981c9d3084ed1c9c1fa3c72bbf976c4ca`.
+The plan was committed at 98b5430 before the read, with the SHA-256 value `9df4367654841b0b4e4edf39cb53bda981c9d3084ed1c9c1fa3c72bbf976c4ca`.
 The counts of `dom-s100-seed1` in Table 4 were seen before it became the candidate. So Table 4 is no test of the candidate, and Table 2 is.
 
 Table 4. Fresh held-out set. Only `soup-mix` was the candidate of this read. The other arms were in the plan for the report.
@@ -143,7 +143,7 @@ The candidate file is `dom-s100-seed1.Q4_K_M.gguf` of this round: 105,453,504 by
 - Harness of the keyboard workflow: `scripts/lm-keyboard/harness_trace.py` with the candidate file and its setting gets 6,538 of 6,799 dev cases right. The harness of this round gives the same count, and `scripts/lm-domain/candidate.json` holds the counts per group.
 - Run 43389818855 of the workflow "Domain candidate file in the Linux harness" passes. Its x86 job fetches the file of the pre-release and gets the same counts as the local run. The keyboard's scorer and `lm_score` give the same answers byte for byte on 13,930 requests.
 - The ARM job of that run gets 6,536 of 6,799 dev cases right, 2 fewer than the x86 job. The file of `ship` shows the same step in run 43258534212: 6,543 on x86 and 6,541 on ARM.
-- Run 43481402003 of the workflow "Language model in the keyboard" passes on the commit 6576495, with the candidate file in the app. Every unit test passes in the simulator, and the keyboard's own code agrees with the harness of the same machine in all 13,936 dev cases.
+- Run 43481402003 of the workflow "Language model in the keyboard" passes on the commit eaf1cdc, with the candidate file in the app. Every unit test passes in the simulator, and the keyboard's own code agrees with the harness of the same machine in all 13,936 dev cases.
 - In that run the keyboard gets 6,539 of 6,799 dev cases and 6,616 of 7,137 cases of the work area right, on the symbol cases after the comma and period keys moved. With the file of `ship` it got 6,537 and 6,350 in run 43312412590. `scripts/lm-keyboard/README.md` gives the counts per group.
 
 ## Remaining errors of `ship`

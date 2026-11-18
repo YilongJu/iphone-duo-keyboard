@@ -6,7 +6,7 @@ The keyboard reads with approach DE: the anchored window with two slots. On the 
 takes 59.1 ms per request against 123.5 ms without reuse, 52% less, at 2 threads on the local PC.
 It changes 4 of 41,556 decisions, all in the technical stream. It keeps all six dev counts and the
 work area count of the full read. The selection rule of `docs/kv-reuse-design.md`, committed in
-0ae5d9f before any accuracy number of C, D or E existed, picked it.
+8ee3625 before any accuracy number of C, D or E existed, picked it.
 
 ```mermaid
 ---
@@ -171,9 +171,9 @@ grows, or a token in nine sequences at once. The keyboard keeps the separate cal
 ## The simulator and the agreement check
 
 The workflow "Language model in the keyboard" ran every unit test in run 43625399707 at commit
-9fca513. It also typed the dev cases through the keyboard's Swift code with DE. All 363 tests
+5124882. It also typed the dev cases through the keyboard's Swift code with DE. All 363 tests
 passed. The
-baseline is run 43551351295 at commit 51568f1 on `ui/space-before-mark`, which read every request
+baseline is run 43551351295 at commit c468121 on `ui/space-before-mark`, which read every request
 in full.
 
 Table 6. Time added to each space press in the simulator, mean, median and 95th percentile in ms.
@@ -220,7 +220,7 @@ tokens. They are 1.005 for a log probability and 1.27 for a space-after term.
 2. `scripts/kv-reuse/jobs/speed.sh` sent the requests of every fourth document of A's replay
    through each approach, one at a time, alone on the machine.
 3. `scripts/kv-reuse/analyze.py` gave the tables and applied the selection rule.
-4. The replay ran the scorer of commit 43a28d9. The keyboard's scorer adds a count of long
+4. The replay ran the scorer of commit 0b94002. The keyboard's scorer adds a count of long
    contexts and a buffer for an empty context, and neither changes a number.
 
 ## Limits

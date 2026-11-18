@@ -27,7 +27,7 @@ on:
 
 env:
   # The commit of engine/lm-keyboard that this branch starts from: the engine before the supplement.
-  BASE: 4cfa7ef
+  BASE: 1608d8a
 
 concurrency:
   group: domain-pack-${{ github.ref }}

@@ -40,7 +40,7 @@ buffer in the English path.
 
 ## Review of the 16 later requested words
 
-Codex read commits 8661a70 and 835dc5f and the section "Requested words" of the design. The
+Codex read commits 3c46fa6 and 7679efd and the section "Requested words" of the design. The
 review covered the pack table, the case builder, the capitals rule in Python and in Swift, and
 the frequency results of the dev half. Codex then recounted the numbers of the design from the
 result files of run 43187473874.
@@ -49,7 +49,7 @@ Table 2. The 6 findings of the second review.
 
 | # | Finding | Outcome | Change |
 | --- | --- | --- | --- |
-| 1 | Four capital cases had the same context and typed text in both halves. An example is an empty field and "Nextjs". | Taken | The test half types these cases after "It is ready." The dev half does not change (commit 835dc5f). |
+| 1 | Four capital cases had the same context and typed text in both halves. An example is an empty field and "Nextjs". | Taken | The test half types these cases after "It is ready." The dev half does not change (commit 7679efd). |
 | 2 | The rule for a word's own frequency left one case open. The grid lacks a frequency at which every clean case of "todo" is right. | Taken | The rule names that case. The word takes the highest frequency that keeps its existing dev cases right. |
 | 3 | The design said that the slips of "pnpm" become "pnpm". The engine changes the slip "nppm" to "npm". | Taken | The design names the one slip that the unit test holds, "pnmp". |
 | 4 | The design said that the model lowers three measures. The dev results show five. | Taken | The section on the effect of the model names all five. The clean pack words and the written stream are the two added ones. |

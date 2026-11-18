@@ -40,7 +40,7 @@ jobs:
           python3 -m pip install --quiet --break-system-packages wordfreq
           python3 scripts/typing-evaluation/build_external_english_cases.py
       # The two tuned engine names keep the threshold 0.27 that the adapter's README reports.
-      # run_latinime.py --tune-on-dev chose it on the dev cases of commit e997c39. This run does not
+      # run_latinime.py --tune-on-dev chose it on the dev cases of commit c4afca3. This run does not
       # choose a threshold again, so every engine name has the setting that the README gives it.
       - name: Write the tuned threshold of the adapter's README
         run: |

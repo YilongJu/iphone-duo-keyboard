@@ -140,7 +140,7 @@ Table 5. Count of dev cases with the exact intended text, of 300 per category. T
 | `two_errors` | 0 | 0 | 0 | 0 | 0 |
 | `fuzzy_sound` | 0 | 0 | 94 | 0 | 0 |
 
-The numbers come from workflow run 42755280003 on commit `2e7e471`. The scorer `score.py` wrote them to `pinyin.HALF.summary.json` in the artifact `typing-evaluation-librime`. Workflow runs 42754169971 and 42756613694 give the same output files, byte for byte, for the engine names they hold.
+The numbers come from workflow run 42755280003 on commit `e51b14e`. The scorer `score.py` wrote them to `pinyin.HALF.summary.json` in the artifact `typing-evaluation-librime`. Workflow runs 42754169971 and 42756613694 give the same output files, byte for byte, for the engine names they hold.
 
 ## Ubuntu 24.04 packages of librime and its data
 

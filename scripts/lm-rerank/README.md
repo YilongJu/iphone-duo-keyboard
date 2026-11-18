@@ -32,7 +32,7 @@ distilgpt2 Q3_K_M, or Qwen3-0.6B, which llama.cpp b4846 does not load.
 
 ## Dev scores per group
 
-Table 1. Right dev cases per group, from run 42877972004 at commit 6a000f7. The control
+Table 1. Right dev cases per group, from run 42877972004 at commit a9389ad. The control
 equals the macOS keyboard run (`Tests/TypingEvaluationTests.swift`) in every group.
 
 | Run | clean | letter slips | space slips | symbol slips | clean symbols | all dev cases |

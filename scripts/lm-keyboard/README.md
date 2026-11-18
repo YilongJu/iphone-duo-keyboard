@@ -38,7 +38,7 @@ It does not read the test half.
 
 ## Dev scores of the keyboard and the three harnesses
 
-Table 1. Right dev cases per group, from run 43481402003 at commit 6576495. The first six
+Table 1. Right dev cases per group, from run 43481402003 at commit eaf1cdc. The first six
 columns count the 6,799 cases of `english.dev.jsonl` and `english-symbols.dev.jsonl`.
 
 | Run | clean | letter slips | space slips | symbol slips | clean symbols | all 6,799 | work area, of 7,137 |

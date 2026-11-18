@@ -9,7 +9,7 @@ Three changes to the compact layout (the folded phone):
 
 A letter key with a second character has the form {"c": "a", "a": "@"}.
 
-Run it against the layout of commit f48cd80 (the layout before this change).
+Run it against the layout of commit 2772184 (the layout before this change).
 """
 import copy
 import json

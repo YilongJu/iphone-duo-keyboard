@@ -4,7 +4,7 @@ The letter keys grow from 1/14.5 to 1/13.5 of the keyboard width, and the letter
 the middle. Every digit and symbol key keeps the letters next to it that
 scripts/typing-evaluation/symbol_keys.py finds today, so the typing test cases stay valid.
 
-The script reads the 14.5-unit layout of the commit before b7ce57d, which applied its output to
+The script reads the 14.5-unit layout of the commit before 4c01650, which applied its output to
 Shared/keyboard-layout.json. Run it only against that version of the file.
 """
 import copy

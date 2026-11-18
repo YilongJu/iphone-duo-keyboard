@@ -218,7 +218,7 @@ three times fewer tokens under the Qwen tokenizer than under SmolLM2's.
 ## The simulator
 
 The unit test `testTheSpeedTestRunsEveryPairAndPrintsEveryLine` ran the `duo:speed` test in the
-simulator of run 43724638219 (commit c61959f), with both Core ML forms of SmolLM2-135M in place.
+simulator of run 43724638219 (commit b16d2db), with both Core ML forms of SmolLM2-135M in place.
 The simulator shares the processor of the runner and has no memory limit, so its times say
 nothing about the phone.
 
@@ -251,7 +251,7 @@ is that Core ML does not run this stateful model on the Neural Engine.
 ## The keyboard's normal autocorrection
 
 `scripts/model-speed/compare_keyboard_runs.py` compared the artifact "keyboard" of run
-43724638219 (commit c61959f) with that of run 43625399707 on `engine/kv-reuse`, case by case. All
+43724638219 (commit b16d2db) with that of run 43625399707 on `engine/kv-reuse`, case by case. All
 14 case files hold the same cases with the same outputs: 54,744 cases, 0 differ. This covers the
 outputs with the model and with the engine alone, the traces with every model number, and the
 Pinyin cases. Every unit test of run 43724638219 passed.

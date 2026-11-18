@@ -478,7 +478,7 @@ cases with the same model. They get 6,542 existing cases right on two kinds of p
 
 The pack keeps the words of the field and corrects their slips. The pack does not turn any
 existing dev case wrong. All numbers are from the job of share 0.3 in run 43187473874, at commit
-835dc5f. That job ran on an AMD EPYC 7763.
+7679efd. That job ran on an AMD EPYC 7763.
 
 Table 11. Right dev cases of the new groups in the four configurations.
 
@@ -669,7 +669,7 @@ request that shows the effect.
 
 The test half was measured two times, each time for the design that ships. The first read was
 run 43142372002, before the 16 later requested words. The second read is run 43187473874 at
-commit 835dc5f, after the addition of those words and their cases.
+commit 7679efd, after the addition of those words and their cases.
 
 Between the two reads, the pack gained the 16 words, and three of them got a frequency of their
 own from dev cases. Every setting was chosen on the dev half. We did not tune a setting on the

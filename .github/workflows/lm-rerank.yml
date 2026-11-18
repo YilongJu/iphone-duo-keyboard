@@ -31,7 +31,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p build/engine build/base-engine
-          base=542a979
+          base=0a90d2e
           git show "$base:Engine/duo_engine.c" > build/base-engine/duo_engine.c
           git show "$base:Engine/duo_engine.h" > build/base-engine/duo_engine.h
           git show "$base:Engine/duo_cli.c" > build/base-engine/duo_cli.c
