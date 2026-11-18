@@ -26,7 +26,6 @@ With --tables, the check also compares the word shares of the word table with th
 scripts/prediction-strip/build_tables.py in FOLDER.
 """
 import argparse
-import bisect
 import json
 import math
 import struct
@@ -77,55 +76,47 @@ def read_table(path: Path, main_words: int, extra_words: int):
     return vocabulary, forms[:main * 2].reshape(main, 2, 2), forms[main * 2:].reshape(extra, 3, 2)
 
 
-def model_value(forms: np.ndarray, block: np.ndarray, capital_only: bool):
-    """The highest model value of the allowed forms of one word, and that form, or None."""
-    best = None
-    for number, (token, packed) in enumerate(forms):
-        if token == NO_FORM_TOKEN or (capital_only and not packed & 0x8000):
-            continue
-        value = np.float32(block[token]) - np.float32(packed & 0x7FFF) / np.float32(1024)
-        if best is None or value > best[0]:
-            best = (value, number)
-    return best
+def model_values(forms: np.ndarray, block: np.ndarray, capital_only: bool):
+    """For every word of one file: the highest model value of its allowed forms and that form.
+    A word without an allowed form has the value -inf."""
+    tokens = forms[:, :, 0].astype(np.int64)
+    packed = forms[:, :, 1]
+    allowed = tokens != NO_FORM_TOKEN
+    if capital_only:
+        allowed &= (packed & 0x8000) != 0
+    numbers = block[np.where(allowed, tokens, 0)].astype(np.float32)
+    values = numbers - (packed & 0x7FFF).astype(np.float32) / np.float32(1024)
+    values = np.where(allowed, values, np.float32(-np.inf))
+    # argmax gives the first form of the highest value, as the engine keeps the earlier form.
+    best = np.argmax(values, axis=1)
+    return values[np.arange(len(forms)), best], best
 
 
-def reference(main: Lexicon, extra: Lexicon, table, sorted_words, block, previous: str, typed: str,
+def reference(main: Lexicon, extra: Lexicon, table, starts: dict, block, previous: str, typed: str,
               capital_only: bool, weight: float) -> dict[str, tuple[float, int]]:
     """The value and the form of every word that starts with the typed letters and is longer."""
     _, main_forms, extra_forms = table
     previous_main = main.index.get(previous)
     after_a_word = previous != "" and (previous_main is not None or previous in extra.index)
     base = np.float32(math.log(1 - PAIR_WEIGHT)) if after_a_word else np.float32(0)
-    listed = {}
-    if previous_main is not None:
-        for pair in range(int(main.pair_start[previous_main]), int(main.pair_start[previous_main + 1])):
-            listed[int(main.pairs["second"][pair])] = float(main.pairs["logp"][pair])
     weight32 = np.float32(weight)
     result: dict[str, tuple[float, int]] = {}
-    start = bisect.bisect_left(sorted_words, typed)
-    for word in sorted_words[start:]:
-        if not word.startswith(typed):
-            break
-        if len(word) <= len(typed) or (typed == "" and not ("a" <= word[0] <= "z")):
-            continue
-        candidates = []
-        if word in main.index:
-            number = main.index[word]
-            own = float(main.own[number])
-            engine = own + float(base)
-            if number in listed:
-                engine = math.log(PAIR_WEIGHT * math.exp(listed[number]) + (1 - PAIR_WEIGHT) * math.exp(own))
-            candidates.append((main_forms[number], engine))
-        if word in extra.index:
-            number = extra.index[word]
-            candidates.append((extra_forms[number], float(extra.own[number]) + float(base)))
-        for forms, engine in candidates:
-            best = model_value(forms, block, capital_only)
-            if best is None:
+    for lexicon, forms, is_main in ((main, main_forms, True), (extra, extra_forms, False)):
+        engine = (lexicon.own + base).astype(np.float32)
+        if is_main and previous_main is not None:
+            first, last = int(main.pair_start[previous_main]), int(main.pair_start[previous_main + 1])
+            second = main.pairs["second"][first:last]
+            listed = main.pairs["logp"][first:last].astype(np.float64)
+            own = main.own[second].astype(np.float64)
+            engine[second] = np.log(PAIR_WEIGHT * np.exp(listed) + (1 - PAIR_WEIGHT) * np.exp(own)).astype(np.float32)
+        model, best = model_values(forms, block, capital_only)
+        mixed = (np.float32(1) - weight32) * model + weight32 * engine
+        for number in starts[(is_main, typed)]:
+            if not np.isfinite(mixed[number]):
                 continue
-            value = float((np.float32(1) - weight32) * best[0] + weight32 * np.float32(engine))
+            word, value = lexicon.words[number], float(mixed[number])
             if word not in result or value > result[word][0]:
-                result[word] = (value, best[1])
+                result[word] = (value, int(best[number]))
     return result
 
 
@@ -141,7 +132,15 @@ def main() -> None:
     main_lexicon, extra_lexicon = Lexicon(LEXICON), Lexicon(SUPPLEMENT)
     table = read_table(TABLE, len(main_lexicon.words), len(extra_lexicon.words))
     vocabulary = table[0]
-    sorted_words = sorted(set(main_lexicon.words) | set(extra_lexicon.words))
+    # The numbers of the words of each file that start with given typed letters and are longer.
+    starts: dict = {}
+
+    def words_with_start(typed: str) -> None:
+        for is_main, lexicon in ((True, main_lexicon), (False, extra_lexicon)):
+            if (is_main, typed) not in starts:
+                starts[(is_main, typed)] = [
+                    number for number, word in enumerate(lexicon.words)
+                    if word.startswith(typed) and len(word) > len(typed) and (typed != "" or "a" <= word[0] <= "z")]
 
     cases = [json.loads(line) for line in CASES.read_text(encoding="utf-8").splitlines() if line.strip()]
     contexts, states = [], []
@@ -160,6 +159,7 @@ def main() -> None:
                 for capital_only in (False, True):
                     for weight in (0.0, 0.3):
                         states.append((block, previous, target[:typed_count], capital_only, weight))
+                words_with_start(target[:typed_count])
     text = "".join(context + "\n" for context in contexts)
     run = subprocess.run([arguments.lm, arguments.model, "2", "next"], input=text.encode("utf-8"), capture_output=True)
     if run.returncode != 0:
@@ -186,7 +186,7 @@ def main() -> None:
             assert len(answers) == len(mine), (len(answers), len(mine))
             for (block, previous, typed, capital, _), answer in zip(mine, answers):
                 listed = [entry.rsplit("/", 1) for entry in answer.split("\t", 1)[1].split(" ") if entry]
-                values = reference(main_lexicon, extra_lexicon, table, sorted_words, numbers[block], previous, typed,
+                values = reference(main_lexicon, extra_lexicon, table, starts, numbers[block], previous, typed,
                                    capital, weight)
                 problems = []
                 if len(listed) != min(20, len(values)):
@@ -210,29 +210,44 @@ def main() -> None:
                     failures += 1
                     if failures <= 5:
                         print(f"PROBLEM context {contexts[block]!r} typed {typed!r} capital {capital} weight {weight}: {problems}")
-    print(f"{len(states)} strip states on {len(contexts)} next-token blocks, {failures} with a problem")
+    print(f"{len(states)} strip states on {len(contexts)} next-token blocks, {failures} with a problem", flush=True)
 
     if arguments.tables:
         arrays = np.load(arguments.tables / "tables.npz")
+        # One read of each array: an access through the archive reads the whole array again.
+        spaced_first, spaced_share = arrays["spaced_first"], arrays["spaced_share"]
         forms = json.loads((arguments.tables / "forms.json").read_text(encoding="utf-8"))
         position = {word: number for number, word in enumerate(forms["words"])}
-        widest, compared, other_tokens = 0.0, 0, 0
-        for number, word in enumerate(main_lexicon.words):
-            row = position[word]
-            for form in forms["spaced"][row]:
-                place = forms["spaced"][row].index(form)
-                slot = 1 if form[0].isupper() and form != word else 0
-                if form[0].isupper() and len(forms["spaced"][row]) == 1:
-                    slot = 0
-                token, packed = table[1][number][slot]
-                if token == NO_FORM_TOKEN:
-                    continue
-                compared += 1
-                other_tokens += int(token != arrays["spaced_first"][row, place])
-                widest = max(widest, abs(-(packed & 0x7FFF) / 1024 - float(arrays["spaced_share"][row, place])))
-        print(f"word shares against {arguments.tables}: {compared} forms, {other_tokens} with another token, "
-              f"widest difference {widest:.5f}")
-        if other_tokens or widest > 1 / 1024:
+
+        def shown(text: str) -> str:
+            """`language_model_text` of scripts/lm-rerank/rerank.py for one word."""
+            return "I" + text[1:] if text == "i" or text.startswith("i'") else text
+
+        widest, compared, other_tokens, missing = 0.0, 0, 0, 0
+        for lexicon, entries in ((main_lexicon, table[1]), (extra_lexicon, table[2])):
+            for number, word in enumerate(lexicon.words):
+                row = position[word]
+                texts = [shown(word), shown(word[0].upper() + word[1:])]
+                for slot in range(entries.shape[1]):
+                    token, packed = int(entries[number][slot][0]), int(entries[number][slot][1])
+                    if token == NO_FORM_TOKEN:
+                        continue
+                    # The third slot is the preferred form: the form of the measurement that is
+                    # neither of the first two.
+                    if slot < 2:
+                        wanted = [place for place, form in enumerate(forms["spaced"][row]) if form == texts[slot]]
+                    else:
+                        wanted = [place for place, form in enumerate(forms["spaced"][row]) if form not in texts]
+                    if len(wanted) != 1:
+                        missing += 1
+                        continue
+                    compared += 1
+                    other_tokens += int(token != int(spaced_first[row, wanted[0]]))
+                    share = -(packed & 0x7FFF) / 1024
+                    widest = max(widest, abs(share - max(float(spaced_share[row, wanted[0]]), -32767 / 1024)))
+        print(f"word table against {arguments.tables}: {compared} forms, {missing} without a form of the measurement, "
+              f"{other_tokens} with another token, widest difference of a word share {widest:.5f}")
+        if missing or other_tokens or widest > 1 / 1024:
             failures += 1
     sys.exit(1 if failures else 0)
 
