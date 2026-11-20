@@ -383,7 +383,9 @@ final class EmojiSuggestionTests: XCTestCase {
         type("nihao")
         let second = pinyinWords("nihao")[1]
         tap(try XCTUnwrap(row()?.firstIndex(of: second)))
-        XCTAssertEqual(document.text, second)
+        // The candidate covers "ni", and the other letters stay in the field as marked text.
+        XCTAssertEqual(document.text, second + "hao")
+        XCTAssertEqual(document.markedText, "hao")
     }
 
     func testAChineseFieldWithoutAutocorrectionShowsNoEmoji() {
