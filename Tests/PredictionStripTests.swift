@@ -237,6 +237,15 @@ final class PredictionStripTests: XCTestCase {
         XCTAssertEqual(spellChecker.requests.last, "you|to")
     }
 
+    func testLettersRightAfterAnEmojiShowTheirPredictedWords() {
+        // An emoji is no word, so the letters after it start a word, with no word before it.
+        makeKeyboard(before: "nice \u{1F44D}")
+        spellChecker.words["|t"] = ["to", "the", "that"]
+        type("t")
+        XCTAssertEqual(strip(), ["to", "the", "that"])
+        XCTAssertEqual(spellChecker.requests.last, "|t")
+    }
+
     func testAWordAndOneSpaceShowTheWordsAfterThatWord() {
         makeKeyboard(before: "See you ")
         spellChecker.words["you|"] = ["are", "can"]

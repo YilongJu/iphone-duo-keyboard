@@ -120,6 +120,15 @@ enum KeyboardTextLogic {
         return !character.unicodeScalars.contains { $0 == "\u{FE0F}" || $0 == "\u{20E3}" }
     }
 
+    /// True for an emoji. An emoji is no word and no part of one, so the letters right after it
+    /// start a word of their own, as the letters after a space do: the keyboard corrects them
+    /// and shows their predicted words and their emoji. A digit, "#" and "*" are emoji only
+    /// with a mark after them, as in a keycap.
+    static func isEmoji(_ character: Character) -> Bool {
+        guard let first = character.unicodeScalars.first, first.properties.isEmoji else { return false }
+        return first.properties.isEmojiPresentation || character.unicodeScalars.count > 1
+    }
+
     /// The two forms of space removal. Space removal deletes the one space between a word and
     /// a mark as the mark is typed.
     enum SpaceRemovalForm: Equatable {
@@ -348,6 +357,8 @@ enum KeyboardTextLogic {
     /// The word may hold one symbol or digit key that sits beside a letter key, because that
     /// key can be a slip for the letter: a digit or "[" at any place, or one of "-", ";", ","
     /// and "." in front of the word. Such a word has two letters or more.
+    /// The word starts the text, or a space, a line break, an opening bracket or quote or an
+    /// emoji comes right before it.
     /// A semicolon between two letters also belongs to the word, as in "don;t": the semicolon
     /// key sits right beside the apostrophe key, and a finger that aims at the apostrophe can
     /// land on it. The semicolon key ended the word before it, so the keyboard may have corrected
@@ -399,7 +410,7 @@ enum KeyboardTextLogic {
         }
         if start > before.startIndex {
             let preceding = before[before.index(before: start)]
-            guard preceding.isWhitespace || "([{\"".contains(preceding) else { return nil }
+            guard preceding.isWhitespace || "([{\"".contains(preceding) || isEmoji(preceding) else { return nil }
             // A word with a symbol key does not follow another symbol key, as in "[;ike".
             guard symbolCount == 0 || !symbolsBesideLetters.contains(preceding) else { return nil }
         }
@@ -422,7 +433,7 @@ enum KeyboardTextLogic {
         guard word.count >= 2, word.dropFirst().contains(where: { $0.isUppercase }) else { return nil }
         if start > before.startIndex {
             let preceding = before[before.index(before: start)]
-            guard preceding.isWhitespace || "([{\"".contains(preceding) else { return nil }
+            guard preceding.isWhitespace || "([{\"".contains(preceding) || isEmoji(preceding) else { return nil }
         }
         return String(word)
     }
@@ -457,7 +468,8 @@ enum KeyboardTextLogic {
         guard start < body.endIndex else { return nil }
         if start > body.startIndex {
             let preceding = body[body.index(before: start)]
-            guard preceding.isWhitespace || "([{\"\u{201C}\u{2018}".contains(preceding) else { return nil }
+            guard preceding.isWhitespace || "([{\"\u{201C}\u{2018}".contains(preceding) || isEmoji(preceding)
+            else { return nil }
         }
         return body[start...].lowercased()
     }
@@ -466,8 +478,8 @@ enum KeyboardTextLogic {
 
     /// The letters that the person is typing right before the cursor, for the predicted words of
     /// the prediction strip, or nil. The letters are ASCII letters and apostrophes. They start
-    /// the text, or a space, a line break or an opening bracket or quote comes right before
-    /// them, as before the word of `wordForEmoji(before:)`.
+    /// the text, or a space, a line break, an opening bracket or quote or an emoji comes right
+    /// before them, as before the word of `wordForEmoji(before:)`.
     ///
     /// The result is nil in three cases. No letter is typed. A letter, a digit or an apostrophe
     /// follows the cursor, so the cursor sits inside a word. The letters hold a capital after the
@@ -485,7 +497,8 @@ enum KeyboardTextLogic {
         guard let first = letters.first, first.isLetter else { return nil }
         if start > before.startIndex {
             let preceding = before[before.index(before: start)]
-            guard preceding.isWhitespace || "([{\"\u{201C}\u{2018}".contains(preceding) else { return nil }
+            guard preceding.isWhitespace || "([{\"\u{201C}\u{2018}".contains(preceding) || isEmoji(preceding)
+            else { return nil }
         }
         let capitals = letters.filter { $0.isUppercase }.count
         let onlyTheFirst = capitals == 0 || (capitals == 1 && first.isUppercase)

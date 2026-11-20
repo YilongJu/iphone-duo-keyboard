@@ -392,6 +392,19 @@ def apostrophe_step(readings: list[dict], choice: dict, lm: dict, setting: Setti
 
 # ---- The keyboard's correction rules, from Shared/KeyboardTextLogic.swift and KeyboardTextController.swift ----
 
+def ends_with_emoji(text: str) -> bool:
+    """`KeyboardTextLogic.isEmoji` for the last character of `text`: an emoji is no word, so the
+    letters right after it start a word of their own. Python has no table of emoji, so this
+    function reads the last code point: a pictograph, a mark that ends an emoji (a variation
+    selector, a keycap mark, a skin tone, a tag) or a regional indicator of a flag. The cases
+    of the harness hold no emoji, and this rule keeps the copy in line with the keyboard."""
+    if not text:
+        return False
+    code = ord(text[-1])
+    return (0x1F000 <= code <= 0x1FAFF or 0x2600 <= code <= 0x27BF or 0x2B00 <= code <= 0x2BFF
+            or code in (0xFE0F, 0x20E3) or 0xE0020 <= code <= 0xE007F)
+
+
 def correctable_word(before: str) -> str | None:
     start = len(before)
     while start > 0:
@@ -424,7 +437,7 @@ def correctable_word(before: str) -> str | None:
             return None
     if start > 0:
         preceding = before[start - 1]
-        if not (preceding.isspace() or preceding in "([{\""):
+        if not (preceding.isspace() or preceding in "([{\"" or ends_with_emoji(before[:start])):
             return None
         if symbol_count > 0 and preceding in SYMBOLS_BESIDE_LETTERS:
             return None
@@ -594,7 +607,7 @@ def word_with_inner_capital(before: str) -> str | None:
     word = before[start:]
     if len(word) < 2 or not any(c.isupper() for c in word[1:]):
         return None
-    if start > 0 and not (before[start - 1].isspace() or before[start - 1] in "([{\""):
+    if start > 0 and not (before[start - 1].isspace() or before[start - 1] in "([{\"" or ends_with_emoji(before[:start])):
         return None
     return word
 

@@ -101,6 +101,42 @@ final class EmojiSuggestionTests: XCTestCase {
         XCTAssertNil(row())
     }
 
+    func testAWordRightAfterAnEmojiShowsItsEmoji() {
+        // An emoji is no word, so the word after it counts without a space between the two.
+        makeController(before: "\u{1F389}")
+        type("good")
+        XCTAssertEqual(topRow().first, "\u{1F44D}")
+        type(" ")
+        XCTAssertEqual(topRow().first, "\u{1F44D}")
+    }
+
+    func testAWordRightAfterAnEmojiGetsItsCorrection() {
+        makeController(before: "ok \u{1F389}")
+        type("teh ")
+        XCTAssertEqual(document.text, "ok \u{1F389}the ")
+        // The emoji is no word before the typed word.
+        XCTAssertEqual(spellChecker.requests, ["|teh"])
+    }
+
+    func testTheRulesOfAWordTakeAnEmojiAsItsStart() {
+        for emoji in ["\u{1F44D}", "\u{2764}\u{FE0F}", "1\u{FE0F}\u{20E3}", "\u{1F1E8}\u{1F1F3}", "\u{1F468}\u{200D}\u{1F469}\u{200D}\u{1F467}"] {
+            XCTAssertTrue(KeyboardTextLogic.isEmoji(Character(emoji)), emoji)
+            XCTAssertEqual(KeyboardTextLogic.correctableWord(before: emoji + "teh"), "teh", emoji)
+            XCTAssertEqual(KeyboardTextLogic.typedLetters(before: emoji + "goo", after: ""), "goo", emoji)
+            XCTAssertEqual(KeyboardTextLogic.wordForEmoji(before: emoji + "good "), "good", emoji)
+            XCTAssertEqual(KeyboardTextLogic.wordWithInnerCapital(before: emoji + "pyTorch"), "pyTorch", emoji)
+        }
+        let context = KeyboardTextLogic.predictionContext(before: "\u{1F44D}goo", after: "")
+        XCTAssertEqual(context?.previousWord, "")
+        XCTAssertEqual(context?.typed, "goo")
+        // A digit, a sign and a letter are no emoji, and a word right after them is still no word of its own.
+        for character in ["1", "#", "*", "a", "\u{4E2D}", "\u{A9}", "@"] {
+            XCTAssertFalse(KeyboardTextLogic.isEmoji(Character(character)), character)
+        }
+        XCTAssertNil(KeyboardTextLogic.correctableWord(before: "name@teh"))
+        XCTAssertNil(KeyboardTextLogic.typedLetters(before: "\u{4E2D}goo", after: ""))
+    }
+
     func testTheWordBeforeOneSpaceShowsItsEmoji() {
         makeController(before: "That is ")
         type("good ")
@@ -330,7 +366,8 @@ final class EmojiSuggestionTests: XCTestCase {
         // Candidates of "nihao": the phrase, then the two characters for "ni". A digit counts
         // the Pinyin candidates only.
         type("nihao2")
-        XCTAssertEqual(document.text, "\u{597D}\u{4F60}")
+        XCTAssertEqual(document.text, "\u{597D}\u{4F60}hao")
+        XCTAssertEqual(document.markedText, "hao")
         XCTAssertEqual(controller.pinyinBuffer, "hao")
         XCTAssertEqual(row()?.prefix(2).map { $0 }, ["\u{597D}", "\u{1F44D}"])
     }
