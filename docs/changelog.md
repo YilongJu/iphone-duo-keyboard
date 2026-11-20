@@ -4,6 +4,41 @@ This file lists what changed in each TestFlight build, the newest build first. E
 the build number, the commit, and the upload time in UTC. An entry says what a person notices
 on the phone first, and then what changed behind it.
 
+## Build 72
+
+Commit `c20cb62`, uploaded 2026-11-20 12:37 UTC.
+
+**What you notice**
+
+- Chinese offers many more names and terms of the last years. "xianyanbao" gives 显眼包,
+  "dongyuhui" gives 董宇辉, and "tangping" gives 躺平 before 烫平.
+- First letters reach new words: "tlp" gives 特朗普.
+- Many more words show an emoji: 4,868 English words and 3,169 Chinese words, where 328 and
+  264 did. A word still shows two emoji at the most, so the strip keeps its words.
+- New emoji up to Emoji 17 show, such as 🫡 for "salute" and 🧋 for 奶茶.
+- "don;t" becomes "don't" at the space. The same holds for every contraction typed with the
+  semicolon key in place of the apostrophe key beside it, as "it;s", "I;m" and "isn;t".
+- A semicolon that you type on purpose stays, with or without a space after it.
+
+**Behind it**
+
+- The Chinese lexicon holds 469,402 more words, from the Wanxiang word lists, and gives
+  21,482 words a higher probability ([pinyin-modern-words.md](pinyin-modern-words.md)). Of
+  497 names and terms from 2015 to 2025, the engine offers 468, where it offered 376. 29 are
+  still not offered, such as 班味 and 国补.
+- The lexicon file is 90 MB, where it was 50 MB. On the PC the Chinese engine takes 22 ms per
+  case, where it took 18 ms.
+- The emoji come from the Unicode annotations of each emoji, with pinned choices and deny
+  lists ([emoji-suggestions.md](emoji-suggestions.md)). By word counts of English text, about
+  15% of typed words now show an emoji, where 3% did.
+- The semicolon key ends a word, so the keyboard never saw "don;t" as one word, and the
+  proofreader fixed it later. The keyboard now reads the letters around a semicolon as one
+  word, and the engine reads the semicolon as the apostrophe
+  (`scripts/semicolon-slip-check/README.md`). With the language model step, 1,195 of 1,224
+  such slips of the test half come out right.
+- The engine reads a semicolon between letters only as the apostrophe. "he;lo" does not
+  become "hello".
+
 ## Build 71
 
 Commit `90eacd8`, uploaded 2026-11-20 09:28 UTC.
