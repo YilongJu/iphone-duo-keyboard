@@ -1,0 +1,17 @@
+# Chinese chat words that the table may hold although Shared/lexicon-pinyin.bin does not hold them.
+# The typing engine builds its first candidate from several words of the lexicon, so such a
+# word can still be the first candidate.
+吓死了
+哭了
+困了
+太棒了
+我的天
+晕了
+气死了
+没问题
+烦死了
+睡了
+笑死了
+累了
+谢了
+辛苦了

@@ -1,597 +1,8044 @@
 # Emoji that the keyboard offers for a word. Built by scripts/emoji-table/build_emoji_table.py
-# from the Unicode CLDR 49.0.0 emoji annotations (Unicode License v3) and the Unicode
-# emoji frequency ranking. docs/emoji-suggestions.md describes the table.
+# from the Unicode CLDR 49.0.0 emoji annotations and the emoji list of Emoji 17.0
+# (Unicode License v3), from the keywords of emojilib 4.0.3 (MIT license), and from the
+# hand-written files beside the script. docs/emoji-suggestions.md describes the table.
 # Unicode data: Copyright (c) 1991-2026 Unicode, Inc. License: https://www.unicode.org/license.txt
+# emojilib: Copyright (c) 2014 Mu-An Chiou. License: https://github.com/muan/emojilib/blob/main/LICENSE
 # Columns: language, word, emoji separated by one space.
+en	abacus	🧮
+en	abandoned	🏚️
+en	academic	🎓
+en	academics	🎓
+en	accept	👍
+en	accepting	👍
+en	accepts	👍
+en	accessibility	♿
+en	accessible	♿
+en	accessory	👜
+en	accident	💥 🚑
+en	accidents	💥 🚑
+en	accommodation	🏨
+en	accommodations	🏨
+en	accordion	🪗
+en	accordions	🪗
+en	accountant	🧑‍💼
+en	acorn	🌰
+en	acorns	🌰
+en	acting	🎭
+en	action	🎬
+en	actions	🎬
+en	actor	🎭
+en	actors	🎭
+en	actress	🎭
+en	actresses	🎭
+en	adaptor	🔌
+en	adaptors	🔌
+en	adhesive	🩹
+en	adhesives	🩹
+en	admiration	🥹
+en	admission	🎫 🎟️
+en	admissions	🎫 🎟️
+en	adorable	🥰
+en	adore	🥰
+en	adored	🥰
+en	adores	🥰
+en	adoring	🥰
+en	aeroplane	✈️
+en	aeroplanes	✈️
+en	affection	🥰 💕
+en	affections	🥰 💕
 en	afraid	😨
+en	africa	🌍
 en	agree	💯
+en	agreed	💯
+en	agreeing	💯
+en	agreement	🤝
+en	agreements	🤝
+en	agrees	💯
+en	agriculture	🚜
+en	aid	⛑️ 🩹
+en	air	💨
+en	airplane	✈️ 🛩️
+en	airport	✈️ 🛫
+en	airports	✈️ 🛫
 en	alarm	⏰
+en	alarms	⏰
+en	alcohol	🍺 🍷
+en	alcohols	🍺 🍷
+en	ale	🍺
+en	alert	🚨 ⚠️
+en	alerts	🚨 ⚠️
+en	ales	🍺
 en	alien	👽
+en	aliens	👽
+en	allergies	🤧
+en	allergy	🤧
+en	alligator	🐊
+en	alligators	🐊
+en	alpaca	🦙
+en	alpacas	🦙
+en	alphabet	🔤
+en	alphabets	🔤
+en	alternation	〽️
+en	alternations	〽️
+en	amazed	😳
+en	amazement	🫢
+en	amazing	🤩
+en	amble	🚶
+en	ambling	🚶
+en	ambulance	🚑
+en	ambulances	🚑
+en	americas	🌎
+en	amoeba	🦠
+en	amphora	🏺
+en	amulet	🧿
+en	amulets	🧿
+en	amusement	🛝
+en	amusements	🛝
+en	anatomical	🫀
+en	anchor	⚓
+en	anchors	⚓
 en	angel	😇 👼
+en	angelic	😇
+en	angels	😇 👼
+en	anger	💢
+en	angered	💢
+en	angers	💢
+en	angle	📐
+en	angles	📐
 en	angry	😡 😠
+en	anguished	😧
+en	ankle	🦶
+en	ankles	🦶
+en	anniversaries	💕 💐
+en	anniversary	💕 💐
+en	announcement	📢
 en	annoyed	😖
+en	answering	🙋
+en	ant	🐜
+en	antarctica	🐧
+en	antenna	📡
+en	antennas	📡
+en	antlers	🫎
+en	ants	🐜
+en	anxieties	😰
+en	anxiety	😰
+en	anxious	😰
+en	ape	🦧
+en	apes	🦧
+en	apocalypse	🧟
+en	apology	🙇
 en	applause	👏
 en	apple	🍎
+en	apples	🍎
 en	appreciate	🙏
+en	appreciated	🙏
+en	appreciates	🙏
+en	appreciating	🙏
+en	appreciation	🫶
+en	apprehend	👮
+en	apprehending	👮
+en	approve	👍
+en	approves	👍
+en	approving	👍
+en	aquarium	🐠
+en	aquariums	🐠
+en	aquarius	♒
+en	arachnid	🕷️
+en	arachnids	🕷️
+en	arcade	👾 🕹️
+en	arcades	👾 🕹️
+en	archer	🏹
+en	archers	🏹
+en	archery	🏹
+en	arctic	🐻‍❄️
+en	aries	♈
+en	arm	💪
+en	armies	🪖 🎖️
+en	army	🪖 🎖️
+en	arrest	👮
+en	arresting	👮
+en	arrests	👮
+en	arrival	🛬
+en	arrivals	🛬
+en	arriving	🛬
+en	art	🎨
+en	artist	🧑‍🎨
+en	artists	🧑‍🎨
+en	arts	🎭
+en	artsy	🎨
+en	arty	🎨
+en	ashes	⚱️
+en	asia	🌏
+en	assassin	🥷
+en	assassins	🥷
+en	asterisk	✳️
+en	asterisks	✳️
+en	astonished	😲
+en	astronaut	🧑‍🚀
+en	astronauts	🧑‍🚀
+en	astronomy	🔭
+en	atm	🏧
+en	atom	⚛️
+en	atoms	⚛️
+en	attendant	💁
+en	attendants	💁
+en	attraction	🧲
+en	aubergine	🍆
+en	automobile	🚗 🚘
+en	automobiles	🚗 🚘
 en	autumn	🍂
+en	avalanche	🛘
+en	avalanches	🛘
+en	aviator	🧑‍✈️
+en	aviators	🧑‍✈️
+en	avocado	🥑
+en	avocados	🥑
+en	award	🏆
+en	awards	🏆
+en	awareness	🎗️
+en	awe	🫢
+en	awed	🫢
 en	awesome	👏 😎
+en	awful	😢
 en	awkward	😬
+en	aww	🥹 🥰
+en	axe	🪓
+en	axes	🪓
+en	baa	🐑
+en	baas	🐑
+en	babies	👶
 en	baby	👶
+en	backhand	🤚
+en	backpack	🎒
+en	backpacking	🎒
+en	backpacks	🎒
 en	bacon	🥓
+en	bacteria	🦠
+en	bad	👎
+en	badge	📛
+en	badger	🦡
+en	badgers	🦡
+en	badges	📛
+en	badminton	🏸
+en	bae	😍 😘
+en	bag	👜 🛍️
+en	bagel	🥯
+en	baggage	🛄 🧳
+en	bags	🛍️
+en	baguette	🥖
+en	baguettes	🥖
+en	bait	🪤
+en	baits	🪤
+en	bakeries	🥯
+en	bakery	🥯
+en	balance	⚖️
+en	balances	⚖️
+en	balancing	🤹
+en	ball	⚽ 🏀
+en	ballerina	🩰
+en	ballerinas	🩰
+en	ballet	🩰
+en	ballets	🩰
 en	balloon	🎈
+en	balloons	🎈
+en	ballot	🗳️
+en	ballots	🗳️
+en	ballpoint	🖊️
+en	balls	⚽ 🏀
+en	bamboo	🎍
+en	bamboos	🎍
+en	ban	🚫
 en	banana	🍌
+en	bananas	🍌
+en	bandage	🩹
+en	bandaged	🤕
+en	bang	💥
+en	banged	💥
+en	banging	💥
+en	bangs	💥
+en	banjo	🪕
+en	banjos	🪕
+en	bank	🏦
+en	banker	🧑‍💼
+en	bankers	🧑‍💼
+en	banknote	💵 💴
+en	banknotes	💵
+en	banks	🏦
+en	banned	🚫
+en	bans	🚫
+en	banzai	🙌
+en	bar	🍻 🍸
+en	barbecue	🍖
+en	barbecues	🍖
+en	barbell	🏋️
+en	barbells	🏋️
+en	barber	💈 💇
+en	barbers	💈 💇
+en	barefoot	👣
+en	barf	🤮
+en	barren	🪾
+en	barrier	🚧
 en	baseball	⚾
+en	baseballs	⚾
+en	basket	🧺
 en	basketball	🏀
+en	basketballs	🏀
+en	baskets	🧺
+en	bass	🎸
+en	basses	🎸
+en	bat	🦇
+en	bath	🛀
+en	bathed	🛀
+en	bathing	🩱
+en	bathroom	🚽 🚿
+en	bathrooms	🚽 🚿
+en	baths	🛀
+en	bathtub	🛁
+en	bathtubs	🛁
+en	batman	🦇
+en	bats	🦇
+en	batteries	🔋 🪫
+en	battery	🔋 🪫
+en	bawling	😭
+en	bbq	🍖
+en	bday	🎂 🥳
 en	beach	🏖️ 🌴
+en	beaches	🏖️ 🌴
+en	beacon	🚨
+en	beacons	🚨
+en	bead	🧿
+en	beads	📿
+en	beaming	😁
+en	beans	🫘
+en	beanstalk	🫛
 en	bear	🐻
+en	beard	🧔
+en	bearded	🧔
+en	beards	🧔
+en	bears	🐻
+en	beating	💓
+en	beauties	💄 💅
+en	beautiful	😍
+en	beauty	💄 💅
+en	beaver	🦫
+en	beavers	🦫
+en	beckon	🫴
+en	bed	🛏️ 🛌
+en	bedroom	🛏️
+en	bedrooms	🛏️
+en	beds	🛏️ 🛌
 en	bedtime	😴
 en	bee	🐝
+en	beef	🥩
+en	beefs	🥩
+en	beeper	📟
+en	beepers	📟
 en	beer	🍺 🍻
+en	beers	🍻
+en	bees	🐝
+en	beet	🫜
+en	beetle	🐞 🪲
+en	beetles	🐞 🪲
+en	beets	🫜
+en	befuddled	😕
+en	beg	🙏
+en	begged	🙏
+en	begging	🥺
+en	beginner	🔰
+en	begs	🙏
+en	bell	🔔
+en	bellhop	💁
+en	bells	🔔
+en	berries	🍓 🫐
+en	berry	🍓
+en	bestie	👯
+en	beverage	☕
+en	beverages	☕
+en	bff	👯
+en	bicep	💪
+en	biceps	💪
+en	bicycle	🚲
+en	bicycles	🚲
+en	bicyclist	🚴
+en	bigfoot	🫈
 en	bike	🚲
+en	biker	🚵
+en	bikers	🚵
+en	bikes	🚲
+en	biking	🚴 🚵
+en	bikini	👙
+en	bikinis	👙
+en	bilberry	🫐
+en	bill	💵
+en	billiard	🎱
+en	billiards	🎱
+en	bills	💸
+en	bin	🗑️
+en	binder	📒
+en	binders	📒
+en	bins	🗑️
+en	biologist	🧑‍🔬
+en	biologists	🧑‍🔬
+en	biology	🧬 🧫
 en	bird	🐦 🐥
+en	birdie	🏸
+en	birdies	🏸
+en	birds	🐦 🐥
 en	birthday	🎂 🎉
+en	birthdays	🎂 🎉
+en	biscuit	🍪
+en	bison	🦬
+en	biting	🫦
+en	black	🖤 ⚫
+en	blade	🔪
+en	bleed	🩸
+en	bleeds	🩸
+en	bless	🙏
 en	blessed	🙏 😇
+en	blesses	🙏
+en	blessing	🙏
+en	block	🚫
+en	blocks	🚫
+en	blood	🩸
+en	bloom	🌸
+en	blooms	🌸
+en	blossom	🌸 🌼
+en	blossoms	🌸 🌼
+en	blouse	👚
+en	blouses	👚
+en	blow	🌬️ 💨
+en	blowfish	🐡
+en	blows	🌬️ 💨
+en	blue	🔵 💙
+en	blueberries	🫐
+en	blueberry	🫐
+en	bluebonnet	🪻
+en	blues	🎷
+en	blurry	🫨
 en	blush	😊
+en	blushed	😊
+en	blushes	😊
+en	blushing	😊 😳
+en	boar	🐗
+en	boars	🐗
+en	boat	⛵ 🚤
+en	boats	⛵ 🚤
+en	bodybuilder	🏋️
+en	bollywood	🎥
+en	bolt	🔩
+en	bolts	🔩
+en	bomb	💣
+en	bombs	💣
+en	bone	🦴
+en	bones	🦴
+en	boo	👻
 en	book	📚 📖
+en	bookkeeping	🧾
+en	bookmark	🔖
+en	bookmarks	🔖
 en	books	📚
 en	boom	💥
+en	boomed	💥
+en	boomerang	🪃
+en	boomerangs	🪃
+en	booming	💥
+en	booms	💥
+en	boot	🥾 👢
+en	boots	🥾 👢
+en	booze	🍺 🍻
 en	bored	😒
+en	boring	🥱 💤
+en	born	🐣 🍼
+en	bot	🤖
+en	bots	🤖
+en	bottle	🍾 🍼
+en	bottles	🍾 🍼
+en	boulder	🪨
+en	boulders	🪨
+en	bouncing	⛹️
 en	bouquet	💐
+en	bouquets	💐
+en	bourbon	🥃
+en	bow	🙇 🏹
+en	bowed	🙇 🏹
+en	bowing	🙇
+en	bowl	🥣
+en	bowling	🎳
+en	bowls	🥣
+en	bows	🙇 🏹
+en	box	📦
+en	boxes	📦
+en	boxing	🥊
 en	brain	🧠
+en	brains	🧠
+en	brainy	🤓
+en	branches	🪾
+en	brass	🎺
+en	brawl	🫯
+en	brawling	🫯
+en	brawls	🫯
 en	bread	🍞
+en	breads	🍞
 en	breakfast	🍳 🥞
+en	breakfasts	🍳 🥞
+en	breastfeeding	🤱
+en	breath	🫁
+en	breathe	🫁
+en	breathed	🫁
+en	breathes	🫁
+en	breathing	🫁
+en	breaths	🫁
+en	brew	🫖
+en	brews	🫖
+en	brick	🧱
+en	bricks	🧱
+en	bride	👰
+en	brides	👰
+en	bridge	🌉
+en	bridges	🌉
+en	briefcase	💼
+en	briefcases	💼
+en	briefs	🩲
+en	bright	🔆
+en	brightness	☀️
+en	brilliant	🤩 💡
+en	bro	👊
+en	broccoli	🥦
 en	broken	💔
+en	bronze	🥉
+en	bronzes	🥉
+en	broom	🧹
+en	brooms	🧹
+en	bros	👊
+en	brown	🟤 🤎
+en	browns	🟤 🤎
+en	brr	🥶
+en	bruh	🤦
+en	brunch	🥞
+en	brush	🖌️ 🪥
+en	brushes	🖌️ 🪥
+en	bubble	🫧 🗨️
+en	bubbles	🫧
+en	bubbly	🍾
+en	buck	🦌
+en	bucket	🪣
+en	buckets	🪣
+en	buffalo	🐃
+en	buffaloes	🐃
+en	bug	🐛
+en	bugle	📯
+en	bugs	🐛
+en	build	🔨
+en	builder	👷
+en	builders	👷
+en	building	🏢
+en	buildings	🏢
+en	builds	🔨
+en	bulb	💡
+en	bull	🐂
+en	bullhorn	📣
+en	bullock	🐂
+en	bullocks	🐂
+en	bulls	🐂
+en	bumblebee	🐝
+en	bump	👊
+en	bumped	👊
+en	bumping	👊
+en	bumps	👊
+en	bunnies	🐰
 en	bunny	🐰
+en	buoy	🛟
+en	buoys	🛟
 en	burger	🍔
+en	burgers	🍔
+en	burn	🔥
+en	burned	🔥
+en	burning	🔥
+en	burnings	🔥
+en	burns	🔥
+en	burrito	🌯
+en	burritos	🌯
+en	burro	🫏
+en	burros	🫏
 en	bus	🚌
+en	buses	🚌
+en	bust	👤 👥
+en	busts	👥
+en	butter	🧈
+en	buttercup	🌼
+en	butterflies	🦋
 en	butterfly	🦋
+en	butters	🧈
+en	buy	🛍️
+en	buys	🛍️
 en	bye	👋
+en	byes	👋
+en	cab	🚕
+en	cabbage	🥬
+en	cabbages	🥬
+en	cabbie	🚕
+en	cabinet	🗄️
+en	cabinets	🗄️
+en	cable	🔌
+en	cables	🔌
+en	caboose	🚂
+en	cabs	🚕
 en	cactus	🌵
+en	cafe	☕
+en	cafes	☕
+en	caffeine	☕
 en	cake	🎂 🍰
+en	cakes	🎂 🍰
+en	calculation	🧮
+en	calculations	🧮
+en	calculator	🧮
+en	calculators	🧮
+en	calendar	🗓️ 📆
+en	calendars	🗓️ 📆
+en	call	📞
+en	called	📞
+en	calling	📞
+en	calls	📞
 en	calm	😌
+en	calmed	😌
+en	calming	😌
+en	calms	😌
+en	camcorder	📹
+en	camcorders	📹
+en	camel	🐪 🐫
+en	camels	🐪 🐫
 en	camera	📷 📸
+en	cameras	📷 📸
+en	camping	🏕️
+en	campsite	🏕️
+en	campsites	🏕️
+en	cancel	❌
+en	canceled	❌
+en	cancelled	❌
+en	cancels	❌
+en	candies	🍬 🍭
+en	candle	🕯️
+en	candles	🕯️ 🎂
 en	candy	🍬 🍭
+en	cane	🦯
+en	canes	🦯
+en	canned	🥫
+en	canoe	🛶
+en	canoes	🛶
+en	cantaloupe	🍈
+en	cap	🧢
+en	capricorn	♑
+en	caps	🧢
+en	capsicum	🫑
+en	capsule	💊
 en	car	🚗
+en	caramel	🍮
+en	caramels	🍮
+en	carbonation	🫧
+en	carbs	🍞
+en	card	💳
+en	cardboard	📦
+en	cardiac	🫀
+en	cardio	💓
+en	cardiology	🫀
+en	cards	🃏
+en	career	💼
+en	careers	💼
+en	careful	⚠️
+en	carnival	🎪 🎠
+en	carnivals	🎪 🎠
+en	carousel	🎠
+en	carousels	🎠
+en	carp	🎏
+en	carpenter	🪚
+en	carpenters	🪚
+en	carpentry	🪚
+en	carps	🎏
+en	carriage	🚃
+en	carriages	🚃
+en	carrot	🥕
+en	carrots	🥕
+en	cars	🚗
+en	cart	🛒
+en	carts	🛒
+en	cartwheel	🤸
 en	cash	💰 💸
+en	cashes	💰 💸
+en	casino	🎰
+en	casinos	🎰
+en	cask	🪣
+en	casket	⚰️
+en	caskets	⚰️
+en	casks	🪣
+en	casserole	🥘
+en	casseroles	🥘
+en	castle	🏰 🏯
+en	castles	🏰 🏯
+en	casual	👕 👖
 en	cat	🐱 🐈
+en	caterpillar	🐛
+en	caterpillars	🐛
+en	cats	🐱 🐈
+en	caution	⚠️
+en	cautions	⚠️
+en	caw	🐦‍⬛
+en	caws	🐦‍⬛
+en	cd	💿
 en	celebrate	🎉 🎊
+en	celebrated	🎉 🎊
+en	celebrates	🎉 🎊
+en	celebrating	🎉 🎊
 en	celebration	🎉 🎊
+en	celebrations	🎉 🎊
+en	cell	📱
+en	cemeteries	🪦
+en	cemetery	🪦
+en	censor	🤬
+en	censoring	🤬
+en	censors	🤬
+en	cereal	🥣
+en	cereals	🥣
+en	chain	⛓️
+en	chains	⛓️
+en	chair	🪑
+en	chairs	🪑
+en	champagne	🍾 🥂
+en	champagnes	🍾 🥂
 en	champion	🏆
+en	champions	🏆
+en	championship	🏆
+en	championships	🏆
+en	champs	🏆
+en	chapel	💒
+en	chapels	💒
+en	charger	🔌
+en	chargers	🔌
+en	charm	🧿
+en	charms	🧿
+en	chart	📊
+en	charts	📊
+en	chat	💬
+en	chats	💬
+en	chatted	💬
+en	chatting	💬
+en	check	✅
+en	checkbox	☑️
+en	checked	✅ ✔️
+en	checks	✅
+en	cheeky	😛
 en	cheerful	😀
+en	cheering	📣
 en	cheers	🍻
+en	cheery	😀
 en	cheese	🧀
+en	cheeseburger	🍔
+en	cheeseburgers	🍔
+en	cheeses	🧀
+en	chef	🧑‍🍳
+en	chefs	🧑‍🍳
+en	chemist	🧑‍🔬
+en	chemistry	🧪 ⚗️
+en	chemists	🧑‍🔬
+en	chequered	🏁
+en	cherries	🍒
 en	cherry	🍒
+en	cherub	👼
+en	cherubs	👼
+en	chess	♟️
+en	chestnut	🌰
+en	chestnuts	🌰
+en	chick	🐥 🐣
 en	chicken	🐔 🍗
+en	chickens	🐔 🍗
+en	chickpea	🧆
+en	chickpeas	🧆
+en	childish	😜
+en	chill	😎
+en	chilled	😎
+en	chilli	🌶️
+en	chilling	😎
+en	chills	😎
+en	chime	🎐
+en	chipmunk	🐿️
+en	chipmunks	🐿️
+en	chips	🍟
+en	chirp	🦗
 en	chocolate	🍫
-en	christmas	🎁 🌲
+en	chocolates	🍫
+en	chop	🥩
+en	chops	🥩
+en	chopsticks	🥢
+en	christmas	🎄 🎅
+en	christmases	🎄 🎅
+en	church	⛪
+en	churches	⛪
+en	cigarette	🚬
+en	cigarettes	🚬
+en	cinema	🎦
+en	cinemas	🎦
+en	circle	⭕ 🔴
+en	circles	⭕ 🔴
+en	circus	🎪
+en	circuses	🎪
+en	cities	🏙️
+en	citrus	🍋
+en	city	🏙️
+en	cityscape	🌆 🏙️
+en	clairvoyant	🔮
+en	clamp	🗜️
+en	clamps	🗜️
 en	clap	👏
+en	clapboard	🎬
+en	clapped	👏
+en	clapper	🎬
+en	clapping	👏
+en	claps	👏
+en	classy	🧐
+en	claus	🧑‍🎄 🎅
+en	claws	🦞
+en	clean	🧼 🫧
+en	cleaned	🧼
+en	cleaning	🧹 🧼
+en	cleanings	🧹 🧼
+en	cleans	🧼 🫧
+en	clef	🎼
+en	clefs	🎼
+en	clenched	👊 ✊
+en	clerk	🧑‍💼
+en	clerks	🧑‍💼
+en	clever	🤓
+en	climb	🧗
+en	climbed	🧗
+en	climber	🧗
+en	climbing	🧗
+en	climbs	🧗
+en	clink	🍻 🥂
+en	clipboard	📋
+en	clipboards	📋
 en	clock	⏰
+en	clocks	⏰
+en	clothes	👚
+en	clothing	👕
 en	cloud	☁️
+en	clouds	☁️
+en	cloudy	☁️ ⛅
+en	clover	🍀
+en	clovers	🍀
 en	clown	🤡
+en	clowning	🤡
+en	clowns	🤡
+en	cluck	🐔
+en	clue	🧩
+en	clues	🧩
+en	clumsy	🤕
+en	clutch	👝
+en	clutches	👝
+en	coaster	🎢
+en	coasters	🎢
+en	coat	🧥
+en	coats	🧥
+en	cob	🌽
+en	cobs	🌽
+en	cobweb	🕸️
+en	cockerel	🐓
+en	cockroach	🪳
 en	cocktail	🍹 🍸
+en	cocktails	🍹 🍸
+en	coconut	🥥
+en	coconuts	🥥
+en	coder	🧑‍💻
+en	coders	🧑‍💻
 en	coffee	☕
-en	cold	❄️
+en	coffees	☕
+en	coffin	⚰️
+en	coffins	⚰️
+en	cog	⚙️
+en	cogs	⚙️
+en	coin	🪙
+en	coins	🪙 💰
+en	cold	🥶 ❄️
+en	colds	🥶 ❄️
+en	college	🎓
+en	colleges	🎓
+en	collide	💥
+en	collided	💥
+en	collides	💥
+en	colliding	💥
+en	collision	💥
+en	collisions	💥
+en	comb	🪮
+en	combs	🪮
+en	comedies	🎭
+en	comedy	🎭
+en	comet	☄️
+en	comets	☄️
+en	comment	💬
+en	commented	💬
+en	commenting	💬
+en	compass	🧭
+en	compasses	🧭
 en	complete	✅
+en	completes	✅
+en	compose	🎼
+en	composes	🎼
+en	compress	🗜️
+en	compresses	🗜️
+en	compression	🗜️
+en	compressions	🗜️
 en	computer	💻
+en	computers	💻
+en	concentrate	😣
+en	concentrated	😣
+en	concentrates	😣
+en	concentrating	😣
+en	concern	😟
+en	concerning	😟
+en	concert	🎤 🎫
+en	concertina	🪗
+en	concerts	🎤 🎫
+en	conch	🐚
+en	concierge	💁
+en	condiment	🧂
+en	cone	🍦
+en	cones	🍦
+en	confetti	🎊
+en	confounded	😖
+en	confuse	🫤
 en	confused	😕
-en	congrats	👏
-en	congratulations	👏 ㊗️
+en	confuses	🫤
+en	confusing	😕
+en	confusion	🫤
+en	confusions	🫤
+en	conga	🪘
+en	congas	🪘
+en	congrats	🎉 👏
+en	congratulate	🎉
+en	congratulates	🎉
+en	congratulations	🎉 👏
+en	consider	🤔
+en	considering	🤔
+en	considers	🤔
+en	console	🎮
+en	consoles	🎮
+en	construction	🚧 🏗️
+en	constructions	🚧 🏗️
+en	container	🫙
+en	containers	🫙
+en	contest	🏆
+en	contests	🏆
+en	controller	🎮
+en	controllers	🎮
+en	convenience	🏪
+en	conveniences	🏪
+en	cook	🧑‍🍳
 en	cookie	🍪
+en	cooking	🍳
+en	cooks	🧑‍🍳
 en	cool	😎
+en	cooled	😎
+en	cools	😎
+en	cop	👮
+en	cops	🚓
+en	copter	🚁
+en	copyright	©️
+en	copyrights	©️
+en	coral	🪸
+en	corals	🪸
+en	cord	🪢
+en	cords	🪢
+en	cork	🍾
+en	corks	🍾
+en	corn	🌽
+en	corns	🌽
+en	correct	✅ ✔️
+en	corrects	✅ ✔️
+en	cosmetics	💄
+en	cosmetology	💇
+en	couch	🛋️
+en	couches	🛋️
+en	countdown	⏳
+en	countdowns	⏳
+en	counting	🧮
+en	couple	💑
+en	couples	💑
+en	covid	😷
 en	cow	🐮 🐄
+en	cowboy	🤠
+en	cowboys	🤠
+en	cowgirl	🤠
+en	cowgirls	🤠
+en	cows	🐮 🐄
+en	crab	🦀
+en	crabs	🦀
+en	cracker	🍘
+en	crackers	🍘
+en	crafts	🧶 🧵
+en	crane	🏗️
+en	cranes	🏗️
+en	crash	💥
+en	crashed	💥
+en	crashes	💥
+en	crashing	💥
+en	crayon	🖍️
 en	crazy	😜 🤪
+en	cream	🍦 🍨
+en	creams	🍦 🍨
+en	creative	🎨
+en	creatives	🎨
+en	creativity	🧑‍🎨
+en	creature	🫈
+en	credentials	🪪
+en	credit	💳
+en	credits	💳
+en	creepy	💀
+en	creme	🍮
+en	crescent	🌙
+en	crescents	🌙
+en	cricket	🏏 🦗
+en	crickets	🏏 🦗
+en	cried	😭 😢
+en	cries	😭 😢
+en	cringe	😖
+en	cringed	😖
+en	cringing	😖
+en	croak	🐸
+en	crochet	🧶
+en	crocodile	🐊
+en	crocodiles	🐊
+en	croissant	🥐
+en	croissants	🥐
+en	crop	🌾
+en	crops	🌽
+en	cross	❌
+en	crossbones	☠️
+en	crossing	🚸
+en	crossings	🚸
+en	crow	🐦‍⬛
 en	crown	👑
+en	crowns	👑
+en	crows	🐦‍⬛
+en	cruise	🚢 🛳️
+en	cruises	🚢 🛳️
+en	crush	🥰
+en	crushed	💔
+en	crushes	🥰
+en	crustacean	🦀
+en	crutch	🩼
 en	cry	😭 😢
 en	crying	😭 😢
+en	crystal	🔮
+en	crystals	🔮
+en	cube	🧊
+en	cubes	🧊
+en	cucumber	🥒
+en	cucumbers	🥒
+en	cue	🎱
+en	cues	🎱
+en	culinary	🧑‍🍳
+en	cup	🥤 ☕
+en	cupcake	🧁
+en	cupid	💘
+en	cupids	💘
+en	cupped	🤲
+en	cups	🥤 ☕
+en	curling	🥌
+en	curly	➰
+en	currencies	💱 💵
+en	currency	💱 💵
+en	curries	🍛
+en	curry	🍛
+en	cursing	🤬
+en	cussing	🤬
+en	custard	🍮
+en	customs	🛃
+en	cut	✂️
+en	cute	🥰 🩷
+en	cutlery	🍴
+en	cuts	✂️
+en	cyan	🩵
+en	cycle	🚴 🚲
+en	cycled	🚴 🚲
+en	cycles	🚴 🚲
+en	cycling	🚲
+en	cyclist	🚴
+en	cyclone	🌀
+en	cyclones	🌀
+en	cygnet	🦢
+en	dagger	🗡️
+en	daggers	🗡️
+en	dairies	🥛 🧀
+en	dairy	🥛 🧀
+en	daisies	🌼
+en	daisy	🌼
 en	dance	💃 🕺
+en	danced	💃 🕺
+en	dancer	💃 🕺
+en	dancers	💃 🕺
+en	dances	💃 🕺
 en	dancing	💃 🕺
+en	dandelion	🌼
+en	dandelions	🌼
+en	danger	⚠️ ☠️
+en	dangerous	⚠️
+en	dangers	⚠️ ☠️
+en	dark	🌑 🖤
+en	dart	🎯
+en	darts	🎯
+en	dashing	💨
+en	data	📊
+en	date	📅
+en	dates	📅
+en	dating	💑 💕
+en	dawn	🌅
+en	dawns	🌅
+en	daydream	💭
+en	daydreaming	💭
+en	daydreams	💭
+en	daze	🫨
+en	dazed	😳
+en	dead	💀
+en	deadline	⏱️
+en	deadlines	⏱️
+en	deadly	☠️
+en	deadpan	😐
+en	deal	🤝
+en	death	💀 ⚰️
+en	deaths	💀 ⚰️
+en	deciduous	🌳
+en	decline	🙅
+en	declined	🙅
+en	declines	🙅
+en	declining	🙅
+en	decreasing	📉
+en	deer	🦌
+en	degree	🎓
+en	degrees	🎓
+en	dejected	😔
+en	deli	🥪
 en	delicious	😋
+en	delis	🥪
+en	deliveries	📦
+en	delivery	📦
+en	demon	👿
+en	demons	👿
+en	demonstration	🪧
+en	demonstrations	🪧
+en	denied	🙅
+en	denim	👖
+en	dental	🦷 🪥
+en	dentist	🦷
+en	departure	🛫
+en	departures	🛫
+en	deploy	🚀
+en	deploys	🚀
+en	depressed	😞
+en	derelict	🏚️
+en	desert	🏜️
+en	deserts	🏜️
+en	design	🎨
+en	designs	🎨
+en	desktop	🖥️
+en	desktops	🖥️
+en	despise	😡
+en	despised	😡
+en	despises	😡
 en	dessert	🍰 🍩
+en	desserts	🍰 🍩
+en	detective	🕵️
+en	detectives	🕵️
+en	developer	🧑‍💻
+en	developers	🧑‍💻
 en	devil	😈
+en	devils	😈
+en	dial	☎️
+en	dialog	💬
+en	dials	☎️
 en	diamond	💎
+en	diamonds	💎
+en	diaper	🧷
+en	diapers	🧷
+en	dice	🎲
+en	dices	🎲
+en	diesel	⛽
+en	diesels	⛽
+en	dig	🪏
+en	digs	🪏
+en	dim	🔅
+en	dims	🔅
+en	ding	🎐
+en	dinghies	⛵
+en	dinghy	⛵
+en	dings	🎐
+en	dining	🍽️
 en	dinner	🍽️ 🍴
+en	dinners	🍽️ 🍴
+en	dinosaur	🦖
+en	dinosaurs	🦖
+en	director	🎬
+en	directors	🎬
+en	disagree	👎
+en	disagreed	👎
+en	disagreeing	👎
+en	disagreement	🫯
+en	disagreements	🫯
+en	disagrees	👎
+en	disallow	🚫
+en	disallows	🚫
+en	disappear	🫠
+en	disappearing	🫠
+en	disappears	🫠
 en	disappointed	😔 😞
-en	doctor	💊 🏥
+en	disapproval	🤨
+en	disapprove	👎
+en	disapproved	👎
+en	disapproves	👎
+en	disapproving	👎
+en	disbelief	🤦 🤨
+en	disc	💿
+en	disco	🪩
+en	discos	🪩
+en	discs	💿
+en	disease	🦠 😷
+en	diseases	🦠 😷
+en	disgruntled	🙍
+en	disguise	🥸
+en	disguised	🥸
+en	disguises	🥸
+en	disguising	🥸
+en	disgust	🤢
+en	disgusted	🤢
+en	dish	🍽️
+en	dishes	🍽️
+en	disk	💿 💽
+en	disks	💿 💽
+en	dislike	👎
+en	disliked	👎
+en	dislikes	👎
+en	disliking	👎
+en	display	🖥️
+en	displays	🖥️
+en	dissatisfied	😒
+en	dissolve	🫠
+en	dissolves	🫠
+en	dissolving	🫠
+en	distilling	⚗️
+en	distorted	🫪
+en	distraught	😩
+en	distress	🆘
+en	distresses	🆘
+en	distrust	🤨
+en	distrusted	🤨
+en	disturbed	🙍
+en	dive	🤿
+en	dives	🤿
+en	divide	➗
+en	dividers	🗂️
+en	divides	➗
+en	diving	🤿
+en	dizzy	💫
+en	dizzying	💫
+en	doctor	🧑‍⚕️ 🩺
+en	doctors	🧑‍⚕️ 🩺
+en	document	📄
+en	documents	📄
+en	dodo	🦤
 en	dog	🐶 🐕
+en	doge	🐕
+en	dogs	🐶 🐕
+en	doily	💮
+en	doll	🪆 🎎
 en	dollar	💵
+en	dolls	🪆 🎎
 en	dolphin	🐬
+en	dolphins	🐬
 en	done	✅
+en	donkey	🫏
+en	donkeys	🫏
+en	donut	🍩
+en	door	🚪
+en	doors	🚪
+en	doorway	🚪
+en	doorways	🚪
+en	dope	👌
+en	dork	🤓
+en	dorks	🤓
+en	dormouse	🐁
+en	doubtful	🫤
+en	doughnut	🍩
+en	dove	🕊️
+en	doves	🕊️
+en	downcast	😓
+en	downtown	🌃
+en	downtrodden	🙎
+en	dracula	🧛
+en	dragon	🐉 🐲
+en	dragons	🐉 🐲
+en	drained	🪫
+en	drama	🎭
+en	dramas	🎭
+en	draw	🎨
+en	drawing	🖍️ 🖌️
+en	drawings	🖍️ 🖌️
+en	draws	🎨
 en	dream	💭
+en	dreamed	💭
+en	dreaming	💭
+en	dreams	💭
+en	dress	👗
+en	dressage	🐴
+en	dressed	👗
+en	dresses	👗
+en	dribble	⛹️
+en	dribbled	⛹️
+en	dribbling	⛹️
 en	drink	🍹 ☕
+en	drinking	🍹
+en	drinks	🍹
+en	drip	💦
+en	dripped	💦
+en	dripping	💦
+en	drips	💦
+en	drive	🚗
+en	drives	🚗
+en	driving	🚗
+en	drizzle	🌂
+en	drool	🤤
+en	drooling	🤤
+en	drools	🤤
+en	drooping	🥀
+en	drop	💧
+en	droplet	💦 💧
+en	droplets	💦
+en	drops	💦
+en	drought	🌵
+en	droughts	🌵
+en	drugs	💊
+en	drum	🥁 🪘
+en	drums	🥁 🪘
+en	drumstick	🍗
+en	drumsticks	🥁
+en	drunk	🥴 🍻
+en	drunks	🥴 🍻
+en	dubious	😒
+en	duck	🦆
+en	duckling	🐥
+en	ducklings	🐥
+en	ducks	🦆
+en	duel	🤼
+en	duelling	🤼
+en	duels	🤼
+en	dumpling	🥟
+en	dumplings	🥟
+en	dung	💩
 en	dunno	🤷
+en	dusk	🌇
+en	dynamite	🧨
+en	eagle	🦅
+en	eagles	🦅
+en	ear	👂
+en	earbud	🎧
+en	earbuds	🎧
+en	earphone	🎧
+en	earphones	🎧
+en	ears	👂
 en	earth	🌍 🌎
+en	earthquake	🫨
+en	earthquakes	🫨
+en	earths	🌍 🌎
+en	earthworm	🪱
+en	earthworms	🪱
+en	easter	🐰 🥚
 en	eat	😋 🍴
+en	eating	😋 🍴
+en	eats	😋 🍴
+en	eclipse	🌑
+en	eclipses	🌑
+en	edamame	🫛
+en	education	🎓
+en	educations	🎓
+en	educator	🧑‍🏫
+en	eek	😬
+en	eeyore	🫏
 en	egg	🥚 🍳
+en	eggplant	🍆
+en	eggplants	🍆
+en	eggs	🥚 🍳
+en	eject	⏏️
+en	election	🗳️
+en	elections	🗳️
+en	electric	⚡
+en	electrician	🧑‍🔧
+en	electricians	🧑‍🔧
+en	electricity	⚡ 💡
 en	elephant	🐘
-en	email	📩
+en	elephants	🐘
+en	elevator	🛗
+en	elevators	🛗
+en	elf	🧝
+en	elk	🫎
+en	elks	🫎
+en	elves	🧝
+en	email	📧 📩
+en	emailed	📧
+en	emails	📧 📩
+en	embarrass	🫢
 en	embarrassed	😳
+en	embarrassing	🫣
+en	embrace	🫂
+en	embraced	🫂
+en	embraces	🫂
+en	embracing	🫂
+en	embroideries	🪡
+en	embroidery	🪡
+en	emergencies	🚨 🆘
+en	emergency	🚨 🆘
+en	emoji	😀
+en	enchantment	🧝
+en	enchantments	🧝
+en	energies	⚡
+en	energy	⚡
 en	engaged	💍
+en	engagement	💍
+en	engagements	💍
+en	enraged	😡
+en	entertainer	🧑‍🎤
+en	enthusiastic	❤️‍🔥
+en	envelope	✉️
+en	envelopes	✉️
+en	equal	🟰
+en	equals	🟰
+en	equestrian	🐎
+en	equestrians	🐎
+en	equine	🐴
+en	equines	🐴
+en	error	⚠️
+en	errors	⚠️
+en	eruption	🌋
+en	eruptions	🌋
+en	escargot	🐌
+en	espresso	☕
+en	euro	💶
+en	europe	🌍
+en	euros	💶
+en	evening	🌆 🌙
+en	evenings	🌆 🌙
+en	evergreen	🌲
+en	evergreens	🌲
+en	evil	😈 👿
+en	evils	😈 👿
+en	evolution	🧬
+en	evolutions	🧬
+en	ew	🤮 🤢
+en	ewe	🐑
+en	ewes	🐑
+en	exam	📝 💯
+en	exams	📝 💯
+en	exasperation	🤦
+en	excellent	👏 💯
+en	exchange	💱
+en	exchanges	💱
+en	excited	🤩 🎉
+en	exclamation	❗
+en	exclamations	❗
+en	exercise	🏃 🏋️
+en	exercised	🏃 🏋️
+en	exercises	🏃 🏋️
+en	exercising	🏃 🏋️
+en	exhalation	🫁
+en	exhale	😮‍💨
+en	exhaled	😮‍💨
+en	exhausted	😩 😫
+en	exit	🚪
+en	exits	🚪
+en	expensive	💸 🫰
+en	experiment	🧪 🔬
+en	experiments	🧪 🔬
+en	expletive	🤬
+en	expletives	🤬
+en	explode	💥
+en	exploded	💥
+en	explodes	💥
+en	exploding	🤯
+en	explosion	💥
+en	explosions	💥
+en	explosive	🧨
+en	explosives	🧨
+en	extinct	🦖
+en	extinction	🦣
+en	extinctions	🦣
+en	extinguish	🧯
+en	extinguisher	🧯
+en	extinguishers	🧯
+en	extinguishes	🧯
+en	extraterrestrial	👽
+en	extraterrestrials	👽
+en	eye	👁️ 👀
+en	eyeballs	👀
+en	eyebrow	🤨
+en	eyeglasses	👓
+en	eyeing	👁️ 👀
+en	eyeroll	🙄
+en	eyes	👀
+en	eyesight	👓
+en	facepalm	🤦
+en	facsimile	📠
+en	facsimiles	📠
+en	factories	🏭
+en	factory	🏭
+en	fairground	🎡
+en	fairies	🧚
+en	fairness	⚖️
+en	fairy	🧚
+en	falafel	🧆
+en	fall	🍂 🍁
+en	fallen	🍂
+en	falling	🍂 🍁
+en	families	👪
+en	family	👪
+en	fan	🪭
+en	fancy	🧐
+en	fangs	🧛
+en	fans	🪭
+en	fantastic	🤩
+en	farewell	👋
+en	farewells	👋
+en	farm	🚜 🐄
+en	farmer	🧑‍🌾
+en	farms	🚜 🐄
+en	fart	💨
+en	farted	💨
+en	farting	💨
+en	farts	💨
+en	fashion	👗 👠
+en	fashions	👗 👠
+en	fast	💨 ⚡
+en	fatigued	🫩
+en	faucet	🚰
+en	faucets	🚰
+en	favorite	⭐ ❤️
+en	favourite	⭐ ❤️
+en	favourites	⭐ ❤️
+en	fax	📠
+en	faxes	📠
 en	fear	😱 😨
-en	fever	🤧
+en	feared	😱 😨
+en	fearful	😨
+en	fearing	😱 😨
+en	fears	😱 😨
+en	feather	🪶
+en	feathers	🪶
+en	feeding	🍼
+en	feedings	🍼
+en	feet	🦶 👣
+en	feline	🐈
+en	felines	🐈
+en	fencer	🤺
+en	fencers	🤺
+en	fencing	🤺
+en	ferries	⛴️
+en	ferris	🎡
+en	ferry	⛴️
+en	festival	🎊 🎆
+en	festivals	🎊 🎆
+en	festive	🎉
+en	fever	🤒 🌡️
+en	feverish	🥵
+en	fevers	🤒 🌡️
+en	fife	🪈
+en	fight	🥊
+en	fighting	🥊
+en	fights	🥊
+en	file	📁
+en	files	📁
+en	filing	🗄️
+en	filings	🗄️
+en	film	🎬
+en	films	🎬 🍿
+en	find	🔍
+en	finds	🔍
+en	finger	☝️
+en	fingerprint	🫆
+en	fingerprinted	🫆
+en	fingerprinting	🫆
+en	fingerprints	🫆
+en	fingers	🤞 🤌
+en	finish	🏁
+en	finishes	🏁
 en	fire	🔥
+en	firebird	🐦‍🔥
+en	firebirds	🐦‍🔥
+en	firecracker	🧨
+en	firecrackers	🧨
+en	firefighter	🧑‍🚒
+en	fires	🔥
+en	firetruck	🚒
+en	firework	🎇
 en	fireworks	🎆
+en	first	🥇
+en	firsts	🥇
 en	fish	🐟 🐠
+en	fisherman	🎣
+en	fishes	🐟 🐠
+en	fishing	🎣
+en	fist	👊 ✊
+en	fists	👊 ✊
+en	fix	🔧
+en	fixed	✅
+en	fixes	🔧
+en	flag	🚩 🏁
+en	flags	🏁 🎌
+en	flamboyant	🦩
+en	flame	🔥
+en	flamenco	💃
+en	flames	🔥
+en	flamingo	🦩
+en	flamingos	🦩
+en	flan	🍮
+en	flash	📸
+en	flashes	📸
+en	flashlight	🔦
+en	flashlights	🔦
+en	flatbed	🛻
+en	flats	🥿
+en	flattered	😳
+en	flavor	🧂
+en	flavors	🧂
+en	flex	💪
+en	flexed	💪
+en	flexes	💪
+en	flexing	💪
+en	flies	✈️ 🪰
+en	flight	✈️ 🛫
+en	flights	✈️ 🛫
+en	flipped	🙃
+en	flipper	🐬
+en	flippers	🐬
+en	flirt	😉 😘
+en	flirted	😉 😘
+en	flirting	🫦
+en	flirts	😉 😘
+en	float	🛟
+en	floats	🛟
+en	flood	🌊
+en	floods	🌊
+en	floppies	💾
+en	floppy	💾
+en	flops	🩴
 en	flower	🌸 🌹
+en	flowers	💐
+en	flu	🤧
+en	fluffy	🐑
+en	flushed	😳
+en	flute	🪈
+en	flutes	🪈
+en	fly	✈️ 🪰
+en	flying	✈️
+en	fog	🌫️
+en	foggy	🌁
+en	fogs	🌫️
+en	folder	📁 📂
+en	folders	📁 📂
+en	fondue	🫕
 en	food	🍕 🍔
+en	foods	🍕 🍔
+en	foot	🦶
 en	football	⚽ 🏈
+en	footballs	⚽ 🏈
+en	footprint	👣
+en	footprints	👣
+en	footsteps	👣
+en	footwear	👟
+en	forbid	🚫
+en	forbidden	🚫
+en	forbids	🚫
+en	forensics	🫆
 en	forest	🌳 🌲
+en	forests	🌳 🌲
+en	forever	♾️
+en	forgetful	😶‍🌫️
+en	forgive	🙇
+en	forgives	🙇
+en	forgiving	🙇
+en	fork	🍴 🍽️
+en	forks	🍴 🍽️
+en	formal	👔 🤵
+en	formals	👔 🤵
+en	fortress	🏯
+en	fortresses	🏯
+en	fortune	🔮
+en	fortunes	🔮
+en	foul	🤬
+en	fountain	⛲
+en	fountains	⛲
+en	fowl	🪿
+en	fowls	🪿
+en	fox	🦊
+en	frame	🖼️
+en	framed	🖼️
+en	frankfurter	🌭
+en	freezing	🥶
+en	fried	🍤
+en	friend	🧑‍🤝‍🧑
+en	friends	🧑‍🤝‍🧑
+en	friendship	🧑‍🤝‍🧑
+en	friendships	🧑‍🤝‍🧑
 en	fries	🍟
+en	frightening	🫣
+en	frisbee	🥏
 en	frog	🐸
+en	frogs	🐸
+en	frostbite	🥶
+en	frosty	⛄
+en	frown	☹️ 🙁
+en	frowned	☹️ 🙁
+en	frowning	☹️ 🙁
+en	frowns	☹️ 🙁
+en	frozen	☃️
+en	fruit	🍎 🍓
+en	fruits	🍎 🍓
+en	frustrated	😤 😠
+en	frustration	🫤
+en	frustrations	🫤
+en	fry	🍳
+en	frying	🍳
+en	fuel	⛽
+en	fuels	⛽
+en	fuji	🗻
+en	fuming	😤
+en	funeral	⚰️ ⚱️
+en	funerals	⚰️ ⚱️
+en	fungi	🍄‍🟫
+en	fungus	🍄
+en	funicular	🚞
 en	funny	😂 🤣
+en	furies	😤
 en	furious	😤
+en	furniture	🪑
+en	fury	😤
+en	future	🔮
+en	futures	🔮
+en	gadgets	📱
+en	gaggle	🪿
+en	gains	💪
+en	galaxies	🌌
+en	galaxy	🌌
+en	galloping	🐎
+en	gamble	🎰
+en	gambles	🎰
+en	gambling	🎰 🎲
 en	game	🎮
-en	garden	🏡
+en	gamer	👾
+en	gaming	🎮
+en	gander	🪿
+en	garbage	🗑️
+en	garden	🌷 🏡
+en	gardener	🧑‍🌾
+en	gardeners	🧑‍🌾
+en	gardens	🌷 🏡
+en	garlic	🧄
+en	gas	⛽
+en	gases	⛽
+en	gasoline	⛽
+en	gasp	🫢
+en	gasped	🫢
+en	gasping	😲
+en	gasps	🫢
+en	gear	⚙️
+en	gears	⚙️
+en	gecko	🦎
+en	geckos	🦎
+en	geek	🤓
+en	geeks	🤓
+en	geese	🪿
+en	geez	😳
+en	gem	💎
+en	gemini	♊
+en	gems	💎
+en	gemstone	💎
+en	gemstones	💎
+en	gene	🧬
+en	genes	🧬
+en	genetics	🧬
+en	genie	🧞
+en	germ	🦠
+en	germs	🦠
+en	gesundheit	🤧
 en	ghost	👻
+en	ghosting	👻
+en	ghosts	👻
+en	ghoul	👻
+en	ghouls	👻
+en	gibbous	🌔
 en	gift	🎁
+en	gifts	🎁
+en	giggle	🤭
+en	giggled	🤭
+en	giggles	🤭
+en	giggling	🤭
+en	ginger	🫚
+en	giraffe	🦒
+en	giraffes	🦒
 en	glad	😊
+en	glass	🥃 🍷
+en	glasses	👓 🕶️
+en	glitter	✨
+en	glitters	✨
+en	glittery	🌟
+en	global	🌐
 en	globe	🌍
+en	globes	🌍
+en	gloss	💄
+en	glosses	💄
+en	glove	🧤
+en	gloves	🧤
+en	glow	🌟
+en	glowing	🌟
+en	glows	🌟
+en	gn	😴 🌙
+en	goal	🥅
+en	goals	🥅
+en	goat	🐐
+en	goats	🐐
+en	gobble	🦃
+en	gobbles	🦃
+en	goblin	👺
+en	goblins	👺
+en	goggles	🥽
+en	gold	🥇 🪙
+en	golds	🥇 🪙
 en	golf	⛳
+en	golfer	🏌️
+en	golfing	🏌️
+en	gondola	🚡
+en	gondolas	🚡
 en	good	👍 👏
+en	goodbye	👋
+en	goodbyes	👋
+en	goodnight	😴
+en	goofy	🤪
+en	googly	👀
+en	goose	🪿
+en	gorgeous	😍
+en	gorilla	🦍
+en	gorillas	🦍
+en	gossip	💁
+en	gossiping	💁
+en	gossips	💁
+en	gotcha	👌
+en	gotchas	👌
+en	gourd	🎃
+en	gourds	🎃
+en	gown	👗
+en	gowns	👗
+en	graduate	🎓
+en	graduated	🎓
+en	graduates	🎓
+en	graduating	🎓
 en	graduation	🎓
+en	graduations	🎓
+en	grain	🌾
+en	grains	🌾
+en	gramps	👴
+en	grandfather	👴
+en	grandfathers	👴
+en	grandma	👵
+en	grandmas	👵
+en	grandmother	👵
+en	grandmothers	👵
+en	grandpa	👴
+en	grandparent	🧓
+en	grandstand	🏟️
+en	grandstands	🏟️
+en	granny	👵
+en	grape	🍇
 en	grapes	🍇
+en	graph	📈 📊
+en	graphs	📈 📊
+en	grapple	🤼
+en	grappled	🤼
+en	grapples	🤼
+en	grappling	🤼
+en	grass	🌿 🌱
+en	grasses	🌿 🌱
+en	grasshopper	🦗
+en	grasshoppers	🦗
+en	grateful	🙏 🥹
+en	gratitude	🙏 🥹
+en	grave	🪦
+en	graves	🪦
+en	graveyard	🪦
+en	graveyards	🪦
+en	gray	🩶
 en	great	👏
+en	green	💚 🟢
+en	greenery	🪴
+en	greens	🥬
 en	greetings	👋
+en	grey	🩶
+en	greys	🩶
+en	gridiron	🏈
+en	grimace	😬
+en	grimaced	😬
+en	grin	😁
+en	grinned	😁
+en	grinning	😀 😁
+en	grins	😁
+en	grizzlies	🐻
+en	grizzly	🐻
+en	groan	😮‍💨
+en	groaning	😮‍💨
+en	groans	😮‍💨
+en	groceries	🛒
+en	groggy	🥴
+en	groom	🤵
+en	grooms	🤵
+en	gross	🤢 🤮
+en	group	👥
+en	grouped	👥
+en	grouping	👥
+en	groups	👥
+en	grow	🌱 🪴
+en	growl	🐻
+en	growls	🐻
+en	grows	🌱 🪴
+en	growth	📈
+en	growths	📈
+en	grumpy	😡
+en	gtg	👋
+en	guard	💂
+en	guarded	💂
+en	guarding	💂
+en	guards	💂
+en	guardsman	💂
+en	guess	🤷
+en	guessed	🤷
+en	guesses	🤷
+en	guessing	🤷
 en	guitar	🎸
+en	guitars	🎸
+en	gun	🔫
+en	guns	🔫
+en	gust	💨
+en	gusting	💨
 en	gym	💪
+en	gymnast	🤸
+en	gymnastic	🤸
+en	gymnastics	🤸
+en	gymnasts	🤸
+en	gyms	💪
+en	gyro	🥙
+en	gyros	🥙
 en	haha	😂 🤣
+en	hahaha	😂 🤣
+en	hair	💇
+en	haircut	💇
+en	haircuts	💇
+en	hairdresser	💇
+en	hairdressers	💇
+en	hairs	💇
+en	hairstyle	💇
+en	hairstyling	💇
+en	hallelujah	🙌
 en	halloween	🎃 👻
+en	halo	😇
+en	halos	😇
+en	halt	✋
+en	halted	✋
+en	halting	✋
+en	halts	✋
 en	hamburger	🍔
+en	hamburgers	🍔
+en	hammer	🔨 ⚒️
+en	hammers	🔨 ⚒️
+en	hamster	🐹
+en	hamsters	🐹
+en	handbag	👜
+en	handball	🤾
+en	handgun	🔫
+en	handguns	🔫
+en	hands	🙌 👐
+en	handset	📞
+en	handsets	📞
+en	handshake	🤝
+en	handshakes	🤝
+en	handshaking	🤝
+en	handyman	🔨
+en	happiness	😊
 en	happy	😁 😄
+en	harp	🪉
+en	harps	🪉
+en	harvest	🌾
+en	harvests	🌾
+en	hat	🎩 🧢
+en	hatched	🐥
+en	hatchet	🪓
+en	hatching	🐣
+en	hate	😡
+en	hated	😡
+en	hates	😡
+en	hating	😡
+en	hats	👒
+en	haunted	🏚️
+en	haunting	👻
+en	haze	😶‍🌫️
+en	hbd	🎂 🎉
+en	headache	🤕
+en	headaches	🤕
+en	headline	📰
+en	headphone	🎧
+en	headphones	🎧
+en	headscarf	🧕
+en	headscarves	🧕
+en	headstone	🪦
+en	headstones	🪦
+en	heal	🩹
+en	healing	❤️‍🩹
+en	healings	❤️‍🩹
+en	heals	🩹
+en	healthcare	🧑‍⚕️
+en	healthy	🥗
 en	hear	👂
+en	hearing	👂
+en	hears	👂
 en	heart	❤️ 💕
+en	heartbeat	💓
+en	heartbeats	💓
+en	heartbreak	💔
+en	heartbreaking	💔
+en	heartbroken	💔
 en	hearts	💕 💞
+en	heat	🥵 🔥
+en	heated	🥵 🔥
+en	heating	🥵 🔥
+en	heats	🥵 🔥
+en	heaven	😇 👼
+en	heavens	😇 👼
+en	hedgehog	🦔
+en	hedgehogs	🦔
+en	heel	👠
+en	heels	👠
+en	hehe	😁 😂
+en	helicopter	🚁
+en	helicopters	🚁
+en	helix	🧬
 en	hello	👋
+en	hellos	👋
+en	helmet	🪖 ⛑️
+en	helmets	🪖 ⛑️
+en	help	🆘
+en	helpless	😣
+en	helps	🆘
+en	hen	🐔
+en	hens	🐔
+en	herb	🌿
+en	hero	🦸
+en	heroes	🦸
+en	heroine	🦸
+en	heroines	🦸
 en	hey	👋
+en	hi	👋
+en	hibiscus	🌺
+en	hide	🙈 🫣
+en	hides	🙈 🫣
+en	hiding	🫣
+en	highway	🛣️
+en	highways	🛣️
+en	hijab	🧕
+en	hike	🥾
+en	hiked	🥾
+en	hikes	🥾
+en	hiking	🥾
 en	hilarious	😂 🤣
+en	hippo	🦛
+en	hippopotamus	🦛
+en	hippos	🦛
+en	hiss	🐍
+en	histories	📜
+en	history	📜
+en	hit	👊
+en	hitched	💒
+en	hits	👊
 en	hmm	🤔
+en	hockey	🏒 🏑
+en	hog	🐖
+en	hogs	🐖
+en	hole	🕳️
+en	holes	🕳️
+en	holiday	🏖️
+en	holidays	🏖️
+en	hollywood	🎥
 en	home	🏠 🏡
+en	homes	🏠 🏡
+en	homework	📚 📝
+en	honey	🍯
+en	honeybee	🐝
+en	honeybees	🐝
+en	honeydew	🍈
+en	honeypot	🍯
+en	honeypots	🍯
+en	honeys	🍯
+en	honk	🪿
+en	hook	🪝
+en	hooks	🪝
+en	hoop	🏀
+en	hooray	🎉 🙌
+en	hoot	🦉
+en	hoots	🦉
+en	hope	🙏
+en	hoped	🙏
+en	hopeful	🤞
+en	hopefuls	🤞
+en	hopes	🙏
+en	hoping	🙏
+en	horn	📯
+en	horns	🤘
+en	horror	😱 🧟
+en	horrors	😱 🧟
 en	horse	🐴
+en	horses	🐴
 en	hospital	🏥
+en	hospitals	🏥
 en	hot	🔥 🌶️
+en	hotdog	🌭
+en	hotdogs	🌭
+en	hotel	🏨
+en	hotels	🏨
+en	hourglass	⏳
 en	house	🏠 🏡
+en	houseplant	🪴
+en	houses	🏘️
 en	hug	🤗
+en	hugged	🤗
+en	hugging	🫂
+en	hugs	🤗
+en	huh	😕
 en	hundred	💯
 en	hungry	😋 🍕
+en	hurricane	🌀
+en	hurricanes	🌀
+en	hurried	🏃
+en	hurries	🏃
+en	hurry	🏃
+en	hurrying	🏃
+en	hurt	🤕
+en	hurting	🤕
+en	hurts	🤕
+en	hush	🙊
+en	hushed	😯
+en	hut	🛖
+en	huts	🛖
+en	hyacinth	🪻
+en	hyacinths	🪻
+en	hygiene	🪥
+en	hyperlink	🔗
+en	hyperlinks	🔗
+en	hypnotized	😵‍💫
+en	ice	🧊
+en	iceberg	🧊
+en	icebergs	🧊
+en	icecream	🍦
+en	ices	🧊
+en	icicles	🥶
 en	idea	💡
+en	identification	🪪 🆔
+en	identifications	🪪 🆔
+en	identities	🆔
+en	identity	🆔
 en	idk	🤷
+en	ignorance	🤷
+en	ignore	🙈 🙊
+en	ignored	🙈 🙊
+en	ignores	🙈 🙊
+en	ignoring	🙈 🙊
+en	ill	🤒 😷
+en	ily	🤟 😍
+en	impact	💥
+en	impacted	💥
+en	impacting	💥
+en	impacts	💥
+en	impressed	😳
+en	inbox	📥 📧
+en	inboxes	📥 📧
+en	inclusive	🧑‍🤝‍🧑
+en	incognito	🥸
+en	incoming	📲
+en	increasing	📈
+en	incredible	🤯 😮
+en	indifference	🤷
+en	indifferent	😑
+en	industries	🏭
+en	industry	🏭
+en	infant	👶 🍼
+en	infants	👶 🍼
+en	infatuation	😍
+en	infinity	♾️
+en	info	ℹ️
+en	information	ℹ️
+en	inhalation	🫁
+en	injured	🤕
+en	injuries	🤕
+en	injury	🤕
 en	innocent	😇
+en	innocents	😇
+en	insect	🐛 🐜
+en	instructor	🧑‍🏫
+en	instructors	🧑‍🏫
+en	instrument	🎸 🎹
+en	intelligent	🧠 🤓
+en	international	🌐
+en	internationalization	🌐
+en	internationals	🌐
+en	internet	🌐
+en	internets	🌐
+en	intersection	🚦
+en	intersections	🚦
+en	interstate	🛣️
+en	interstates	🛣️
+en	intoxicated	🥴
+en	introvert	🫥
+en	invader	👾
+en	invent	💡
+en	invention	💡
+en	inventions	💡
+en	invents	💡
+en	invertebrate	🪼
+en	investigate	🔍 🕵️
+en	investigates	🔍 🕵️
+en	invisible	🫥
+en	invoice	🧾
+en	invoices	🧾
+en	irritated	🙍
 en	island	🏝️
+en	islands	🏝️
+en	jacked	💪
+en	jacket	🧥
+en	jackets	🧥
+en	jaguar	🐆
+en	jaguars	🐆
+en	japan	🗾
+en	jar	🫙
+en	jars	🫙
+en	jaws	🦈
+en	jazz	🎷 🎺
+en	jealous	😒
+en	jeans	👖
+en	jeez	😳
+en	jellyfish	🪼
+en	jet	✈️
+en	jets	✈️
+en	jewel	💎
+en	jewellery	💎 💍
+en	jewelry	💎 💍
+en	jewels	💎
+en	jigsaw	🧩
+en	jigsaws	🧩
+en	jinn	🧞
+en	job	💼
+en	jockey	🏇
+en	jockeys	🏇
+en	joey	🦘
+en	jogging	🏃
 en	joke	😜
+en	joked	😜
+en	joker	🃏
+en	jokers	🃏
+en	joking	😜
 en	joy	😂
+en	joys	😂
+en	joystick	🕹️
+en	joysticks	🕹️
+en	judge	🧑‍⚖️
+en	judged	🧑‍⚖️
+en	judges	🧑‍⚖️
+en	judging	🧑‍⚖️
+en	judo	🥋
+en	jug	🏺
+en	juggle	🤹
+en	juggler	🤹
+en	jugglers	🤹
+en	juggles	🤹
+en	juggling	🤹
+en	jugs	🏺
+en	juice	🧃
+en	juices	🧃
+en	justice	⚖️
+en	justices	⚖️
+en	kale	🥬
+en	kangaroo	🦘
+en	kangaroos	🦘
+en	karaoke	🎤
+en	karate	🥋
+en	kebab	🍢
+en	kebabs	🍢
+en	kettle	🫖
+en	kettles	🫖
+en	key	🔑
+en	keyboard	⌨️ 🎹
+en	keyboards	⌨️ 🎹
+en	keys	🔑
+en	kick	🦵
+en	kicked	🦵
+en	kicking	🦵
+en	kicks	🦵
+en	kidding	😏
+en	kimono	👘
+en	kimonos	👘
 en	king	👑
+en	kings	👑
 en	kiss	😘 💋
+en	kissed	😘 💋
+en	kisses	😘 💋
+en	kissing	💋 😚
+en	kitchen	🍳
+en	kitchens	🍳
+en	kite	🪁
+en	kites	🪁
 en	kitten	🐱
+en	kittens	🐱
+en	kitties	🐱
 en	kitty	🐱
+en	kiwi	🥝
+en	kiwifruit	🥝
+en	kiwis	🥝
+en	knee	🦵
+en	kneel	🧎
+en	kneeling	🧎
+en	kneels	🧎
+en	knees	🧎
+en	knife	🔪
+en	knifes	🔪
+en	knit	🧶
+en	knits	🧶
+en	knives	🔪
+en	knobs	🎛️
+en	knot	🪢
+en	knots	🪢
+en	knowledge	📚
+en	knuckle	👊
+en	koala	🐨
+en	koalas	🐨
+en	lab	🧪 🔬
+en	label	🏷️
+en	labels	🏷️
+en	laboratories	🔬
+en	laboratory	🔬
+en	labs	🧪 🔬
+en	lacrosse	🥍
+en	ladder	🪜
+en	ladders	🪜
+en	ladybird	🐞
+en	ladybug	🐞
+en	ladybugs	🐞
+en	lamb	🐑
+en	lambs	🐑
+en	lamp	💡
+en	lamps	💡
+en	landing	🛬
+en	landings	🛬
+en	landslide	🛘
+en	landslides	🛘
+en	lantern	🏮
+en	lanterns	🏮
 en	laptop	💻
+en	laptops	💻
+en	late	⏰
+en	lather	🧼
+en	latte	☕
+en	lattes	☕
 en	laugh	😂 🤣
-en	laughing	😹
+en	laughed	😂 🤣
+en	laughing	😂 🤣
+en	laughs	😂 🤣
+en	launch	🚀
+en	launches	🚀
+en	laundries	🧺
+en	laundry	🧺
+en	lavatories	🚻
+en	lavatory	🚻
+en	lavender	🪻
+en	lawn	🌿
+en	lawns	🌿
+en	lazy	🦥
 en	leaf	🍃 🍀
+en	leafs	🍃 🍀
+en	leafy	🥬
+en	learn	📖
+en	learns	📖
+en	leaves	🍃 🍂
+en	lecturer	🧑‍🏫
+en	lecturers	🧑‍🏫
+en	ledger	📒
+en	ledgers	📒
+en	leer	😏
+en	leering	😏
+en	leftovers	🥡
+en	leg	🦵
+en	legit	👌
+en	legume	🫘
 en	lemon	🍋
+en	lemonade	🍋
+en	lemons	🍋
+en	length	📏
+en	lengths	📏
+en	leo	♌
+en	leopard	🐆
+en	leopards	🐆
+en	leos	♌
+en	letter	✉️ 💌
+en	letters	🔤
+en	lettuce	🥬
+en	lettuces	🥬
+en	levitate	🕴️
+en	liar	🤥
+en	liars	🤥
+en	liberties	🗽
+en	liberty	🗽
+en	libra	♎
+en	libraries	📚
+en	library	📚
+en	license	🪪
+en	licenses	🪪
+en	lick	👅
+en	licked	👅
+en	licking	👅
+en	licks	👅
+en	lie	🤥
+en	lied	🤥
+en	lifesaver	🛟
+en	lifesavers	🛟
+en	lifter	🏋️
+en	lifters	🏋️
+en	lifting	🏋️
+en	light	💡
 en	lightning	⚡
+en	lightnings	⚡
+en	lights	💡
+en	like	👍
+en	liked	👍
+en	likes	👍
+en	liking	👍
+en	lilac	🪻
+en	lilacs	🪻
+en	limb	🦵
+en	lime	🍋‍🟩
+en	limes	🍋‍🟩
+en	link	🔗
+en	links	🔗
 en	lion	🦁
+en	lions	🦁
+en	lip	👄
+en	lips	💋 👄
+en	lipstick	💄
+en	lipsticks	💄
+en	liquor	🥃
+en	liquors	🥃
+en	list	📋
 en	listen	👂
+en	listened	👂
+en	listening	👂
+en	listens	👂
+en	lists	📋
 en	lit	🔥
+en	literature	📚 📖
+en	litter	🚮
+en	littering	🚯
+en	litters	🚮
+en	lizard	🦎
+en	lizards	🦎
+en	llama	🦙
+en	llamas	🦙
+en	lmao	😂 🤣
+en	lmfao	😂 🤣
+en	loaf	🍞
+en	loaves	🍞
+en	lobster	🦞
+en	lobsters	🦞
+en	localization	🌐
+en	localizations	🌐
+en	location	📍
+en	locations	📍
 en	lock	🔒
+en	locked	🔐 🔒
+en	locks	🔒
+en	locomotive	🚂
+en	locomotives	🚂
 en	lol	😂 🤣
+en	lollies	🍬
+en	lollipop	🍭
+en	lollipops	🍭
+en	lolly	🍬
+en	lonely	😔
+en	loo	🚽
+en	look	👀
+en	looked	👀
+en	looking	👀
+en	looks	👀
+en	loop	➰ ➿
+en	loops	➰ ➿
+en	loopy	😜
+en	loos	🚽
+en	loot	🪎
+en	lorry	🚛
+en	lotion	🧴
+en	lotions	🧴
+en	lotus	🪷
+en	loud	📢
+en	loudspeaker	📢
+en	lounge	🛋️
+en	lounges	🛋️
 en	love	❤️ 😍
+en	loved	❤️ 😍
+en	lovely	🥰
+en	lover	😘
+en	loves	❤️ 😍
 en	loving	💕
+en	lowercase	🔡
 en	luck	🤞
 en	lucky	🍀
+en	luge	🛷
+en	luggage	🧳 🛅
+en	lumber	🪵
 en	lunch	🍴
+en	lunches	🍴
+en	lung	🫁
+en	lungs	🫁
+en	lupine	🪻
+en	lure	🪤
+en	lures	🪤
+en	lying	🤥
 en	mad	😡 😠
+en	maddening	😡
+en	mage	🧙
+en	mages	🧙
+en	maggot	🪰
+en	maggots	🪰
 en	magic	✨ 🔮
+en	magical	✨
+en	magician	🪄
+en	magicians	🪄
+en	magics	✨ 🔮
+en	magnet	🧲
+en	magnetic	🧲
+en	magnets	🧲
+en	magnifier	🔎
+en	magnifiers	🔎
+en	magnifies	🔍
+en	magnify	🔍
+en	magnifying	🔎
+en	mahjong	🀄
+en	mail	📧
+en	mailbox	📬 📫
+en	mailboxes	📬 📫
+en	mails	📧
+en	maize	🌽
+en	makeup	💄
+en	malaria	🦟
+en	mall	🛍️ 🏬
+en	mallard	🦆
+en	mallards	🦆
+en	malls	🛍️ 🏬
+en	mammoth	🦣
+en	mammoths	🦣
+en	mandarin	🍊
+en	mandarins	🍊
+en	mane	🦁
+en	manes	🦁
+en	mango	🥭
+en	mangoes	🥭
+en	manicure	💅
+en	manicured	💅
+en	map	🗺️
+en	maple	🍁
+en	maples	🍁
+en	maps	🗺️
+en	maracas	🪇
+en	marathon	🏃
+en	marathons	🏃
+en	margarita	🍸
+en	margaritas	🍸
+en	marriage	💍 💑
+en	marriages	💍 💑
 en	married	💍
+en	marries	💍 💒
+en	marry	💍 💒
+en	marsupial	🦘
+en	marsupials	🦘
+en	mart	🏪
+en	martial	🥋
+en	martini	🍸
+en	martinis	🍸
+en	marts	🏪
+en	masjid	🕌
 en	mask	😷
+en	masked	😷
+en	masking	😷
+en	masks	🎭
+en	massage	💆
+en	massaged	💆
+en	massages	💆
+en	massaging	💆
+en	mastercard	💳
+en	math	🧮 ➗
+en	mathematician	🧑‍🔬
+en	mathematicians	🧑‍🔬
+en	maybe	🤷
+en	meal	🍽️
+en	meals	🍽️
 en	meat	🍖 🥩
+en	meatball	🧆
+en	meatballs	🍝
+en	meats	🍖 🥩
+en	mecca	🕋
+en	mechanic	🧑‍🔧
 en	medal	🥇 🏅
+en	medallion	🎖️
+en	medallions	🎖️
+en	medals	🥇 🏅
+en	medical	⚕️
+en	medicated	💊
 en	medicine	💊
+en	medicines	💊
+en	meditate	🧘
+en	meditated	🧘
+en	meditating	🧘
+en	meditation	🧘
+en	meditations	🧘
+en	meeting	🤝
+en	meetings	🤝
+en	megaphone	📣
+en	megaphones	📣
+en	meh	😑 😕
+en	melon	🍈
+en	melons	🍈
+en	melt	🫠
+en	melting	🫠
+en	melts	🫠
+en	memo	📝
+en	memorandum	📝
+en	memorandums	📝
+en	memos	📝
+en	mending	❤️‍🩹
+en	menorah	🕎
+en	menorahs	🕎
+en	menstruation	🩸
+en	meow	🐱
+en	meridians	🌐
+en	mermaid	🧜
+en	mermaids	🧜
+en	merman	🧜
+en	merry	🧑‍🎄
 en	message	💬
+en	messages	💬
+en	messaging	💬
+en	metal	🤘
+en	metrics	📈
+en	metro	🚇
+en	metros	🚇
+en	mic	🎤
+en	mice	🐁
+en	microbe	🦠
+en	microorganism	🦠
+en	microphone	🎤 🎙️
+en	microphones	🎤 🎙️
+en	microscope	🔬
+en	microscopes	🔬
+en	mics	🎤
+en	military	🪖
 en	milk	🥛
+en	milks	🥛
+en	milkshake	🥤
+en	milkshakes	🥤
+en	milky	🌌
+en	minaret	🕌
+en	minarets	🕌
+en	mind	🧠 🤯
+en	minds	🧠 🤯
+en	minibus	🚐
+en	minibuses	🚐
+en	mining	⛏️
+en	minivan	🚐
+en	minivans	🚐
+en	minus	➖
+en	minuses	➖
+en	miracle	🙌
+en	miracles	🙌
+en	mirror	🪞
+en	mirrors	🪞
+en	mischievous	😉
+en	miss	😢 😘
+en	missed	😢 😘
+en	misses	😢 😘
+en	mobile	📱
+en	mobiles	📱
+en	mock	🤡
+en	mocked	🤡
+en	mocking	🤡
+en	mocks	🤡
+en	moisturizer	🧴
+en	moisturizers	🧴
+en	monarch	🫅
+en	monarchs	🫅
 en	money	💰 💸
+en	moneys	💰 💸
+en	monitor	🖥️
+en	monitors	🖥️
+en	monkey	🐵 🐒
+en	monkeys	🐵 🐒
+en	monorail	🚝
+en	monster	👾
+en	monsters	👾
+en	moo	🐄
 en	moon	🌙 🌚
+en	moons	🌙 🌚
+en	moos	🐄
+en	moose	🫎
+en	morning	🌅 ☕
+en	mornings	🌅 ☕
+en	mortar	🧱
+en	mortars	🧱
+en	mosque	🕌
+en	mosques	🕌
+en	mosquito	🦟
+en	mosquitoes	🦟
+en	motorbike	🏍️
+en	motorboat	🛥️
+en	motorboats	🛥️
+en	motorcycle	🏍️
+en	motorcycles	🏍️
+en	motorway	🛣️
+en	motorways	🛣️
+en	mountain	⛰️ 🏔️
+en	mountains	⛰️ 🏔️
+en	mouse	🐭 🐁
+en	mouses	🐭 🐁
+en	mousetrap	🪤
+en	moustache	🥸
+en	moustaches	🥸
+en	mouth	👄
+en	mouths	👄
 en	movie	🎬 🍿
+en	movies	🎬 🍿
+en	moving	📦
+en	muah	😘
+en	mudslide	🛘
+en	mug	☕
+en	mugs	🍻
+en	mule	🫏
+en	mules	🫏
+en	multiplication	✖️
+en	multiplications	✖️
+en	multiplies	✖️
+en	multiply	✖️
+en	multitask	🤹
 en	muscle	💪
+en	muscles	💪
+en	museum	🖼️ 🎨
+en	museums	🖼️ 🎨
+en	mushroom	🍄 🍄‍🟫
+en	mushrooms	🍄 🍄‍🟫
 en	music	🎶 🎵
+en	musical	🎶 🎵
+en	musicals	🎶 🎵
+en	musician	🧑‍🎤
+en	musics	🎶 🎵
+en	mustache	🥸
+en	muted	🔕
+en	mwah	😘
+en	mystical	🦄
+en	myth	🧚
+en	myths	🧚
+en	naan	🫓
+en	nah	👎
+en	nail	💅
+en	nailed	💅
+en	nailing	💅
+en	nails	💅
+en	nanna	👵
+en	nanny	🧑‍🍼
 en	nap	😴
+en	napping	😴
+en	naps	😴
+en	nasty	🤢
+en	nausea	😵‍💫
+en	nauseated	🤢
+en	nauseous	😵‍💫
+en	navigation	🧭
+en	necklace	📿
+en	necklaces	📿
+en	necktie	👔
+en	neckties	👔
+en	nectarine	🍊
+en	nectarines	🍊
+en	needle	🪡
+en	needles	🪡
 en	nerd	🤓
+en	nerds	🤓
+en	nerdy	🤓
 en	nervous	😅 😰
+en	nest	🪹 🪺
+en	nesting	🪹 🪺
+en	nests	🪹 🪺
+en	net	🥅
+en	nets	🥅
+en	network	🌐
+en	networks	🌐
+en	neutral	😐
+en	newborn	👶
+en	newborns	👶
+en	newspaper	📰 🗞️
+en	newspapers	📰 🗞️
+en	nib	✒️
+en	nibs	✒️
 en	nice	👏 😁
 en	night	🌃 🌠
+en	nightmare	😱
+en	nightmares	😱
+en	nights	🌃 🌠
+en	ninja	🥷
+en	ninjas	🥷
+en	nod	🙂‍↕️
+en	nodded	🙂‍↕️
+en	nodding	🙂‍↕️
+en	nods	🙂‍↕️
+en	noise	🔊
+en	noises	🔊
+en	noisy	🔊
+en	nom	😋
+en	nonchalant	💅
+en	noodle	🍜
+en	noodles	🍜
+en	nope	👎
+en	nose	👃
+en	noses	👃
+en	nosey	👃
+en	note	📝
+en	notebook	📓 📔
+en	notebooks	📓 📔
+en	notepad	🗒️
+en	notepads	🗒️
+en	notes	📝
+en	notification	🔔
+en	notifications	🔔
+en	novel	📖
+en	novels	📚
+en	nuclear	☢️
+en	numbers	🔢
+en	nuptials	💒
+en	nurse	🧑‍⚕️ 💉
+en	nurses	🧑‍⚕️ 💉
+en	nut	🥜 🔩
+en	nuts	🥜
+en	nutty	😜
+en	nye	🎆 🥂
+en	oar	🚣
+en	oars	🚣
+en	oatmeal	🥣
 en	ocean	🌊
+en	oceans	🌊
 en	octopus	🐙
 en	office	💻
+en	officer	👮
+en	officers	👮
+en	offices	💻
+en	ogre	👹
+en	ogres	👹
+en	oil	🛢️
+en	oils	🛢️
+en	oink	🐷
+en	ok	👌 👍
 en	okay	👌
+en	okays	👌
+en	oktoberfest	🍺
+en	olive	🫒
+en	olives	🫒
 en	omg	😮 😲
+en	omw	🏃
+en	onion	🧅
+en	onions	🧅
+en	oof	😬
 en	oops	🤭
+en	orange	🍊 🧡
+en	oranges	🍊 🧡
+en	orangutan	🦧
+en	orangutans	🦧
+en	orbit	🛰️
+en	orbits	🛰️
+en	orca	🫍
+en	orcas	🫍
+en	orchestra	🎻
+en	orchestras	🎻
+en	organ	🫀
+en	organizing	🗂️
+en	organs	🫀
+en	orienteering	🧭
+en	otter	🦦
+en	otters	🦦
+en	ouch	🤕
+en	outbox	📤
+en	outdoors	🏕️
+en	overcast	☁️
+en	overheated	🥵
+en	owl	🦉
+en	owls	🦉
+en	oxen	🐂
+en	oyster	🦪
+en	oysters	🦪
+en	package	📦
+en	packages	📦
+en	packing	🧳
+en	pad	🗒️
+en	paddle	🏓
+en	paddles	🚣
+en	padlock	🔒
+en	padlocks	🔒
+en	pads	🗒️
+en	paella	🥘
+en	page	📃
+en	pager	📟
+en	pagers	📟
+en	pages	📃
+en	pail	🪣
+en	pails	🪣
+en	pain	😣
+en	pained	😧
+en	pains	😣
+en	paint	🎨
+en	paintbrush	🖌️
+en	painted	🎨
+en	painter	🎨
+en	painters	🎨
+en	painting	🎨 🖼️
+en	paintings	🎨 🖼️
+en	paints	🎨
+en	palette	🎨
+en	palettes	🎨
+en	palm	🌴
+en	palms	🤲
+en	pamper	🧖
+en	pampered	🧖
+en	pampering	🧖
+en	pampers	🧖
+en	pan	🍳
+en	pancake	🥞
+en	pancakes	🥞
 en	panda	🐼
+en	pandas	🐼
+en	panic	😱
+en	panics	😱
+en	pans	🍳
+en	panting	🥵
+en	pants	👖
+en	paper	📄
+en	paperclip	🖇️ 📎
+en	paperclips	🖇️
+en	papers	📄
+en	parachute	🪂
+en	parachutes	🪂
+en	parasite	🪱
+en	parasol	⛱️
+en	parasols	⛱️
+en	parcel	📦
+en	parcels	📦
+en	parchment	📜
+en	parents	👪
+en	park	🏞️
+en	parks	🏞️
+en	parrot	🦜
+en	parrots	🦜
+en	parties	🎉 🎊
 en	party	🎉 🎊
+en	partying	🥳
+en	passionate	❤️‍🔥
+en	passport	🛂
+en	passports	🛂
 en	password	🔑
+en	passwords	🔑
 en	pasta	🍝
+en	pastas	🍝
+en	pastries	🥐
+en	pastry	🥐
+en	patrol	🚓
+en	patrols	🚓
+en	pause	⏸️
+en	pauses	⏸️
+en	paw	🐾
+en	pawn	♟️
+en	pawns	♟️
+en	paws	🐾
+en	pay	💸
+en	payment	💳
+en	payments	💳
+en	pays	💸
+en	pc	💻
+en	pea	🫛
 en	peace	✌️ 🕊️
+en	peaceful	😇
 en	peach	🍑
+en	peaches	🍑
+en	peacock	🦚
+en	peacocks	🦚
+en	peanut	🥜
+en	peanuts	🥜
+en	pear	🍐
+en	pearl	🦪
+en	pearls	🦪
+en	pears	🍐
+en	pedestrian	🚶
+en	pedestrians	🚶
+en	peek	👀
+en	peeked	👀
+en	peeking	🫣
+en	peeks	👀
+en	peep	🫣
+en	peeped	🫣
+en	peeping	🫣
+en	peeps	🫣
+en	pen	🖋️ 🖊️
+en	penalties	🟥 🟨
+en	penalty	🟥 🟨
+en	pencil	✏️
+en	pencils	✏️
 en	penguin	🐧
+en	penguins	🐧
+en	pens	🖋️ 🖊️
+en	pensive	😔
+en	pepper	🌶️ 🫑
+en	pepperoni	🍕
+en	peppers	🌶️ 🫑
+en	percussion	🪇
 en	perfect	💯
+en	perfected	💯
+en	perfecting	💯
+en	performer	🧑‍🎤
+en	performers	🧑‍🎤
+en	performing	🎭
+en	persevere	😣
+en	persevered	😣
+en	persevering	😣
+en	pest	🪳
+en	pests	🪳
+en	pet	🐶 🐱
+en	petrol	⛽
+en	petroleum	⛽
+en	pets	🐶 🐱
+en	pharmacies	💊
+en	pharmacy	💊
+en	phew	😌
+en	pho	🍜
+en	phoenix	🐦‍🔥
 en	phone	📱
+en	phones	📱
 en	photo	📷
+en	photography	📷
+en	photos	📷
+en	physician	🧑‍⚕️
+en	physicians	🧑‍⚕️
+en	physicist	🧑‍🔬
+en	physicists	🧑‍🔬
+en	physics	⚛️
 en	piano	🎹
+en	pianos	🎹
+en	piccolo	🪈
+en	picket	🪧
+en	pickets	🪧
+en	pickle	🥒
+en	pickles	🥒
+en	pickup	🛻
+en	pickups	🛻
+en	picnic	🧺
+en	picnics	🧺
+en	picture	🖼️
+en	pie	🥧
+en	piece	🧩
+en	pieces	🧩
+en	pies	🥧
 en	pig	🐷
+en	pigs	🐷
 en	pill	💊
+en	pills	💊
+en	pilot	🧑‍✈️
+en	piloted	🧑‍✈️
+en	piloting	🧑‍✈️
+en	pilots	🧑‍✈️
+en	pin	📌 📍
+en	pinata	🪅
+en	pinatas	🪅
+en	pinch	🤏
+en	pinched	🤌
+en	pinches	🤏
+en	pinching	🤏
+en	pine	🌲
 en	pineapple	🍍
+en	pineapples	🍍
+en	pines	🌲
+en	ping	🏓
+en	pink	🩷 🌸
+en	pinks	🩷 🌸
+en	pinocchio	🤥
+en	pins	📌 📍
+en	pint	🍺
+en	pints	🍺
+en	pirate	🏴‍☠️
+en	pisces	♓
+en	pistol	🔫
+en	pistols	🔫
+en	pita	🫓
+en	pixie	🧚
+en	pixies	🧚
 en	pizza	🍕
+en	pizzas	🍕
+en	placard	🪧
+en	placards	🪧
 en	plane	✈️
+en	planes	✈️
+en	planet	🪐
+en	planets	🪐
+en	planning	🗓️
 en	plant	🌱 🌿
+en	plantain	🍌
+en	plantains	🍌
+en	plants	🌱 🌿
+en	plaque	🪧
+en	plaques	🪧
+en	plaster	🩹
+en	plasters	🩹
+en	plate	🍽️
+en	plates	🍽️
+en	play	▶️
+en	playful	🦦
+en	playground	🛝
+en	playgrounds	🛝
+en	plays	▶️
+en	playstation	🎮
+en	plaything	🧸
+en	pleading	🥺
 en	please	🙏
+en	pleases	🙏
+en	pls	🙏
+en	plug	🔌
+en	plugs	🔌
+en	plumage	🪶
+en	plumber	🧑‍🔧
+en	plunger	🪠
+en	plungers	🪠
+en	plus	➕
+en	pluses	➕
+en	plush	🧸
+en	plz	🙏
+en	pod	🫛
+en	podcast	🎙️
+en	podcasts	🎙️
+en	pods	🫛
+en	point	👉
+en	pointing	👉 👆
+en	points	💯
+en	poison	💀
+en	poisoning	💀
+en	poisons	💀
+en	poke	🫵
+en	poked	🫵
+en	poker	🃏
+en	pokes	🫵
+en	poking	🫵
+en	polar	🐻‍❄️
+en	police	👮
+en	policed	👮
+en	policeman	👮
+en	polices	👮
+en	policewoman	👮
+en	policing	👮
+en	pollution	🏭
+en	polo	🤽
+en	ponder	🤔
+en	pondered	🤔
+en	pondering	🤔
+en	ponders	🤔
+en	pong	🏓
+en	poodle	🐩
+en	poodles	🐩
+en	pool	🏊 🎱
+en	pools	🏊 🎱
 en	poop	💩
+en	pooped	💩
+en	pooping	💩
+en	poops	💩
 en	popcorn	🍿
+en	popper	🎉
+en	poppers	🎉
+en	popping	🍾
+en	pork	🐷
+en	porridge	🥣
+en	postal	🏣 ✉️
+en	pot	🍲
+en	potable	🚰
+en	potato	🥔
+en	potatoes	🥔
+en	pots	🍲
+en	potted	🪴
+en	potty	🚽
+en	pouch	👝
+en	pouches	👝
+en	poultry	🍗
+en	pound	💷
+en	pounds	💷
+en	pour	🫗
+en	pouring	🫗
+en	pours	🫗
+en	pout	😡
+en	pouting	🙎
+en	power	⚡
+en	powerboat	🚤
+en	powerboats	🚤
+en	powers	⚡
+en	praise	🙌
+en	praised	🙌
+en	praises	🙌
+en	praising	🙌
+en	prank	😏
+en	pranks	😏
+en	prawn	🍤
+en	prawns	🍤
 en	pray	🙏
+en	prayed	🙏
+en	prayer	🙏 📿
+en	prayers	🙏 📿
+en	praying	🙏
+en	prays	🙏
+en	predator	🐯
+en	predators	🐯
+en	pregnancies	🤰
+en	pregnancy	🤰
+en	pregnant	🤰
+en	present	🎁
+en	presents	🎁
+en	preserver	🛟
+en	preservers	🛟
+en	pretzel	🥨
+en	price	🏷️
+en	prices	🏷️
+en	pride	🏳️‍🌈 🌈
+en	prince	🤴
+en	princes	🤴
 en	princess	👸
+en	princesses	👸
+en	print	🖨️
+en	printer	🖨️
+en	printers	🖨️
+en	privacy	🔒
+en	private	🔒
+en	prize	🏆
+en	prizes	🏆
+en	profanity	🤬
+en	professor	🧑‍🏫
+en	professors	🧑‍🏫
+en	progress	🚧
+en	progresses	🚧
+en	prohibit	🙅
+en	prohibited	🚫
+en	prohibiting	🙅
+en	prohibits	🙅
+en	projector	📽️
+en	projectors	📽️
+en	prophecies	🥠
+en	prophecy	🥠
+en	propose	💍
+en	proposes	💍
+en	prosper	🖖
+en	prospered	🖖
+en	prospering	🖖
+en	prosthetic	🦾
+en	prosthetics	🦾
+en	protest	🪧
+en	protests	🪧
+en	proud	🥹 😊
+en	psychic	🔮
+en	psychics	🔮
+en	pub	🍺 🍻
+en	pubs	🍺 🍻
+en	puck	🏒
+en	pucks	🏒
+en	pudding	🍮
+en	puddings	🍮
+en	puff	💨
+en	puffed	💨
+en	puffing	💨
+en	puffs	💨
+en	puke	🤮
+en	puked	🤮
+en	puking	🤮
+en	pulsating	💓
+en	pulse	💓
+en	pulses	💓
+en	pump	⛽
 en	pumpkin	🎃
+en	pumpkins	🎃
+en	pumps	👠
+en	punch	👊 ✊
+en	punched	👊 ✊
+en	punches	👊 ✊
+en	punching	👊 ✊
+en	pupil	🧑‍🎓
+en	puppies	🐶
 en	puppy	🐶
+en	purchase	🛍️
+en	purchases	🛍️
+en	purple	💜 🟣
+en	purples	💜 🟣
+en	purse	👛
+en	purses	👛
+en	push	🫷 🫸
+en	pushed	🫷 🫸
+en	pushes	🫷 🫸
+en	pushing	🫷 🫸
+en	putt	🏌️
+en	putts	🏌️
+en	puzzle	🧩
+en	puzzled	😕
+en	puzzles	🧩
+en	python	🐍
+en	pythons	🐍
+en	quartet	🎻
+en	quartets	🎻
 en	queen	👑 👸
+en	queens	👑 👸
+en	question	❓
+en	quid	💷
 en	quiet	🤫
+en	quieted	🤫
+en	quieting	🤫
+en	quivering	😖
+en	quiz	💯
+en	quizzed	💯
+en	quizzing	💯
 en	rabbit	🐰
+en	rabbits	🐰
+en	raccoon	🦝
+en	raccoons	🦝
+en	race	🏁
+en	racehorse	🐎
+en	racehorses	🐎
+en	races	🏁
+en	racing	🏎️ 🏇
+en	racket	🎾
+en	rackets	🎾
+en	racquet	🎾
+en	racquets	🎾
+en	rad	👌
+en	radiation	☢️
+en	radiations	☢️
+en	radio	📻
+en	radioactive	☢️
+en	radios	📻
+en	radish	🫜
+en	radishes	🫜
+en	raft	🚣
+en	rafts	🚣
+en	rage	😡
+en	raged	😡
+en	rages	😡
+en	raging	😡
+en	rail	🚈
+en	railroad	🚃
+en	railroads	🚃
+en	rails	🚈
+en	railway	🚞 🚟
+en	railways	🚞 🚟
 en	rain	☔ 🌧️
 en	rainbow	🌈
-en	relax	💆
+en	rainbows	🌈
+en	rained	☔ 🌧️
+en	raining	☔
+en	rains	☔ 🌧️
+en	rainy	☔
+en	raise	🙋
+en	raises	🙋
+en	raising	🙌 🙋
+en	ram	🐏
+en	ramen	🍜
+en	rams	🐏
+en	rancher	🧑‍🌾
+en	random	🎲 🔀
+en	rat	🐀
+en	rats	🐀
+en	rattle	🪇
+en	rattles	🪇
+en	raven	🐦‍⬛
+en	ravens	🐦‍⬛
+en	rays	☀️
+en	razor	🪒
+en	razors	🪒
+en	read	📖
+en	reading	📖 📚
+en	readings	📖 📚
+en	reads	📖
+en	rebirth	🐦‍🔥
+en	reborn	🐦‍🔥
+en	rebuild	👷
+en	rebuilding	👷
+en	rebuilds	👷
+en	receipt	🧾
+en	receipts	🧾
+en	receiver	📞
+en	receivers	📞
+en	recession	📉
+en	recessions	📉
+en	record	⏺️
+en	records	⏺️
+en	recovering	❤️‍🩹
+en	recruit	🫵
+en	recruited	🫵
+en	recruits	🫵
+en	recuperating	❤️‍🩹
+en	recycle	♻️
+en	recycles	♻️
+en	recycling	♻️
+en	red	🔴 ❤️
+en	reds	🔴 ❤️
+en	reef	🪸
+en	reefs	🪸
+en	reflection	🪞
+en	reflections	🪞
+en	reflector	🪞
+en	reflectors	🪞
+en	refresh	🔄
+en	refreshes	🔄
+en	refuse	🫷
+en	refuses	🫷
+en	refusing	🫷
+en	regal	🫅
+en	registered	®️
+en	regret	🙇
+en	regrets	🙇
+en	regretted	🙇
+en	regretting	🙇
+en	reincarnation	🐦‍🔥
+en	reindeer	🦌
+en	relationship	💑
+en	relationships	💑
+en	relax	😌 💆
+en	relaxed	😌
+en	relaxes	😌 💆
+en	relaxing	💆
+en	relief	😌 😮‍💨
+en	reliefs	😌 😮‍💨
+en	relieve	😮‍💨
 en	relieved	😌
+en	relieves	😮‍💨
+en	relieving	😮‍💨
+en	reminder	🎗️
+en	reminders	🎗️
+en	remodel	👷
+en	remodelling	👷
+en	remodels	👷
+en	repair	🔧 🧑‍🔧
+en	repairs	🔨
+en	repeat	🔁
+en	repeats	🔁
+en	reptile	🦎
+en	rescue	🛟 ⛑️
+en	rescues	🛟 ⛑️
+en	respect	🫡 🙇
+en	respected	🫡 🙇
+en	respecting	🫡 🙇
+en	respects	🫡 🙇
+en	respiration	🫁
+en	rest	🛌
+en	restaurant	🍽️ 🍴
+en	rested	🛌
+en	resting	🛌
+en	restricted	🚫
+en	restroom	🚻
+en	restrooms	🚻
+en	rests	🛌
+en	retro	👾
+en	reuse	♻️
+en	reverse	◀️ ⏪
+en	reverses	◀️ ⏪
+en	revival	🐦‍🔥
+en	revivals	🐦‍🔥
+en	revive	🐦‍🔥
+en	revives	🐦‍🔥
+en	revolver	🔫
+en	revolvers	🔫
+en	rewind	⏪
+en	rex	🦖
+en	rhino	🦏
+en	rhinoceros	🦏
+en	rhinos	🦏
+en	rhythm	🪘
+en	rhythms	🪘
+en	ribbon	🎀 🎗️
+en	ribbons	🎀 🎗️
 en	rice	🍚
+en	rices	🍚
 en	rich	💰
+en	riches	🪎
+en	rickshaw	🛺
+en	riding	🚴 🏇
 en	ring	💍
+en	ringer	🔔
+en	ringers	🔔
+en	rings	💍
+en	rip	🪦
+en	ripped	💪
+en	roach	🪳
+en	roaches	🪳
+en	road	🛣️
+en	roads	🛣️
+en	roadwork	🚧
+en	roar	🦁
+en	roars	🦁
 en	robot	🤖
+en	robots	🤖
+en	rock	🪨 🤘
+en	rocker	🧑‍🎤
+en	rockers	🧑‍🎤
 en	rocket	🚀
+en	rockets	🚀
+en	rocks	🪨 🤘
+en	rod	🎣
+en	rodent	🦫
+en	rodents	🦫
+en	rods	🎣
+en	rofl	🤣 😂
+en	roller	🛼
+en	rollercoaster	🎢
+en	rollers	🛼
+en	rolodex	📇
+en	romaine	🥬
 en	romance	😍 💘
+en	romances	😍 💘
+en	romancing	😍 💘
 en	romantic	😍 😘
+en	romantics	😍 😘
+en	roo	🦘
+en	rooster	🐓
+en	roosters	🐓
+en	rope	🪢
+en	ropes	🪢
+en	rosaries	📿
+en	rosary	📿
 en	rose	🌹
+en	roses	🌹
+en	rosette	🏵️
+en	rosettes	🏵️
+en	rotate	🔄
+en	rotates	🔄
+en	row	🚣
+en	rowboat	🚣
+en	rowed	🚣
+en	rowing	🚣
+en	royal	👑
+en	royals	👑
+en	royalty	👑
+en	rubbish	🗑️
+en	rubies	💎
+en	ruby	💎
+en	rucksack	🎒
+en	rucksacks	🎒
+en	ruckus	🫯
+en	rugby	🏉
+en	ruler	📏 📐
+en	rulers	📏 📐
+en	rum	🥃
+en	rums	🥃
 en	run	🏃
+en	runner	🏃
+en	runners	🏃
 en	running	🏃
+en	runs	🏃
+en	rush	🏃
+en	rushed	😰
+en	rushes	🏃
+en	rushing	🏃
 en	sad	😭 😢
+en	safari	🦁 🦒
+en	safaris	🦁 🦒
+en	safeties	🦺
+en	safety	🦺
+en	sagittarius	♐
+en	sailboat	⛵
+en	sailboats	⛵
+en	sailing	⛵
+en	sailings	⛵
+en	sake	🍶
+en	salad	🥗
+en	salads	🥗
+en	sale	🏷️
+en	sales	🏷️
+en	salon	💆
+en	salons	💆
+en	salsa	💃
+en	salsas	💃
+en	salt	🧂
+en	salts	🧂
+en	salty	🧂
+en	salute	🫡
+en	saluted	🫡
+en	salutes	🫡
+en	saluting	🫡
+en	sand	🏖️ ⏳
+en	sandal	🩴 👡
+en	sandals	🩴
+en	sands	🏖️ ⏳
+en	sandwich	🥪
+en	sandwiches	🥪
+en	santa	🎅 🧑‍🎄
+en	sapling	🌱
+en	saplings	🌱
+en	sarcasm	🫠
+en	sarcastic	🙃
+en	sari	🥻
+en	saris	🥻
+en	sash	🎽
+en	sashes	🎽
+en	sasquatch	🫈
+en	sassy	💁
+en	satchel	🎒
+en	satchels	🎒
+en	satellite	🛰️
+en	satellites	🛰️
 en	satisfied	😊
+en	saturn	🪐
+en	sauce	🫙
+en	saucer	🛸
+en	saucers	🛸
+en	sauces	🫙
+en	sauna	🧖
+en	saunas	🧖
+en	sausage	🌭
+en	sausages	🌭
+en	save	💾
+en	saves	💾
+en	sax	🎷
+en	saxes	🎷
+en	saxophone	🎷
+en	saxophones	🎷
+en	scale	⚖️
+en	scales	⚖️
 en	scared	😱 😰
-en	school	📚
+en	scarf	🧣
+en	scarfs	🧣
+en	scarves	🧣
+en	scary	😱 👻
+en	scenery	🏞️
+en	scepticism	🤨
+en	schedule	📅
+en	schedules	📅
+en	scholar	🎓
+en	school	🏫 📚
+en	schools	🏫 📚
+en	science	🔬 🧪
+en	sciences	🔬 🧪
+en	scientist	🧑‍🔬
+en	scissors	✂️
+en	scooter	🛵 🛴
+en	scooters	🛵 🛴
+en	scorpio	♏
+en	scorpion	🦂
+en	scorpions	🦂
+en	scorpius	🦂
+en	scotch	🥃
+en	scowl	🙎
+en	scowled	🙎
+en	scowling	🙎
+en	scream	😱
+en	screamed	😱
+en	screamer	😱
+en	screamers	😱
+en	screaming	😱
+en	screams	😱
+en	screen	🖥️
+en	screens	🖥️
+en	screw	🪛
+en	screwdriver	🪛
+en	screwdrivers	🪛
+en	screws	🪛
+en	scroll	📜
+en	scrolls	📜
+en	scuba	🤿
+en	sea	🌊
+en	seafood	🦞
+en	seal	🦭
+en	seals	🦭
+en	search	🔍
+en	searched	🔍
+en	searches	🔍
+en	searching	🔍
+en	seas	🌊
+en	seashell	🐚
+en	seashells	🐚
+en	seat	💺
+en	seats	💺
 en	secret	🤭 🤐
+en	secrets	🤭 🤐
+en	secure	🔐
+en	secures	🔐
+en	security	🔐
+en	seed	🌱
+en	seedling	🌱
+en	seeds	🌱
+en	seeing	👀
+en	selfie	🤳
+en	semaphore	🚦
+en	semaphores	🚦
+en	send	📩
+en	sends	📩
+en	sent	📨
+en	serenity	🧘
+en	serpent	🐍
+en	serpents	🐍
+en	settee	🛋️
+en	settees	🛋️
+en	sew	🪡
+en	sewing	🧵
+en	shades	😎
+en	shadows	👥
+en	shaka	🤙
+en	shake	🤝
+en	shaker	🧂
+en	shakers	🧂
+en	shakes	🤝
+en	shaking	🫨
+en	shame	😳
+en	shamed	😳
+en	shames	😳
+en	shaming	😳
+en	shampoo	🧴
+en	shampoos	🧴
+en	shamrock	☘️
+en	shamrocks	☘️
 en	shark	🦈
+en	sharks	🦈
+en	shave	🪒
+en	shaves	🪒
+en	sheaf	🌾
+en	sheep	🐑
+en	shell	🐚
+en	shellfish	🦐
+en	shells	🐚
+en	shelter	🛖
+en	shelters	🛖
+en	shh	🤫
+en	shied	🫣
+en	shield	🛡️
+en	shields	🛡️
+en	shifty	👀
+en	shiitake	🍄‍🟫
+en	shine	✨
+en	shines	✨
+en	shining	🌟
+en	shiny	✨
+en	ship	🚢 🛳️
+en	shipped	📦
+en	shipping	📦
+en	ships	🚢 🛳️
+en	shirt	👕 👔
+en	shirts	👕 👔
+en	shock	😱 🫢
 en	shocked	😱 😲
+en	shocking	😱 🫢
+en	shocks	😱 🫢
+en	shoe	👟 👞
+en	shoes	👟 👞
+en	shoo	🫳
+en	shop	🛍️
+en	shopping	🛍️ 🛒
+en	shops	🛍️
+en	shortcake	🍰
+en	shorts	🩳
+en	shot	💉
+en	shots	💉
+en	shout	🗣️
+en	shouted	🗣️
+en	shouting	🗣️
+en	shouts	🗣️
+en	shovel	🪏
+en	shovels	🪏
+en	shower	🚿
+en	showers	🚿
+en	shrimp	🍤 🦐
+en	shrimps	🍤 🦐
+en	shrine	⛩️
+en	shrines	⛩️
 en	shrug	🤷
+en	shrugging	🤷
+en	shrugs	🤷
+en	shuffle	🔀
+en	shuffles	🔀
+en	shut	🤐
+en	shuts	🤐
+en	shutting	🤐
+en	shuttle	🚀
+en	shuttles	🚀
+en	shy	🫣
 en	sick	😷 🤒
+en	sigh	😮‍💨
+en	sighed	😮‍💨
+en	sighing	😮‍💨
+en	sighs	😮‍💨
+en	signal	📶
+en	signals	📶
+en	silence	🤫
+en	silenced	🤫
+en	silences	🤫
+en	silencing	🤫
+en	silent	🤫 🔇
+en	silhouette	🗣️
+en	silhouettes	👥
+en	silly	🤪
+en	silverware	🍴
 en	sing	🎤
+en	singer	🧑‍🎤
+en	singers	🧑‍🎤
+en	singing	🎤
+en	singlet	🎽
+en	singlets	🎽
+en	sings	🎤
+en	siren	🚨
+en	sirens	🚨
+en	sit	🪑
+en	sits	🪑
+en	skate	🛼 ⛸️
+en	skateboard	🛹
+en	skateboards	🛹
+en	skater	🛹
+en	skaters	🛹
+en	skates	🛼
+en	skating	⛸️
+en	skeleton	🦴
+en	skeletons	🦴
+en	sketch	✏️
+en	sketches	✏️
+en	skewer	🍡
+en	ski	🎿
+en	skier	⛷️
+en	skies	☁️ 🌌
+en	skiing	🎿
+en	skillet	🍳
+en	skillets	🍳
+en	skip	⏭️
+en	skips	⏭️
+en	skirt	👗
+en	skirts	👗
+en	skis	🎿
+en	skull	💀 ☠️
+en	skulls	💀 ☠️
+en	skunk	🦨
+en	skunks	🦨
+en	sky	☁️ 🌌
+en	skydive	🪂
+en	skyline	🏙️
+en	skylines	🏙️
+en	slap	🫷
+en	slapped	🫷
+en	slapping	🫷
+en	slaps	🫷
+en	slay	😎
+en	slaying	😎
+en	slays	😎
+en	sled	🛷
+en	sledge	🛷
+en	sleds	🛷
 en	sleep	😴 💤
 en	sleeping	😴
+en	sleeps	😴 💤
 en	sleepy	😪
+en	sleigh	🛷
+en	sleuth	🕵️
+en	sleuthing	🕵️
+en	sleuths	🕵️
+en	slice	🍰
+en	slices	🍰
+en	slide	🛝
+en	slider	🎚️
+en	sliders	🎚️
+en	slides	🛝
+en	sliding	🛝
+en	slipper	🥿
+en	slot	🎰
+en	sloth	🦥
+en	slots	🎰
+en	slow	🐢 🐌
+en	slug	🐌
+en	slugs	🐌
+en	slurp	👅
+en	slurping	👅
 en	smart	🤓 🧠
+en	smartphone	📱
+en	smartphones	📱
+en	smell	👃
+en	smelled	👃
+en	smelling	👃
+en	smells	👃
+en	smelly	💩
+en	smh	🤦
 en	smile	😊 😁
+en	smiled	😊 😁
+en	smiles	😊 😁
+en	smiley	😊 😀
+en	smileys	😊 😀
 en	smiling	😊
+en	smirk	😏
+en	smirked	😏
+en	smirking	😏
+en	smog	🏭
+en	smoke	💨 🚬
+en	smoked	💨 🚬
+en	smokes	💨 🚬
+en	smoking	🚬 🚭
+en	smooch	😘
+en	smoothie	🥤
+en	smoothies	🥤
+en	smug	😏
+en	snack	🍿 🍪
+en	snail	🐌
+en	snails	🐌
 en	snake	🐍
+en	snakes	🐍
+en	snap	🫰
+en	snapdragon	🪻
+en	snapped	🫰
+en	snapping	🫰
+en	snaps	🫰
+en	snapshots	📸
+en	snare	🪤
+en	snares	🪤
+en	sneaker	👟
+en	sneakers	👟
+en	sneeze	🤧
+en	sneezes	🤧
+en	sneezing	🤧
+en	snicker	😏
+en	sniff	👃
+en	sniffed	👃
+en	sniffing	👃
+en	sniffs	👃
+en	snooker	🎱
+en	snoring	😴
+en	snot	😪
+en	snout	🐽
 en	snow	❄️ ☃️
+en	snowboard	🏂
+en	snowboarder	🏂
+en	snowboarders	🏂
+en	snowboarding	🏂
+en	snowboards	🏂
+en	snowed	❄️
+en	snowflake	❄️
+en	snowflakes	❄️
+en	snowing	❄️
 en	snowman	☃️
+en	snows	❄️ ☃️
+en	soap	🧼
+en	soaps	🧼
+en	sob	😭
+en	sobbed	😭
+en	sobbing	😭
+en	sobs	😭
 en	soccer	⚽
+en	socks	🧦
+en	soda	🥤
+en	sodas	🥤
+en	sofa	🛋️
+en	sofas	🛋️
+en	softball	🥎
+en	softballs	🥎
+en	soldier	🪖
+en	solidarity	✊
+en	somersault	🤸
+en	song	🎵 🎶
+en	songs	🎵 🎶
+en	soothe	💆
+en	soothes	💆
+en	sorcerer	🧙
+en	sorcerers	🧙
+en	sorceress	🧙
+en	sorcery	🧙
+en	sorrowful	😔
 en	sorry	🙇
-en	soup	🍜
+en	sos	🆘
+en	sound	🔊
+en	sounds	🔊
+en	soup	🍲 🍜
+en	soups	🍲 🍜
+en	sour	🍋
+en	soybean	🫛
+en	soybeans	🫛
+en	spa	💆 🧖
+en	space	🚀 🌌
+en	spaceflight	🛰️
+en	spade	♠️
+en	spades	♠️
 en	spaghetti	🍝
+en	spanner	🛠️
+en	spanners	🛠️
+en	spark	💥
+en	sparked	💥
+en	sparking	💥
 en	sparkle	✨
+en	sparkler	🎇
+en	sparkles	✨
+en	sparkling	✨
+en	sparkly	✨
+en	sparks	💥
+en	spas	💆 🧖
+en	speak	🗣️
+en	speaker	🔊
+en	speakers	🔊
+en	speaking	🗣️
+en	speaks	🗣️
+en	speech	💬
+en	speeches	💬
+en	speechless	😶
+en	speed	⚡
+en	speedboat	🚤
+en	speeds	⚡
+en	spew	🤮
+en	spewed	🤮
+en	spewing	🤮
+en	spews	🤮
+en	spice	🌶️
+en	spices	🌶️
+en	spicy	🌶️
+en	spider	🕷️
+en	spiders	🕷️
+en	spiderweb	🕸️
+en	spied	🕵️
+en	spies	🕵️
+en	spill	🫗
+en	spills	🫗
+en	spin	🌀
+en	spins	🌀
+en	spiny	🦔
+en	spiral	🌀
+en	spirals	🌀
+en	splashing	💦
+en	splatter	🫟
+en	spock	🖖
+en	sponge	🧽
+en	sponges	🧽
+en	spooky	👻
+en	spool	🧵
+en	spools	🧵
+en	spoon	🥄
+en	spoons	🥄
+en	spore	🍄‍🟫
+en	sport	⚽
+en	sports	⚽ 🏀
+en	spouting	🐳
 en	spring	🌸
+en	springtime	🌸
+en	sprinkles	🧁
+en	sprout	🌱
+en	sprouting	🌱
+en	spy	🕵️
+en	spying	🕵️
+en	squeezebox	🪗
+en	squid	🦑
+en	squids	🦑
+en	squinting	😆 😝
+en	squirrel	🐿️
+en	squirrels	🐿️
+en	stack	📚
+en	stacks	📚
+en	stadium	🏟️
+en	stadiums	🏟️
+en	stag	🦌
+en	stags	🦌
+en	stand	🧍
+en	standing	🧍
+en	standings	🧍
+en	stands	🧍
 en	star	⭐ 🌟
+en	stare	👀
+en	stared	👀
+en	stares	👀
+en	stargazing	🔭
+en	starry	🤩
 en	stars	⭐ 💫
+en	station	🚉
+en	stations	🚉
+en	stats	📊 📈
+en	statue	🗽
+en	statues	🗽
+en	steak	🥩
+en	steaks	🥩
+en	stealth	🥷
+en	steam	♨️
+en	steaming	☕
+en	steams	♨️
+en	steamy	🧖
+en	stein	🍺
+en	steins	🍺
+en	stethoscope	🩺
+en	stethoscopes	🩺
+en	stew	🍲
+en	stews	🍲
+en	stiletto	👠
+en	stilettos	👠
+en	sting	🪼
+en	stinger	🪼
+en	stingers	🪼
+en	stings	🪼
+en	stink	🦨
+en	stinks	💩
+en	stinky	💩
+en	stitches	🪡
+en	stocking	🧦
+en	stockings	🧦
+en	stomp	🦶
+en	stomped	🦶
+en	stomping	🦶
+en	stomps	🦶
+en	stone	🪨
+en	stones	🪨
 en	stop	🛑
+en	stoplight	🚦
+en	stops	🛑
+en	stopwatch	⏱️
+en	stopwatches	⏱️
+en	store	🏪
+en	stores	🏪
+en	storm	⛈️ 🌪️
+en	storms	⛈️ 🌪️
+en	straw	🧃
+en	strawberries	🍓
 en	strawberry	🍓
+en	straws	🧃
+en	streamer	🎏
+en	streamers	🎏
+en	strength	💪
+en	strengths	💪
 en	stress	😅
 en	stressed	😅
+en	stresses	😅
+en	stressing	😅
+en	stride	🚶
+en	strides	🚶
+en	striding	🚶
+en	stroll	🚶
+en	strolled	🚶
+en	strolling	🚶
+en	strolls	🚶
 en	strong	💪
+en	struggling	😣
+en	stub	🎫
+en	stubborn	🫏
+en	stubs	🎫
+en	student	🧑‍🎓
+en	studied	📚
+en	studies	📚
+en	studio	🎙️
+en	studios	🎙️
 en	study	📚
+en	studying	📚
+en	stuffed	🧸
+en	stunned	😯
+en	suave	😏
+en	subtract	➖
+en	subtracts	➖
+en	suburban	🏠
+en	suburbia	🏠
+en	subway	🚇
+en	subways	🚇
+en	subzero	🥶
+en	success	🏆 📈
+en	successes	🏆 📈
+en	sucker	🍭
+en	suckers	🍭
+en	sucks	😔
+en	suction	🪠
+en	suit	🕴️ 🤵
+en	suitcase	🧳
+en	suitcases	🧳
+en	sulk	🙎
+en	sulking	🙎
+en	summer	☀️ 🏖️
+en	summers	☀️ 🏖️
 en	sun	☀️ 🌞
+en	sunflower	🌻
+en	sunflowers	🌻
+en	sunglass	😎
 en	sunglasses	😎
 en	sunny	☀️ 🌞
 en	sunrise	🌅
+en	sunrises	🌅
+en	suns	☀️ 🌞
+en	sunscreen	🧴
+en	sunscreens	🧴
+en	sunset	🌇
+en	sunsets	🌇
 en	sunshine	🌞
+en	superbowl	🏈
+en	superhero	🦸
+en	superheroes	🦸
+en	supernatural	🧛
+en	superpower	🦸
+en	superpowers	🦸
+en	superstition	🐈‍⬛
+en	superstitions	🐈‍⬛
+en	sure	👌
+en	surf	🏄
+en	surfed	🏄
+en	surfer	🏄
+en	surfing	🏄
+en	surfs	🏄
+en	surgical	😷
+en	surprise	😮 🎁
 en	surprised	😮 😯
+en	surprises	😮 🎁
+en	surprising	😮 🎁
+en	surrender	🏳️
+en	surrenders	🏳️
+en	sus	🤨
 en	sushi	🍣
+en	suspicious	🤨
+en	sutures	🪡
+en	swag	😎
+en	swan	🦢
+en	swans	🦢
+en	swearing	🤬
+en	sweat	😅 😥
+en	sweated	😅 😥
+en	sweating	🥵
+en	sweats	😅 😥
+en	sweep	🧹
+en	sweeping	🧹
+en	sweeps	🧹
+en	sweet	🍬 🍭
+en	sweets	🍬 🍭
+en	swim	🏊
+en	swimmer	🏊
 en	swimming	🏊
+en	swims	🏊
+en	swimsuit	🩱
+en	swimsuits	🩱
+en	swirl	🍥
+en	swirls	🍥
+en	sword	🗡️
+en	swords	⚔️
+en	symbols	🔣
+en	symphonies	🎻
+en	symphony	🎻
+en	synagogue	🕍
+en	synagogues	🕍
+en	sync	🔄
+en	syncs	🔄
+en	syringe	💉
+en	syringes	💉
+en	tablet	💊
+en	tablets	💊
+en	tableware	🥄
+en	tabs	📑
+en	tack	📌
+en	tacks	📌
 en	taco	🌮
+en	tacos	🌮
+en	tada	🎉
+en	tag	🏷️
+en	tailoring	🪡
+en	takeout	🥡
+en	talisman	🧿
+en	talismans	🧿
+en	talk	💬
+en	talked	💬
+en	talking	💬
+en	talks	💬
+en	tamale	🫔
+en	tangerine	🍊
+en	tangerines	🍊
+en	tangled	🪢
+en	tango	💃
+en	tangos	💃
+en	tap	🚰
+en	tape	📼
+en	tapes	📼
+en	tapioca	🧋
+en	taps	🚰
+en	target	🎯
+en	targets	🎯
+en	taste	👅 😋
+en	tasted	👅 😋
+en	tastes	👅 😋
+en	tasting	👅 😋
 en	tasty	😋
+en	taurus	♉
+en	taxi	🚕 🚖
+en	taxicab	🚕
+en	taxicabs	🚕
+en	taxis	🚕 🚖
 en	tea	🍵 ☕
+en	teacher	🧑‍🏫
+en	teacup	🍵
+en	teacups	🍵
+en	teal	🩵
+en	team	👥
+en	teamed	👥
+en	teaming	👥
+en	teams	👥
+en	teapot	🫖
+en	teapots	🫖
+en	tear	😢
 en	tears	😭
+en	teas	🍵 ☕
+en	tease	😉
+en	teases	😉
+en	technician	🧑‍🔧
+en	technicians	🧑‍🔧
+en	technologies	💻
+en	technologist	🧑‍💻
+en	technologists	🧑‍💻
+en	technology	💻
+en	teddies	🧸
+en	teddy	🧸
+en	tee	🏌️
+en	teed	🏌️
+en	tees	🏌️
+en	teeth	🦷
+en	teething	🦷
+en	telephone	☎️
+en	telephones	☎️
+en	telescope	🔭
+en	telescopes	🔭
 en	television	📺
+en	televisions	📺
+en	temperature	🌡️
+en	temperatures	🌡️
+en	temple	🛕
+en	temples	🛕
+en	tempura	🍤
 en	tennis	🎾
+en	tent	⛺
+en	tentacles	🐙
+en	tents	⛺
+en	tequila	🥃
+en	terrapin	🐢
+en	terrified	😨
+en	test	📝
+en	tests	📝
+en	text	💬
+en	textbook	📕
+en	texted	💬
+en	texting	💬
+en	texts	💬
+en	thank	🙏
+en	thanked	🙏
+en	thanking	🙏
 en	thanks	🙏
+en	thanksgiving	🦃
+en	theater	🎭
+en	theatre	🎭
+en	theatres	🎭
+en	therapist	🧑‍⚕️
+en	therapists	🧑‍⚕️
+en	thermometer	🤒 🌡️
+en	thermometers	🤒 🌡️
+en	thespian	🎭
+en	think	🤔
+en	thinker	🤔
 en	thinking	🤔
+en	thinks	🤔
+en	third	🥉
+en	thirds	🥉
+en	thirsty	🥤
+en	thought	💭
+en	thoughts	💭
+en	thread	🧵
+en	threads	🧵
+en	thumb	👍
 en	thumbs	👍
 en	thunder	⚡ ⛈️
+en	thunderbolt	⚡
+en	thunderbolts	⚡
+en	thunders	⚡ ⛈️
+en	thunderstorm	⛈️
+en	thx	🙏
+en	tiara	👑
+en	tiaras	👑
+en	tick	✅
+en	ticket	🎫 🎟️
+en	tickets	🎟️
+en	ticks	✅
+en	tie	👔 🪢
+en	ties	👔 🪢
 en	tiger	🐯
+en	tigers	🐯
+en	tiki	🍹
+en	timber	🪵
+en	timbers	🪵
+en	time	⏰
+en	timepiece	⌚
+en	timer	⏲️
+en	timers	⏲️
+en	times	⏰
+en	tin	🥫
+en	tinned	🥫
+en	tins	🥫
+en	tiny	🤏
+en	tipsy	🥴
+en	tire	🛞
 en	tired	😩 😴
+en	tires	🛞
+en	titanic	🚢
+en	toad	🐸
+en	toads	🐸
+en	toadstool	🍄
 en	toast	🍞
+en	toasts	🍞
+en	tobacco	🚬
+en	tobaccos	🚬
+en	toboggan	🛷
+en	toddler	👶
+en	toddlers	👶
+en	toilet	🚽
+en	toiletry	🪥
+en	toilets	🚽
+en	tokyo	🗼
+en	tomato	🍅
+en	tomb	🪦
+en	tombs	🪦
+en	tombstone	🪦
+en	tombstones	🪦
 en	tongue	😜 😛
+en	tonight	🌙
+en	toolbox	🧰
+en	toolboxes	🧰
+en	tools	🛠️
+en	tooth	🦷
+en	toothbrush	🪥
+en	toothbrushes	🪥
+en	torch	🔦
+en	torches	🔦
 en	tornado	🌪️
+en	tornadoes	🌪️
+en	tortoise	🐢
+en	tortoises	🐢
+en	touched	🥲
+en	tower	🗼
+en	towers	🗼
+en	toy	🧸 🪀
+en	trackball	🖲️
+en	trackballs	🖲️
+en	tractor	🚜
+en	tractors	🚜
+en	trademark	™️
+en	traffic	🚦
+en	tragedies	🎭
+en	tragedy	🎭
 en	train	🚂
-en	travel	✈️
+en	trainer	👟
+en	trainers	👟
+en	training	🏋️
+en	trainings	🏋️
+en	trains	🚂
+en	tram	🚊
+en	trams	🚊
+en	tramway	🚡
+en	tramways	🚡
+en	trap	🪤
+en	traps	🪤
+en	trash	🗑️
+en	travel	✈️ 🧳
+en	traveled	✈️
+en	traveling	✈️
+en	travelled	✈️
+en	travelling	✈️
+en	travels	✈️ 🧳
+en	tray	📥 📤
+en	trays	📥 📤
+en	treasure	🪎 💰
+en	treasures	🪎 💰
+en	treble	🎼
 en	tree	🌳 🌲
+en	trees	🌳 🌲
+en	trefoil	☘️
+en	trend	📈
+en	triangular	📐
+en	triathlon	🏊
+en	triathlons	🏊
+en	trident	🔱
+en	trip	🧳
+en	trips	🧳
+en	triumph	😤
+en	triumphed	😤
+en	triumphs	😤
+en	troll	🧌
+en	trolled	🧌
+en	trolley	🛒
+en	trolleys	🛒
+en	trolling	🧌
+en	trolls	🧌
+en	trombone	🪊
+en	trombones	🪊
+en	trophies	🏆
 en	trophy	🏆
+en	tropical	🌴 🍹
+en	tropics	🍹
+en	trousers	👖
+en	truck	🚚 🚛
+en	trucks	🚚 🚛
+en	truffle	🍄‍🟫
+en	trumpet	🎺
+en	trumpets	🎺
+en	tshirt	👕
+en	tsunami	🌊
+en	tsunamis	🌊
+en	ttyl	👋
+en	tub	🛀
+en	tuber	🥔
+en	tubs	🛀
+en	tulip	🌷
+en	tulips	🌷
+en	tumbler	🥃
+en	tumblers	🥃
+en	turd	💩
+en	turds	💩
+en	turkey	🦃
+en	turkeys	🦃
+en	turnip	🫜
+en	turnips	🫜
 en	turtle	🐢
+en	turtles	🐢
+en	tusk	🦣
+en	tusks	🦣
+en	tuxedo	🤵
+en	tuxedos	🤵
+en	tv	📺
+en	tweet	🐦
+en	twine	🪢
+en	twins	👯
+en	twister	🌀
+en	twisters	🌀
+en	typhoon	🌀
+en	typhoons	🌀
+en	typing	⌨️
+en	typos	✏️
+en	tyrannosaurus	🦖
+en	tysm	🙏
+en	ufo	🛸 👽
+en	ugh	😒
+en	umbrella	☔ ☂️
+en	umbrellas	☔ ☂️
+en	unbelievable	😮
+en	unconscious	😵
+en	undead	🧟
+en	undercover	👮
+en	underground	🚇
+en	underwater	🫧
+en	underwear	🩲
+en	undo	↩️
 en	unhappy	😢
 en	unicorn	🦄
+en	unicorns	🦄
+en	unimpressed	😒
+en	universe	🌌
+en	universes	🌌
+en	universities	🎓
+en	university	🎓
+en	unlock	🔓
+en	unlocked	🔓
+en	unlocks	🔓
+en	unlucky	🐈‍⬛
+en	unreal	😮
+en	unsure	🫤
+en	unwell	😖
+en	unwind	🧖
+en	unwinding	🧖
+en	uppercase	🔠
 en	upset	😡 😠
+en	upsets	😡 😠
+en	upsetting	😡 😠
+en	urban	🏙️
+en	urn	⚱️
+en	urns	⚱️
+en	user	👤
+en	users	👤
+en	vacation	🏖️ 🍹
+en	vacations	🏖️ 🍹
+en	vaccination	💉
+en	vaccinations	💉
+en	vaccine	💉
+en	vaccines	💉
 en	valentine	🌹 💘
+en	valentines	🌹 💘
+en	valuables	🪎
+en	vampire	🧛
+en	vampires	🧛
+en	van	🚐
+en	vans	🚐
+en	vase	🏺
+en	vases	🏺
+en	vegetable	🥦 🥕
+en	vegetables	🥦 🥕
+en	vegetarian	🥗
+en	vegetarians	🥗
+en	veggie	🥦
+en	veggies	🥦
+en	vehicle	🚙
+en	vehicles	🚙
+en	veil	👰
+en	veils	👰
+en	venison	🦌
+en	venue	🏟️
+en	venues	🏟️
+en	versus	🆚
+en	vest	🦺
+en	vests	🦺
+en	vibes	✨
+en	vibrate	🫨
+en	vibrated	🫨
+en	vibrates	🫨
+en	vibration	📳
+en	vibrations	📳
+en	victories	✌️ 🏆
 en	victory	✌️ 🏆
+en	video	📹
+en	videocassette	📼
+en	videocassettes	📼
+en	videogame	🎮 🕹️
+en	videos	📹
+en	villain	🦹
+en	violet	🪻
+en	violets	🪻
+en	violin	🎻
+en	violins	🎻
+en	virgo	♍
+en	virus	🦠
+en	viruses	🦠
+en	vitamin	💊 🍊
+en	vitamins	💊 🍊
 en	volcano	🌋
+en	volcanoes	🌋
+en	volleyball	🏐
+en	voltage	⚡
+en	voltages	⚡
+en	volume	🔊 🔉
+en	volumes	🔊 🔉
+en	vomit	🤮
+en	vomited	🤮
+en	vomiting	🤮
+en	vortex	🌀
+en	vote	🗳️
+en	voted	🗳️
+en	votes	🗳️
+en	voting	🗳️
+en	vulcan	🖖
+en	wacky	😜
+en	waffle	🧇
+en	waffles	🧇
+en	wagon	🚃
+en	wagons	🚃
+en	wailing	😩
+en	wait	⏳
+en	waiting	⏳ ⏰
+en	waits	⏳
+en	wake	⏰
+en	wakes	⏰
+en	walk	🚶
+en	walked	🚶
+en	walking	🚶
+en	walks	🚶
+en	wall	🧱
+en	wallet	👛
+en	wallets	👛
+en	walls	🧱
+en	wand	🪄
+en	wands	🪄
+en	waning	🌘
 en	warning	⚠️
+en	warnings	⚠️
+en	warrior	🪖
+en	warriors	🪖
+en	warthog	🐗
+en	wash	🧼 🚿
+en	washes	🧼 🚿
+en	washroom	🚽
+en	washrooms	🚽
+en	waste	🗑️
+en	wastebasket	🗑️
+en	wastebaskets	🗑️
+en	wastes	🗑️
+en	watch	⌚
+en	watches	⌚
+en	water	💧
 en	watermelon	🍉
+en	watermelons	🍉
+en	waters	💧
 en	wave	👋
+en	waved	👋
+en	waves	🌊
+en	waving	👋
+en	wavy	🥴
+en	wax	🕯️
+en	waxes	🕯️
+en	waxing	🌒
+en	wealthy	🤑
+en	wearied	😩
+en	weary	😩
 en	weather	☀️ 🌈
+en	weathers	☀️ 🌈
+en	web	🌐
 en	wedding	💍 💒
+en	weddings	💍 💒
+en	wedge	🧀
+en	wedges	🧀
+en	weekend	🎉
+en	weekends	🎉
+en	weep	😢 😭
+en	weeps	😢 😭
+en	weight	🏋️
+en	weights	🏋️
+en	weirdo	😜
+en	weirdos	😜
+en	welcome	🤗 👋
+en	welcomed	🤗 👋
+en	welcomes	🤗 👋
+en	welcoming	🤗 👋
+en	welder	🧑‍🏭
+en	welders	🧑‍🏭
+en	welding	🥽
+en	wet	💦
 en	whale	🐳
+en	whales	🐳
 en	whatever	🙄 🤷
+en	wheat	🌾
+en	wheel	🛞
+en	wheelchair	🦽 🦼
+en	wheelchairs	🦽 🦼
+en	wheels	🛞
+en	whew	😥
+en	whine	😫
+en	whined	😫
+en	whines	😫
+en	whirlpool	🌀
+en	whirlpools	🌀
+en	whirlwind	🌪️
+en	whiskey	🥃
+en	whiskies	🥃
+en	whisky	🥃
+en	whisper	🤫
+en	whispered	🤫
+en	whispering	🤫
+en	whispers	🤫
+en	whistle	😙
+en	whistled	😙
+en	whistles	😙
+en	whistling	😙
+en	white	🤍 ⚪
+en	whoa	😮
+en	whoops	🤭
+en	wicked	🖤
+en	wiener	🌭
+en	wifi	🛜 📶
+en	wildcard	🃏
+en	wildcards	🃏
+en	wilted	🥀
 en	win	🏆
 en	wind	🌬️
+en	window	🪟
+en	winds	🌬️
 en	wine	🍷
+en	wines	🍷
+en	wing	🪽
+en	wings	🪽
 en	wink	😉
-en	winner	🏅
+en	winked	😉
+en	winking	😉 😜
+en	winks	😉
+en	winner	🏆 🥇
+en	winners	🏆 🥇
+en	winning	🏆
+en	winnings	🏆
+en	wins	🏆
+en	winter	❄️ ⛄
+en	winters	❄️ ⛄
+en	wireless	🛜
+en	wise	🦉
+en	wish	🌠
+en	wishbone	🦴
+en	wishes	🌠
+en	witch	🧙
+en	witches	🧙
+en	wizard	🧙
+en	wizards	🧙
+en	woah	😯 😱
+en	wolf	🐺
+en	wolfs	🐺
+en	wolves	🐺
+en	won	🏆
+en	wonderful	🤩
+en	wondering	🤔
+en	wood	🪵
+en	woods	🪵
+en	woodwind	🪈
+en	woodwinds	🪈
+en	woof	🐶
+en	woohoo	🎉 🥳
+en	wool	🐑 🧶
+en	woolly	🦣
+en	wools	🐑 🧶
+en	woozy	🥴
+en	work	💼
+en	worker	👷
 en	workout	🏋️
+en	workouts	🏋️
+en	works	💼
 en	world	🌍 🌎
+en	worlds	🌍 🌎
+en	worldwide	🌐
+en	worm	🪱
+en	worms	🪱
 en	worried	😟
+en	worries	😟
+en	worry	😟
+en	worrying	😟
+en	worship	🛐
+en	worships	🛐
+en	wound	🩸
+en	wounded	❤️‍🩹
+en	wounds	🩸
 en	wow	🤩 😮
+en	wowed	🤩 😮
+en	wows	🤩 😮
+en	wrap	🌯
+en	wrapped	🎁
+en	wrapper	🍬
+en	wrappers	🍬
+en	wraps	🌯
+en	wrench	🔧
+en	wrenches	🔧
+en	wrestle	🤼
+en	wrestled	🤼
+en	wrestler	🤼
+en	wrestlers	🤼
+en	wrestles	🤼
+en	wrestling	🤼
+en	wrist	⌚
+en	wrists	⌚
+en	wristwatch	⌚
+en	wristwatches	⌚
 en	write	✍️
+en	writes	✍️
+en	writing	✍️
+en	writings	✍️
+en	wrong	❌
+en	wrongs	❌
+en	xmas	🎄 🎅
+en	xoxo	😘 💕
+en	yacht	⛵
+en	yachts	⛵
+en	yam	🍠
+en	yams	🍠
+en	yang	☯️
+en	yarn	🧶
+en	yarns	🧶
+en	yawn	🥱
+en	yawned	🥱
+en	yawning	🥱
+en	yawns	🥱
+en	yay	🎉 👏
+en	yea	🙌
+en	yeah	👍
+en	yeahs	👍
+en	yellow	🟡 💛
+en	yellows	🟡 💛
+en	yen	💴
+en	yep	👍
 en	yes	👍
+en	yeti	🫈
+en	yikes	😬
+en	yin	☯️
+en	yoga	🧘
+en	yogi	🧘
+en	yogis	🧘
 en	yum	😋
 en	yummy	😋
+en	yup	👍
+en	yurt	🛖
+en	zany	🤪
+en	zap	⚡
+en	zaps	⚡
+en	zebra	🦓
+en	zebras	🦓
+en	zen	😌
+en	zipper	🤐
+en	zippered	🤐
+en	zippers	🤐
+en	zombie	🧟
+en	zombies	🧟
+en	zoo	🦁 🐘
+en	zoom	🔍
+en	zooms	🔍
+en	zoos	🦁 🐘
+en	zzz	💤
+zh	一点点	🤏
+zh	一百分	💯
+zh	一言为定	🤝
+zh	七夕	🎋
+zh	万圣节	🎃 👻
+zh	三叉戟	🔱
+zh	三叶草	☘️
+zh	三日月	🌒
+zh	三明治	🥪
+zh	三点式	👙
+zh	三角	📐
+zh	三角尺	📐
+zh	三角旗	🚩
+zh	三角裤	🩲
+zh	三蹦子	🛺
+zh	上升	📈
+zh	上学	🎒
+zh	上弦月	🌛 🌓
+zh	上扬	💹
+zh	上涨	📈
+zh	上班	💼
+zh	上衣	🎽
+zh	上课	📚
+zh	上锁	🔒
+zh	下弦月	🌜 🌗
+zh	下班	🏃
+zh	下跌	📉
+zh	下跪	🧎
+zh	下降	📉
 zh	下雨	☔ 🌧️
+zh	下雪	🌨️
+zh	不信任	🤨
+zh	不关心	🤷
+zh	不可以	🙅
+zh	不可能	🙅
+zh	不可说	🤭
+zh	不吉利	🐈‍⬛
+zh	不好	👎
 zh	不好意思	🙇
+zh	不安	😨
+zh	不客气	😊
+zh	不屑	😒
+zh	不开心	🙁
 zh	不懂	😕
+zh	不敢苟同	🙄
+zh	不服	😒
+zh	不死族	🧟
+zh	不死鸟	🐦‍🔥
+zh	不满	☹️
 zh	不爽	😠 😤
+zh	不相信	🫤
+zh	不知道	🤷
+zh	不确定	😕
+zh	不舒服	🤒
+zh	不行	🙅
+zh	不要	🙅
+zh	不说	🤭
+zh	不赞同	🤨
+zh	不赞成	👎
+zh	不错	👍
+zh	不高兴	😒
+zh	丑小鸭	🦢
+zh	专辑	💿
 zh	世界	🌍 🌏
+zh	丘比特	💘
+zh	东京	🗼
+zh	东京塔	🗼
+zh	东山再起	🐦‍🔥
+zh	丝带	🎗️
+zh	两颗心	💕
+zh	丧礼	⚱️
+zh	个人电脑	💻
+zh	中暑	🥵
+zh	中止	🫷
+zh	中秋	🎑
+zh	中秋节	🥮
+zh	中餐	🥢
+zh	串	🍢
+zh	为什么	❓
+zh	主厨	🧑‍🍳
+zh	主意	💡
+zh	主食	🍚
+zh	举手	🙋
+zh	举重	🏋️
+zh	举铁	🏋️
+zh	么么	😘
+zh	么么哒	😘
+zh	义肢	🦾
+zh	乌贼	🦑
+zh	乌鸦	🐦‍⬛
+zh	乌龙茶	🍵
+zh	乌龟	🐢
+zh	乐谱	🎼
+zh	乐队	🎸
+zh	乒乓	🏓
+zh	乒乓球	🏓
 zh	书	📚 📖
+zh	书包	🎒
+zh	书呆子	🤓
+zh	书本	📖 📕
+zh	书签	🔖
+zh	书籍	📚
+zh	买	🛍️
+zh	买买买	🛍️
+zh	乳制品	🧈
+zh	乳液	🧴
+zh	乳液瓶	🧴
+zh	乳牛	🐄
+zh	了解	👌
+zh	争论	🫯
+zh	二头肌	💪
+zh	亏凸月	🌖
+zh	亏眉月	🌘
 zh	云	☁️
+zh	云彩	☁️
+zh	云朵	☁️
+zh	五指	✋
+zh	五线谱	🎶
+zh	五角星	⭐
+zh	亚军	🥈
+zh	亚洲	🌏
+zh	交叉	🤞
+zh	交叉口	🚦
+zh	交叉旗	🎌
+zh	交警	👮
+zh	交通工具	🚗
+zh	交通灯	🚦
 zh	亲亲	😘 😚
+zh	亲亲猫	😽
+zh	亲吻	💏
+zh	亲子	👪
+zh	亲爱的	😘 ❤️
+zh	人偶	🎎
+zh	人像	👤
+zh	人字拖	🩴
+zh	人马座	♐
+zh	人鱼	🧜
+zh	仓鼠	🐹
+zh	付钱	💰
+zh	仙人掌	🌵
+zh	仙女	🧚
+zh	仙子	🧚
+zh	企鹅	🐧
+zh	休旅车	🚙
+zh	休闲车	🚙
+zh	优秀	👍 🌟
+zh	会计	🧾
+zh	会面	🤝
+zh	伞	☂️
+zh	传呼机	📟
+zh	传真	📠
+zh	传真机	📠
+zh	伤口	🩹
 zh	伤心	💔 😢
+zh	伪装	🥸
+zh	伸手	🫱
+zh	位子	💺
+zh	位置	📍
+zh	低落	🙎
+zh	住嘴	🤐
+zh	住宅	🏘️
+zh	住家	🏠
+zh	佐料	🧂
+zh	体操	🤸
+zh	体温计	🌡️
+zh	体育	⚽ 🏀
+zh	体育馆	🏟️
+zh	佛寺	🛕
+zh	作业	📝 📚
 zh	你好	👋
+zh	佩服	🙇 👍
+zh	侠客	🥷
+zh	侦探	🕵️
+zh	侧手翻	🤸
+zh	便便	💩
+zh	便利店	🏪
+zh	便当	🍱
+zh	便当盒	🍱
+zh	便条	📝
+zh	便笺	📝
+zh	便鞋	🥿
+zh	保姆	🧑‍🍼
+zh	保龄球	🎳
 zh	信	💌
+zh	信件	📩
+zh	信号灯	🚦
+zh	信封	✉️
+zh	信息	💬 ℹ️
+zh	信用	💳
+zh	信用卡	💳
+zh	信箱	📮
+zh	修剪	✂️
+zh	修理	🔨
+zh	修补	❤️‍🩹
+zh	倒三角	🔻
+zh	倒出	🫗
+zh	倒垃圾	🚮
+zh	倒脸	🙃
+zh	倔强	🫏
+zh	借记卡	💳
+zh	倦容	😫
+zh	值机	🛫
+zh	倾倒	🫗
+zh	假笑	😏
+zh	做菜	🍽️
+zh	做饭	🧑‍🍳
 zh	停	✋
 zh	停止	🛑
+zh	健康	💪
+zh	健行	🥾
+zh	健身	💪 🏋️
+zh	健身房	💪
+zh	偷看	🫣
+zh	偷窥	🫣
+zh	傲慢	😤
+zh	傻	🤪
+zh	傻瓜	🤪
+zh	傻笑	🤭
+zh	僵尸	🧟
+zh	元旦	🎆
+zh	光环	😇
+zh	光盘	💿 💽
+zh	光碟	📀
+zh	光线	☀️
+zh	克尔白	🕋
+zh	兑换	💱
+zh	兔	🐰 🐇
 zh	兔子	🐇
+zh	兔子头	🐰
+zh	兔宝宝	🐰
+zh	兔耳朵	👯
+zh	入场券	🎟️
+zh	入睡	🛌
+zh	全倒	🎳
+zh	全球	🌎
+zh	八卦	💁
+zh	八戒	🐷
+zh	八爪	🐙
+zh	八角形	🛑
+zh	八角星	✴️
+zh	八边形	🛑
 zh	公主	👸
+zh	公事包	💼
+zh	公交	🚌
+zh	公交站	🚏
+zh	公交车	🚌
+zh	公交车站	🚏
+zh	公共汽车	🚌
+zh	公司	🏢
+zh	公园	🏞️
+zh	公墓	🪦
+zh	公安	👮
+zh	公平	⚖️
+zh	公文包	💼
+zh	公正	⚖️
+zh	公牛	🐂
+zh	公羊	🐏
+zh	公路	🛣️
+zh	公鸡	🐓
+zh	六芒星	🔯
+zh	关东煮	🍢
+zh	关机	📴
+zh	兴奋	🤩 🎉
+zh	兴建	🏗️
+zh	内向	🫥
+zh	内裤	🩲
 zh	再见	👋
+zh	冒冷汗	😓
+zh	冒汗	😓
 zh	写	✍️
+zh	写作	✍️
+zh	写字	✍️
+zh	写字板	📋
+zh	写字楼	🏢
+zh	军事	🪖
+zh	军功章	🎖️
+zh	军用	🪖
+zh	军队	🪖
+zh	农作物	🌽
+zh	农民	🧑‍🌾
 zh	冠军	🏆
+zh	冥想	🧘
+zh	冬天	❄️ ⛄
+zh	冬季	❄️ ⛄
+zh	冰	🧊
+zh	冰冷	🧊
+zh	冰刀	⛸️
+zh	冰块	🧊
+zh	冰壶	🥌
+zh	冰山	🧊
+zh	冰柱	🥶
+zh	冰沙	🍧
+zh	冰淇淋	🍨
+zh	冰激凌	🍨
+zh	冰球	🏒
+zh	冲泡	🫖
+zh	冲浪	🏄
+zh	冲浪者	🏄
+zh	冲鸭	💪 🦆
 zh	冷	❄️
+zh	冷冰冰	🥶
+zh	冷却	🧊
+zh	冷汗	😰
+zh	冷漠	😐
+zh	冷笑	😏
+zh	冷脸	🥶
+zh	冷饮	🧊
+zh	冻	🥶
+zh	冻僵	🥶
+zh	凉快	🪭
+zh	凉鞋	🩴 👡
+zh	凋谢	🥀
+zh	凝视	🫣
+zh	凤凰	🐦‍🔥
+zh	凭据	🧾
+zh	凭证	🪪
+zh	出入口	🚪
+zh	出冷汗	😥
+zh	出发	🚀
+zh	出境	🛫
+zh	出拳	👊
+zh	出汗	😅
+zh	出租车	🚕 🚖
+zh	击剑	🤺
+zh	击掌	🙌
+zh	刀	🔪
+zh	刀叉	🍴
+zh	分手	💔
+zh	划桨	🚣
+zh	划艇	🚣
+zh	创可贴	🩹
+zh	创意	🎨
+zh	刨冰	🍧
+zh	利是	🧧
+zh	别墅	🏡
+zh	别看	🙈
+zh	别针	🧷
+zh	刮刀	🪒
+zh	到站	🚆
+zh	到达	🛬
+zh	刷卡	💳
+zh	刷子	🪥
+zh	刺客	🥷
+zh	刺猬	🦔
+zh	剃刀	🪒
+zh	剃须刀	🪒
+zh	前台	💁
+zh	前门	🚪
+zh	剑	⚔️ 🗡️
+zh	剧院	🎭
+zh	剪	✂️
+zh	剪刀	✂️
+zh	剪头	💇
+zh	剪子	✂️
+zh	剪影	🗣️
+zh	剪裁	✂️
+zh	剪贴板	📋
+zh	剪贴簿	📋
+zh	办公	📁
+zh	办公室	💼
+zh	办公楼	🏢
+zh	加油	💪 ⛽
+zh	加油站	⛽
+zh	加班	😩 💼
+zh	动物园	🐅
+zh	动车	🚄
+zh	助听器	🦻
+zh	努力	💪
+zh	勋章	🎖️
+zh	勤劳	🐝
+zh	勺	🥄
+zh	勺子	🥄
+zh	勾	✅
+zh	包	👜 🎒
+zh	包包	👜
+zh	包子	🥟
+zh	包工头	👷
+zh	包装	🎁
+zh	包裹	📦
+zh	包谷	🌽
+zh	匆忙	🏃
+zh	匕首	🗡️
+zh	化妆	💄
+zh	化妆包	👝
+zh	化妆品	💄
+zh	化学	🧪
+zh	化学家	🧑‍🔬
+zh	北极	🐻‍❄️
+zh	北极熊	🐻‍❄️
+zh	匙	🥄
+zh	匙子	🥄
+zh	匹诺曹	🤥
+zh	医学	💉
 zh	医生	💊 🏥
+zh	医疗	🏥
+zh	医药	💊
 zh	医院	🏥
+zh	十字架	✝️
+zh	升降机	🛗
+zh	午餐	🍴
+zh	午饭	🍱
+zh	半死不活	🧟
+zh	半身	👤
+zh	半身像	👤
+zh	华夫饼	🧇
+zh	协议	🤝
+zh	单峰	🐪
+zh	单峰驼	🐪
+zh	单板	🏂
+zh	单车	🚴
+zh	单轨	🚝
+zh	卖弄	🦚
+zh	南极	🐧
+zh	南极洲	🐧
+zh	南瓜	🎃
+zh	南瓜灯	🎃
+zh	博物馆	🏛️
+zh	卡	💳
+zh	卡片	📇
+zh	卡片盒	🗃️
+zh	卡牌	🎴
+zh	卡车	🚚
+zh	卫兵	💂
+zh	卫士	💂
+zh	卫星	🛰️
+zh	卫生	🪥
+zh	卫生纸	🧻
+zh	卫生间	🚻
+zh	印刷机	🖨️
+zh	印象深刻	🤯
+zh	印迹	🫆
+zh	危险	⚠️
+zh	卷心菜	🥬
+zh	卷毛狗	🐩
+zh	卷烟	🚬
+zh	卷纸	🧻
+zh	卷轴	📜
+zh	卷饼	🌯
+zh	厉害	👍 💪
+zh	压缩	🗜️
+zh	厌倦	🫩
+zh	厕所	🚽 🚻
+zh	原子笔	🖊️
+zh	原木	🪵
+zh	原驼	🦙
+zh	厨师	🧑‍🍳
+zh	叉	🍴
+zh	叉号	❌
+zh	友谊	🫂
+zh	双人舞	👯
+zh	双剑	⚔️
+zh	双子座	♊
+zh	双手	🙌 👐
+zh	双手合十	🙏
+zh	双掌	🤲
+zh	双眼	👀
+zh	双耳瓶	🏺
+zh	双胞胎	👯
+zh	双鱼座	♓
+zh	反对	🙅
+zh	反射	🪞
+zh	反射镜	🪞
+zh	发件箱	📤
+zh	发信	📩
+zh	发光	🌟
+zh	发型	💇
+zh	发夹	🪮
+zh	发射	🚀
+zh	发明	💡
+zh	发火	😡
 zh	发烧	🤒
+zh	发热	🥵
+zh	发票	🧾
+zh	发芽	🌱
+zh	发言	💬
 zh	发财	🤑
+zh	发送	📩
+zh	发邮件	📩
+zh	发飙	😡
+zh	取款机	🏧
 zh	取消	❌
 zh	受伤	🤕
+zh	变形虫	🦠
+zh	口	👄
 zh	口水	🤤 😋
+zh	口红	💄
+zh	口罩	😷
+zh	古典	🏛️
+zh	古建筑	🏛️
+zh	古灵精怪	😜
+zh	叫车	🚖
+zh	叮当	🔔
+zh	可乐	🥤
 zh	可以	👌
+zh	可怕	😱
+zh	可怜	🥺
+zh	可爱	🥰
+zh	台球	🎱
+zh	台钟	🕰️
 zh	台风	🌀
 zh	叶子	🍃
+zh	号角	📯
+zh	叹号	❗
+zh	叹息	😮‍💨
+zh	叹气	😮‍💨
 zh	吃	🍴 🍔
+zh	吃惊	😮
+zh	吃药	💊
+zh	吃货	😋
 zh	吃饭	🍴
+zh	合掌	🙏
+zh	吉他	🎸
+zh	吊牌	🏷️
 zh	同意	👍 👌
+zh	名牌	📛
+zh	后门	🚪
+zh	吐	🤮
+zh	吐舌	😜 😝
+zh	向前冲	🏃
+zh	向日葵	🌻
+zh	吓人	👹
+zh	吓死	😱
+zh	吓死了	😱
+zh	君主	🫅
+zh	君子协定	🤝
+zh	否决	👎
+zh	否定	🙂‍↔️
 zh	听	👂
+zh	听力	👂
+zh	听歌	🎧 🎵
+zh	听筒	📞
+zh	听诊器	🩺
+zh	吵架	🫯
+zh	吸引	🧲
+zh	吸引力	🧲
+zh	吸气	🫁
+zh	吸烟	🚬
+zh	吸管	🧃
+zh	吸血鬼	🧛
+zh	吹奏	🎺
+zh	吹气	😮‍💨
 zh	吻	💋 😚
+zh	告别	👋
+zh	告示	🪧
+zh	呕	🤢
+zh	呕吐	🤮
+zh	呜呜	😭
+zh	周末	🎉
 zh	呵呵	🙂 ☺️
+zh	呵欠	🥱
+zh	呼吸	🫁
+zh	呼喊	📣
+zh	呼噜	😴
+zh	呼机	📟
+zh	呼气	😮‍💨
+zh	命中	🎯
+zh	命运	🔮
 zh	和平	✌️ 🕊️
+zh	和服	👘
+zh	咒骂	🤬
 zh	咖啡	☕
+zh	咖喱	🍛
+zh	咖喱饭	🍛
+zh	咩	🐑
+zh	咬嘴唇	🫦
+zh	咬牙切齿	😬
+zh	咸	🧂
+zh	哀伤	😢
+zh	哇	😮
+zh	哇塞	🫢
 zh	哈哈	🤣 😆
+zh	哈哈哈	😂 🤣
+zh	哈喇子	🤤
+zh	哈密瓜	🍈
+zh	哈欠	🥱
+zh	响指	🫰
+zh	响铃	🔔
 zh	哎呀	🤭
+zh	哑口无言	🫢
 zh	哭	😭 😢
+zh	哭了	😭
+zh	哭泣	😭
+zh	哭脸	😢
+zh	唇	👄 💋
+zh	唇印	💋
+zh	唇膏	💄
+zh	唉	😮‍💨
 zh	唱歌	🎤
+zh	商人	🧑‍💼
+zh	商务	🕴️
+zh	商场	🏬
+zh	商店	🏪
+zh	商标	™️
 zh	啤酒	🍺 🍻
-zh	喜欢	😻
+zh	啤酒节	🍺
+zh	喇叭	📢
+zh	喇叭筒	📣
+zh	喜庆	🏮
+zh	喜悦	😊
+zh	喜极而泣	😂
+zh	喜欢	😍 ❤️
+zh	喜笑颜开	🥰
 zh	喝	🥂 🥛
+zh	喝咖啡	☕
+zh	喝彩	🥳
+zh	喝水	💧 🥤
+zh	喝茶	🍵
 zh	喝酒	🍻 🍷
+zh	喝醉	🥴
+zh	喵	🐱
+zh	喵星人	🐱
+zh	喷发	🌋
+zh	喷嚏	🤧
+zh	喷头	🚿
+zh	喷气机	✈️
+zh	喷泉	⛲
+zh	喷溅	💦
+zh	嗅	👃
 zh	嗨	👋 🙋
+zh	嗯嗯	👍
+zh	嘘	🤫
+zh	嘟嘟车	🛺
 zh	嘴	👄
+zh	嘴唇	👄
 zh	嘻嘻	😁
 zh	嘿嘿	😀
+zh	噘嘴	🙎
+zh	四叶草	🍀
+zh	四角裤	🩳
+zh	回家	🏠
+zh	回形针	🖇️ 📎
+zh	回旋镖	🪃
+zh	回纹针	🖇️
+zh	回见	👋
+zh	团子	🍡
+zh	团结	✊
+zh	园丁	🧑‍🌾
 zh	困	😪
+zh	困了	😪
+zh	困倦	🫩
 zh	困惑	😕
+zh	困扰	😕
+zh	围巾	🧣
+zh	围脖	🧣
+zh	固定电话	☎️
+zh	固话	☎️
+zh	国家公园	🏞️
 zh	国王	👑
+zh	国际象棋	♟️
+zh	图书	📚
+zh	图书馆	📚
+zh	图片	🖼️
+zh	图表	📈 📉
+zh	图钉	📌 📍
+zh	圆圈	⭕
+zh	圆木	🪵
+zh	圆珠笔	🖊️
+zh	圆白菜	🥬
+zh	圆盘	🥏
+zh	土星	🪐
+zh	土豆	🥔
 zh	圣诞	🎁
+zh	圣诞快乐	🎄 🎅
+zh	圣诞树	🎄
+zh	圣诞老人	🎅
+zh	圣诞节	🎄 🎅
+zh	地图	🗺️
 zh	地球	🌍 🌏
+zh	地瓜	🍠
+zh	地铁	🚇
+zh	地震	🫨
+zh	场记	🎬
+zh	场记板	🎬
+zh	坏蛋	🦹
+zh	坐	🪑
+zh	坐下	🪑
+zh	坑	🕳️
+zh	坚持	💪
+zh	坚果	🥜
+zh	坟墓	🪦
+zh	垂涎	🤤
+zh	垂涎三尺	🤤
+zh	垃圾	🗑️
+zh	垃圾桶	🗑️
+zh	垃圾篓	🗑️
+zh	垒球	🥎
+zh	埋葬	⚰️
+zh	城堡	🏰 🏯
+zh	城市	🌆
+zh	培养皿	🧫
+zh	培根	🥓
+zh	基因	🧬
+zh	堵耳	🙉
+zh	堵车	🚗 😩
+zh	塌方	🛘
+zh	塑像	🗽
+zh	塔	🗼
+zh	墓园	🪦
+zh	墓地	🪦
+zh	墓碑	🪦
+zh	墙	🧱
+zh	墨镜	😎 🕶️
+zh	墨鱼	🦑
+zh	士兵	🪖
+zh	声音	🔊
+zh	壶	🫖
+zh	处女座	♍
+zh	备忘录	📝
+zh	复印	🖨️
+zh	复活岛	🗿
+zh	复活节岛	🗿
+zh	夕阳	🌇
+zh	外卖	🥡
+zh	外卖盒	🥡
+zh	外太空	👽
+zh	外套	🧥
+zh	外星	👽
+zh	外星人	👽
+zh	外星球	🛸
+zh	外衣	🧥
+zh	多云	🌥️
+zh	多谢	🙏
+zh	夜宵	🍢 🍜
+zh	夜幕	🌉
+zh	夜晚	🌃
+zh	大便	💩
+zh	大厨	🧑‍🍳
+zh	大反派	🦹
+zh	大哭	😭
+zh	大声	📣
+zh	大小王	🃏
+zh	大巴	🚌
+zh	大桶	🪣
+zh	大海	🌊
+zh	大猩猩	🦍
+zh	大王	🃏
+zh	大眼睛	🥺
+zh	大笑	😄
+zh	大胡子	🧔
 zh	大脑	🧠
+zh	大自然	🌅
+zh	大蒜	🧄
+zh	大豆	🫛
+zh	大象	🐘
+zh	大门	🚪
+zh	大风	🌬️
+zh	天体	🔭
 zh	天使	😇 👼
+zh	天呀	😳
+zh	天哪	😱
+zh	天啊	😱
+zh	天妇罗	🍤
+zh	天平	⚖️
+zh	天才	🤓
+zh	天文	🔭
+zh	天文学	🔭
+zh	天晓得	🤷
 zh	天气	🌧️ ❄️
+zh	天真	😇
+zh	天秤	⚖️
+zh	天秤座	♎
+zh	天线	📡
+zh	天蓝	🩵
+zh	天蝎宫	🦂
+zh	天蝎座	♏
+zh	天鹅	🦢
+zh	太好了	🎉 👏
+zh	太棒了	👍 🎉
 zh	太阳	☀️ 🌞
+zh	太阳花	🌻
+zh	太阳镜	😎
+zh	失恋	💔
 zh	失望	😞 😥
-zh	头痛	😣
+zh	失落	😔
+zh	失败	😞
+zh	头发	💇
+zh	头昏眼花	🥴
+zh	头晕	💫
+zh	头晕目眩	💫
+zh	头晕眼花	😵
+zh	头疼	🤕
+zh	头痛	🤕 😣
+zh	头盔	🪖 ⛑️
+zh	头纱	👰
+zh	头脑	🧠
+zh	头骨	💀
+zh	夹克	🧥
+zh	夹具	🗜️
+zh	夹钳	🗜️
+zh	奇幻	🧞
+zh	奇异果	🥝
+zh	奋斗	💪
+zh	奔跑	🏃
+zh	奖励	🏆
+zh	奖品	🏆
+zh	奖杯	🏆
+zh	奖牌	🏅
+zh	奖章	🎖️
+zh	奖赏	🏆
+zh	套娃	🪆
+zh	女人鱼	🧜
+zh	女厕	🚺
+zh	女巫	🧙
+zh	女帽	👒
+zh	女演员	🎭
+zh	女英雄	🦸
+zh	女衬衫	👚
+zh	女装	👚
+zh	女靴	👢
 zh	奶	🥛
+zh	奶油	🍰
+zh	奶牛	🐄 🐮
+zh	奶瓶	🍼
+zh	奶茶	🧋
+zh	奶酪	🧀
+zh	奸笑	😼
 zh	好	👍
+zh	好冷	🥶
 zh	好吃	😋
+zh	好喝	😋 🥤
+zh	好奇	🤔
 zh	好朋友	👭
+zh	好热	🥵
 zh	好的	👌
-zh	委屈	☹️ 🙁
+zh	好笑	😂
+zh	好臭	💩
+zh	好运	🍀
+zh	如释重负	😥
+zh	妖怪	🧞
+zh	姓名牌	📛
+zh	委屈	🥺 😢
+zh	姜	🫚
+zh	威士忌	🥃
+zh	娃娃	🪆
+zh	娥眉月	🌙
 zh	婚礼	💒 👰
 zh	婴儿	🍼
+zh	媚眼	😉
+zh	子午线	🌐
+zh	子弹头	🚅
+zh	孔雀	🦚
+zh	孕妇	🤰
+zh	字母	🔠 🔤
+zh	存储	💿
+zh	存档	🗃️
+zh	季军	🥉
 zh	学习	📚
+zh	学位	🎓
 zh	学校	📚
+zh	学生	🧑‍🎓
+zh	学者	🎓
+zh	孩子	👶
+zh	宇航员	🧑‍🚀
+zh	守卫	💂
+zh	守财奴	💰
+zh	守车	🚂
+zh	安全	🔐
+zh	安全帽	⛑️
+zh	安息	🪦
+zh	安慰	🫂
 zh	安静	🤫 😶
 zh	完成	✅
+zh	完美	💯
+zh	完蛋	😱
+zh	定向	🧭
+zh	定时器	⏲️
 zh	宝宝	👶
+zh	宝物	🪎
+zh	宝石	💎
+zh	宝箱	🪎
+zh	宝贝	🥰
+zh	实验	🧪
+zh	实验室	🧪
 zh	宠物	🐶 🐱
+zh	客船	🛳️
+zh	客轮	🛳️
 zh	害怕	😱 😨
+zh	害羞	😊
+zh	害虫	🪳
 zh	家	🏠 🏡
+zh	家庭	👪
+zh	家禽	🍗
+zh	容器	🫙
+zh	宾馆	🏨
+zh	寄信	📮
+zh	寄生虫	🪱
 zh	密码	🔑
+zh	密钥	🔑
+zh	富士山	🗻
+zh	富有	💰
 zh	对不起	🙇
+zh	对决	🤼
+zh	对虾	🍤
+zh	对话框	💬
+zh	寺庙	🛕
+zh	寺院	🛕
+zh	寻呼机	📟
+zh	导盲犬	🦮
+zh	导航	🧭
+zh	寿司	🍣
+zh	封口	🤐
+zh	封面	📔
+zh	射手	🏹
+zh	射手座	♐
+zh	射箭	🏹
+zh	小丑	🤡
+zh	小区	🏘️
+zh	小号	🎺
+zh	小声	🔈
+zh	小天使	👼
+zh	小天鹅	🦢
+zh	小妖精	👺
+zh	小宝贝	👶
+zh	小屋	🛖
+zh	小巴	🚐
+zh	小强	🪳
 zh	小心	⚠️
+zh	小提琴	🎻
+zh	小时	⏰
+zh	小毛头	👶
+zh	小水滴	💦
+zh	小水珠	💦
+zh	小熊维尼	🍯
 zh	小狗	🐶 🐕
+zh	小猫	🐈
+zh	小白菜	🥬
+zh	小睡	😴
+zh	小精灵	🧝
+zh	小袋鼠	🦘
+zh	小说	📚
+zh	小鸟球	🏌️
+zh	小鸡	🐥 🐤
+zh	小麦	🌾
+zh	小龙虾	🦞
+zh	少云	🌤️
+zh	少量	🤏
+zh	尖叫	😱
 zh	尴尬	😬 🙈
+zh	尺	📏
+zh	尺子	📏
+zh	尾气	💨
+zh	居酒屋	🏮
+zh	屋门	🚪
+zh	屎	💩
 zh	山	🌄 🌋
+zh	山地车	🚵
+zh	山崩	🛘
+zh	山羊	🐐
 zh	岛	🏝️
-zh	工作	👔
+zh	岩石	🪨
+zh	峰	⛰️
+zh	巡逻	🚓
+zh	工业	🏭
+zh	工人	🧑‍🏭 👷
+zh	工作	💼 👔
+zh	工作犬	🐕‍🦺
+zh	工具箱	🧰
+zh	工厂	🏭
+zh	工程师	👷
+zh	工资	💰
+zh	左轮	🔫
 zh	巧克力	🍫
+zh	巧克力棒	🍫
+zh	巨石	🪨
+zh	巨蟹座	♋
+zh	巫婆	🧙
+zh	巫师	🧙
+zh	布告	🪧
+zh	帅	😎
+zh	帆伞	🪂
+zh	帆船	⛵
+zh	希望	🙏 🤞
+zh	帐篷	⛺
+zh	帮助	💁
+zh	帮忙	🙏
+zh	常青树	🌲
+zh	帽子	🧢
+zh	干旱	🌵
+zh	干杯	🍻
+zh	平底杯	🥃
+zh	平底锅	🍳
+zh	平底鞋	🥿
+zh	平衡	⚖️
+zh	幸福	🥰 😊
 zh	幸运	🍀 🤞
+zh	幻兽	🐦‍🔥
+zh	幼苗	🌱
+zh	幽灵	👻
+zh	广播	📢
+zh	广播电台	📻
+zh	庆典	🎆
 zh	庆祝	🎉 🎊
+zh	床	🛏️
+zh	床垫	🛏️
+zh	床铺	🛏️
+zh	庙宇	🛕
+zh	废墟	🏚️
+zh	废纸篓	🗑️
+zh	度假	🏖️
+zh	座位	💺
+zh	座机	☎️
+zh	座钟	🕰️
+zh	庭院	🏡
+zh	康加鼓	🪘
+zh	建造	👷
+zh	开卷	📖
+zh	开发人员	🧑‍💻
+zh	开口笑	😃
 zh	开心	😆 😄
 zh	开玩笑	😜
+zh	开窗	🪟
+zh	开花	🌼
 zh	开车	🚗
+zh	开锁	🔓
+zh	弓	🏹
+zh	弓箭	🏹
+zh	弦乐器	🪕
+zh	弯月	🌙
+zh	弯钩	🪝
+zh	弹奏	🎸
+zh	强	💪
+zh	强壮	💪
+zh	归档	🗄️
 zh	当然	👌
+zh	录像	🎥
+zh	录像带	📼
+zh	录像机	📹
+zh	录影	📹
+zh	录影带	📼
+zh	录音室	🎙️
+zh	彗星	☄️
+zh	彩带	🎉
+zh	彩虹	🌈
+zh	彩虹旗	🏳️‍🌈
+zh	影片	📽️
+zh	徒步	🚶
 zh	得意	😏
 zh	微笑	😊 ☺️
+zh	微醉	🥴
+zh	微醺	🥴
 zh	心	❤️ 💌
+zh	心事重重	😔
+zh	心动	💓
+zh	心形	❤️
+zh	心情不好	🙁
+zh	心烦意乱	🙍
+zh	心率	🫀
+zh	心疼	🥺 💔
+zh	心碎	💔
+zh	心脏	🫀
+zh	心跳	💓
+zh	忍者	🥷
+zh	忍耐	😣
+zh	忧虑	😔
+zh	快乐	😄 😊
+zh	快点	🏃
+zh	快艇	🚤
+zh	快跑	🏃
+zh	快递	📦
+zh	快餐	🍟
+zh	念珠	📿
+zh	怀孕	🤰
 zh	怀疑	🤨 🤷
+zh	怒	💢
+zh	怒火中烧	😡
+zh	怒视	🙎
 zh	怕	😨
+zh	怜悯	🥺
+zh	思想	💭
 zh	思考	🤔
+zh	急救	🚑
+zh	怪兽	👾
+zh	怪物	👾
+zh	恋爱	💑
 zh	恐怖	😱 😨
-zh	恭喜	👏
+zh	恐惧	😨
+zh	恐龙	🦖
+zh	恢复	❤️‍🩹
+zh	恤衫	👕
+zh	恭喜	🎉 👏
+zh	恭喜发财	🧧 🤑
 zh	恶心	🤢
 zh	恶魔	👿
+zh	恼怒	🤦
+zh	恼火	🙍
+zh	悠悠球	🪀
+zh	您好	👋
+zh	悲伤	😢
+zh	情书	💌
+zh	情人节	💘 🌹
 zh	情侣	💑 💏
+zh	惊	😲
+zh	惊吓	😱
 zh	惊喜	🎁
+zh	惊奇	🫢
+zh	惊恐	😱
+zh	惊愕	🫢
+zh	惊慌	🫨
 zh	惊讶	😲 🙀
+zh	惨	😭
+zh	惭愧	🙇
 zh	想	🤔
+zh	想一想	🤔
 zh	想你	😘
+zh	想法	💡
+zh	想睡	😪
+zh	意外	🤭
+zh	意大利面	🍝
+zh	意粉	🍝
+zh	意面	🍝
 zh	感冒	😷
-zh	感谢	🙇
+zh	感动	🥹
+zh	感叹号	❗
+zh	感恩	🙏
+zh	感恩节	🦃
+zh	感情	🩷
+zh	感激	🙏
+zh	感谢	🙏 🙇
 zh	愤怒	😠 😤
+zh	愿望	🌠
+zh	慢	🐢 🦥
+zh	懊悔	🙇
+zh	懒	🦥
+zh	戏剧	🎭
 zh	成功	✌️
+zh	成长	📈
 zh	我爱你	😍 💕
+zh	我的天	😱
 zh	戒指	💍
+zh	战争	🪖
+zh	战士	🪖
+zh	战斗	🫯
+zh	户外	🥾
+zh	房	🏠
 zh	房子	🏠 🏡
+zh	房屋	🏠
+zh	房车	🚙
+zh	房门	🚪
+zh	房间	🚪
+zh	扇	🪭
+zh	扇子	🪭
+zh	手套	🧤
+zh	手拉手	🧑‍🤝‍🧑
+zh	手拿包	👝
+zh	手指	☝️
+zh	手掌	🖐️
+zh	手推车	🛒
+zh	手提包	👜
+zh	手提电脑	💻
+zh	手提箱	🧳
 zh	手机	📱
+zh	手杖	🩼
+zh	手枪	🔫
+zh	手柄	🎮
+zh	手球	🤾
+zh	手电	🔦
+zh	手电筒	🔦
+zh	手纸	🧻
+zh	手背	🤚
+zh	手臂	💪
+zh	手表	⌚
+zh	手袋	👝
+zh	手铐	⛓️‍💥
+zh	手风琴	🪗
+zh	扑克	🃏
+zh	打击乐器	🪇
+zh	打印	🖨️
+zh	打印机	🖨️
+zh	打呵欠	🥱
+zh	打呼	😴
+zh	打哈欠	🥱
+zh	打喷嚏	🤧
+zh	打字	⌨️
+zh	打扫	🧹
+zh	打斗	🫯
+zh	打板	🎬
+zh	打架	🫯
+zh	打游戏	🎮
+zh	打滚	🤣
+zh	打球	🏀
+zh	打结	🪢
+zh	打车	🚕
+zh	打针	💉
+zh	打雷	🌩️
+zh	扔掉	🗑️
+zh	扣针	🧷
+zh	执照	🪪
+zh	扩音器	📣
+zh	扫地	🧹
+zh	扫帚	🧹
+zh	扫描	🖨️
+zh	扬声器	🔊 🔉
+zh	扳手	🔧
+zh	扶额	🤦
+zh	技工	🧑‍🔧
+zh	投影仪	📽️
+zh	投球	🤾
+zh	投票	🗳️
+zh	投票箱	🗳️
+zh	折扇	🪭
+zh	抛接	🤹
+zh	护士	🧑‍⚕️
+zh	护目	🥽
+zh	护目镜	🥽
+zh	护眼	🥽
+zh	护肤霜	🧴
+zh	护身符	🧿
+zh	报纸	📰
+zh	报纸卷	🗞️
+zh	报道	📰
+zh	披肩	🥻
+zh	披萨	🍕
 zh	抱	🤗
 zh	抱抱	🤗
+zh	抱歉	🙇 🙏
+zh	抽烟	🚬
 zh	担心	😟
+zh	担忧	😟
+zh	拇指	👍
+zh	拉丁字母	🔤
+zh	拉手	🧑‍🤝‍🧑
+zh	拉面	🍜
+zh	拍手	👏
+zh	拍摄	📹
 zh	拍照	📸 📷
+zh	拍电影	🎬
+zh	拐杖	🩼
+zh	拒绝	🙅
+zh	拖拉机	🚜
+zh	拖车	🚛
+zh	招摇	🦚
 zh	拜托	🙏
+zh	拜拜	👋
+zh	拜金	🤑
 zh	拥抱	🤗
+zh	拨浪鼓	🪇
+zh	拳	👊
+zh	拳击	🥊
+zh	拳头	✊ 🤜
+zh	拼图	🧩
+zh	挂钩	🪝
+zh	指南针	🧭
+zh	指向	🫵
+zh	指甲油	💅
+zh	指纹	🫆
+zh	按摩	💆
+zh	按钮	🔘
+zh	挎包	👜
+zh	挑眉	🤨
+zh	挤眉弄眼	😜
+zh	挥手	👋
+zh	捂嘴	🙊
+zh	捂脸	🤦
+zh	捏手指	🤌
+zh	捏着	🤏
+zh	捕鱼	🎣
+zh	捕鼠器	🪤
+zh	捷运	🚇
+zh	排灯节	🪔
+zh	排球	🏐
+zh	排骨	🍖
+zh	探戈	💃
+zh	接吻	💋
+zh	接收	📲
+zh	接球	🤾
+zh	接种	💉
+zh	掷骰子	🎲
+zh	提琴	🎻
+zh	插头	🔌
+zh	握手	🤝
+zh	握拳	✊
+zh	搋子	🪠
+zh	搏动	💗
+zh	搏斗	🤼
+zh	搜索	🔎
+zh	搞怪	😜
+zh	搬砖	👷
+zh	搬运	🚛
+zh	摄像机	📹
+zh	摄录机	🎥
+zh	摄影	📷
+zh	摄影机	🎥
+zh	摇头	🙂‍↔️
+zh	摇滚	🤘
+zh	摊手	🤷
+zh	摔跤	🤼
+zh	摩天轮	🎡
+zh	摩托	🏍️
+zh	摩托艇	🛥️
+zh	摩托车	🏍️ 🛵
+zh	摩羯座	♑
+zh	撅嘴	🙎
+zh	撞	💥
+zh	撩拨	😉
+zh	操控杆	🕹️
+zh	攀岩	🧗
+zh	攀岩者	🧗
+zh	支持	👍 💪
+zh	收件箱	📥
+zh	收信	📨
+zh	收到	🫡 👌
+zh	收据	🧾
+zh	收条	🧾
+zh	收纳	🗄️
+zh	收钱	💳
+zh	收音机	📻
+zh	放假	🎉 🏖️
+zh	放声大哭	😭
+zh	放大	🔎
+zh	放大镜	🔎 🔍
+zh	放屁	💨
+zh	放映机	📽️
+zh	放松	😌
+zh	救命	🆘
+zh	救护车	🚑
+zh	救援	🛟
+zh	救火车	🚒
+zh	救生	🛟
+zh	救生圈	🛟
+zh	救生衣	🦺
+zh	教堂	⛪
+zh	教学楼	🏫
+zh	教师	🧑‍🏫
+zh	教授	🧑‍🏫
+zh	教育	📚
+zh	散步	🚶
+zh	敬畏	🫢
+zh	敬礼	🫡
+zh	数字	🔢
+zh	数学	🧮 ➗
+zh	文书	📄
+zh	文件	📄
+zh	文件夹	📁 📂
+zh	文件柜	🗄️
+zh	文具	📏
+zh	文档	📄
+zh	斑马	🦓
+zh	斗殴	🫯
+zh	斧头	🪓
+zh	断开	⛓️‍💥
+zh	断链	⛓️‍💥
+zh	斯波克	🖖
+zh	新娘	👰
+zh	新干线	🚄
+zh	新年	🎆 🧧
+zh	新年快乐	🎉 🧧
+zh	新月	🌑
+zh	新月形	🌙
+zh	新生儿	👶
+zh	新郎	🤵
+zh	新闻	📰
+zh	方片	♦️
+zh	施工	🚧 🏗️
+zh	旅游	✈️ 🧳
 zh	旅行	✈️
+zh	旅馆	🏨
+zh	旋钮	🎛️
+zh	旋风	🌀
+zh	旗	🚩
+zh	无声	🔕
+zh	无奈	😮‍💨
+zh	无感	😐
 zh	无所谓	🤷
+zh	无穷大	♾️
+zh	无线	🛜
+zh	无线电	📻
+zh	无聊	🥱
+zh	无视	🤷
 zh	无语	🙄 🤦
+zh	日元	💴
+zh	日出	🌅 🌄
+zh	日历	🗓️ 📆
+zh	日币	💴
+zh	日期	🗓️
+zh	日落	🌇
+zh	日记本	📓
+zh	早上	🌅
+zh	早上好	☀️ 🌅
+zh	早安	🌅 ☀️
+zh	早晨	🌅
 zh	早餐	🍳
+zh	旱冰	🛼
+zh	时装	👗
 zh	时间	⏰ ⌚
+zh	昂贵	🫰
+zh	昂首阔步	🚶
+zh	明星	🌟
+zh	明白	👌
+zh	昏昏欲睡	🥱
+zh	星	⭐ 🌟
+zh	星号	✳️
 zh	星星	⭐ 🌟
-zh	晕	🌀
+zh	星空	🌠
+zh	星际迷航	🖖
+zh	春天	🌸
+zh	春节	🧧 🏮
+zh	显微镜	🔬
+zh	显示器	🖥️
+zh	显示屏	🖥️
+zh	晕	😵 😵‍💫
+zh	晕了	😵
+zh	晕头	😵
+zh	晕头转向	😵
+zh	晚上	🌃
 zh	晚安	😴 💤
+zh	晚睡	🫩
+zh	晚餐	🍴
+zh	晚饭	🍚
+zh	景色	🏞️
+zh	晴	☀️
+zh	晴天	☀️
+zh	智慧	🧠
+zh	智者	🧙
+zh	智能	🧠
+zh	智能手机	📱
+zh	暂停	⏸️
+zh	暗灰	🩶
+zh	暴风雨	⛈️
+zh	暴龙	🦖
+zh	曲别针	🖇️
+zh	曲奇	🍪
+zh	曲棍球	🏑
+zh	曲谱	🎼
 zh	月亮	🌙 🌚
+zh	月经	🩸
+zh	月饼	🥮
+zh	有电	⚡
+zh	有轨电车	🚋
 zh	有钱	💰
+zh	有雾	🌁
 zh	朋友	👭 👬
+zh	服务犬	🐕‍🦺
+zh	服务铃	🛎️
+zh	朔月	🌚 🌑
+zh	望月	🌝
+zh	望远镜	🔭
+zh	木	🪵
+zh	木匠	🪚
+zh	木塞	🍾
+zh	木头	🪵
+zh	木材	🪵
+zh	木桩	🪵
+zh	木桶	🪣
+zh	木槿	🌺
+zh	木筏	🚣
+zh	木马	🎠
+zh	本子	📓
+zh	机修	🧰
 zh	机器人	🤖
+zh	机场	✈️ 🛫
+zh	机械	⚙️
+zh	机械腿	🦿
+zh	杀菌	🧼
+zh	杂技	🤸
+zh	杂耍	🤹
+zh	杏仁	🌰
+zh	杠铃	🏋️
+zh	条形图	📊
+zh	来信	📨
+zh	来电	📲
+zh	松口气	😌
+zh	松树	🌲
+zh	松饼	🧇
+zh	松鼠	🐿️
+zh	板球	🏏
+zh	极客	🤓
+zh	果岭	⛳
+zh	果汁	🧃
+zh	果汁盒	🧃
+zh	枪	🔫
+zh	枫叶	🍁
+zh	枯萎	🥀
+zh	柑桔	🍊
+zh	柑橘	🍊
+zh	柔道	🥋
+zh	柠檬	🍋
+zh	查找	🔎
+zh	柱形图	📊
+zh	柴油	⛽
+zh	标牌	🪧
+zh	标的	🎯
+zh	标签	🏷️
+zh	标签页	📑
+zh	标记	🏷️
+zh	标语	🪧
+zh	标语牌	🪧
 zh	树	🌳 🌲
+zh	树叶	🍃
+zh	树干	🪾
+zh	树懒	🦥
+zh	树枝	🪹
+zh	树袋熊	🐨
+zh	栗子	🌰
+zh	根茎	🫚
+zh	格子饼	🧇
+zh	桃	🍑
+zh	桃子	🍑
+zh	桌球	🎱
+zh	桑拿	🧖
+zh	桑拿浴	🧖
+zh	桔子	🍊
+zh	档案	🗃️
+zh	桥	🌉
+zh	桶	🪣
+zh	梁龙	🦕
+zh	梅花	♣️
+zh	梦	💭
+zh	梦幻	🔮
+zh	梨	🍐
+zh	梯子	🪜
+zh	梯级	🪜
+zh	梳子	🪮
+zh	梳理	🪮
+zh	棒	👍 💪
+zh	棒棒	👍
+zh	棒棒糖	🍭
+zh	棒球	⚾
+zh	棒球帽	🧢
+zh	棕	🤎 🟤
+zh	棕榈	🌴
+zh	棕榈树	🌴
+zh	棕色	🤎
+zh	森林	🌲 🌳
+zh	棺材	⚰️
+zh	椅子	🪑
+zh	椅背	🪑
 zh	植物	🌺 🌵
+zh	椰子	🥥
+zh	模仿	🦜
+zh	横笛	🪈
+zh	樱桃	🍒
+zh	樱花	🌸
+zh	橄榄	🫒
+zh	橄榄球	🏈 🏉
+zh	橘子	🍊
+zh	橘色	🧡
+zh	橙	🧡 🟠
+zh	橙子	🍊
+zh	橙心	🧡
+zh	橙色	🧡 🟠
+zh	橡皮	✏️
+zh	橡皮擦	✏️
+zh	欧元	💶
+zh	欧洲	🌍
+zh	歌手	🧑‍🎤
+zh	正三角	🔺
+zh	正义	⚖️
+zh	正式	🎩
 zh	正确	✔️
+zh	正装	🕴️
+zh	武器	⚔️
+zh	武术	🥋
+zh	武警	👮
+zh	死	💀
+zh	死亡	💀
+zh	残月	🌘
+zh	母乳喂养	🤱
+zh	母牛	🐮
+zh	母羊	🐑
+zh	毒蕈	🍄
+zh	比基尼	👙
+zh	比心	🫰
+zh	比萨	🍕
+zh	比萨饼	🍕
+zh	比赛	🏆
 zh	毕业	🎓
+zh	毕业帽	🎓
+zh	毕业生	🧑‍🎓
+zh	毛毛虫	🐛
+zh	毛笔	🖌️
+zh	毛线	🧶
+zh	毛线球	🧶
+zh	毛茸茸	🐑
+zh	毛虫	🐛
+zh	毛豆	🫛
+zh	气味	👃
+zh	气旋	🌀
+zh	气死	😡
+zh	气死了	😡
+zh	气泡	🫧
+zh	气温	🌡️
+zh	气球	🎈
 zh	水	💧
+zh	水下	🫧
+zh	水族馆	🐠
+zh	水晶	🔮
+zh	水晶球	🔮
 zh	水果	🍓 🍎
+zh	水果派	🥧
+zh	水枪	🔫
+zh	水桶	🪣
+zh	水母	🪼
+zh	水滴	💧
+zh	水牛	🐃
+zh	水獭	🦦
+zh	水球	🤽
+zh	水瓶	🏺
+zh	水瓶座	♒
+zh	水疗	💆
+zh	水管工	🧑‍🔧
+zh	水肺	🤿
+zh	水饺	🥟
+zh	求	🙏
+zh	汉堡	🍔
+zh	汉堡包	🍔
+zh	汗	😓
+zh	汗滴	💦
+zh	汤匙	🥄
+zh	汪星人	🐶
+zh	汽水	🥤
 zh	汽车	🚗
+zh	沉思	😔
+zh	沉默	😶
+zh	沐浴	🛁
+zh	沙发	🛋️
+zh	沙拉	🥗
+zh	沙滩	🏖️
+zh	沙滩伞	🏖️
+zh	沙漏	⏳ ⌛
 zh	沙漠	🌵
+zh	没事	👌
+zh	没关系	👌 😊
+zh	没钱	💸
+zh	没问题	👌
+zh	沮丧	🙍
+zh	河粉	🍜
+zh	河豚	🐡
+zh	河马	🦛
+zh	油桃	🍊
+zh	油桶	🛢️
+zh	油泵	⛽
+zh	油炸	🍟
+zh	治疗师	🧑‍⚕️
+zh	泉	♨️
+zh	法官	🧑‍⚖️
+zh	法师	🧙
+zh	法律	⚖️
+zh	法术	🧙
+zh	法警	👮
+zh	泡沫	🧼
+zh	泡泡	🫧
+zh	泡澡	🛁
+zh	泡菜	🥒
+zh	波浪	🌊
+zh	泥石流	🛘
+zh	注册	®️
+zh	注射器	💉
+zh	注意	⚠️
+zh	泪	😢 😭
+zh	泰迪熊	🧸
+zh	泳衣	🩱
+zh	泳装	👙
+zh	泳裤	🩳
+zh	泼溅	🫟
+zh	洋葱	🧅
+zh	洒出	🫗
+zh	洗发水	🧴
+zh	洗发露	🧴
+zh	洗手	🧼
+zh	洗手间	🚽
+zh	洗漱	🪥
+zh	洗澡	🛀
+zh	洗衣	🧺
+zh	洞	🕳️
+zh	津津有味	😋
+zh	活泼	🤸
+zh	派	🥧
+zh	派对	🎉
+zh	流口水	🤤
+zh	流星	🌠
+zh	流血	🩸
+zh	浅蓝	🩵
+zh	浆果	🍓
+zh	测量	📏
+zh	浣熊	🦝
 zh	浪	🌊
+zh	浪漫	🌹 💕
+zh	浪花	🌊
+zh	浮游生物	🪼
+zh	浮潜	🤿
+zh	浴室	🛁 🚿
+zh	浴火重生	🐦‍🔥
+zh	浴盆	🛀
+zh	浴缸	🛁
+zh	海关	🛃
+zh	海妖	🧜
+zh	海报	🪧
 zh	海洋	🌊
+zh	海滩	🏖️
+zh	海狮	🦭
+zh	海狸	🦫
+zh	海盗	🏴‍☠️
+zh	海盗旗	🏴‍☠️
+zh	海绵	🧽
+zh	海蜇	🪼
+zh	海螺	🐚
+zh	海豚	🐬
+zh	海豹	🦭
+zh	海边	🏖️ 🌊
+zh	海鲜	🦞
+zh	海龟	🐢
+zh	消失	🫠
+zh	消防员	🧑‍🚒
+zh	消防车	🚒
+zh	涌浪	🏄
+zh	淋浴	🚿
+zh	淘气	😜
+zh	深潜	🤿
+zh	清晨	🌅
+zh	清洁	🧹
+zh	清真寺	🕌
+zh	清酒	🍶
+zh	渡渡鸟	🦤
+zh	渡船	⛴️
+zh	渡轮	⛴️
+zh	渡鸦	🐦‍⬛
+zh	温度	🌡️
+zh	温度计	🌡️
+zh	温泉	♨️
+zh	渴	🥤
+zh	渴望	❤️‍🔥
+zh	游乐园	🎡 🎢
+zh	游乐场	🛝
 zh	游戏	🎮
 zh	游泳	🏊
+zh	游泳者	🏊
+zh	游艇	⛵
+zh	溜冰	🛼
+zh	溜冰鞋	🛼
+zh	溜溜球	🪀
+zh	溶解	🫠
+zh	滑冰	⛸️
+zh	滑块	🎚️
+zh	滑板	🛹
+zh	滑板车	🛴
+zh	滑梯	🛝
+zh	滑稽	🤪
+zh	滑翔	🪂
+zh	滑翔伞	🪂
+zh	滑雪	🎿
+zh	滑雪板	🏂
+zh	满分	💯
 zh	满意	😊
+zh	满月	🌕
+zh	漂亮	😍
+zh	漂浮	🛟
+zh	演化	🧬
+zh	演员	🎭
+zh	演奏	🎸
+zh	漫画	💬
+zh	潜水	🤿
+zh	澡盆	🛀
+zh	澳洲	🌏
+zh	激动	🤩
 zh	火	🔥
+zh	火大	💢
+zh	火山	🌋
+zh	火灾	🔥 🧯
+zh	火烈鸟	🦩
+zh	火焰	🔥
 zh	火箭	🚀
+zh	火花	✨
 zh	火车	🚂
+zh	火车头	🚂
+zh	火锅	🍲
+zh	火鸟	🐦‍🔥
+zh	火鸡	🦃
+zh	灭火	🧯
+zh	灭火器	🧯
+zh	灭绝	🦣
+zh	灯	💡
+zh	灯泡	💡
+zh	灯神	🧞
+zh	灯笼	🏮
+zh	灯笼椒	🫑
+zh	灰	🩶
+zh	灰心	😞
+zh	灰熊	🐻
+zh	灰色	🩶
+zh	灵柩	⚰️
+zh	灾害	🛘
+zh	灾难	🛘
+zh	炖菜	🍲
+zh	炖锅	🥘
+zh	炮竹	🎆
+zh	炸	💥
 zh	炸弹	💣
+zh	炸药	🧨
+zh	炸虾	🍤
+zh	炸鸡	🍗
+zh	点击	🖱️
+zh	点子	💡
+zh	点心	🥟
+zh	点按	🖱️
+zh	点赞	👍
+zh	烙饼	🥞
+zh	烛光	🕯️
+zh	烛台	🕎
+zh	烛火	🕯️
+zh	烟	🚬 💨
+zh	烟火	🎇
+zh	烟肉	🥓
+zh	烟花	🎇
+zh	烟草	🚬
+zh	烤地瓜	🍠
+zh	烤红薯	🍠
+zh	烤肉	🍖 🥩
+zh	烤肉串	🥙
+zh	烤面包	🍞
+zh	烦	😩
+zh	烦死了	😩
+zh	烧	🔥
+zh	烧烤	🍢 🍖
+zh	热	🥵
+zh	热带	🌴
+zh	热带鱼	🐠
+zh	热气腾腾	☕
+zh	热狗	🌭
+zh	热茶	🍵
+zh	热饮	☕
+zh	烹调	🍴
+zh	烹饪	🍳
+zh	焦头烂额	😖
+zh	焦虑	😰
+zh	焰火	🎆
+zh	煎	🍳
+zh	煎蛋	🍳
+zh	煎锅	🥘
+zh	煎饺	🥟
+zh	煎饼	🥞
+zh	照明	💡
 zh	照片	📷
+zh	照相机	📷
+zh	煮	🍲
+zh	煲汤	🍲
+zh	熄灭	🧯
 zh	熊	🐻
+zh	熊头	🐻
 zh	熊猫	🐼
+zh	熊脸	🐻
+zh	熏肉	🥓
+zh	熬夜	🫩
+zh	燃料	⛽
+zh	燃油	⛽
+zh	燃烧	🔥
+zh	燕尾服	🤵
+zh	燕麦	🥣
+zh	燕麦粥	🥣
+zh	爆	💥
+zh	爆发	🌋
 zh	爆炸	💥
+zh	爆炸头	🤯
+zh	爆竹	🧨
+zh	爆米花	🍿
+zh	爪	🐾
+zh	爪印	🐾
+zh	爪子	🐾
+zh	爬山	🧗
+zh	爬梯	🪜
 zh	爱	❤️ 😍
-zh	爱你	🤟
+zh	爱你	❤️ 😘
+zh	爱心	❤️
 zh	爱情	💕 💘
-zh	牛	🐄 🐂
+zh	爱慕	🥰
+zh	爵士	🎷
+zh	父母	👪
+zh	版权	©️
+zh	牙刷	🪥
+zh	牙医	🦷
+zh	牙科	🦷
+zh	牙齿	🦷
+zh	牛	🐮 🐂
+zh	牛仔	🤠
+zh	牛仔裤	👖
+zh	牛头	🐮
 zh	牛奶	🥛
+zh	牛排	🥩
+zh	牛油果	🥑
+zh	牡蛎	🦪
+zh	牦牛	🦬
+zh	物理学家	🧑‍🔬
+zh	牵手	🧑‍🤝‍🧑
+zh	特工	🕵️
+zh	犀牛	🦏
+zh	犟	🫏
+zh	犬	🐕
+zh	狂风	🌬️
+zh	狐狸	🦊
 zh	狗	🐶 🐕
+zh	狗狗	🐶
+zh	狗脸	🐶
+zh	狡猾	🦊
+zh	独木舟	🛶
+zh	独角兽	🦄
 zh	狮子	🦁
+zh	狮子头	🦁
+zh	狮子座	♌
 zh	狼	🐺
+zh	狼头	🐺
+zh	猎豹	🐆
+zh	猕猴桃	🥝
+zh	猛犸	🦣
+zh	猛犸象	🦣
+zh	猩猩	🦧
 zh	猪	🐷
+zh	猪头	🐷
+zh	猪排	🥩
+zh	猪肉	🐖
+zh	猪鼻子	🐽
 zh	猫	🐱 🐈
+zh	猫咪	🐱
+zh	猫头鹰	🦉
+zh	猫熊	🐼
+zh	猫脸	🐱
+zh	献血	🩸
+zh	猴	🐒 🐵
+zh	猴头	🐵
 zh	猴子	🐒 🐵
+zh	猿	🦧
+zh	獭	🦦
+zh	獾	🦡
 zh	玉米	🌽
+zh	玉米饼	🫓
+zh	王冠	👑
+zh	王后	👑
 zh	王子	🤴
+zh	王室	🫅
+zh	玩偶	🧸
+zh	玩具	🪀
+zh	玩球	⛹️
+zh	玩耍	🛝
 zh	玫瑰	🌹
 zh	现金	💵 💰
+zh	玻璃杯	🥃
+zh	珊瑚	🪸
+zh	珊瑚礁	🪸
+zh	珍宝	🪎
+zh	珍珠	🦪
+zh	珠子	🧿
+zh	珠宝	💎
+zh	班卓琴	🪕
+zh	球	⚽ 🏀
+zh	球座	🏌️
+zh	球拍	🎾
+zh	球棍	🥍
+zh	球童	🏌️
+zh	球网	🥅
+zh	球赛	⚽
+zh	球门	🥅
+zh	理发	💇
+zh	理发师	💇
+zh	理发店	💈
+zh	瑜伽	🧘
+zh	瓢虫	🐞
+zh	瓦肯	🖖
+zh	瓶子	🍾
+zh	甘蓝	🥦
 zh	甜	🍭 🍩
+zh	甜品	🍫
+zh	甜瓜	🍈
+zh	甜甜圈	🍩
+zh	甜菜	🫜
+zh	甜蜜	🥰
 zh	生日	🎂 🎉
+zh	生日快乐	🎂 🎉
+zh	生日礼物	🎁
 zh	生气	😡 😠
+zh	生物	🔬
+zh	生物学	🧫
+zh	生物学家	🧑‍🔬
 zh	生病	😷 🤒
+zh	生菜	🥬
+zh	生蚝	🦪
+zh	生长	🪴
+zh	生闷气	🙎
+zh	用药	💊
+zh	甲壳	🦐
+zh	甲虫	🪲
+zh	电	⚡ 🔋
+zh	电台	📻
+zh	电吉他	🎸
+zh	电子游戏	🎮
+zh	电子邮件	📧
+zh	电工	🧑‍🔧
 zh	电影	🎥 📽️
+zh	电影票	🎫
+zh	电影院	🎦
+zh	电插头	🔌
+zh	电梯	🛗
+zh	电池	🔋
+zh	电源	🔌
+zh	电灯泡	💡
+zh	电筒	🔦
+zh	电线	🔌
 zh	电脑	💻
 zh	电视	📺
+zh	电视机	📺
 zh	电话	📞 📱
+zh	电车	🚎 🚊
+zh	电邮	✉️
+zh	男人鱼	🧜
+zh	男厕	🚹
+zh	男孩节	🎏
+zh	男巫	🧙
+zh	男鞋	👞
+zh	画	🖼️
+zh	画刷	🖌️
+zh	画卷	📜
+zh	画家	🎨
+zh	画框	🖼️
+zh	画画	🎨
+zh	画笔	🖌️
+zh	番茄	🍅
+zh	疑惑	😕
+zh	疑问	❓ 🤔
+zh	疟疾	🦟
+zh	疫苗	💉
+zh	疯狂	🤪
+zh	疲倦	😩
+zh	疲劳	😩
+zh	疲惫	😪
+zh	疾病	🦠 😷
+zh	疾驰	🏎️
+zh	病	🤒 😷
+zh	病容	🤮
+zh	病恹恹	🤮
+zh	病毒	🦠
+zh	病菌	🦠
+zh	痊愈	❤️‍🩹
+zh	痛	😣
+zh	痛哭	😭
+zh	痛苦	😣 😧
+zh	登山	🥾
+zh	登山者	🧗
+zh	登山鞋	🥾
+zh	登机	🛫
+zh	白	🤍 ⚪
+zh	白大褂	🥼
+zh	白心	🤍
+zh	白旗	🏳️
+zh	白日梦	💭
+zh	白炽灯	💡
+zh	白眼	🙄
+zh	白羊座	♈
+zh	白色圆	⚪
+zh	白花	💮
+zh	白衣	🥼
+zh	白领	🧑‍💼
+zh	百分百	💯
+zh	百合花饰	⚜️
+zh	百货公司	🏬
+zh	百货商店	🏬
+zh	皂	🧼
+zh	的士	🚕
+zh	皇冠	👑
+zh	皇室	🫅
+zh	皇家	👑
+zh	皮卡	🛻
+zh	皮塔饼	🫓
+zh	皮纳塔	🪅
+zh	皮鞋	👞
+zh	皱眉	🙍
+zh	盆景	🪴
+zh	盆栽	🪴
+zh	盆浴	🛀
+zh	盈凸月	🌔
+zh	盈月	🌒
+zh	盐	🧂
+zh	盒子	📦
+zh	盒饭	🍱
+zh	盘	🍽️
+zh	目录	📇
+zh	目瞪口呆	😦
+zh	盲杖	🦯
+zh	直升机	🚁
+zh	直升飞机	🚁
+zh	直尺	📏
+zh	直播	📹
+zh	直方图	📊
+zh	相恋	💑
 zh	相机	📷 📸
+zh	相爱	🥰
+zh	盾	🛡️
+zh	盾牌	🛡️
+zh	眉月	🌒
+zh	眉毛	🤨
 zh	看	👀
+zh	看书	📖
+zh	看报	📰
 zh	看电影	🍿
+zh	看电视	📺
+zh	看病	🏥
+zh	真心	❤️
+zh	真棒	👍
+zh	真菌	🍄
+zh	眨眼	😉
+zh	眯眼	😆
+zh	眼	👁️
+zh	眼泪	😢
 zh	眼睛	👀
+zh	眼花	🥴
+zh	眼袋	🫩
+zh	眼镜	👓
+zh	着陆	🛬
+zh	睡	😴 💤
+zh	睡了	😴
+zh	睡容	😴
+zh	睡眠	😴
 zh	睡着	💤
 zh	睡觉	😴 😪
+zh	睿智	🦉
+zh	瞌睡	😪
+zh	矢车菊	🪻
+zh	知识	📚
+zh	短刀	🗡️
+zh	短剑	🗡️
+zh	短笛	🪈
+zh	短袜	🧦
+zh	短裤	🩳
+zh	石头	🪨
+zh	石油	🛢️
+zh	石油桶	🛢️
+zh	码农	🧑‍💻
+zh	码表	⏱️
+zh	砍	🪓
+zh	砖	🧱
+zh	破壳	🐣
+zh	破解	🔓
+zh	硬币	🪙
+zh	硬拉	🏋️
+zh	硬笔	✒️
 zh	确定	👌
+zh	碗	🥣
+zh	碗勺	🥣
+zh	碰杯	🥂
+zh	磁带	📼
+zh	磁性	🧭
+zh	磁盘	💾
+zh	磁铁	🧲
+zh	示威	🪧
+zh	礼品	🎁
+zh	礼帽	🎩
 zh	礼物	🎁
+zh	祈求	🙏
 zh	祈祷	🙏
+zh	祈福	🙏
+zh	祖母	👵
+zh	祖父	👴
+zh	祝	㊗️
 zh	祝福	🙏 ㊗️
-zh	祝贺	㊗️
+zh	祝贺	🎉 ㊗️
+zh	神社	⛩️
+zh	票	🎫
+zh	票根	🎫
+zh	票箱	🗳️
+zh	祭月	🎑
+zh	祷告	🙏
+zh	禁	🚫
 zh	禁止	🚫
+zh	禅	🧘
+zh	离境	🛫
+zh	私密	🔒
 zh	秋	🍂
+zh	秋叶	🍁
+zh	秋天	🍂 🍁
+zh	种植	🌱
+zh	科学	🔬 🧪
+zh	科学家	🧑‍🔬
+zh	秒表	⏱️
+zh	秘	㊙️
 zh	秘密	🤭 🤐
+zh	移动电话	📱
+zh	移动通信	📱
+zh	稀饭	🥣
+zh	程序员	🧑‍💻
+zh	稍等	⏳
+zh	稻	🌾
+zh	稻子	🌾
+zh	空巢	🪹
+zh	空手道	🥋
+zh	空瓶	🫙
+zh	空轨	🚟
+zh	窗口	🪟
+zh	窗户	🪟
+zh	窗框	🪟
+zh	窥视	👀
+zh	竖琴	🪉
+zh	竖笛	🪈
+zh	站着	🧍
+zh	站立	🧍
+zh	站立者	🧍
+zh	竞技场	🏟️
+zh	竞走	🚶
+zh	章鱼	🐙
+zh	童话	🧚
+zh	竹	🎍
 zh	笑	😂 🤣
+zh	笑哭	😂
+zh	笑死	😂 🤣
+zh	笑死了	😂 🤣
+zh	笑脸	😊 😀
+zh	笑脸相迎	😊
+zh	笑颜	😁
 zh	笔	✏️ ✍️
+zh	笔刷	🖌️
+zh	笔尖	✒️
+zh	笔记	📓
+zh	笔记本	📓 📔
+zh	符咒	🧿
+zh	第一	🥇
+zh	第三	🥉
+zh	第二	🥈
+zh	等一下	✋
+zh	等号	🟰
 zh	等待	⏳
+zh	筐	🧺
+zh	筑巢	🪹
+zh	筷子	🥢
+zh	算命	🥠
+zh	算盘	🧮
+zh	管乐器	🪈
+zh	管弦乐队	🎻
+zh	箭	🏹
+zh	箱子	📦
+zh	箸	🥢
+zh	篮子	🧺
 zh	篮球	🏀
+zh	篮筐	🏀
+zh	簿记	🧾
 zh	米	🍚
+zh	米果	🍘
+zh	米饭	🍚
+zh	米饼	🍘
+zh	粉红	🩷
+zh	粑粑	💩
+zh	粥	🥣
+zh	粮食	🌾
+zh	粽子	🫔
+zh	精灵	🧚 🧝
+zh	糕点	🍰 🧁
 zh	糖	🍬 🍭
+zh	糖果	🍭
+zh	糖葫芦	🍡
+zh	糟糕	😱 😬
+zh	素食	🥗
+zh	素食主义者	🥗
+zh	素食者	🥗
+zh	索引	📇
+zh	索道	🚡
 zh	紧张	😅 😰
+zh	紧急	🚨
+zh	紫	💜 🟣
+zh	紫丁香	🪻
+zh	紫心	💜
+zh	紫罗兰	🪻
+zh	紫色	💜 🟣
+zh	紫色圆	🟣
 zh	累	😩 😫
+zh	累了	😩
+zh	纠结	😖
+zh	红	🔴
+zh	红中	🀄
+zh	红包	🧧
+zh	红心	❤️
+zh	红桃	♥️
+zh	红灯笼	🏮
+zh	红玫瑰	🌹
+zh	红绿灯	🚦 🚥
+zh	红肉	🥩
+zh	红色圆	🔴
+zh	红苹果	🍎
+zh	红薯	🍠
+zh	红辣椒	🌶️
+zh	约会	💏
+zh	纱丽	🥻
+zh	纸	📄
+zh	纸卷	🧻
+zh	纸夹	🖇️
+zh	纸巾	🧻
+zh	纸币	💸
+zh	纸张	📄
+zh	纽约	🗽
+zh	线	🧵
+zh	线圈本	🗒️
+zh	线球	🧶
+zh	线索	🫆
+zh	线轴	🧵
+zh	练武服	🥋
+zh	细胞	🔬
+zh	细菌	🦠
+zh	经理	🧑‍💼
+zh	经纬	🌐
+zh	经线	🌐
+zh	经血	🩸
+zh	结	🪢
 zh	结婚	💍 💒
+zh	绘画	🎨
+zh	给力	💪 👍
+zh	络腮胡	🧔
+zh	绝对	💯
+zh	绣花针	🪡
+zh	绳子	🪢
+zh	绳结	🪢
+zh	维他命	💊
+zh	绵羊	🐑
+zh	绷带	🩹
+zh	绿	💚 🟢
+zh	绿心	💚
+zh	绿皮书	📗
+zh	绿色	💚 🟢
+zh	绿色圆	🟢
+zh	缄默	😯
+zh	缆车	🚠
+zh	缎带	🎀
+zh	编织	🧶
+zh	缝合	🪡
+zh	缝纫	🧵
+zh	缝线	🪡
+zh	缝衣针	🪡
+zh	缠结	🪢
+zh	罐	🫙
+zh	罐头	🥫
+zh	网址	🔗
+zh	网球	🎾
+zh	网球拍	🎾
+zh	罗曼史	💐
+zh	罗盘	🧭
+zh	罚球	⛹️
+zh	罪犯	🦹
+zh	置顶	🔝
 zh	羊	🐑
+zh	羊排	🥩
+zh	羊毛	🐑 🧶
+zh	羊皮纸	📜
+zh	羊驼	🦙
+zh	美丽	😍
+zh	美人鱼	🧜
+zh	美元	💵
+zh	美刀	💵
+zh	美发	💇
+zh	美味	😋
+zh	美容	💆
+zh	美容院	💇
+zh	美洲	🌎
+zh	美洲鸵	🦙
+zh	美甲	💅
+zh	美钞	💵
+zh	羞涩	😊
+zh	羽扇豆	🪻
+zh	羽毛	🪶
+zh	羽毛球	🏸
+zh	羽球	🏸
+zh	翅膀	🪽
+zh	翱翔	🪽
+zh	翻白眼	🙄
+zh	翻筋斗	🤸
+zh	老奶奶	👵
+zh	老师	🧑‍🏫
+zh	老爷爷	👴
 zh	老虎	🐯 🐅
-zh	考试	💯
+zh	老虎头	🐯
+zh	老虎机	🎰
+zh	老鸦	🐦‍⬛
+zh	老鹰	🦅
+zh	老鼠	🐁
+zh	老鼠头	🐭
+zh	老鼠夹	🪤
+zh	考拉	🐨
+zh	考试	📝 💯
+zh	耗子	🐀
+zh	耳	👂
+zh	耳塞	🎧
 zh	耳朵	👂
 zh	耳机	🎧
-zh	聚会	👯
+zh	耶	✌️ 😎
+zh	耸肩	🤷
+zh	聚会	🎉 🥳
+zh	聚餐	🍻 🍽️
 zh	聪明	🧠 🤓
 zh	肉	🍖 🥩
+zh	肉丸	🍝
+zh	肉块	🥩
+zh	肉夹馍	🥙
+zh	肉排	🥩
 zh	肌肉	💪
+zh	肥皂	🧼
+zh	肥皂泡	🧼
+zh	肥皂盒	🧼
+zh	肺	🫁
+zh	肺部	🫁
+zh	背包	🎒
+zh	背心	🦺
+zh	胖达	🐼
 zh	胜利	✌️ 🏆
+zh	胡子	🧔
+zh	胡萝卜	🥕
+zh	胡须	🧔
+zh	胶卷	🎞️
+zh	胶布	🩹
+zh	胶片	🎞️
+zh	脑	🧠
+zh	脚	🦶
+zh	脚印	👣
+zh	脚踏车	🚴
+zh	脸红	😳
+zh	腌菜	🥒
+zh	腕龙	🦕
+zh	腼腆	😊
+zh	腿	🦵
+zh	膜拜	🙇
+zh	自拍	🤳
+zh	自然	🌿 🌳
+zh	自由	⛓️‍💥
+zh	自由女神像	🗽
+zh	自由泳	🏊
 zh	自行车	🚲 🚴
+zh	自行车赛	🚴
+zh	自负	😤
+zh	臭	💩 🦨
+zh	臭鼬	🦨
+zh	致敬	🫡
+zh	舌	👅
+zh	舌头	👅
+zh	舔	👅
+zh	舞会	🎊
+zh	舞厅	🪩
+zh	舞者	💃
+zh	舞蹈	💃 🕺
+zh	舞鞋	🩰
+zh	航班	✈️
 zh	船	🚤 ⚓
+zh	色子	🎲
+zh	色彩缤纷	🦚
+zh	色拉	🥗
+zh	艺人	🧑‍🎤
+zh	艺术	🎨
+zh	艺术家	🧑‍🎨
+zh	节奏	🪘
 zh	节日	🎈
+zh	节日快乐	🥳
+zh	节目	📺
+zh	芒果	🥭
+zh	芙蓉	🌺
+zh	芜菁	🫜
+zh	芝士	🧀
+zh	芭蕾	🩰
+zh	芭蕾舞	🩰
+zh	芭蕾舞者	🧑‍🩰
 zh	花	🌸 🌹
+zh	花园	🌷
+zh	花札	🎴
+zh	花朵	🌸
+zh	花束	💐
+zh	花栗鼠	🐿️
+zh	花洒	🚿
+zh	花牌	🎴
+zh	花生	🥜
+zh	花痴	😍
+zh	花盆	🪴
+zh	花钱	💸
+zh	芽	🌱
+zh	苍蝇	🪰
+zh	苏打	🥤
+zh	苗	🌱
+zh	苜蓿	☘️
+zh	苞米	🌽
+zh	苦中作乐	🥲
+zh	苦相	🙎
+zh	苦笑	😅
+zh	英镑	💷
+zh	英雄	🦸
 zh	苹果	🍎 🍏
+zh	苹果派	🥧
+zh	茄子	🍆
+zh	茅屋	🛖
+zh	茫然	😑
 zh	茶	🍵 ☕
+zh	茶壶	🫖
+zh	茶杯	🍵
+zh	茶饮	🧋
+zh	草花	♣️
+zh	草药	🌿
+zh	草莓	🍓
+zh	荒宅	🏚️
+zh	荒岛	🏝️
+zh	荒废	🏚️
+zh	荒漠	🏜️
+zh	荒芜	🪾
 zh	药	💊
+zh	药丸	💊
+zh	药物	💊
+zh	药草	🌿
+zh	莫吉托	🍹
+zh	莲花	🪷
+zh	莴苣	🥬
+zh	获胜	🏆
+zh	菌类	🍄‍🟫
+zh	菜刀	🔪
+zh	菠萝	🍍
+zh	菱形	🔷 🔹
+zh	萌	🥰
+zh	萝卜	🫜
+zh	萨克斯管	🎷
+zh	萨克斯风	🎷
+zh	落叶	🍂
+zh	落叶树	🌳
 zh	葡萄	🍇
+zh	葡萄酒	🍷
+zh	葬礼	⚰️
+zh	蒙古包	🛖
+zh	蒙眼	🙈
+zh	蒜	🧄
+zh	蒜头	🧄
+zh	蒲公英	🌼
+zh	蒸房	🧖
+zh	蒸汽	♨️
+zh	蒸汽浴	🧖
+zh	蒸馏	⚗️
+zh	蒸馏器	⚗️
+zh	蓄电池	🔋
+zh	蓝	💙 🔵
+zh	蓝光	💿
+zh	蓝心	💙
+zh	蓝皮书	📘
+zh	蓝绿	🩵
+zh	蓝绿色	🩵
+zh	蓝色圆	🔵
+zh	蓝莓	🫐
 zh	蔬菜	🍅 🥕
+zh	薄煎饼	🥞
+zh	薄饼	🥞
+zh	薯条	🍟
+zh	薰衣草	🪻
+zh	蘑菇	🍄 🍄‍🟫
+zh	虎	🐅
+zh	虎鲸	🫍
+zh	虫子	🐛
+zh	虾	🦐
 zh	蚂蚁	🐜
+zh	蚊子	🦟
+zh	蚯蚓	🪱
+zh	蚱蜢	🦗
+zh	蛀牙	🦷
 zh	蛇	🐍
+zh	蛇夫座	⛎
 zh	蛋	🍳 🥚
 zh	蛋糕	🎂 🍰
+zh	蛐蛐	🦗
+zh	蛛网	🕸️
+zh	蛾眉月	🌒
+zh	蜂蜜	🍯
+zh	蜗牛	🐌
 zh	蜘蛛	🕷️
+zh	蜘蛛网	🕸️
+zh	蜜獾	🦡
+zh	蜜瓜	🍈
+zh	蜜罐	🍯
+zh	蜜蜂	🐝
+zh	蜡烛	🕯️
+zh	蜡笔	🖍️
+zh	蜥蜴	🦎
+zh	蝎子	🦂
+zh	蝙蝠	🦇
+zh	蝙蝠侠	🦸
 zh	蝴蝶	🦋
+zh	蝴蝶结	🎀
+zh	螃蟹	🦀
+zh	融化	🫠
+zh	螺	🐚
+zh	螺丝	🪛
+zh	螺丝刀	🪛
+zh	螺帽	🔩
+zh	螺旋	🌀
+zh	螺栓	🔩
+zh	螺母	🔩
+zh	螺钉	🔩
+zh	蟋蟀	🦗
+zh	蟑螂	🪳
+zh	蟹	🦀
+zh	蠕虫	🪱
+zh	血拼	🛍️
+zh	血滴	🩸
+zh	行人	🚶
+zh	行尸走肉	🧟
+zh	行星	🪐
+zh	行李	🧳
+zh	行李员	🛎️
+zh	行李牌	🏷️
+zh	行李箱	🧳
+zh	衣服	👕 👗
+zh	表演	🎭
+zh	袋	🛍️
+zh	袋棍球	🥍
+zh	袋鼠	🦘
+zh	袜	🧦
+zh	袜子	🧦
+zh	裁剪	✂️
+zh	装货	📦
+zh	裙子	👗
+zh	裤子	👖
+zh	褐色	🤎 🟤
+zh	西兰花	🥦
 zh	西瓜	🍉
+zh	西红柿	🍅
+zh	西装革履	🕴️
+zh	西餐	🍴
+zh	见钱眼开	🤑
+zh	观星	🔭
+zh	视频	📹
+zh	角子机	🎰
+zh	角度	📐
+zh	解锁	🔓
+zh	触手	🐙
 zh	警告	⚠️
+zh	警官	👮
 zh	警察	👮 🚓
+zh	警报	🚨
+zh	警方	👮
+zh	警灯	🚨
+zh	警示	🚨
+zh	警车	🚓 🚔
+zh	计时	⏱️
+zh	计时器	⏱️
+zh	计程车	🚕
+zh	计算	🧮
+zh	计算器	🧮
+zh	计算机	💻
+zh	订婚	💍
+zh	讨人喜欢	🥰
+zh	训练	🏋️
+zh	记事本	📓
+zh	记录	📝
+zh	记账	🧾
+zh	讲话	🗣️
+zh	讽刺	😼
+zh	证件	🪪
+zh	证据	🧾
+zh	诅咒	🤬
+zh	诊断	🩺
+zh	试管	🧪
+zh	话语	🗨️
+zh	诱饵	🪤
+zh	说话	🗣️
+zh	说谎	🤥
+zh	请	🙏
+zh	请求	🥺
 zh	读书	📖
+zh	读报	📰
+zh	调味	🧂
+zh	调味品	🧂
+zh	调味料	🧂
+zh	调情	🫦
+zh	调皮	😛
+zh	调羹	🥄
+zh	调色板	🎨
+zh	调色盘	🎨
+zh	谢了	🙏
 zh	谢谢	🙏
+zh	谷物	🌾
+zh	谷类	🌾
+zh	豆	🫘
+zh	豆子	🫘
+zh	豆类	🫘
+zh	豆茎	🫛
+zh	豆荚	🫛
+zh	豌豆	🫛
+zh	豌豆荚	🫛
+zh	象	🐘
+zh	豹	🐆
+zh	豹子	🐆
+zh	贝果	🥯
+zh	财富	💰
+zh	账单	🧾
+zh	账本	📒
+zh	账簿	📒
+zh	货币	💵
+zh	货车	🚚 🚛
+zh	购物	🛍️
+zh	购物袋	🛍️
+zh	购物车	🛒
+zh	贮藏	🫙
+zh	贵	💸
+zh	贵宾犬	🐩
+zh	贵族	🫅
+zh	贷记卡	💳
+zh	赌博	🎰
+zh	赌场	🎰
+zh	赌钱	🎰
+zh	赏月	🎑
+zh	赛跑	🏃
+zh	赛车	🏎️
+zh	赛马	🏇
 zh	赞	👍
+zh	赞成	👍
+zh	赢	🏆
+zh	赢钱	💰
+zh	赤脚	👣
+zh	走势	💹
+zh	走路	🚶
+zh	起司	🧀
+zh	起床	⏰ 🌅
+zh	起飞	🛫
+zh	超人	🦸
+zh	超市	🛒 🏪
+zh	超能力	🦸
+zh	超自然	🧛
+zh	越桔	🫐
+zh	趋势线	📈
+zh	足尖鞋	🩰
 zh	足球	⚽
+zh	足踝	🦶
+zh	足迹	🐾
+zh	趾高气昂	😤
+zh	跆拳道	🥋
+zh	跑	🏃 👟
 zh	跑步	🏃
+zh	跑步者	🏃
+zh	跑路	🏃
+zh	跑车	🏎️
+zh	跑鞋	👟
+zh	跪下	🧎
+zh	跪坐	🧎
+zh	路障	🚧
+zh	跳伞	🪂
 zh	跳舞	💃 🕺
+zh	跳跃	🦘
+zh	踏板车	🛵
+zh	蹦迪	🪩
+zh	身份	🪪
+zh	身份证	🪪
+zh	车	🚗
+zh	车票	🎫
+zh	车站	🚉
+zh	车轮	🛞
+zh	车辆	🚙
+zh	轨迹球	🖲️
+zh	轨道	🛤️
+zh	轨道车	🚃
+zh	转账	💸
+zh	轮椅	🦽 🦼
+zh	轮胎	🛞
+zh	轮船	🚢
+zh	软件	🧑‍💻
+zh	软体动物	🦑
+zh	软盘	💾
+zh	软饮料	🥤
+zh	轻声	🔈
+zh	轻轨	🚈
+zh	载货	🛻
+zh	轿车	🚗
+zh	辐射	☢️
+zh	输入	⌨️
+zh	输血	🩸
+zh	辛苦	💪
+zh	辛苦了	🙏 💪
+zh	辣	🌶️
+zh	辣椒	🌶️
+zh	过山车	🎢
+zh	过年	🧧 🎆
+zh	过来	🫴
 zh	运动	⚽ 🏀
+zh	运动员	🏅
+zh	运动服	🎽
+zh	运动鞋	👟
+zh	运气	🍀
+zh	运球	⛹️
+zh	运送	📦
+zh	进化	🧬
+zh	远足	🚶
+zh	连接	🔗
+zh	连衣裙	👗
+zh	迟到	⏰ 🏃
+zh	迟缓	🦥
+zh	迪斯科	🪩
+zh	迷恋	🥰
+zh	迷惘	🫤
+zh	迷糊	😵‍💫
+zh	迷茫	😶‍🌫️
+zh	追剧	📺 🍿
+zh	追星族	🤩
+zh	送货	🚚
+zh	送餐	🥡
+zh	选举	🗳️
+zh	选票	🗳️
+zh	通信	📱
+zh	通知	🔔
+zh	逛街	🛍️
+zh	速度	🚄
+zh	速食	🍔
+zh	造型师	💇
+zh	逮捕	👮
 zh	道歉	🙇
+zh	遗传学	🧬
+zh	邪恶	😈
+zh	邪魔	😈
 zh	邮件	📩 ✉️
+zh	邮局	🏣 🏤
+zh	邮政	📯
+zh	邮筒	📮
+zh	邮箱	📮
+zh	邮递	📭
+zh	郁金香	🌷
 zh	郁闷	😒
+zh	郊区	🏠
+zh	部队	🪖
+zh	都市	🌆
+zh	鄙视	😒
 zh	酒	🍷 🍺
+zh	酒吧	🍻
+zh	酒店	🏨
+zh	酒杯	🍷
+zh	酒馆	🍻
+zh	酢浆草	☘️
+zh	酪梨	🥑
 zh	酷	😎
+zh	酸	🍋
+zh	酸橙	🍋‍🟩
+zh	酸爽	🍋‍🟩
+zh	醉醺醺	🥴
+zh	采矿	⛏️
+zh	采购	🛒
+zh	释然	😮‍💨
+zh	重生	🐦‍🔥
+zh	野牛	🦬
+zh	野猪	🐗
+zh	野餐	🧺
+zh	量体温	🤒
+zh	金	🪙
+zh	金子	🪙
+zh	金币	🪙
+zh	金牌	🥇
+zh	金牛座	♉
+zh	金钱	💰
+zh	金鱼草	🪻
+zh	针	🪡
+zh	针头	💉
+zh	针筒	💉
+zh	针线	🧵
+zh	钓竿	🎣
+zh	钓鱼	🎣
+zh	钓鱼竿	🎣
+zh	钞票	💵
 zh	钟	⏰
+zh	钟声	🔔
 zh	钢琴	🎹
+zh	钢笔	🖋️
+zh	钢笔尖	✒️
 zh	钥匙	🔑
+zh	钩子	🪝
+zh	钩状物	🪝
 zh	钱	💰 💸
+zh	钱包	👛
+zh	钱袋	💰
+zh	钻戒	💍
 zh	钻石	💎
+zh	铁路	🚞
+zh	铁轨	🛤️
+zh	铁链	⛓️
+zh	铁锤	🔨
+zh	铁镐	⛏️
+zh	铃	🔔
+zh	铃声	🔔
+zh	铃铛	🔔
+zh	铅笔	✏️
+zh	铜板	🪙
+zh	铜牌	🥉
+zh	铜管乐	🪊
+zh	铲	🪏
+zh	银河	🌌
+zh	银牌	🥈
+zh	银色	🩶
+zh	银行	🏦
+zh	银行卡	💳
+zh	链	⛓️
+zh	链接	🔗
+zh	链条	⛓️
 zh	锁	🔒 🔐
+zh	锁上	🔐
+zh	锁住	🔒
+zh	锁头	🔒
+zh	锁定	🔒
+zh	锁链	⛓️
+zh	锅	🍲
+zh	锋利	🪒
+zh	锚	⚓
+zh	锤子	🔨
+zh	锦标赛	🏆
+zh	键盘	⌨️
+zh	锯	🪚
+zh	锯子	🪚
 zh	锻炼	🙆
+zh	镜子	🪞
+zh	长号	🪊
+zh	长度	📏
+zh	长毛绒	🧸
+zh	长毛象	🦣
+zh	长牙	🦣
+zh	长笛	🪈
+zh	长袜	🧦
+zh	长颈鹿	🦒
+zh	长鼓	🪘
+zh	长鼻子	🤥
+zh	门	🚪
+zh	门松	🎍
+zh	门票	🎫
+zh	闪亮	✨
+zh	闪人	🏃
+zh	闪光	✨
+zh	闪光灯	📸
+zh	闪电	⚡
+zh	闪耀	✨
+zh	闭嘴	🤐
+zh	问号	❓
+zh	问题	❓
+zh	闲逛	🚶
+zh	间谍	🕵️
+zh	闹钟	⏰
+zh	闺蜜	👯
+zh	闻	👃
+zh	防御	🛡️
+zh	防晒霜	🧴
+zh	阳伞	⛱️
+zh	阳光	☀️
+zh	阳光明媚	☀️
+zh	阴	⛅
+zh	阴阳	☯️
+zh	阵雨	⛈️
+zh	阶梯	🪜
+zh	阻挡	🫷
+zh	阿米巴	🦠
+zh	陆龟	🐢
+zh	降温	🪭
+zh	降落	🛬
+zh	降落伞	🪂
+zh	陵墓	⚰️
+zh	陷阱	🪤
+zh	随便	🤷
+zh	隐形	🫥
+zh	隐私	🔏
+zh	隐藏	🫥
+zh	隐身	🥷
+zh	难以置信	🤦
+zh	难受	😣
 zh	难过	😞
+zh	雕塑	🗿
 zh	雨	🌧️ ☂️
+zh	雨伞	☔
+zh	雨滴	💧
 zh	雪	❄️ ☃️
+zh	雪人	☃️ ⛄
+zh	雪山	🏔️
+zh	雪橇	🛷
+zh	雪糕	🍨
+zh	雪花	❄️
+zh	雪顶	🏔️
+zh	零下	🥶
+zh	零件	⚙️
 zh	雷	⛈️
+zh	雷暴	⛈️
+zh	雷阵雨	⛈️
+zh	雷龙	🦕
+zh	雾	🌫️
+zh	震动	🫨
+zh	震惊	😲
+zh	霜淇淋	🍦
+zh	露营	🏕️
+zh	露齿	😬
+zh	露齿笑	😁
+zh	霸王龙	🦖
+zh	霾	🌫️
+zh	青柠	🍋‍🟩
+zh	青椒	🫑
+zh	青筋	💢
+zh	青色	🩵
+zh	青苹果	🍏
+zh	青蛙	🐸
+zh	青蛙头	🐸
+zh	静音	🔕
+zh	非洲	🌍
+zh	非礼勿视	🙈
+zh	面具	🎭
 zh	面包	🍞
+zh	面包圈	🥯
+zh	面包店	🥐
+zh	面无表情	😑
+zh	面条	🍜
+zh	面饼	🫓
+zh	靴子	🥾
+zh	靶心	🎯
+zh	鞋	👟 👞
+zh	鞠躬	🙇
+zh	鞭炮	🧨
 zh	音乐	🎶 🎵
+zh	音符	🎶 🎵
+zh	音量	🔊
+zh	页面	📃
+zh	顶一下	👍
+zh	项链	📿
+zh	顽童	👿
+zh	预言	🥠
+zh	领带	👔
+zh	颠倒	🙃
+zh	颤抖	🫨
+zh	风	🌬️ 🎐
+zh	风信子	🪻
+zh	风吹	🌬️
+zh	风景	🏞️
+zh	风琴	🪗
+zh	风筝	🪁
+zh	风铃	🎐
+zh	飓风	🌀
+zh	飘带	🎗️
+zh	飞	✈️
+zh	飞吻	😘
 zh	飞机	✈️ 🛫
+zh	飞盘	🥏
+zh	飞碟	🛸
+zh	飞翔	🕊️
+zh	飞行	✈️
+zh	飞行员	🧑‍✈️
+zh	飞镖	🎯
+zh	食人魔	👹
+zh	食堂	🍽️
+zh	食指	☝️
+zh	餐具	🍽️
+zh	餐厅	🍽️ 🍴
+zh	餐馆	🍽️ 🍴
 zh	饭	🍚 🍛
+zh	饭团	🍙
+zh	饮料	🍹
+zh	饮料盒	🧃
+zh	饮用水	🚰
+zh	饺子	🥟
+zh	饼干	🍪
 zh	饿	🍕 🍔
+zh	饿了	😋 🍴
+zh	香料	🫚
+zh	香槟	🍾
+zh	香烟	🚬
+zh	香瓜	🍈
+zh	香肠	🌭
+zh	香草	🌿
+zh	香蕉	🍌
 zh	马	🐴
+zh	马丁尼	🍸
+zh	马头	🐴
+zh	马戏团	🎪
+zh	马拉松	🏃
+zh	马桶	🚽
+zh	马铃薯	🥔
+zh	马黛茶	🧉
+zh	驴	🫏
+zh	驴子	🫏
+zh	驼峰	🐪
+zh	驼鹿	🫎
+zh	驾驶	🚗
+zh	骄傲	🦚
+zh	骆马	🦙
+zh	骆驼	🐪 🐫
+zh	骑师	🏇
+zh	骑自行车	🚴
+zh	骑车	🚲
+zh	骑马	🐎
+zh	骚动	🫯
+zh	骡	🫏
+zh	骡子	🫏
+zh	骨	🦴
+zh	骨头	🦴
+zh	骨架	🩻
+zh	骨灰	⚱️
+zh	骨灰缸	⚱️
+zh	骨骼	🦴
+zh	骰子	🎲
+zh	骷髅	☠️
 zh	高兴	😆 😄
+zh	高压	⚡
+zh	高尔夫	⛳
+zh	高帽	🎩
+zh	高楼大厦	🏙️
+zh	高球	⛳
+zh	高跟	👠
+zh	高跟鞋	👠
+zh	高速	🚅
+zh	高速公路	🛣️
+zh	高铁	🚄
 zh	鬼	👻
+zh	鬼屋	🏚️
+zh	鬼牌	🃏
+zh	鬼脸	😜
+zh	魔咒	🧙
+zh	魔幻	🧝
+zh	魔术	🪄
+zh	魔术师	🪄
+zh	魔杖	🪄
+zh	魔棒	🪄
 zh	魔法	🔮
+zh	魔鬼	😈
 zh	鱼	🐟 🐠
+zh	鱼板	🍥
+zh	鱼钩	🪝
+zh	鱼饼	🍥
+zh	鱿鱼	🦑
 zh	鲜花	💐
+zh	鲤鱼旗	🎏
+zh	鲨	🦈
+zh	鲨鱼	🦈
+zh	鲸	🐳
+zh	鲸鱼	🐋
+zh	鳄梨	🥑
+zh	鳄鱼	🐊
 zh	鸟	🐦 🕊️
+zh	鸟巢	🪹
+zh	鸟类学	🐦
+zh	鸟蛋	🪺
 zh	鸡	🐔 🐤
+zh	鸡尾酒	🍸
+zh	鸡肉	🍗
+zh	鸡腿	🍗
+zh	鸭	🦆
+zh	鸭子	🦆
+zh	鸭舌帽	🧢
+zh	鸽	🕊️
+zh	鸽子	🕊️
+zh	鹅	🪿
+zh	鹅群	🪿
+zh	鹤嘴锄	⛏️
+zh	鹦鹉	🦜
+zh	鹰	🦅
+zh	鹰嘴豆	🧆
+zh	鹿	🦌
+zh	鹿角	🫎
+zh	麋鹿	🫎
+zh	麦	🌾 🎤
+zh	麦克	🎤
+zh	麦克风	🎤 🎙️
+zh	麻将	🀄
+zh	麻线	🪢
+zh	黄	💛 🟡
+zh	黄包车	🛺
+zh	黄心	💛
+zh	黄昏	🌆
+zh	黄油	🧈
+zh	黄瓜	🥒
+zh	黄色圆	🟡
+zh	黄豆	🫛
+zh	黄金	🪙 🥇
+zh	黑	🖤 ⚫
+zh	黑心	🖤
+zh	黑旗	🏴
+zh	黑桃	♠️
+zh	黑猫	🐈‍⬛
+zh	黑色圆	⚫
+zh	鼓	🥁
+zh	鼓声	🥁
+zh	鼓掌	👏
+zh	鼓槌	🥁
+zh	鼠	🐭 🐀
+zh	鼠标	🖱️
+zh	鼻	👃
+zh	鼻子	👃
+zh	鼻涕	🤧
+zh	鼻涕虫	🐌
+zh	齿轮	⚙️
+zh	龇牙咧嘴	😬
 zh	龙	🐉
+zh	龙卷风	🌪️
+zh	龙头	🐲
+zh	龙虾	🦞
+zh	龟	🐢

@@ -1,331 +1,1171 @@
-# English words and the emoji the keyboard offers for each, chosen by hand from the CLDR 49
-# annotations. build_emoji_table.py checks each pair. Columns: word, tab, one or two emoji
-# separated by one space, the more used emoji first.
-good	👍 👏
-great	👏
-nice	👏 😁
-yes	👍
-okay	👌
-awesome	👏 😎
-perfect	💯
-hundred	💯
-agree	💯
-thumbs	👍
-love	❤️ 😍
-heart	❤️ 💕
-hearts	💕 💞
-loving	💕
-kiss	😘 💋
-hug	🤗
-romance	😍 💘
-romantic	😍 😘
-valentine	🌹 💘
-broken	💔
-happy	😁 😄
-smile	😊 😁
-smiling	😊
-glad	😊
-satisfied	😊
-cheerful	😀
-sad	😭 😢
-unhappy	😢
-cry	😭 😢
-crying	😭 😢
-tears	😭
-laugh	😂 🤣
-laughing	😹
-lol	😂 🤣
-haha	😂 🤣
-funny	😂 🤣
-hilarious	😂 🤣
-joy	😂
-joke	😜
-crazy	😜 🤪
-wink	😉
-tongue	😜 😛
-cool	😎
-sunglasses	😎
-wow	🤩 😮
-omg	😮 😲
-shocked	😱 😲
-surprised	😮 😯
-scared	😱 😰
-fear	😱 😨
+# English words and the emoji that the keyboard offers for each, chosen by hand.
+# A pair of this file wins over the pairs that build_emoji_table.py generates for the word.
+# The script checks that a source holds each pair, or that added-en.tsv lists the pair.
+# Columns: word, tab, one or two emoji separated by one space, the better emoji first.
+academic	🎓
+accept	👍
+accessibility	♿
+accessible	♿
+accessory	👜
+accident	💥 🚑
+accommodation	🏨
+acting	🎭
+action	🎬
+actor	🎭
+admission	🎫 🎟️
+adorable	🥰
+affection	🥰 💕
 afraid	😨
-worried	😟
-nervous	😅 😰
-stress	😅
-stressed	😅
-confused	😕
-angry	😡 😠
-mad	😡 😠
-upset	😡 😠
-furious	😤
-annoyed	😖
-disappointed	😔 😞
-bored	😒
-awkward	😬
-embarrassed	😳
-blush	😊
-tired	😩 😴
-sleepy	😪
-sleep	😴 💤
-sleeping	😴
-bedtime	😴
-nap	😴
-relax	💆
-calm	😌
-relieved	😌
-sick	😷 🤒
-fever	🤧
-thinking	🤔
-hmm	🤔
-idea	💡
-dream	💭
-idk	🤷
-dunno	🤷
-shrug	🤷
-whatever	🙄 🤷
-secret	🤭 🤐
-quiet	🤫
-oops	🤭
-please	🙏
-thanks	🙏
-pray	🙏
-blessed	🙏 😇
-appreciate	🙏
-sorry	🙇
-hello	👋
-hey	👋
-bye	👋
-greetings	👋
-wave	👋
-clap	👏
-applause	👏
-congrats	👏
-congratulations	👏 ㊗️
-strong	💪
-muscle	💪
-gym	💪
-workout	🏋️
-luck	🤞
-lucky	🍀
-peace	✌️ 🕊️
-victory	✌️ 🏆
-hear	👂
-listen	👂
-smart	🤓 🧠
-nerd	🤓
-brain	🧠
-angel	😇 👼
-innocent	😇
-devil	😈
-ghost	👻
-halloween	🎃 👻
-pumpkin	🎃
+africa	🌍
+agree	💯
+agreement	🤝
+agriculture	🚜
+aid	⛑️ 🩹
+air	💨
+airplane	✈️ 🛩️
+airport	✈️ 🛫
+alarm	⏰
+alcohol	🍺 🍷
+alert	🚨 ⚠️
 alien	👽
-robot	🤖
-clown	🤡
-poop	💩
-fire	🔥
-lit	🔥
-hot	🔥 🌶️
-cold	❄️
-party	🎉 🎊
-celebrate	🎉 🎊
-celebration	🎉 🎊
-birthday	🎂 🎉
-cake	🎂 🍰
-gift	🎁
-balloon	🎈
-fireworks	🎆
-christmas	🎁 🌲
-win	🏆
-winner	🏅
-champion	🏆
-trophy	🏆
-medal	🥇 🏅
-king	👑
-queen	👑 👸
-crown	👑
-princess	👸
-star	⭐ 🌟
-stars	⭐ 💫
-sparkle	✨
-magic	✨ 🔮
-sun	☀️ 🌞
-sunny	☀️ 🌞
-sunshine	🌞
-sunrise	🌅
-moon	🌙 🌚
-night	🌃 🌠
-rain	☔ 🌧️
-rainbow	🌈
-snow	❄️ ☃️
-snowman	☃️
-cloud	☁️
-wind	🌬️
-lightning	⚡
-thunder	⚡ ⛈️
-tornado	🌪️
-weather	☀️ 🌈
-flower	🌸 🌹
-rose	🌹
-bouquet	💐
-tree	🌳 🌲
-leaf	🍃 🍀
-autumn	🍂
-spring	🌸
-plant	🌱 🌿
-cactus	🌵
-garden	🏡
-forest	🌳 🌲
-earth	🌍 🌎
-world	🌍 🌎
-globe	🌍
-ocean	🌊
-beach	🏖️ 🌴
-island	🏝️
-volcano	🌋
-dog	🐶 🐕
-puppy	🐶
-cat	🐱 🐈
-kitty	🐱
-kitten	🐱
-pig	🐷
-cow	🐮 🐄
-horse	🐴
-bird	🐦 🐥
-chicken	🐔 🍗
-fish	🐟 🐠
-bear	🐻
-lion	🦁
-tiger	🐯
-panda	🐼
-rabbit	🐰
-bunny	🐰
-snake	🐍
-frog	🐸
-bee	🐝
-butterfly	🦋
-unicorn	🦄
-whale	🐳
-dolphin	🐬
-shark	🦈
-penguin	🐧
-octopus	🐙
-turtle	🐢
-elephant	🐘
-food	🍕 🍔
-eat	😋 🍴
-hungry	😋 🍕
-yummy	😋
-yum	😋
-delicious	😋
-tasty	😋
-breakfast	🍳 🥞
-lunch	🍴
-dinner	🍽️ 🍴
-pizza	🍕
-burger	🍔
-hamburger	🍔
-fries	🍟
-pasta	🍝
-spaghetti	🍝
-soup	🍜
-sushi	🍣
-taco	🌮
-rice	🍚
-bread	🍞
-toast	🍞
-egg	🥚 🍳
-cheese	🧀
-meat	🍖 🥩
-bacon	🥓
-cookie	🍪
-chocolate	🍫
-candy	🍬 🍭
-dessert	🍰 🍩
+aliens	👽
+alphabet	🔤
+amazing	🤩
+angel	😇 👼
+angle	📐
+angry	😡 😠
+anniversary	💕 💐
+announcement	📢
+annoyed	😖
+anxiety	😰
+applause	👏
 apple	🍎
+appreciate	🙏
+aquarium	🐠
+arcade	👾 🕹️
+arm	💪
+army	🪖 🎖️
+art	🎨
+asia	🌏
+astronomy	🔭
+autumn	🍂
+award	🏆
+awareness	🎗️
+awesome	👏 😎
+awkward	😬
+aww	🥹 🥰
+baby	👶
+bacon	🥓
+bad	👎
+bae	😍 😘
+bag	👜 🛍️
+baggage	🛄 🧳
+balance	⚖️
+ball	⚽ 🏀
+ballerina	🩰
+ballet	🩰
+balloon	🎈
+ban	🚫
 banana	🍌
-strawberry	🍓
-cherry	🍒
-peach	🍑
-lemon	🍋
-grapes	🍇
-pineapple	🍍
-watermelon	🍉
-coffee	☕
-tea	🍵 ☕
-milk	🥛
-beer	🍺 🍻
-cheers	🍻
-wine	🍷
-cocktail	🍹 🍸
-drink	🍹 ☕
-music	🎶 🎵
-sing	🎤
-dance	💃 🕺
-dancing	💃 🕺
-guitar	🎸
-piano	🎹
-movie	🎬 🍿
-popcorn	🍿
-camera	📷 📸
-photo	📷
-television	📺
-game	🎮
-soccer	⚽
-football	⚽ 🏈
-basketball	🏀
+bang	💥
+banned	🚫
+bar	🍻 🍸
+barber	💈 💇
 baseball	⚾
-tennis	🎾
-golf	⛳
-run	🏃
-running	🏃
-swimming	🏊
+basketball	🏀
+bass	🎸
+bathroom	🚽 🚿
+battery	🔋 🪫
+bbq	🍖
+bday	🎂 🥳
+beach	🏖️ 🌴
+bear	🐻
+beautiful	😍
+beauty	💄 💅
+bed	🛏️ 🛌
+bedroom	🛏️
+bedtime	😴
+bee	🐝
+beef	🥩
+beer	🍺 🍻
+bees	🐝
+beginner	🔰
+bell	🔔
+berries	🍓 🫐
+bestie	👯
+bff	👯
 bike	🚲
-car	🚗
-bus	🚌
-train	🚂
-plane	✈️
-travel	✈️
-rocket	🚀
-house	🏠 🏡
-home	🏠 🏡
-school	📚
+bill	💵
+bills	💸
+bin	🗑️
+biology	🧬 🧫
+bird	🐦 🐥
+birthday	🎂 🎉
+black	🖤 ⚫
+bless	🙏
+blessed	🙏 😇
+block	🚫
+blood	🩸
+bloom	🌸
+blow	🌬️ 💨
+blue	🔵 💙
+blues	🎷
+blush	😊
+blushing	😊 😳
+boat	⛵ 🚤
 book	📚 📖
 books	📚
-study	📚
-graduation	🎓
-write	✍️
-money	💰 💸
-cash	💰 💸
-dollar	💵
-rich	💰
-phone	📱
-computer	💻
-laptop	💻
-email	📩
-message	💬
-done	✅
-complete	✅
-password	🔑
-lock	🔒
-clock	⏰
-alarm	⏰
-warning	⚠️
-stop	🛑
-wedding	💍 💒
-ring	💍
-married	💍
-engaged	💍
-diamond	💎
-baby	👶
-hospital	🏥
-doctor	💊 🏥
-medicine	💊
-pill	💊
-mask	😷
 boom	💥
+booze	🍺 🍻
+bored	😒
+boring	🥱 💤
+born	🐣 🍼
+bouquet	💐
+bowl	🥣
+box	📦
+brain	🧠
+brass	🎺
+bread	🍞
+breakfast	🍳 🥞
+brilliant	🤩 💡
+broken	💔
+brown	🟤 🤎
+brr	🥶
+bruh	🤦
+brush	🖌️ 🪥
+build	🔨
+builder	👷
+building	🏢
+bull	🐂
+bunny	🐰
+burger	🍔
+burgers	🍔
+burn	🔥
+burned	🔥
+burning	🔥
+bus	🚌
+butterflies	🦋
+butterfly	🦋
+buy	🛍️
+bye	👋
+cabbage	🥬
+cable	🔌
+cactus	🌵
+cafe	☕
+cake	🎂 🍰
+calculator	🧮
+call	📞
+called	📞
+calling	📞
+calm	😌
+camcorder	📹
+camera	📷 📸
+cancel	❌
+canceled	❌
+cancelled	❌
+candles	🕯️ 🎂
+candy	🍬 🍭
+cap	🧢
+car	🚗
+card	💳
+cardiac	🫀
+cards	🃏
+career	💼
+careful	⚠️
+carnival	🎪 🎠
+cash	💰 💸
+casino	🎰
+casual	👕 👖
+cat	🐱 🐈
+caterpillar	🐛
+cats	🐱 🐈
+caution	⚠️
+cd	💿
+celebrate	🎉 🎊
+celebrated	🎉 🎊
+celebrating	🎉 🎊
+celebration	🎉 🎊
+cell	📱
+chain	⛓️
+champagne	🍾 🥂
+champion	🏆
+championship	🏆
+charger	🔌
+chat	💬
+check	✅
+checkbox	☑️
+cheerful	😀
+cheers	🍻
+cheese	🧀
+chemistry	🧪 ⚗️
+chequered	🏁
+cherry	🍒
+chicken	🐔 🍗
+chill	😎
+chips	🍟
+chocolate	🍫
+chocolates	🍫
+christmas	🎄 🎅
+circle	⭕ 🔴
+circus	🎪
+city	🏙️
+clap	👏
+clean	🧼 🫧
+cleaned	🧼
+cleaning	🧹 🧼
+clock	⏰
+clothing	👕
+cloud	☁️
+clouds	☁️
+cloudy	☁️ ⛅
+clown	🤡
+coat	🧥
+cocktail	🍹 🍸
+coffee	☕
+coins	🪙 💰
+cold	🥶 ❄️
+college	🎓
+comedy	🎭
+comment	💬
+complete	✅
+computer	💻
+concern	😟
+concert	🎤 🎫
+cone	🍦
+confused	😕
+congrats	🎉 👏
+congratulate	🎉
+congratulations	🎉 👏
+consider	🤔
+console	🎮
+contest	🏆
+controller	🎮
+convenience	🏪
+cookie	🍪
+cool	😎
+corn	🌽
+correct	✅ ✔️
+cosmetics	💄
+cow	🐮 🐄
+crafts	🧶 🧵
+crash	💥
+crazy	😜 🤪
+creative	🎨
+credit	💳
+crescent	🌙
+cricket	🏏 🦗
+crop	🌾
+cross	❌
+crown	👑
+cruise	🚢 🛳️
+cry	😭 😢
+crying	😭 😢
+crystal	🔮
+cup	🥤 ☕
+curly	➰
+currency	💱 💵
+cut	✂️
+cute	🥰 🩷
+cycle	🚴 🚲
+dairy	🥛 🧀
+dance	💃 🕺
+dancer	💃 🕺
+dancing	💃 🕺
+danger	⚠️ ☠️
+dangerous	⚠️
+dark	🌑 🖤
+data	📊
+date	📅
+dating	💑 💕
+dawn	🌅
+dead	💀
+deadline	⏱️
+deal	🤝
+death	💀 ⚰️
+degree	🎓
+delicious	😋
+delivery	📦
+dental	🦷 🪥
+depressed	😞
+design	🎨
+desktop	🖥️
+dessert	🍰 🍩
+developer	🧑‍💻
+devil	😈
+dial	☎️
+diamond	💎
+diamonds	💎
+diesel	⛽
+dining	🍽️
+dinner	🍽️ 🍴
+director	🎬
+disagree	👎
+disallow	🚫
+disappointed	😔 😞
+disc	💿
+disease	🦠 😷
+dish	🍽️
+display	🖥️
+distress	🆘
+dive	🤿
+diving	🤿
+doctor	🧑‍⚕️ 🩺
+document	📄
+documents	📄
+dog	🐶 🐕
+dogs	🐶 🐕
+dollar	💵
+dolphin	🐬
+done	✅
+donut	🍩
+downtown	🌃
+drama	🎭
+draw	🎨
+drawing	🖍️ 🖌️
+dream	💭
+drink	🍹 ☕
+drive	🚗
+driving	🚗
+drop	💧
+drugs	💊
+drunk	🥴 🍻
+duckling	🐥
+dumplings	🥟
+dunno	🤷
+ear	👂
+earth	🌍 🌎
+easter	🐰 🥚
+eat	😋 🍴
+education	🎓
+egg	🥚 🍳
+eggs	🥚 🍳
+election	🗳️
+electric	⚡
+electricity	⚡ 💡
+elephant	🐘
+email	📧 📩
+emailed	📧
+embarrassed	😳
+emergency	🚨 🆘
+emoji	😀
+energy	⚡
+engaged	💍
+envelope	✉️
+error	⚠️
+euro	💶
+europe	🌍
+evening	🌆 🌙
+evil	😈 👿
+evolution	🧬
+ew	🤮 🤢
+exam	📝 💯
+excellent	👏 💯
+excited	🤩 🎉
+exclamation	❗
+exercise	🏃 🏋️
+exhausted	😩 😫
+exit	🚪
+expensive	💸 🫰
+experiment	🧪 🔬
+explosion	💥
+eye	👁️ 👀
+eyebrow	🤨
+eyeroll	🙄
+eyes	👀
+facepalm	🤦
+fall	🍂 🍁
+falling	🍂 🍁
+fantastic	🤩
+farm	🚜 🐄
+fashion	👗 👠
+fast	💨 ⚡
+faucet	🚰
+favorite	⭐ ❤️
+favourite	⭐ ❤️
+fax	📠
+fear	😱 😨
+feet	🦶 👣
+festival	🎊 🎆
+festive	🎉
+fever	🤒 🌡️
+fight	🥊
+fighting	🥊
+file	📁
+filing	🗄️
+film	🎬
+films	🎬 🍿
+find	🔍
+finger	☝️
+finish	🏁
+fire	🔥
+firetruck	🚒
+fireworks	🎆
+first	🥇
+fish	🐟 🐠
+fisherman	🎣
+fishing	🎣
+fix	🔧
+fixed	✅
+flash	📸
+flight	✈️ 🛫
+flirt	😉 😘
+flood	🌊
+flower	🌸 🌹
+flowers	💐
+fly	✈️ 🪰
+flying	✈️
+food	🍕 🍔
+football	⚽ 🏈
+footwear	👟
+forbid	🚫
+forbidden	🚫
+forest	🌳 🌲
+forever	♾️
+formal	👔 🤵
+frame	🖼️
+friend	🧑‍🤝‍🧑
+friends	🧑‍🤝‍🧑
+friendship	🧑‍🤝‍🧑
+fries	🍟
+frog	🐸
+fruit	🍎 🍓
+frustrated	😤 😠
+fuel	⛽
+funeral	⚰️ ⚱️
+funny	😂 🤣
+furious	😤
+furniture	🪑
+future	🔮
+gadgets	📱
+gambling	🎰 🎲
+game	🎮
+gaming	🎮
+garden	🌷 🏡
+gas	⛽
+gem	💎
+gene	🧬
+genetics	🧬
+germs	🦠
+ghost	👻
+gift	🎁
+glad	😊
+glass	🥃 🍷
+glasses	👓 🕶️
+glitter	✨
+global	🌐
+globe	🌍
+glove	🧤
+gn	😴 🌙
+goal	🥅
+gold	🥇 🪙
+golf	⛳
+good	👍 👏
+goodbye	👋
+gorgeous	😍
+graduate	🎓
+graduated	🎓
+graduating	🎓
+graduation	🎓
+granny	👵
+grapes	🍇
+graph	📈 📊
+grass	🌿 🌱
+grateful	🙏 🥹
+gratitude	🙏 🥹
+gray	🩶
+great	👏
+green	💚 🟢
+greetings	👋
+grey	🩶
+grin	😁
+grinning	😀 😁
+groceries	🛒
+groom	🤵
+gross	🤢 🤮
+group	👥
+grow	🌱 🪴
+growth	📈
+gtg	👋
+guess	🤷
+guitar	🎸
+gun	🔫
+gym	💪
+haha	😂 🤣
+hahaha	😂 🤣
+hair	💇
+halloween	🎃 👻
+halt	✋
+hamburger	🍔
+hands	🙌 👐
+happiness	😊
+happy	😁 😄
+harvest	🌾
+hat	🎩 🧢
+hate	😡
+hbd	🎂 🎉
+headache	🤕
+healing	❤️‍🩹
+healthcare	🧑‍⚕️
+healthy	🥗
+hear	👂
+heart	❤️ 💕
+hearts	💕 💞
+heat	🥵 🔥
+heaven	😇 👼
+hehe	😁 😂
+hello	👋
+help	🆘
+hero	🦸
+hey	👋
+hi	👋
+hide	🙈 🫣
+highway	🛣️
+hike	🥾
+hiked	🥾
+hilarious	😂 🤣
+history	📜
+hit	👊
+hmm	🤔
+holiday	🏖️
+hollywood	🎥
+home	🏠 🏡
+homework	📚 📝
+honey	🍯
+hope	🙏
+horror	😱 🧟
+horse	🐴
+hospital	🏥
+hot	🔥 🌶️
+hotel	🏨
+house	🏠 🏡
+hug	🤗
+hundred	💯
+hungry	😋 🍕
+hurricane	🌀
+hurt	🤕
+ice	🧊
+icecream	🍦
+idea	💡
+identification	🪪 🆔
+identity	🆔
+idk	🤷
+ignore	🙈 🙊
+ill	🤒 😷
+ily	🤟 😍
+impact	💥
+inbox	📥 📧
+increasing	📈
+incredible	🤯 😮
+industry	🏭
+infant	👶 🍼
+info	ℹ️
+injury	🤕
+innocent	😇
+insect	🐛 🐜
+instructor	🧑‍🏫
+instrument	🎸 🎹
+intelligent	🧠 🤓
+international	🌐
+internet	🌐
+invent	💡
+invention	💡
+investigate	🔍 🕵️
+island	🏝️
+jacket	🧥
+japan	🗾
+jazz	🎷 🎺
+jet	✈️
+jewellery	💎 💍
+jewelry	💎 💍
+jewels	💎
+job	💼
+joke	😜
+joy	😂
+juice	🧃
+justice	⚖️
+key	🔑
+keyboard	⌨️ 🎹
+kick	🦵
+king	👑
+kiss	😘 💋
+kitchen	🍳
+kitten	🐱
+kitty	🐱
+knowledge	📚
+lab	🧪 🔬
+laboratory	🔬
+lamp	💡
+laptop	💻
+late	⏰
+laugh	😂 🤣
+laughing	😂 🤣
+launch	🚀
+lavatory	🚻
+leaf	🍃 🍀
+learn	📖
+leaves	🍃 🍂
+leg	🦵
+lemon	🍋
+length	📏
+letter	✉️ 💌
+liberty	🗽
+library	📚
+license	🪪
+lick	👅
+licking	👅
+light	💡
+lightning	⚡
+like	👍
+lion	🦁
+lip	👄
+list	📋
+listen	👂
+lit	🔥
+literature	📚 📖
+littering	🚯
+lmao	😂 🤣
+lmfao	😂 🤣
+location	📍
+lock	🔒
+lol	😂 🤣
+lonely	😔
+look	👀
+looking	👀
+lounge	🛋️
+love	❤️ 😍
+lovely	🥰
+loving	💕
+luck	🤞
+lucky	🍀
+lunch	🍴
+mad	😡 😠
+magic	✨ 🔮
+magical	✨
+magnetic	🧲
+magnify	🔍
+mail	📧
+mall	🛍️ 🏬
+map	🗺️
+margarita	🍸
+marriage	💍 💑
+married	💍
+marry	💍 💒
+mask	😷
+math	🧮 ➗
+maybe	🤷
+meal	🍽️
+meat	🍖 🥩
+medal	🥇 🏅
+medicine	💊
+meditate	🧘
+meeting	🤝
+message	💬
+metal	🤘
+military	🪖
+milk	🥛
+mind	🧠 🤯
+mining	⛏️
+miss	😢 😘
+mobile	📱
+money	💰 💸
+monitor	🖥️
+monkey	🐵 🐒
+moon	🌙 🌚
+morning	🌅 ☕
+mouth	👄
+movie	🎬 🍿
+movies	🎬 🍿
+moving	📦
+muah	😘
+mug	☕
+multiplication	✖️
+muscle	💪
+museum	🖼️ 🎨
+music	🎶 🎵
+musical	🎶 🎵
+mustache	🥸
+mwah	😘
+nah	👎
+nap	😴
+navigation	🧭
+nerd	🤓
+nervous	😅 😰
+network	🌐
+nice	👏 😁
+night	🌃 🌠
+nightmare	😱
+noise	🔊
+nose	👃
+note	📝
+notes	📝
+notification	🔔
+notifications	🔔
+novel	📖
+nuclear	☢️
+nurse	🧑‍⚕️ 💉
+nut	🥜 🔩
+nye	🎆 🥂
+ocean	🌊
+octopus	🐙
 office	💻
+oil	🛢️
+ok	👌 👍
+okay	👌
+omg	😮 😲
+omw	🏃
+oof	😬
+oops	🤭
+orange	🍊 🧡
+outdoors	🏕️
+pad	🗒️
+pain	😣
+paint	🎨
+painted	🎨
+painting	🎨 🖼️
+palm	🌴
+pan	🍳
+panda	🐼
+panic	😱
+pants	👖
+paper	📄
+parents	👪
+party	🎉 🎊
+passport	🛂
+password	🔑
+pasta	🍝
+pastry	🥐
+pause	⏸️
+pay	💸
+payment	💳
+pc	💻
+peace	✌️ 🕊️
+peach	🍑
+pearl	🦪
+penalty	🟥 🟨
+penguin	🐧
+perfect	💯
+performing	🎭
+pet	🐶 🐱
+pharmacy	💊
+phone	📱
+photo	📷
+photography	📷
+physician	🧑‍⚕️
+physics	⚛️
+piano	🎹
+pig	🐷
+pill	💊
+pin	📌 📍
+pinch	🤏
+pine	🌲
+pineapple	🍍
+pink	🩷 🌸
+pirate	🏴‍☠️
+pizza	🍕
+plane	✈️
+planets	🪐
+planning	🗓️
+plant	🌱 🌿
+plate	🍽️
+playstation	🎮
+please	🙏
+pls	🙏
+plz	🙏
+point	👉
+pointing	👉 👆
+poker	🃏
+police	👮
+pollution	🏭
+pool	🏊 🎱
+poop	💩
+popcorn	🍿
+postal	🏣 ✉️
+pot	🍲
+potable	🚰
+potato	🥔
+pound	💷
+pounds	💷
+pour	🫗
+power	⚡
+pray	🙏
+prayer	🙏 📿
+pregnancy	🤰
+pregnant	🤰
+present	🎁
+price	🏷️
+pride	🏳️‍🌈 🌈
+princess	👸
+print	🖨️
+privacy	🔒
+private	🔒
+prize	🏆
+professor	🧑‍🏫
+progress	🚧
+proud	🥹 😊
+pub	🍺 🍻
+pulse	💓
+pumpkin	🎃
+puppy	🐶
+purchase	🛍️
+purple	💜 🟣
+puzzle	🧩
+python	🐍
+queen	👑 👸
+question	❓
+quiet	🤫
+rabbit	🐰
+race	🏁
+racing	🏎️ 🏇
+radiation	☢️
+radio	📻
+rain	☔ 🌧️
+rainbow	🌈
+rained	☔ 🌧️
+random	🎲 🔀
+read	📖
+reading	📖 📚
+red	🔴 ❤️
+refresh	🔄
+relationship	💑
+relax	😌 💆
+relaxed	😌
+relief	😌 😮‍💨
+relieved	😌
+repair	🔧 🧑‍🔧
+rescue	🛟 ⛑️
+respect	🫡 🙇
+rest	🛌
+restaurant	🍽️ 🍴
+restricted	🚫
+reuse	♻️
+rewind	⏪
+rice	🍚
+rich	💰
+riding	🚴 🏇
+ring	💍
+road	🛣️
+robot	🤖
+rock	🪨 🤘
+rocket	🚀
+rod	🎣
+rofl	🤣 😂
+romance	😍 💘
+romantic	😍 😘
+rose	🌹
+rotate	🔄
+row	🚣
+royal	👑
+rugby	🏉
+run	🏃
+running	🏃
+rush	🏃
+sad	😭 😢
+safari	🦁 🦒
+safety	🦺
+sale	🏷️
+salute	🫡
+sand	🏖️ ⏳
+santa	🎅 🧑‍🎄
+sarcastic	🙃
+satisfied	😊
+save	💾
+scared	😱 😰
+scary	😱 👻
+scenery	🏞️
+schedule	📅
+school	🏫 📚
+science	🔬 🧪
+screen	🖥️
+sea	🌊
+search	🔍
+searched	🔍
+searching	🔍
+secret	🤭 🤐
+secure	🔐
+security	🔐
+seed	🌱
+seeing	👀
+selfie	🤳
+send	📩
+sent	📨
+shark	🦈
+shipped	📦
+shipping	📦
+shirt	👕 👔
+shock	😱 🫢
+shocked	😱 😲
+shoe	👟 👞
+shoes	👟 👞
+shop	🛍️
+shopping	🛍️ 🛒
+shot	💉
+shrug	🤷
+shuffle	🔀
+sick	😷 🤒
+signal	📶
+silence	🤫
+silent	🤫 🔇
+silly	🤪
+sing	🎤
+singing	🎤
+sit	🪑
+sketch	✏️
+skip	⏭️
+sky	☁️ 🌌
+sleep	😴 💤
+sleeping	😴
+sleepy	😪
+slot	🎰
+slots	🎰
+slow	🐢 🐌
+smart	🤓 🧠
+smh	🤦
+smile	😊 😁
+smiley	😊 😀
+smiling	😊
+smoke	💨 🚬
+smoking	🚬 🚭
+snack	🍿 🍪
+snake	🐍
+snow	❄️ ☃️
+snowed	❄️
+snowflakes	❄️
+snowman	☃️
+soccer	⚽
+song	🎵 🎶
+sorry	🙇
+sound	🔊
+soup	🍲 🍜
+spa	💆 🧖
+space	🚀 🌌
+spaghetti	🍝
+sparkle	✨
+sparkling	✨
+sparkly	✨
+speak	🗣️
+speaker	🔊
+speaking	🗣️
+speech	💬
+speed	⚡
+spice	🌶️
+spin	🌀
+sport	⚽
+sports	⚽ 🏀
+spring	🌸
+spy	🕵️
+star	⭐ 🌟
+stare	👀
+stars	⭐ 💫
+stats	📊 📈
+steam	♨️
+stone	🪨
+stop	🛑
+store	🏪
+storm	⛈️ 🌪️
+strawberry	🍓
+strength	💪
+stress	😅
+stressed	😅
+strong	💪
+studied	📚
+studio	🎙️
+study	📚
+studying	📚
+subtract	➖
+success	🏆 📈
+suit	🕴️ 🤵
+summer	☀️ 🏖️
+sun	☀️ 🌞
+sunglasses	😎
+sunny	☀️ 🌞
+sunrise	🌅
+sunshine	🌞
+sure	👌
+surprise	😮 🎁
+surprised	😮 😯
+surrender	🏳️
+sus	🤨
+sushi	🍣
+suspicious	🤨
+sweet	🍬 🍭
+swimming	🏊
+sword	🗡️
+sync	🔄
+taco	🌮
+tada	🎉
+tag	🏷️
+talk	💬
+tap	🚰
+tape	📼
+target	🎯
+taste	👅 😋
+tasty	😋
+tea	🍵 ☕
+team	👥
+tear	😢
+tears	😭
+technology	💻
+teddy	🧸
+teeth	🦷
+television	📺
+temperature	🌡️
+tennis	🎾
+tent	⛺
+tentacles	🐙
+tequila	🥃
+test	📝
+text	💬
+texted	💬
+thank	🙏
+thanks	🙏
+theater	🎭
+theatre	🎭
+think	🤔
+thinking	🤔
+third	🥉
+thirsty	🥤
+thought	💭
+thoughts	💭
+thumb	👍
+thumbs	👍
+thunder	⚡ ⛈️
+thx	🙏
+tiara	👑
+tick	✅
+tie	👔 🪢
+tiger	🐯
+time	⏰
+timer	⏲️
+tiny	🤏
+tired	😩 😴
+toast	🍞
+tobacco	🚬
+tokyo	🗼
+tongue	😜 😛
+tonight	🌙
+tools	🛠️
+tornado	🌪️
+toy	🧸 🪀
+trademark	™️
+traffic	🚦
+train	🚂
+training	🏋️
+travel	✈️ 🧳
+traveled	✈️
+traveling	✈️
+travelled	✈️
+travelling	✈️
+treasure	🪎 💰
+tree	🌳 🌲
+trend	📈
+trident	🔱
+trip	🧳
+trophy	🏆
+tropical	🌴 🍹
+truck	🚚 🚛
+tshirt	👕
+ttyl	👋
+turtle	🐢
+tv	📺
+twins	👯
+typing	⌨️
+tysm	🙏
+ufo	🛸 👽
+underground	🚇
+undo	↩️
+unhappy	😢
+unicorn	🦄
+universe	🌌
+university	🎓
+upset	😡 😠
+urban	🏙️
+user	👤
+vacation	🏖️ 🍹
+valentine	🌹 💘
+van	🚐
+vegetable	🥦 🥕
+vegetables	🥦 🥕
+vegetarian	🥗
+veggie	🥦
+venue	🏟️
+versus	🆚
+vibes	✨
+vibration	📳
+victory	✌️ 🏆
+video	📹
+videogame	🎮 🕹️
+virus	🦠
+vitamin	💊 🍊
+volcano	🌋
+vote	🗳️
+voted	🗳️
+voting	🗳️
+wait	⏳
+waiting	⏳ ⏰
+wake	⏰
+wall	🧱
+warning	⚠️
+wash	🧼 🚿
+waste	🗑️
+water	💧
+watermelon	🍉
+wave	👋
+wealthy	🤑
+weather	☀️ 🌈
+web	🌐
+wedding	💍 💒
+weekend	🎉
+weep	😢 😭
+welcome	🤗 👋
+wet	💦
+whale	🐳
+whatever	🙄 🤷
+wheat	🌾
+wheel	🛞
+whiskey	🥃
+whisper	🤫
+whistle	😙
+white	🤍 ⚪
+wifi	🛜 📶
+win	🏆
+wind	🌬️
+wine	🍷
+wink	😉
+winner	🏆 🥇
+winning	🏆
+winter	❄️ ⛄
+wise	🦉
+wish	🌠
+witch	🧙
+wizard	🧙
+woah	😯 😱
+won	🏆
+wonderful	🤩
+woohoo	🎉 🥳
+wool	🐑 🧶
+work	💼
+worker	👷
+workout	🏋️
+world	🌍 🌎
+worldwide	🌐
+worried	😟
+worship	🛐
+wow	🤩 😮
+wrapped	🎁
+write	✍️
+wrong	❌
+xmas	🎄 🎅
+xoxo	😘 💕
+yay	🎉 👏
+yeah	👍
+yellow	🟡 💛
+yep	👍
+yes	👍
+yikes	😬
+yin	☯️
+yoga	🧘
+yum	😋
+yummy	😋
+yup	👍
+zoo	🦁 🐘
+zoom	🔍
