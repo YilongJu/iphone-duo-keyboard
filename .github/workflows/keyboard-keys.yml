@@ -36,6 +36,8 @@ on:
       - 'Shared/word-table-smollm2.bin'
       - 'App/SetupViewController.swift'
       - 'Tests/TypingEngineTests.swift'
+      - 'Tests/EnglishRerankingTests.swift'
+      - 'Shared/EnglishReranking.swift'
       - 'scripts/keyboard-preview/**'
       - 'scripts/ci/capture_screenshots.sh'
       - 'scripts/typing-evaluation/symbol_keys.py'
@@ -88,7 +90,7 @@ jobs:
               Tests/EmojiSuggestionTests.swift Tests/ChineseMarkLabelTests.swift Tests/TopRowEmojiTests.swift \
               Tests/PredictionStripTests.swift Tests/ModelPredictedWordsTests.swift Tests/TypingEngineTests.swift \
               Tests/TypingSpeedTests.swift Tests/WideBottomRowsTests.swift \
-              Tests/LanguageModelScorerTests.swift | awk '{ print $3 }' | tr -d ':'); do
+              Tests/LanguageModelScorerTests.swift Tests/EnglishRerankingTests.swift | awk '{ print $3 }' | tr -d ':'); do
             only+=("-only-testing:DuoKeyboardTests/$class")
           done
           test "${#only[@]}" -ge 5
