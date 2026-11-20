@@ -4,6 +4,31 @@ This file lists what changed in each TestFlight build, the newest build first. E
 the build number, the commit, and the upload time in UTC. An entry says what a person notices
 on the phone first, and then what changed behind it.
 
+## Build 70
+
+Commit `0f9fcf3`, uploaded 2026-11-20 04:47 UTC.
+
+**What you notice**
+
+- The candidate row of Chinese no longer shows the typed Pinyin letters at its left end. The
+  candidates start at the left end, so the row holds more of them. The return key and the
+  newline key still type the letters as they are.
+- Whole syllables with the start of one more syllable offer the words that complete them.
+  "mingt" offers 明天 and 命题 first, and the space bar types 明天.
+- In a longer run of letters, such a word shows at the end of the second candidate. The first
+  candidate still leaves the last letters for the next word.
+
+**Behind it**
+
+- The words come from the Pinyin dictionary, with the most frequent word first. The text
+  before the cursor does not change their order.
+- A pick of such a word is remembered under the typed letters. After a pick of 命题 for
+  "mingt", the same letters give 命题 first.
+- No place of the keyboard shows the typed Pinyin letters now. The candidates are the only
+  sign of them.
+- Letters that end in a whole syllable get no completed word. "mingti" gives 命题 first and
+  does not offer 明天.
+
 ## Build 69
 
 Commit `8e04041`, uploaded 2026-11-18 18:27 UTC.
