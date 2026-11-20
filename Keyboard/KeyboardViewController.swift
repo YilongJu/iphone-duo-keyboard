@@ -233,4 +233,12 @@ final class ProxyDocument: KeyboardDocument {
     func moveCursor(byUTF16Offset offset: Int) {
         proxy.adjustTextPosition(byCharacterOffset: offset)
     }
+
+    func setMarkedText(_ text: String) {
+        proxy.setMarkedText(text, selectedRange: NSRange(location: text.utf16.count, length: 0))
+    }
+
+    func unmarkText() {
+        proxy.unmarkText()
+    }
 }

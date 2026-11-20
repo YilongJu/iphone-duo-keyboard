@@ -15,10 +15,17 @@ protocol KeyboardDocument: AnyObject {
     var documentIdentifier: UUID { get }
     /// False for a field that asks for no autocorrection, such as a web address field.
     var allowsAutocorrection: Bool { get }
+    /// Puts text at the cursor. Marked text that the field holds is replaced by it.
     func insertText(_ text: String)
     func deleteBackward()
     /// Moves the cursor. The offset counts UTF-16 units.
     func moveCursor(byUTF16Offset offset: Int)
+    /// Shows `text` at the cursor as marked text: text that the keyboard still composes, which
+    /// the field draws underlined. Marked text that the field holds already is replaced, and an
+    /// empty text takes it out. The cursor stays right after the marked text.
+    func setMarkedText(_ text: String)
+    /// Ends the composition. The marked text stays in the field as plain text.
+    func unmarkText()
 }
 
 /// Finds the text a person most likely meant for the text they typed.
@@ -486,10 +493,22 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
 
     /// True while the keyboard types Simplified Chinese through Pinyin.
     private(set) var chineseMode = false
-    /// The Pinyin letters typed so far that are not Chinese text yet.
+    /// The Pinyin letters typed so far that are not Chinese text yet. The field shows them as
+    /// marked text, so the person sees what the keys typed. A picked candidate takes the place
+    /// of the letters it covers, and the return key leaves the letters as plain text.
     private(set) var pinyinBuffer = "" {
-        didSet { keyboardView.pinyinLettersWait = !pinyinBuffer.isEmpty }
+        didSet {
+            keyboardView.pinyinLettersWait = !pinyinBuffer.isEmpty
+            showPinyinLettersInTheField()
+        }
     }
+    /// The marked text that the keyboard last put into the field: the Pinyin letters, or an
+    /// empty string while the field holds no marked text of the keyboard.
+    private var markedPinyin = ""
+    /// True once the field's text before the cursor ended with `markedPinyin`. From then on, a
+    /// field whose text no longer ends with the letters was changed by the person or the app.
+    /// A field that never reports its marked text gives no such sign, and the letters stay.
+    private var fieldShowedMarkedPinyin = false
     private var pinyinCandidates: [PinyinCandidate] = []
     /// The candidates picked since the buffer was last empty.
     private var sessionPicks: [PinyinCandidate] = []
@@ -604,8 +623,41 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
         countsTyping = counted
     }
 
+    /// Puts the Pinyin letters into the field as marked text, in place of the marked text that
+    /// the field holds for the keyboard.
+    private func showPinyinLettersInTheField() {
+        guard pinyinBuffer != markedPinyin else { return }
+        // The state changes first: a field can report its change before the call returns.
+        markedPinyin = pinyinBuffer
+        fieldShowedMarkedPinyin = false
+        document.setMarkedText(pinyinBuffer)
+    }
+
+    /// Puts text into the field in the place of the marked Pinyin letters.
+    private func insertInPlaceOfMarkedPinyin(_ text: String) {
+        markedPinyin = ""
+        document.insertText(text)
+    }
+
+    /// Forgets the Pinyin letters after the person or the app moved the cursor or changed the
+    /// text. The field keeps what it holds, and the keyboard edits nothing.
+    private func abandonPinyinLetters() {
+        markedPinyin = ""
+        document.unmarkText()
+        sessionPicks = []
+        pinyinBuffer = ""
+        refreshCandidates()
+    }
+
     /// The owner calls this when the app's text or cursor changed.
     func documentDidChange() {
+        if !markedPinyin.isEmpty {
+            if document.textBeforeCursor.hasSuffix(markedPinyin) {
+                fieldShowedMarkedPinyin = true
+            } else if fieldShowedMarkedPinyin {
+                abandonPinyinLetters()
+            }
+        }
         if let allText, allText != currentText() {
             setAllText(nil)
         }
@@ -1112,7 +1164,7 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
     private func insertEmoji(_ emoji: String) {
         if !pinyinBuffer.isEmpty {
             guard let first = pinyinCandidates.first else { return }
-            document.insertText(emoji)
+            insertInPlaceOfMarkedPinyin(emoji)
             // The emoji ends the phrase of the picks before it, so the engine learns no phrase.
             sessionPicks = []
             pinyinBuffer.removeFirst(first.consumedLetters)
@@ -1168,11 +1220,19 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
     /// `KeyboardTextLogic.removesSpaceAfterOpeningQuote(committing:)`. As after a letter in
     /// English mode, a delete right after it is a plain delete.
     private func insertCommittedPinyin(_ text: String) {
+        // The field holds the Pinyin letters as marked text, and the rule reads the text before them.
+        let before = document.textBeforeCursor
+        let beforeLetters = before.hasSuffix(markedPinyin) ? String(before.dropLast(markedPinyin.count)) : before
         if document.selectedText == nil, KeyboardTextLogic.removesSpaceAfterOpeningQuote(
-            committing: text, before: document.textBeforeCursor, allowsAutocorrection: document.allowsAutocorrection) {
+            committing: text, before: beforeLetters, allowsAutocorrection: document.allowsAutocorrection) {
+            // The space stands before the marked letters, so the letters leave the field first.
+            if !markedPinyin.isEmpty {
+                markedPinyin = ""
+                document.setMarkedText("")
+            }
             document.deleteBackward()
         }
-        document.insertText(text)
+        insertInPlaceOfMarkedPinyin(text)
     }
 
     /// Handles a typed character while the keyboard types Chinese.

@@ -97,6 +97,15 @@ final class MeteredDocument: KeyboardDocument {
     func moveCursor(byUTF16Offset offset: Int) {
         base.moveCursor(byUTF16Offset: offset)
     }
+
+    // Marked text is no typed character yet. The text that takes its place counts when it goes in.
+    func setMarkedText(_ text: String) {
+        base.setMarkedText(text)
+    }
+
+    func unmarkText() {
+        base.unmarkText()
+    }
 }
 
 /// The typing speed in the top row, between Select All and the prediction strip: the number of

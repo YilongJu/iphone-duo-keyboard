@@ -488,4 +488,12 @@ final class TextViewDocument: KeyboardDocument {
             ?? (offset < 0 ? textView.beginningOfDocument : textView.endOfDocument)
         textView.selectedTextRange = textView.textRange(from: target, to: target)
     }
+
+    func setMarkedText(_ text: String) {
+        textView.setMarkedText(text, selectedRange: NSRange(location: text.utf16.count, length: 0))
+    }
+
+    func unmarkText() {
+        textView.unmarkText()
+    }
 }

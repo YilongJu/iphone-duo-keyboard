@@ -24,14 +24,34 @@ final class FakeDocument: KeyboardDocument {
 
     private var fullBefore: String { (text as NSString).substring(to: cursor) }
 
+    /// True hands out the text without the marked text, as a field that does not report it.
+    var hidesMarkedText = false
+
     var textBeforeCursor: String {
-        let before = fullBefore
+        var before = fullBefore
+        if hidesMarkedText, before.hasSuffix(markedText) { before = String(before.dropLast(markedText.count)) }
         guard onlyCurrentLine, let lineBreak = before.lastIndex(of: "\n") else { return before }
         return String(before[before.index(after: lineBreak)...])
     }
     var textAfterCursor: String { (text as NSString).substring(from: cursor) }
 
+    /// The marked text: the text right before the cursor that the keyboard still composes, or
+    /// an empty string. `text` holds it too, as a field shows it.
+    private(set) var markedText = ""
+    /// Every call that changed the marked text, for a test of the calls the keyboard makes.
+    private(set) var markedTextCalls: [String] = []
+
+    /// Takes the marked text out of the field, as an insert or a new marked text does first.
+    private func removeMarkedText() {
+        guard !markedText.isEmpty else { return }
+        precondition(fullBefore.hasSuffix(markedText), "the marked text stands right before the cursor")
+        text = String(fullBefore.dropLast(markedText.count)) + textAfterCursor
+        cursor -= markedText.utf16.count
+        markedText = ""
+    }
+
     func insertText(_ inserted: String) {
+        removeMarkedText()
         text = fullBefore + inserted + textAfterCursor
         cursor += inserted.utf16.count
     }
@@ -41,10 +61,32 @@ final class FakeDocument: KeyboardDocument {
         guard let last = before.last else { return }
         text = String(before.dropLast()) + textAfterCursor
         cursor -= String(last).utf16.count
+        // A delete inside the marked text takes its last character, as in a field.
+        if !markedText.isEmpty { markedText.removeLast() }
     }
 
     func moveCursor(byUTF16Offset offset: Int) {
+        // A field ends the composition when the cursor moves.
+        markedText = ""
         cursor = min(max(cursor + offset, 0), text.utf16.count)
+    }
+
+    func setMarkedText(_ marked: String) {
+        markedTextCalls.append(marked)
+        removeMarkedText()
+        text = fullBefore + marked + textAfterCursor
+        cursor += marked.utf16.count
+        markedText = marked
+    }
+
+    func unmarkText() {
+        markedText = ""
+    }
+
+    /// The person taps at another place: the field ends the composition and moves the cursor.
+    func tap(atUTF16Offset offset: Int) {
+        markedText = ""
+        cursor = min(max(offset, 0), text.utf16.count)
     }
 }
 
@@ -550,7 +592,9 @@ final class KeyboardTextControllerTests: XCTestCase {
         type("nihao")
         waitForDelayedEdits()
         // The old text is gone, and the letters wait in the Pinyin buffer as usual.
-        XCTAssertEqual(document.text, "")
+        // The field shows the letters as marked text until a candidate takes their place.
+        XCTAssertEqual(document.text, "nihao")
+        XCTAssertEqual(document.markedText, "nihao")
         XCTAssertEqual(controller.pinyinBuffer, "nihao")
         type(" ")
         XCTAssertEqual(document.text, "\u{4F60}\u{597D}")
@@ -603,7 +647,8 @@ final class KeyboardTextControllerTests: XCTestCase {
         let candidates = PinyinEngine(dictionaryText: testDictionary).candidates(for: "wonihao")
         let shorter = candidates.firstIndex { $0.word == "\u{6211}" }!
         controller.keyboardView(keyboardView, didSelectCandidateAt: shorter)
-        XCTAssertEqual(document.text, "\u{6211}")
+        XCTAssertEqual(document.text, "\u{6211}nihao")
+        XCTAssertEqual(document.markedText, "nihao")
         XCTAssertEqual(controller.pinyinBuffer, "nihao")
         type(" ")
         XCTAssertEqual(document.text, "\u{6211}\u{4F60}\u{597D}")
@@ -649,7 +694,9 @@ final class KeyboardTextControllerTests: XCTestCase {
         makeController(before: "")
         controller.keyboardView(keyboardView, edit: .toggleLanguage)
         type("nihao")
-        XCTAssertEqual(document.text, "")
+        // The field shows the letters as marked text until a candidate takes their place.
+        XCTAssertEqual(document.text, "nihao")
+        XCTAssertEqual(document.markedText, "nihao")
         XCTAssertEqual(controller.pinyinBuffer, "nihao")
         type(" ")
         XCTAssertEqual(document.text, "\u{4F60}\u{597D}")
@@ -662,7 +709,8 @@ final class KeyboardTextControllerTests: XCTestCase {
         type("nihao")
         // Candidates: the phrase for "ni hao", then the two characters for "ni".
         type("2")
-        XCTAssertEqual(document.text, "\u{4F60}")
+        XCTAssertEqual(document.text, "\u{4F60}hao")
+        XCTAssertEqual(document.markedText, "hao")
         XCTAssertEqual(controller.pinyinBuffer, "hao")
     }
 
@@ -686,7 +734,8 @@ final class KeyboardTextControllerTests: XCTestCase {
         type("wo")
         controller.keyboardViewDeleteBackward(keyboardView)
         XCTAssertEqual(controller.pinyinBuffer, "w")
-        XCTAssertEqual(document.text, "a")
+        XCTAssertEqual(document.text, "aw")
+        XCTAssertEqual(document.markedText, "w")
     }
 
     func testPunctuationTypesTheWordAndTheChineseMark() {

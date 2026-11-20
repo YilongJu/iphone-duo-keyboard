@@ -312,7 +312,7 @@ final class TypingSpeedTests: XCTestCase {
     func testPinyinLettersKeepARunOfTypingGoing() {
         makeKeyboard()
         controller.keyboardView(keyboardView, edit: .toggleLanguage)
-        // The letters wait outside the text, so they add no character, and the run goes on.
+        // The letters are marked text, which is no typed character yet, and the run goes on.
         type("ni")
         now = 2.5
         controller.keyboardView(keyboardView, insert: " ")
