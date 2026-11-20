@@ -192,12 +192,39 @@ final class TypingEngineTests: XCTestCase {
         XCTAssertEqual(first?.consumedLetters, 25)
     }
 
-    func testLettersOfAnUnfinishedSyllableStayInTheBuffer() {
+    func testFirstLettersOfTheNextWordStayInTheBuffer() {
         let engine = bundledEngine()
-        // "h" may start the next syllable, so the first candidate does not use the letter up.
-        XCTAssertEqual(engine.candidates(for: "nih").first, PinyinCandidate(word: "\u{4F60}", consumedLetters: 2, spelling: "ni"))
-        // "tq" are the first letters of the next word.
+        // "tq" are the first letters of the next word. No syllable starts with "tq".
         XCTAssertEqual(engine.candidates(for: "jintiantq").first, PinyinCandidate(word: "\u{4ECA}\u{5929}", consumedLetters: 7, spelling: "jintian"))
+    }
+
+    func testTheStartOfOneMoreSyllableOffersTheWordsThatCompleteTheLetters() {
+        let engine = bundledEngine()
+        // The words for "ming tian" and "ming ti", with the more frequent word first.
+        let candidates = engine.candidates(for: "mingt")
+        XCTAssertEqual(Array(candidates.prefix(2)), [
+            PinyinCandidate(word: "\u{660E}\u{5929}", consumedLetters: 5, spelling: "mingt"),
+            PinyinCandidate(word: "\u{547D}\u{9898}", consumedLetters: 5, spelling: "mingt"),
+        ])
+        // The reading that leaves "t" in the buffer stays in the list.
+        XCTAssertTrue(candidates.contains { $0.word == "\u{660E}" && $0.consumedLetters == 4 }, "\(candidates)")
+        // "h" is the start of "hao", so the word for "ni hao" leads.
+        XCTAssertEqual(engine.candidates(for: "nih").first, PinyinCandidate(word: "\u{4F60}\u{597D}", consumedLetters: 3, spelling: "nih"))
+    }
+
+    func testAPickOfACompletedWordComesFirstTheNextTime() {
+        let engine = bundledEngine()
+        let picked = engine.candidates(for: "mingt").first { $0.word == "\u{547D}\u{9898}" }!
+        engine.learn(spelling: picked.spelling, word: picked.word)
+        XCTAssertEqual(engine.candidates(for: "mingt").first?.word, "\u{547D}\u{9898}")
+    }
+
+    func testASentenceMayEndWithAWordThatCompletesTheLetters() {
+        let candidates = bundledEngine().candidates(for: "wojintianqumingt")
+        // The sentence follows the first candidate, or the first two when "t" reads as a slip.
+        XCTAssertTrue(
+            candidates.prefix(3).contains { $0.word.hasSuffix("\u{660E}\u{5929}") && $0.consumedLetters == 16 },
+            "\(candidates.prefix(5))")
     }
 
     func testLettersAtTheEndThatChangeTheTextAreReadAsASlip() {

@@ -20,7 +20,9 @@ struct PinyinCandidate: Equatable {
 /// frequencies. The candidates after that are single words for the leading syllables. A pick of
 /// a shorter word leaves the other letters in the buffer, and the engine converts those again.
 ///
-/// Three more rules:
+/// Four more rules:
+/// - Whole syllables with the start of one more syllable after them offer the words that
+///   complete them, so "mingt" offers the words for "ming tian" and "ming ti".
 /// - The engine remembers each pick, and a remembered word comes first for its spelling.
 /// - Letters that do not form syllables count as first letters, so "nh" offers the words whose
 ///   syllables start with "n" and "h".
@@ -36,6 +38,9 @@ final class PinyinEngine {
     private var entries: [String: [Entry]] = [:]
     /// Words of two or more syllables by the first letters of their syllables, as in "nh".
     private var wordsByFirstLetters: [String: [(word: String, spelling: String)]] = [:]
+    /// Words of two or more syllables by all their syllables but the last, as in "ming" for
+    /// "ming tian". Each list is in file order, with the most frequent word first.
+    private var wordsByLeadingSyllables: [String: [(word: String, lastSyllable: String)]] = [:]
     /// Every one-syllable entry in file order, for a syllable the user has typed only in part.
     private var singles: [(syllable: String, word: String)] = []
     private var syllables: Set<String> = []
@@ -63,6 +68,13 @@ final class PinyinEngine {
     static let longestLearnedPhrase = 8
     /// Places in the candidate list kept for this class's own dictionary words.
     private static let placesForDictionaryWords = 8
+    /// The candidate list holds this many words at most that complete the syllable at the end
+    /// of the typed letters, and this many sentences at most that end with such a word.
+    private static let placesForCompletedWords = 8
+    /// A sentence gets a completed word of this many syllables at most at its end.
+    private static let longestCompletedWord = 4
+    /// One count of syllables gives this many completed words at most at the end of a sentence.
+    private static let completedWordsPerLength = 3
 
     /// One syllable of the typed letters, with the count of typed characters it covers.
     /// The count includes an apostrophe typed after the syllable.
@@ -98,8 +110,11 @@ final class PinyinEngine {
                 Entry(word: item.word, logProbability: log(item.frequency / total)))
             if item.key.contains(" ") {
                 longestWord = max(longestWord, item.word.count)
-                let firstLetters = String(item.key.split(separator: " ").compactMap { $0.first })
+                let parts = item.key.split(separator: " ")
+                let firstLetters = String(parts.compactMap { $0.first })
                 wordsByFirstLetters[firstLetters, default: []].append((item.word, item.key))
+                wordsByLeadingSyllables[parts.dropLast().joined(separator: " "), default: []]
+                    .append((item.word, String(parts[parts.count - 1])))
             } else {
                 singles.append((item.key, item.word))
                 syllables.insert(item.key)
@@ -255,6 +270,19 @@ final class PinyinEngine {
         return Entry(word: learned, logProbability: max(top?.logProbability ?? Self.learnedLogProbability, Self.learnedLogProbability))
     }
 
+    /// The dictionary's words that start with the syllables `leading` and whose last syllable
+    /// starts with `start`, with the most frequent word first. For "ming" and "t" the words
+    /// are those of "ming tian", "ming ti" and so on.
+    private func wordsCompleting(_ leading: ArraySlice<String>, lastSyllableStart start: String, limit: Int) -> [String] {
+        var result: [String] = []
+        for match in wordsByLeadingSyllables[leading.joined(separator: " ")] ?? []
+        where match.lastSyllable.hasPrefix(start) {
+            if result.count >= limit { break }
+            result.append(match.word)
+        }
+        return result
+    }
+
     /// The most likely sentence for the syllables, or nil when some syllable has no word at all.
     /// `best[i]` holds the most likely text for the first `i` syllables.
     func sentence(for syllables: [String]) -> String? {
@@ -291,6 +319,14 @@ final class PinyinEngine {
     ///   syllable the person has not finished, or the first letters of the next word, so the
     ///   first candidate leaves them in the buffer. When the texts differ, the reading of all
     ///   the letters leads, as for "shoujj", where the other letters are a slip.
+    ///
+    /// With and without the typing engine, whole syllables with the start of one more syllable
+    /// after them, as in "mingt", get two more kinds of candidates:
+    /// - The dictionary's words that complete all the letters, as the words for "ming tian" and
+    ///   "ming ti". These words lead the list, after the remembered picks.
+    /// - Sentences that end with a word that completes the last syllables, as the sentence for
+    ///   "wo" with the word for "ming tian" after it for "womingt". These sentences follow the
+    ///   first candidate, or the first two candidates when the other letters read as a slip.
     func candidates(for letters: String, limit: Int = 60) -> [PinyinCandidate] {
         let (units, remainder) = split(letters)
         var result: [PinyinCandidate] = []
@@ -341,6 +377,43 @@ final class PinyinEngine {
             }
             addFirstLetterWords()
         }
+        /// True when the letters after the whole syllables may be the start of one more syllable.
+        let endsInsideASyllable = !units.isEmpty && !remainder.isEmpty && !remainder.contains("'")
+        /// The words that complete all the letters. A pick is remembered under the typed letters.
+        func addWordsThatCompleteAllLetters() {
+            guard endsInsideASyllable else { return }
+            let words = wordsCompleting(parsed[...], lastSyllableStart: remainder, limit: Self.placesForCompletedWords)
+            for word in words {
+                add(word, consumed: letters.count, spelling: letters)
+            }
+        }
+        /// The sentences that end with a word that completes the last syllables. The longest
+        /// completed words come first.
+        func addSentencesThatEndWithACompletedWord() {
+            guard endsInsideASyllable else { return }
+            var places = Self.placesForCompletedWords
+            var wholeSyllables = min(units.count - 1, Self.longestCompletedWord - 1)
+            while wholeSyllables > 0, places > 0 {
+                let start = units.count - wholeSyllables
+                wholeSyllables -= 1
+                let words = wordsCompleting(
+                    parsed[start...], lastSyllableStart: remainder, limit: min(places, Self.completedWordsPerLength))
+                if words.isEmpty { continue }
+                let lettersBefore = String(letters.prefix(units[0..<start].reduce(0) { $0 + $1.characters }))
+                let textBefore: String?
+                if let decoder = self.decoder, !letters.contains("'") {
+                    let reading = decoder.candidates(for: lettersBefore, limit: 1).first
+                    textBefore = reading?.consumedLetters == lettersBefore.count ? reading?.text : nil
+                } else {
+                    textBefore = sentence(for: Array(parsed[0..<start]))
+                }
+                guard let textBefore else { continue }
+                for word in words {
+                    add(textBefore + word, consumed: letters.count, spelling: letters)
+                    places -= 1
+                }
+            }
+        }
 
         // The typing engine does not read the apostrophe that forces a syllable break, so
         // letters with an apostrophe go through this class's own reading only.
@@ -348,6 +421,11 @@ final class PinyinEngine {
             if units.isEmpty {
                 addWordsForPartOfASyllable()
             } else {
+                addWordsThatCompleteAllLetters()
+                if let sentence = sentence(for: parsed) {
+                    add(sentence, consumed: allCharacters, spelling: parsed.joined(separator: " "))
+                }
+                addSentencesThatEndWithACompletedWord()
                 addDictionaryWords()
             }
             return result
@@ -356,6 +434,7 @@ final class PinyinEngine {
         for word in learnedWords[letters] ?? [] {
             add(word, consumed: letters.count, spelling: letters)
         }
+        addWordsThatCompleteAllLetters()
         if units.isEmpty {
             addWordsForPartOfASyllable()
             // Letters that are neither first letters nor part of a syllable hold a slip at
@@ -365,6 +444,8 @@ final class PinyinEngine {
         }
         let engineLimit = max(limit - Self.placesForDictionaryWords, 1)
         var readings = decoder.candidates(for: letters, limit: engineLimit)
+        /// Count of readings that stay ahead of the sentences that end with a completed word.
+        var leadingReadings = 1
         if !remainder.isEmpty {
             let wholeSyllables = decoder.candidates(for: String(letters.prefix(allCharacters)), limit: engineLimit)
             if let all = readings.first, let part = wholeSyllables.first {
@@ -373,10 +454,13 @@ final class PinyinEngine {
                 } else {
                     // The reading that leaves the other letters in the buffer comes second.
                     readings.insert(part, at: 1)
+                    leadingReadings = 2
                 }
             }
         }
-        addReadings(readings)
+        addReadings(Array(readings.prefix(leadingReadings)))
+        addSentencesThatEndWithACompletedWord()
+        addReadings(Array(readings.dropFirst(leadingReadings)))
         // The last places go to this class's own dictionary words.
         addDictionaryWords()
         return result

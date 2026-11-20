@@ -991,7 +991,9 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
             if let first = pinyinCandidates.first, document.allowsAutocorrection {
                 items.insert(contentsOf: emojiSuggestions.chinese(for: first.word).map { RowItem.emoji($0) }, at: 1)
             }
-            composition = pinyinEngine.display(for: pinyinBuffer)
+            // The row does not show the typed letters, so the candidates have its whole width.
+            // The return key types the letters as they are.
+            composition = ""
         } else {
             let emoji = englishEmoji()
             keyboardView.showPredictionStrip(emoji: emoji, words: predictedWords())

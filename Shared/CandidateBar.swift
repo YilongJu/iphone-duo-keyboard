@@ -10,22 +10,29 @@ final class CandidateScrollView: UIScrollView {
 }
 
 /// The candidate row: the Chinese candidates, or the proofreader's fix of a sentence. The row
-/// lies in the place of the prediction strip, so the keys of the top row stay in view. The typed
-/// Pinyin sits at the left, and the candidate words scroll sideways to its right. The first word
-/// is the one the space bar types.
+/// lies in the place of the prediction strip, so the keys of the top row stay in view. The
+/// words scroll sideways, and the first word is the one the space bar types. The proofreader's
+/// fix has a caption at the left. The Chinese candidates have none, so they start at the left
+/// end: the row does not show the typed Pinyin letters.
 final class CandidateBar: UIView {
     /// Called with the index of the word the user tapped.
     var onSelect: ((Int) -> Void)?
-    /// Called when the user tapped the typed letters at the row's left end.
+    /// Called when the user tapped the caption at the row's left end.
     var onSelectComposition: (() -> Void)?
 
     private let compositionLabel = UILabel()
+    /// The caption at the row's left end. The unit tests read this value.
+    var caption: String { compositionLabel.text ?? "" }
+    /// The left edge of the words in the row. The unit tests read this value.
+    var wordsMinX: CGFloat { scrollView.frame.minX }
     private let scrollView = CandidateScrollView()
     private var buttons: [UIButton] = []
     /// Holds the ripples of the taps. The row clips them to its capsule.
     private let rippleHost = UIView()
     /// Count of ripples in the row now. The unit tests read this value.
     var rippleCount: Int { rippleHost.layer.sublayers?.count ?? 0 }
+    /// The room between the row's left end and the words of a row without a caption, in points.
+    static let wordsInset: CGFloat = 6
 
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -106,7 +113,9 @@ final class CandidateBar: UIView {
         rippleHost.frame = bounds
         let labelWidth = min(compositionLabel.intrinsicContentSize.width, bounds.width * 0.4)
         compositionLabel.frame = CGRect(x: 14, y: 0, width: labelWidth, height: bounds.height)
-        let scrollX = compositionLabel.frame.maxX + 8
+        // Without a caption the words start near the row's left end.
+        let scrollX = labelWidth > 0 ? compositionLabel.frame.maxX + 8 : Self.wordsInset
+
         scrollView.frame = CGRect(x: scrollX, y: 0, width: max(bounds.width - scrollX - 10, 0), height: bounds.height)
         var x: CGFloat = 0
         for button in buttons {

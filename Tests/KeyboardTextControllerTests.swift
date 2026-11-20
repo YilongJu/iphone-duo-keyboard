@@ -623,6 +623,28 @@ final class KeyboardTextControllerTests: XCTestCase {
         XCTAssertEqual(document.text, "\u{4F60}\u{597D}nihao\u{6211}")
     }
 
+    func testTheCandidateRowDoesNotShowTheTypedPinyinLetters() {
+        makeController(before: "")
+        controller.keyboardView(keyboardView, edit: .toggleLanguage)
+        type("nihao")
+        let row = keyboardView.candidateBar
+        XCTAssertFalse(row.isHidden)
+        XCTAssertEqual(row.caption, "")
+        // The candidates start at the row's left end.
+        row.frame = CGRect(x: 0, y: 0, width: 300, height: 40)
+        row.layoutIfNeeded()
+        XCTAssertEqual(row.wordsMinX, CandidateBar.wordsInset)
+    }
+
+    func testSpaceTypesTheWordThatCompletesTheLetters() {
+        makeController(before: "")
+        controller.keyboardView(keyboardView, edit: .toggleLanguage)
+        // "h" is the start of "hao", and the dictionary holds a word for "ni hao".
+        type("nih ")
+        XCTAssertEqual(document.text, "\u{4F60}\u{597D}")
+        XCTAssertEqual(controller.pinyinBuffer, "")
+    }
+
     func testPinyinLettersWaitInTheBufferAndSpaceTypesTheFirstCandidate() {
         makeController(before: "")
         controller.keyboardView(keyboardView, edit: .toggleLanguage)
@@ -1418,6 +1440,42 @@ final class PinyinEngineTests: XCTestCase {
     func testAnIncompleteSyllableOffersCharactersThatStartThatWay() {
         let words = engine.candidates(for: "zh").map { $0.word }
         XCTAssertEqual(words, ["\u{4E2D}"])
+    }
+
+    /// "ming tian" is more frequent than "ming ti", and "ming bai" does not start with "t".
+    private let completing = PinyinEngine(dictionaryText: [
+        "wo\t\u{6211}\t1000", "ming\t\u{660E}\t900", "ming tian\t\u{660E}\u{5929}\t800",
+        "ming bai\t\u{660E}\u{767D}\t700", "ming ti\t\u{547D}\u{9898}\t100", "tian\t\u{5929}\t60", "ti\t\u{9898}\t50",
+    ].joined(separator: "\n"))
+
+    func testTheStartOfOneMoreSyllableOffersTheWordsThatCompleteTheLetters() {
+        XCTAssertEqual(completing.candidates(for: "mingt"), [
+            PinyinCandidate(word: "\u{660E}\u{5929}", consumedLetters: 5, spelling: "mingt"),
+            PinyinCandidate(word: "\u{547D}\u{9898}", consumedLetters: 5, spelling: "mingt"),
+            PinyinCandidate(word: "\u{660E}", consumedLetters: 4, spelling: "ming"),
+        ])
+    }
+
+    func testALetterThatStartsNoWordOfTheDictionaryAddsNoCandidate() {
+        XCTAssertEqual(completing.candidates(for: "mingz"), [
+            PinyinCandidate(word: "\u{660E}", consumedLetters: 4, spelling: "ming"),
+        ])
+    }
+
+    func testAnApostropheBeforeTheStartOfTheSyllableCountsAsATypedCharacter() {
+        let first = completing.candidates(for: "ming't").first
+        XCTAssertEqual(first, PinyinCandidate(word: "\u{660E}\u{5929}", consumedLetters: 6, spelling: "ming't"))
+    }
+
+    func testASentenceMayEndWithAWordThatCompletesTheLetters() {
+        // No word of the dictionary starts with "wo ming", so the sentence for the whole
+        // syllables leads, and it leaves "t" in the buffer.
+        XCTAssertEqual(completing.candidates(for: "womingt"), [
+            PinyinCandidate(word: "\u{6211}\u{660E}", consumedLetters: 6, spelling: "wo ming"),
+            PinyinCandidate(word: "\u{6211}\u{660E}\u{5929}", consumedLetters: 7, spelling: "womingt"),
+            PinyinCandidate(word: "\u{6211}\u{547D}\u{9898}", consumedLetters: 7, spelling: "womingt"),
+            PinyinCandidate(word: "\u{6211}", consumedLetters: 2, spelling: "wo"),
+        ])
     }
 
     func testDisplayMarksTheSyllables() {

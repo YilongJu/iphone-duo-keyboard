@@ -150,7 +150,8 @@ final class KeyboardView: UIView {
     /// the keys of the top row stay in view and react.
     let candidateBar = CandidateBar()
 
-    /// Shows the typed Pinyin and its candidate words, or hides the bar when `composition` is nil.
+    /// Shows the candidate words with the caption `composition` at their left, or hides the bar
+    /// when `composition` is nil. The Chinese candidates have an empty caption.
     func showCandidates(composition: String?, words: [String]) {
         if let composition {
             candidateBar.show(composition: composition, words: words)
