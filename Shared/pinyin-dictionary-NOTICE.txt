@@ -1,18 +1,17 @@
-pinyin-dictionary.txt is derived from rawdict_utf16_65105_freq.txt in the Android Open Source
-Project, platform/packages/inputmethods/PinyinIME.
+pinyin-dictionary.txt holds the most frequent words of the Pinyin lexicon with their Pinyin and
+a frequency. scripts/pinyin-dictionary/build_dictionary.py makes the file from two sources:
 
-Copyright (c) 2009, The Android Open Source Project
+  - The dictionary and the language model of the fcitx5 libime project, the files that
+    lexicon-NOTICE.txt names for lexicon-pinyin.bin: the words, their Pinyin and the frequency of
+    a word without a Wanxiang weight. Both files are under the GNU Lesser General Public
+    License, version 2.1 or later (https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html).
+  - The word lists of the Wanxiang project (https://github.com/amzxyz/rime-wanxiang, commit
+    e52c2958464d23fe2675f7c6770d921926b5d245): the weight of a word, which the file holds as
+    its frequency, and the words that scripts/pinyin-dictionary/modern_words.py adds. The lists
+    are under the Creative Commons Attribution 4.0 International license
+    (https://creativecommons.org/licenses/by/4.0/).
 
-Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
-in compliance with the License. You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software distributed under the License
-is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
-or implied. See the License for the specific language governing permissions and limitations under
-the License.
-
-Changes: entries outside the GB2312 character set are removed, the frequencies are rounded to
-five digits, and the entries are sorted with the most frequent word first. scripts/pinyin-dictionary/build_dictionary.py
-makes the file.
+pinyin-dictionary.txt is under the GNU Lesser General Public License, version 2.1 or later, with
+the attribution to the Wanxiang project that its license asks for. Changes: the file keeps the
+48,000 most frequent words of two or more characters and the characters in common use, leaves
+out a reading with less than 5% of a word's uses, and writes the Pinyin without tone marks.

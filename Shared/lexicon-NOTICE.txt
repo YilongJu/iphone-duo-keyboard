@@ -15,7 +15,26 @@ lexicon-pinyin.bin
   costs, the 1,250,000 word pairs with the highest weight, the 231,023 further pairs that a kept
   triple needs, all 2,189,434 word triples, and adds the spellings "lve", "nve", "lue" and "nue".
   It stores the pair and triple values in steps of 1/2048 and 1/256 of a natural-log unit. The
-  converter and the workflow in this repository rebuild the file from the two source files.
+  converter and the workflow in this repository rebuild the file from the two source files and
+  from scripts/pinyin-dictionary/pinyin-updates.tsv.gz.
+
+  scripts/pinyin-dictionary/pinyin-updates.tsv.gz gives 21,482 words of the libime model a
+  higher probability and adds 469,402 words that the model lacks.
+  scripts/pinyin-dictionary/modern_words.py makes it from these sources:
+
+  - The word lists jichu, mingren, yiren and diming of the Wanxiang project,
+    https://github.com/amzxyz/rime-wanxiang, commit e52c2958464d23fe2675f7c6770d921926b5d245,
+    under the Creative Commons Attribution 4.0 International license
+    (https://creativecommons.org/licenses/by/4.0/). The update file takes the added words,
+    their Pinyin without tone marks, and probabilities fitted to the lists' weights.
+  - The lists zhwiki-20261018 and web-slang-20261018 of
+    https://github.com/felixonmars/fcitx5-pinyin-zhwiki, release 0.3.1: the article titles of
+    the Chinese Wikipedia and the terms of its list of web slang, from text under the Creative
+    Commons Attribution-ShareAlike 4.0 license (https://creativecommons.org/licenses/by-sa/4.0/).
+    The script uses them only to decide whether a Wanxiang word is a known term. The update
+    file holds no title that Wanxiang does not hold.
+
+  lexicon-pinyin.bin carries the attribution to the Wanxiang project that its license asks for.
 
 lexicon-english.bin
 

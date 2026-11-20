@@ -30,10 +30,21 @@ its end, with the chance of each word at the start and of the end after each wor
 keeps the marks that the model lists under spellings that nobody can type (the bytes 1 and 2),
 so the engine can ask how likely a word is to open or to close a sentence.
 
+With --updates FILE the script also reads the lines that scripts/pinyin-dictionary/modern_words.py
+writes: a word, its Pinyin with an apostrophe between syllables, and the base-10 log of its
+probability, with a tab between the three. A file name that ends in ".gz" is a gzip file.
+- A line without Pinyin is a new value: a word of the model gets the given probability in place
+  of its own. The word keeps its back-off weight, its pairs and its triples. The script chooses
+  the pairs and the triples to keep before it reads the new values, so they do not change them.
+- A line with Pinyin is an addition: a word that the model does not hold joins the lexicon under
+  that spelling, with the given probability, a back-off weight of 0 and no pair.
+
 Usage, from the repository root, on a machine that holds the unpacked files:
     python3 scripts/typing-engine/build_pinyin_lexicon_from_libime.py FOLDER PAIRS [TRIPLES] [--gain higher]
+        [--updates FILE] [--output FILE]
 """
 import argparse
+import gzip
 import heapq
 import math
 import re
@@ -165,6 +176,8 @@ def main():
     parser.add_argument("triples", type=int, nargs="?", default=0, help="the number of word triples to keep by weight")
     parser.add_argument("--gain", choices=["any", "higher"], default="any",
                         help="keep the entries on both sides of their back-off estimate, or only the entries above it")
+    parser.add_argument("--updates", type=Path, help="new values and additions from scripts/pinyin-dictionary/modern_words.py")
+    parser.add_argument("--output", type=Path, default=OUTPUT, help="the lexicon file to write")
     arguments = parser.parse_args()
     folder = arguments.folder
     report = [f"settings: {arguments.pairs} pairs, {arguments.triples} triples, gain {arguments.gain}"]
@@ -178,6 +191,28 @@ def main():
         f"language model: {counts['triples']} triples between known words, {counts['triples_above']} of them above "
         f"their back-off estimate, {len(kept_triples)} triples kept, {counts['pairs_for_triples']} more pairs kept "
         f"because a kept triple needs them")
+
+    additions = []
+    if arguments.updates is not None:
+        changed = 0
+        opener = gzip.open if arguments.updates.suffix == ".gz" else open
+        with opener(arguments.updates, "rt", encoding="utf-8") as file:
+            update_lines = file.read().splitlines()
+        for line in update_lines:
+            fields = line.split("\t")
+            if len(fields) != 3:
+                raise SystemExit(f"unexpected update line: {line!r}")
+            text, pinyin, log_probability = fields[0], fields[1], float(fields[2])
+            if pinyin:
+                if text in words:
+                    raise SystemExit(f"the addition {text!r} is a word of the language model")
+                additions.append((text, pinyin, log_probability))
+            else:
+                if text not in words:
+                    raise SystemExit(f"the new value of {text!r} is for a word that the language model does not hold")
+                words[text] = (log_probability, words[text][1])
+                changed += 1
+        report.append(f"updates: {changed} new values and {len(additions)} additions from {arguments.updates.name}")
 
     entries = []
     known_texts = set()
@@ -218,6 +253,18 @@ def main():
         f"dictionary lines with two fields, read as a word's single reading: {len(two_field_lines)}"
         + (f", first: {two_field_lines[0]!r}" if two_field_lines else ""))
 
+    for text, pinyin, log_probability in additions:
+        spelling = pinyin.replace("'", "")
+        if not SPELLING.fullmatch(spelling):
+            raise SystemExit(f"the addition {text!r} has the Pinyin {pinyin!r}, which holds other characters")
+        spellings = {spelling}
+        for old, new in SPELLING_VARIANTS:
+            if old in spelling:
+                spellings.add(spelling.replace(old, new))
+        for one in sorted(spellings):
+            entries.append((one, text, log_probability * LN10, 0.0, 0.0))
+        known_texts.add(text)
+
     marks_in_file = sorted(word for word in words if word.startswith("<"))
     report.append(f"marks in the language model: {marks_in_file}")
     # A model without the two sentence marks gives a lexicon without them, and the engine then
@@ -239,11 +286,14 @@ def main():
         key: log_probability * LN10 for key, log_probability in kept_triples.items()
         if all(text in known_texts for text in key)
     }
-    stats = write_lexicon_with_triples(OUTPUT, entries, pairs, triples, MODEL_BACK_OFF)
-    report.append(f"wrote {OUTPUT.relative_to(ROOT)}: {stats}")
+    output = arguments.output.resolve()
+    stats = write_lexicon_with_triples(output, entries, pairs, triples, MODEL_BACK_OFF)
+    report.append(f"wrote {output.relative_to(ROOT)}: {stats}")
     for line in report:
         print(line)
-    (folder / "lexicon-report.txt").write_text("\n".join(report) + "\n", encoding="utf-8")
+    # The report of the lexicon in Shared/ keeps its name. Another output gets a report beside it.
+    report_file = folder / "lexicon-report.txt" if output == OUTPUT else output.with_suffix(".report.txt")
+    report_file.write_text("\n".join(report) + "\n", encoding="utf-8")
 
 
 if __name__ == "__main__":

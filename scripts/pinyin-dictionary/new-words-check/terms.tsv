@@ -1,0 +1,502 @@
+# Names and terms that came into wide use from 2015 to 2025, for check_terms.py.
+# Columns: group, term, and the Pinyin a person types for it when the script cannot derive it
+# (a character with two readings). The Pinyin has no spaces.
+# The terms come from memory, among them the yearly lists of ten vogue words of the magazine
+# Yaowen Jiaozi. No term was checked against a source.
+vogue 2015-2019	获得感
+vogue 2015-2019	颜值
+vogue 2015-2019	创客
+vogue 2015-2019	脑洞大开
+vogue 2015-2019	剁手党
+vogue 2015-2019	网红
+vogue 2015-2019	供给侧	gongjice
+vogue 2015-2019	工匠精神
+vogue 2015-2019	小目标
+vogue 2015-2019	洪荒之力
+vogue 2015-2019	吃瓜群众
+vogue 2015-2019	葛优躺
+vogue 2015-2019	套路
+vogue 2015-2019	蓝瘦香菇
+vogue 2015-2019	不忘初心
+vogue 2015-2019	油腻
+vogue 2015-2019	尬聊
+vogue 2015-2019	命运共同体
+vogue 2015-2019	锦鲤
+vogue 2015-2019	店小二
+vogue 2015-2019	教科书式
+vogue 2015-2019	官宣
+vogue 2015-2019	确认过眼神
+vogue 2015-2019	退群
+vogue 2015-2019	佛系
+vogue 2015-2019	巨婴
+vogue 2015-2019	杠精
+vogue 2015-2019	文明互鉴
+vogue 2015-2019	区块链
+vogue 2015-2019	硬核
+vogue 2015-2019	融梗
+vogue 2015-2019	柠檬精
+vogue 2015-2019	霸凌主义
+vogue 2020-2022	逆行者
+vogue 2020-2022	后浪
+vogue 2020-2022	神兽
+vogue 2020-2022	直播带货
+vogue 2020-2022	双循环
+vogue 2020-2022	打工人
+vogue 2020-2022	内卷
+vogue 2020-2022	凡尔赛文学
+vogue 2020-2022	双减
+vogue 2020-2022	碳达峰
+vogue 2020-2022	碳中和
+vogue 2020-2022	野性消费
+vogue 2020-2022	破防
+vogue 2020-2022	鸡娃
+vogue 2020-2022	躺平
+vogue 2020-2022	元宇宙
+vogue 2020-2022	赶考
+vogue 2020-2022	踔厉奋发
+vogue 2020-2022	勇毅前行
+vogue 2020-2022	中国式现代化
+vogue 2020-2022	新赛道
+vogue 2020-2022	大白
+vogue 2020-2022	烟火气
+vogue 2020-2022	天花板
+vogue 2020-2022	拿捏
+vogue 2020-2022	雪糕刺客
+vogue 2020-2022	精神内耗
+vogue 2020-2022	沉浸式
+vogue 2023-2025	新质生产力
+vogue 2023-2025	双向奔赴
+vogue 2023-2025	大模型
+vogue 2023-2025	村超
+vogue 2023-2025	特种兵式旅游
+vogue 2023-2025	显眼包
+vogue 2023-2025	搭子
+vogue 2023-2025	多巴胺
+vogue 2023-2025	情绪价值
+vogue 2023-2025	数智化
+vogue 2023-2025	智能向善
+vogue 2023-2025	未来产业
+vogue 2023-2025	硬控
+vogue 2023-2025	水灵灵
+vogue 2023-2025	班味
+vogue 2023-2025	松弛感
+vogue 2023-2025	银发力量
+vogue 2023-2025	小孩哥
+vogue 2023-2025	小孩姐
+vogue 2023-2025	韧性
+vogue 2023-2025	具身智能
+vogue 2023-2025	苏超
+vogue 2023-2025	赛博对账
+vogue 2023-2025	数字游民
+vogue 2023-2025	谷子
+vogue 2023-2025	预制菜
+vogue 2023-2025	活人感
+chat and daily life	社恐
+chat and daily life	社牛
+chat and daily life	社死
+chat and daily life	摆烂
+chat and daily life	躺赢
+chat and daily life	绝绝子
+chat and daily life	电子榨菜
+chat and daily life	嘴替
+chat and daily life	摸鱼
+chat and daily life	划水
+chat and daily life	内耗
+chat and daily life	卷王
+chat and daily life	上岸
+chat and daily life	考公
+chat and daily life	考研
+chat and daily life	考编
+chat and daily life	小镇做题家
+chat and daily life	牛马
+chat and daily life	窝囊费
+chat and daily life	脆皮大学生
+chat and daily life	特种兵
+chat and daily life	遥遥领先
+chat and daily life	泼天的富贵
+chat and daily life	尔滨
+chat and daily life	南方小土豆
+chat and daily life	哈基米
+chat and daily life	偷感
+chat and daily life	草台班子
+chat and daily life	搞抽象
+chat and daily life	主理人
+chat and daily life	颗粒度
+chat and daily life	抓手
+chat and daily life	赋能
+chat and daily life	复盘
+chat and daily life	种草
+chat and daily life	拔草
+chat and daily life	安利
+chat and daily life	带货
+chat and daily life	探店
+chat and daily life	团购
+chat and daily life	秒杀
+chat and daily life	拼单
+chat and daily life	砍一刀
+chat and daily life	薅羊毛
+chat and daily life	割韭菜
+chat and daily life	抄底
+chat and daily life	梭哈
+chat and daily life	小确幸
+chat and daily life	断舍离
+chat and daily life	仪式感
+chat and daily life	氛围感
+chat and daily life	高级感
+chat and daily life	少年感
+chat and daily life	破碎感
+chat and daily life	边界感
+chat and daily life	配得感
+chat and daily life	钝感力
+chat and daily life	分寸感
+chat and daily life	网感
+chat and daily life	丁克
+chat and daily life	二胎
+chat and daily life	三胎
+chat and daily life	月嫂
+chat and daily life	育儿嫂
+chat and daily life	学区房
+chat and daily life	社畜
+chat and daily life	副业
+chat and daily life	斜杠青年
+chat and daily life	灵活就业
+chat and daily life	零工经济
+chat and daily life	外卖小哥
+chat and daily life	骑手
+chat and daily life	快递小哥
+chat and daily life	网约车
+chat and daily life	代驾
+chat and daily life	共享单车
+chat and daily life	共享充电宝
+chat and daily life	充电宝
+chat and daily life	扫码
+chat and daily life	二维码
+chat and daily life	点赞
+chat and daily life	打卡
+chat and daily life	外卖
+chat and daily life	弹幕	danmu
+chat and daily life	二次元
+chat and daily life	国漫
+chat and daily life	国潮
+chat and daily life	国货
+chat and daily life	汉服
+chat and daily life	文创
+chat and daily life	盲盒
+chat and daily life	手办
+chat and daily life	潮玩
+chat and daily life	剧本杀
+chat and daily life	密室逃脱
+chat and daily life	露营
+chat and daily life	飞盘
+chat and daily life	骑行
+chat and daily life	徒步
+chat and daily life	冰墩墩
+chat and daily life	雪容融
+health	健康码
+health	行程码
+health	核酸
+health	核酸检测
+health	抗原
+health	方舱
+health	奥密克戎
+health	德尔塔
+health	新冠
+health	新冠肺炎
+health	密接
+health	次密接
+health	流调	liudiao
+health	清零
+health	封控
+health	阳了
+health	阳康
+health	复阳
+health	布洛芬
+health	连花清瘟
+technology	人工智能
+technology	大语言模型
+technology	生成式
+technology	多模态
+technology	智能体
+technology	提示词
+technology	提示工程
+technology	算力
+technology	芯片
+technology	光刻机
+technology	半导体
+technology	量子计算
+technology	脑机接口
+technology	人形机器人
+technology	无人机
+technology	无人驾驶
+technology	自动驾驶
+technology	智能驾驶
+technology	智驾
+technology	新能源
+technology	新能源车
+technology	电动车
+technology	充电桩
+technology	换电
+technology	固态电池
+technology	锂电池
+technology	光伏
+technology	储能
+technology	氢能
+technology	低空经济
+technology	商业航天
+technology	空间站
+technology	天宫
+technology	嫦娥
+technology	天问
+technology	祝融
+technology	北斗
+technology	鸿蒙
+technology	麒麟
+technology	昇腾
+technology	鲲鹏
+technology	龙芯
+technology	云计算
+technology	大数据
+technology	物联网
+technology	虚拟现实
+technology	增强现实
+technology	数字孪生
+technology	数字人
+technology	短视频
+technology	直播
+companies and products	文心一言
+companies and products	通义千问
+companies and products	豆包
+companies and products	讯飞星火
+companies and products	智谱清言
+companies and products	月之暗面
+companies and products	深度求索
+companies and products	零一万物
+companies and products	商汤
+companies and products	旷视
+companies and products	寒武纪
+companies and products	地平线
+companies and products	宇树科技
+companies and products	大疆
+companies and products	影石
+companies and products	科大讯飞
+companies and products	字节跳动
+companies and products	抖音
+companies and products	快手
+companies and products	小红书
+companies and products	哔哩哔哩
+companies and products	知乎
+companies and products	微博
+companies and products	微信
+companies and products	企业微信
+companies and products	钉钉
+companies and products	飞书
+companies and products	腾讯会议
+companies and products	拼多多
+companies and products	淘宝
+companies and products	天猫
+companies and products	京东
+companies and products	美团
+companies and products	饿了么
+companies and products	滴滴
+companies and products	高德
+companies and products	携程
+companies and products	闲鱼
+companies and products	得物
+companies and products	希音
+companies and products	蜜雪冰城
+companies and products	瑞幸
+companies and products	库迪
+companies and products	喜茶
+companies and products	奈雪
+companies and products	霸王茶姬
+companies and products	茶百道
+companies and products	古茗
+companies and products	沪上阿姨
+companies and products	泡泡玛特
+companies and products	拉布布
+companies and products	名创优品
+companies and products	胖东来
+companies and products	山姆
+companies and products	盒马
+companies and products	海底捞
+companies and products	比亚迪
+companies and products	蔚来
+companies and products	小鹏
+companies and products	理想汽车
+companies and products	问界
+companies and products	赛力斯
+companies and products	极氪
+companies and products	小米汽车
+companies and products	特斯拉
+companies and products	宁德时代
+companies and products	华为
+companies and products	荣耀
+companies and products	中芯国际
+companies and products	台积电
+companies and products	英伟达
+companies and products	阿里巴巴
+companies and products	腾讯
+companies and products	百度
+companies and products	网易
+companies and products	米哈游
+companies and products	支付宝
+games, films and shows	原神
+games, films and shows	王者荣耀
+games, films and shows	和平精英
+games, films and shows	蛋仔派对	danzaipaidui
+games, films and shows	黑神话
+games, films and shows	黑神话悟空
+games, films and shows	明日方舟
+games, films and shows	星穹铁道
+games, films and shows	绝区零
+games, films and shows	鸣潮
+games, films and shows	哪吒	nezha
+games, films and shows	流浪地球	liulangdiqiu
+games, films and shows	长津湖	changjinhu
+games, films and shows	满江红
+games, films and shows	热辣滚烫
+games, films and shows	繁花
+games, films and shows	狂飙
+games, films and shows	漫长的季节
+games, films and shows	三体
+games, films and shows	庆余年
+games, films and shows	甄嬛传	zhenhuanzhuan
+people	特朗普
+people	拜登
+people	哈里斯
+people	万斯
+people	马斯克
+people	普京
+people	泽连斯基
+people	内塔尼亚胡
+people	莫迪
+people	马克龙
+people	朔尔茨
+people	默茨
+people	斯塔默
+people	苏纳克
+people	岸田文雄
+people	石破茂
+people	高市早苗
+people	尹锡悦
+people	李在明
+people	金正恩
+people	佩洛西
+people	鲁比奥
+people	鲍威尔
+people	黄仁勋
+people	奥特曼
+people	扎克伯格
+people	贝索斯
+people	库克
+people	纳德拉
+people	皮查伊
+people	梁文锋
+people	任正非
+people	余承东
+people	雷军
+people	马化腾
+people	马云
+people	张一鸣
+people	王兴
+people	刘强东
+people	李彦宏
+people	丁磊
+people	何小鹏
+people	李斌
+people	王传福
+people	曾毓群	zengyuqun
+people	董明珠
+people	俞敏洪
+people	董宇辉
+people	罗永浩
+people	李佳琦
+people	谷爱凌
+people	苏翊鸣
+people	全红婵
+people	樊振东
+people	孙颖莎
+people	王楚钦
+people	马龙
+people	郑钦文
+people	潘展乐
+people	张雨霏
+people	苏炳添
+people	梅西
+people	姆巴佩
+people	哈兰德
+people	贾玲
+people	沈腾
+people	吴京
+people	易烊千玺
+people	王一博
+people	肖战
+people	赵丽颖
+people	杨幂
+people	迪丽热巴
+people	刘亦菲
+people	周杰伦
+people	林俊杰
+people	邓紫棋
+people	刀郎
+people	薛之谦
+places	淄博
+places	哈尔滨
+places	天水
+places	阿勒泰
+places	榕江
+places	雄安
+places	雄安新区
+places	大湾区
+places	海南自贸港
+places	北交所
+places	科创板
+public affairs and economy	一带一路
+public affairs and economy	共同富裕
+public affairs and economy	乡村振兴
+public affairs and economy	脱贫攻坚
+public affairs and economy	精准扶贫
+public affairs and economy	内循环
+public affairs and economy	高质量发展
+public affairs and economy	供给侧改革	gongjicegaige
+public affairs and economy	营商环境
+public affairs and economy	放管服
+public affairs and economy	人类命运共同体
+public affairs and economy	新发展格局
+public affairs and economy	数字经济
+public affairs and economy	平台经济
+public affairs and economy	专精特新
+public affairs and economy	卡脖子
+public affairs and economy	自主可控
+public affairs and economy	国产替代
+public affairs and economy	信创
+public affairs and economy	东数西算
+public affairs and economy	新基建
+public affairs and economy	以旧换新
+public affairs and economy	国补
+public affairs and economy	延迟退休
+public affairs and economy	个税
+public affairs and economy	公积金
+public affairs and economy	医保
+public affairs and economy	集采
+public affairs and economy	双碳
+public affairs and economy	垃圾分类
+public affairs and economy	河长制	hezhangzhi
+public affairs and economy	比特币
+public affairs and economy	以太坊
+public affairs and economy	稳定币
+public affairs and economy	数字人民币
+public affairs and economy	北向资金
+public affairs and economy	注册制
+public affairs and economy	量化交易
+public affairs and economy	俄乌冲突
+public affairs and economy	巴以冲突
+public affairs and economy	加沙
+public affairs and economy	哈马斯
+public affairs and economy	胡塞	husai
+public affairs and economy	北约
+public affairs and economy	金砖
+public affairs and economy	关税战
+public affairs and economy	贸易战
+public affairs and economy	脱钩
+public affairs and economy	去风险

@@ -11,9 +11,9 @@ struct PinyinCandidate: Equatable {
 
 /// Turns typed Pinyin letters into Simplified Chinese candidates.
 ///
-/// The words come from `pinyin-dictionary.txt`, built from the Android Open Source Project's
-/// Pinyin dictionary. Each line holds a spelling, a word and the word's frequency, with the most
-/// frequent word first.
+/// The words come from `pinyin-dictionary.txt`, the most frequent words of the Pinyin lexicon
+/// (scripts/pinyin-dictionary/build_dictionary.py). Each line holds a spelling, a word and the
+/// word's frequency, with the most frequent word first.
 ///
 /// The first candidate is a whole sentence: the engine cuts all typed syllables into dictionary
 /// words in the most likely way, where the likelihood of a cut is the product of its words'

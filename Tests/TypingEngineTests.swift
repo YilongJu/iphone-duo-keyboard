@@ -138,8 +138,9 @@ final class TypingEngineTests: XCTestCase {
 
     func testEnglishRefusesTextWithOtherSymbols() {
         // More than one symbol key in a word, fewer than two letters beside a symbol key, a
-        // punctuation key after the first place, and a key that is not beside a letter.
-        for typed in ["a1b2", "[[teh", "[a", "4k", "a;b", "teh;", "te-h", "te#h", "teh [a"] {
+        // punctuation key after the first place, and a key that is not beside a letter. A
+        // semicolon between two letters is no such key: the engine reads it (SemicolonSlipTests).
+        for typed in ["a1b2", "[[teh", "[a", "4k", "a,b", "teh;", "te-h", "te#h", "teh [a"] {
             XCTAssertNil(Self.english.reading(previousWord: "", typed: typed), typed)
         }
     }
@@ -180,6 +181,28 @@ final class TypingEngineTests: XCTestCase {
         XCTAssertTrue(twoWords.allSatisfy { !$0.typedWordsKnown })
         let known = try XCTUnwrap(Self.english.readings(previousWord: "", typed: "that is", limit: 8))
         XCTAssertTrue(known.allSatisfy { $0.typedWordsKnown })
+    }
+
+    func testPinyinReadsNamesAndTermsOfTheLastYears() {
+        // Words that the lexicon got from the Wanxiang lists (docs/pinyin-modern-words.md).
+        let terms = [
+            ("xianyanbao", "\u{663E}\u{773C}\u{5305}"), ("songchigan", "\u{677E}\u{5F1B}\u{611F}"),
+            ("heishenhua", "\u{9ED1}\u{795E}\u{8BDD}"), ("dongyuhui", "\u{8463}\u{5B87}\u{8F89}"),
+            ("jushenzhineng", "\u{5177}\u{8EAB}\u{667A}\u{80FD}"),
+        ]
+        for (letters, word) in terms {
+            let first = Self.pinyin.candidates(for: letters, limit: 1).first
+            XCTAssertEqual(first?.text, word, letters)
+            XCTAssertEqual(first?.consumedLetters, letters.count, letters)
+        }
+        // A vogue word that the model held at its floor comes before a rare word with its sound.
+        XCTAssertEqual(Self.pinyin.candidates(for: "tangping", limit: 1).first?.text, "\u{8EBA}\u{5E73}")
+        // A phrase that the model builds from its own words keeps the first place.
+        XCTAssertEqual(Self.pinyin.candidates(for: "huobishi", limit: 1).first?.text, "\u{8D27}\u{5E01}\u{662F}")
+    }
+
+    func testFirstLettersOfferANameOfTheLastYears() {
+        XCTAssertEqual(bundledEngine().candidates(for: "tlp").first?.word, "\u{7279}\u{6717}\u{666E}")
     }
 
     func testPinyinKeepsTextItCannotRead() {

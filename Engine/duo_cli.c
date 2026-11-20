@@ -12,6 +12,10 @@
  Pinyin input lines:   id <TAB> typed letters
  Output lines:         id <TAB> the engine's text
 
+ In the mode pinyin, candidates=COUNT prints the first COUNT candidates of duo_convert_pinyin,
+ from 1 to 64, each as text/count of typed letters it covers, with one space between them.
+ score=1 prints a third field after the engine's text: the log probability of that reading.
+
  Predict input lines:  id <TAB> previous word (may be empty) <TAB> typed letters (may be empty)
  Predict output lines: id <TAB> the predicted words of duo_predict_english, most probable first,
                        with one space between them. words=COUNT sets how many, from 1 to 64,
@@ -79,6 +83,8 @@ int main(int argc, char **argv) {
     }
     int english = predict || strcmp(argv[1], "english") == 0;
     int word_count = 20;
+    int candidate_count = 0;
+    int with_score = 0;
     duo_word_table table;
     void *table_data = NULL;
     int has_table = 0;
@@ -130,6 +136,18 @@ int main(int argc, char **argv) {
         }
         if (with_model && strcmp(argv[index], "weight") == 0) {
             engine_weight = (float)atof(equals + 1);
+            continue;
+        }
+        if (!english && strcmp(argv[index], "candidates") == 0) {
+            candidate_count = atoi(equals + 1);
+            if (candidate_count < 1 || candidate_count > 64) {
+                fprintf(stderr, "duo_cli: candidates takes a count from 1 to 64, got %s\n", equals + 1);
+                return 2;
+            }
+            continue;
+        }
+        if (!english && strcmp(argv[index], "score") == 0) {
+            with_score = atoi(equals + 1) != 0;
             continue;
         }
         if (predict && strcmp(argv[index], "words") == 0) {
@@ -218,8 +236,17 @@ int main(int argc, char **argv) {
                 fprintf(stderr, "duo_cli: expected 2 fields: %s\n", line);
                 return 1;
             }
-            if (duo_convert_pinyin(&lexicon, &params, fields[1], results, 1) >= 1) {
-                printf("%s\t%s\n", fields[0], results[0].text);
+            if (candidate_count > 0) {
+                static duo_result candidates[64];
+                int found = duo_convert_pinyin(&lexicon, &params, fields[1], candidates, candidate_count);
+                printf("%s\t", fields[0]);
+                for (int index = 0; index < found; index++) {
+                    printf(index == 0 ? "%s/%d" : " %s/%d", candidates[index].text, candidates[index].consumed);
+                }
+                printf("\n");
+            } else if (duo_convert_pinyin(&lexicon, &params, fields[1], results, 1) >= 1) {
+                if (with_score) printf("%s\t%s\t%.4f\n", fields[0], results[0].text, (double)results[0].score);
+                else printf("%s\t%s\n", fields[0], results[0].text);
             } else {
                 printf("%s\t%s\n", fields[0], fields[1]);
             }

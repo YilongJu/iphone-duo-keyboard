@@ -1,8 +1,7 @@
 """Builds Shared/lexicon-pinyin.bin, the Chinese word data of the typing engine.
 
-Source: Shared/pinyin-dictionary.txt, which scripts/pinyin-dictionary/build_dictionary.py makes
-from the Android Open Source Project's Pinyin dictionary (Apache License 2.0). Each line holds a
-spelling as syllables, a word and the word's frequency.
+Source: Shared/pinyin-dictionary.txt, which scripts/pinyin-dictionary/build_dictionary.py makes.
+Each line holds a spelling as syllables, a word and the word's frequency.
 
 A word's spelling in the lexicon is its syllables written together, as a person types them:
 "ni hao" becomes "nihao".

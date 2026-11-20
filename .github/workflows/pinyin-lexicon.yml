@@ -1,7 +1,10 @@
 name: Pinyin lexicon
 
-# Builds Shared/lexicon-pinyin.bin from the libime dictionary and language model on a Linux
-# runner, scores the engine with it on the dev half, and uploads the file as an artifact.
+# Builds Shared/lexicon-pinyin.bin from the libime dictionary and language model and from the
+# word updates of scripts/pinyin-dictionary/pinyin-updates.tsv.gz on a Linux runner, scores the
+# engine with it on the dev half and on the new terms, and uploads the file as an artifact.
+# scripts/pinyin-dictionary/modern_words.py makes the update file by hand: it types 1.4 million
+# words into the engine, which takes too long for this runner.
 # Start it by hand:
 #   gh workflow run "Pinyin lexicon" -f pairs=1250000 -f triples=3000000 -f sweep="beam=16;beam=64"
 on:
@@ -75,7 +78,7 @@ jobs:
             read -r pairs triples gain <<< "$row"
             echo "TABLE ROW: $pairs pairs, $triples triples, gain $gain"
             python3 scripts/typing-engine/build_pinyin_lexicon_from_libime.py build/libime-data "$pairs" "$triples" --gain "$gain" \
-              | grep -E '^(language model|wrote)'
+              --updates scripts/pinyin-dictionary/pinyin-updates.tsv.gz | grep -E '^(language model|updates|wrote)'
             echo "TABLE FILE: $(stat -c %s Shared/lexicon-pinyin.bin) bytes, sha256 $(sha256sum Shared/lexicon-pinyin.bin | cut -d' ' -f1)"
             python3 scripts/typing-evaluation/run_duo_engine.py --task pinyin --half dev --show-time --name table \
               | grep -E '^duo_cli|GROUP'
@@ -84,9 +87,14 @@ jobs:
         run: |
           set -euo pipefail
           python3 scripts/typing-engine/build_pinyin_lexicon_from_libime.py build/libime-data \
-            ${{ github.event.inputs.pairs }} ${{ github.event.inputs.triples }} --gain ${{ github.event.inputs.gain }}
+            ${{ github.event.inputs.pairs }} ${{ github.event.inputs.triples }} --gain ${{ github.event.inputs.gain }} \
+            --updates scripts/pinyin-dictionary/pinyin-updates.tsv.gz
           ls -l Shared/lexicon-pinyin.bin
           sha256sum Shared/lexicon-pinyin.bin
+      - name: Check the names and terms of the last years
+        run: |
+          set -euo pipefail
+          python3 scripts/pinyin-dictionary/new-words-check/check_terms.py --out build/new-words-check/results.tsv
       - name: Score the engine with this lexicon on the dev half
         env:
           SWEEP: ${{ github.event.inputs.sweep }}
