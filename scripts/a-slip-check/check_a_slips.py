@@ -23,11 +23,7 @@ import rerank  # noqa: E402
 # The texts before the typed word. The empty text is the start of a field.
 CONTEXTS = ["", "i think", "do you know", "we can see", "tell me", "it is not", "ok"]
 WORD_COUNT = 150
-# `KeyboardLanguageModel.rule` of Shared/KeyboardLanguageModel.swift.
-KEYBOARD_RULE = rerank.Setting(
-    weight=1.5, margin_from_typed=1, margin_to_typed=4, margin_other=2, space_after=1,
-    margin_apostrophe=0.5, apostrophe_scope="next", apostrophe_score="slips", apostrophe_prompt="stock",
-    margin_to_typed_unknown=12)
+KEYBOARD_RULE = rerank.KEYBOARD_RULE
 
 
 def frequent_words_with_a() -> list[str]:

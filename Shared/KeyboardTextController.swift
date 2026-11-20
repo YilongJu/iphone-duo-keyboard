@@ -338,7 +338,17 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
     /// Count of characters that `RecentWord.context` holds.
     private static let recentContextLength = 48
 
-    private var recentWord: RecentWord?
+    private var recentWord: RecentWord? {
+        // Every step that forgets the word before a space also forgets the word before a semicolon.
+        didSet { if recentWord == nil { wordBeforeSemicolon = nil } }
+    }
+
+    /// The word that a semicolon key ended, when the key came right after the word, as "didn" in
+    /// "didn;". `typed` holds the keys the person pressed, `shown` the text the field holds after
+    /// any correction, as "did", and `context` the end of the text right after the semicolon.
+    /// Letters that follow at once make one word with a semicolon in it, as "did;t". The typing
+    /// engine then reads the keys "didn;t", where the semicolon can be a slip for the apostrophe.
+    private var wordBeforeSemicolon: RecentWord?
 
     /// The last space removal: a mark took the place of the one space between a word and the
     /// mark. The key right after it can restore the space, and one delete right after it brings
@@ -1374,6 +1384,7 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
         lastCorrection = nil
         guard KeyboardTextLogic.wordTerminators.contains(terminator) else { return }
         let earlier = recentWord
+        let beforeSemicolon = wordBeforeSemicolon
         recentWord = nil
         guard !chineseMode, document.allowsAutocorrection else { return }
         let before = document.textBeforeCursor
@@ -1417,7 +1428,8 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
                     previousWord: span.previousWord, typed: span.typed.lowercased(), textBefore: span.textBefore,
                     endsWithSpace: followedBySpace) : nil
         }
-        var span = correctionSpan(word: word, before: before, earlier: earlier)
+        let typedWord = typedForm(of: word, before: before, beforeSemicolon: beforeSemicolon)
+        var span = correctionSpan(word: word, typedWord: typedWord, before: before, earlier: earlier)
         var reading = read(span)
         // After a comma read from a letter, the reading of the two words together counts only
         // when it moves or takes out a space and keeps every typed letter, as "let me" for
@@ -1426,7 +1438,7 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
         // as after a typed comma.
         if span.followsComma,
             !(reading.map { KeyboardTextLogic.movesOnlySpaces($0, typed: span.typed.lowercased()) } ?? false) {
-            span = correctionSpan(word: word, before: before, earlier: nil)
+            span = correctionSpan(word: word, typedWord: typedWord, before: before, earlier: nil)
             reading = read(span)
         }
         let typedSpan = span.typed
@@ -1462,14 +1474,31 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
             lastCorrection = Correction(original: shownSpan, corrected: final, terminator: terminator)
             showNotice("\(shownSpan) \u{2192} \(final)")
         }
+        // After a correction that joined or split words, the last shown word counts as typed
+        // that way, so the next correction does not take the same keys apart again.
+        let sameCount = finalWords.count == typedWords.count
         if followedBySpace, let last = finalWords.last {
-            // After a correction that joined or split words, the last shown word counts as typed
-            // that way, so the next correction does not take the same keys apart again.
-            let sameCount = finalWords.count == typedWords.count
             recentWord = RecentWord(
-                typed: sameCount ? word : String(last), shown: String(last), context: contextAfterSpace(),
+                typed: sameCount ? typedWord : String(last), shown: String(last), context: contextAfterSpace(),
                 readsComma: comma)
         }
+        if terminator == ";", let last = finalWords.last {
+            wordBeforeSemicolon = RecentWord(
+                typed: sameCount ? typedWord : String(last), shown: String(last),
+                context: String((document.textBeforeCursor + ";").suffix(Self.recentContextLength)))
+        }
+    }
+
+    /// The keys the person pressed for `word`, the correctable word right before the cursor.
+    /// The two differ for a word with a semicolon between two letters whose first part the
+    /// keyboard corrected when the semicolon key ended it: the field holds "did;t" and the
+    /// person typed "didn;t". `beforeSemicolon` is the word that the last semicolon key ended.
+    private func typedForm(of word: String, before: String, beforeSemicolon: RecentWord?) -> String {
+        guard let beforeSemicolon, let semicolon = word.firstIndex(of: ";") else { return word }
+        let rest = word[word.index(after: semicolon)...]
+        guard word[..<semicolon] == beforeSemicolon.shown, before.hasSuffix(beforeSemicolon.context + rest)
+        else { return word }
+        return beforeSemicolon.typed + ";" + rest
     }
 
     /// The text that a correction reads: the last word, and the word before it when the person
@@ -1486,8 +1515,8 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
         let followsComma: Bool
     }
 
-    private func correctionSpan(word: String, before: String, earlier: RecentWord?) -> CorrectionSpan {
-        var typed = word
+    private func correctionSpan(word: String, typedWord: String, before: String, earlier: RecentWord?) -> CorrectionSpan {
+        var typed = typedWord
         var shown = word
         var followsComma = false
         // The context of the earlier word ends with its shown text and a space. A word with a
@@ -1496,7 +1525,7 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
             before.hasSuffix(earlier.context + word),
             earlier.readsComma
                 || KeyboardTextLogic.correctableWord(before: String(before.dropLast(word.count + 1))) == earlier.shown {
-            typed = earlier.typed + " " + word
+            typed = earlier.typed + " " + typedWord
             shown = earlier.shown + " " + word
             followsComma = earlier.readsComma
         }
@@ -1513,7 +1542,8 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
         guard !chineseMode, pending == nil, document.allowsAutocorrection else { return }
         let before = document.textBeforeCursor
         guard let word = KeyboardTextLogic.correctableWord(before: before), !keepsAsTyped(word) else { return }
-        let span = correctionSpan(word: word, before: before, earlier: recentWord)
+        let typedWord = typedForm(of: word, before: before, beforeSemicolon: wordBeforeSemicolon)
+        let span = correctionSpan(word: word, typedWord: typedWord, before: before, earlier: recentWord)
         guard span.typed.count >= 2 else { return }
         spellChecker.readAhead(previousWord: span.previousWord, typed: span.typed.lowercased(), textBefore: span.textBefore)
     }

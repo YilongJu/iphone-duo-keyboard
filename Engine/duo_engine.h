@@ -120,6 +120,10 @@ typedef struct {
        last letter that repeats the letter before it or sits beside it gets no such reading,
        because a doubled letter or an extra key explains it as well. */
     float letter_for_comma;
+    /* A semicolon key typed in place of the apostrophe key beside it, between two letters of a
+       word (English only), as in "don;t" for "don't". The wide layout has the two keys side by
+       side, each 0.7 key widths wide. */
+    float semicolon_for_apostrophe;
     /* Share of the word-pair statistic in a word's probability, from 0 to 1. A lexicon with a
        back-off model does not use this share. */
     float pair_weight;
@@ -194,6 +198,8 @@ int duo_params_set(duo_params *params, const char *name, float value);
    `typed` holds one or a few words in lower case: letters, apostrophes and single spaces.
    A word of two or more letters may also hold one symbol or digit key that sits beside a
    letter key: a digit or "[" at any place, or one of "-" ";" "," "." in front of the word.
+   A ";" may also stand between two letters of a word, as in "don;t": the engine reads it as a
+   slip for the apostrophe key beside it, and never as a letter.
    `previous_word` is the word before the typed text, in lower case, or an empty string.
    The result equals `typed` when no other reading is clearly more likely. With
    last_letter_as_comma, the result can end in a comma that takes the place of the last typed

@@ -1,0 +1,40 @@
+{
+  "half": "test",
+  "cases": 2024,
+  "runs": {
+    "engine alone": {
+      "right": {
+        "semicolon_for_apostrophe": [
+          1185,
+          1224
+        ],
+        "clean_semicolon_then_space": [
+          392,
+          400
+        ],
+        "clean_semicolon_without_space": [
+          400,
+          400
+        ]
+      },
+      "misses": 47
+    },
+    "with the model": {
+      "right": {
+        "semicolon_for_apostrophe": [
+          1195,
+          1224
+        ],
+        "clean_semicolon_then_space": [
+          384,
+          400
+        ],
+        "clean_semicolon_without_space": [
+          400,
+          400
+        ]
+      },
+      "misses": 45
+    }
+  }
+}

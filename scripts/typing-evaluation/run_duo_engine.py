@@ -10,7 +10,8 @@ The task english-symbols runs the English engine on cases/english-symbols.HALF.j
 with a symbol or digit key in place of a letter. The task english-apostrophe-words runs it on
 cases/english-apostrophe-words.HALF.jsonl, the words with and without an apostrophe. The task
 english-comma-slip runs it on cases/english-comma-slip.HALF.jsonl, a letter typed in place of the
-comma key or the period key right after a word.
+comma key or the period key right after a word. The task english-semicolon runs it on
+cases/english-semicolon.HALF.jsonl, a semicolon typed in place of the apostrophe key.
 """
 import argparse
 import json
@@ -26,7 +27,7 @@ OUTPUT = ROOT / "build" / "typing-evaluation" / "duo-engine"
 LEXICON = {"english": ROOT / "Shared" / "lexicon-english.bin", "pinyin": ROOT / "Shared" / "lexicon-pinyin.bin"}
 # The task names of the command line, each with the engine mode and the scoring rules it uses.
 ENGINE_TASK = {"english": "english", "english-symbols": "english", "english-apostrophe-words": "english",
-               "english-comma-slip": "english", "pinyin": "pinyin"}
+               "english-comma-slip": "english", "english-semicolon": "english", "pinyin": "pinyin"}
 
 
 def case_files(task: str, half: str) -> list[Path]:

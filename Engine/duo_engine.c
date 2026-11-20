@@ -332,6 +332,13 @@ duo_params duo_english_params(void) {
        dev cases keep their scores, and 5.2 repairs the most comma slips in that range. At 5.5 and
        up, the reading that drops the last letter as an extra key (insertion) always wins. */
     params.letter_for_comma = 5.2f;
+    /* The two keys lie closer together than two letter keys, and a semicolon between two
+       letters is rare in text typed on purpose, so this slip costs less than a wrong letter
+       key. The value comes from a sweep on the dev half of
+       scripts/typing-evaluation/cases/english-semicolon.dev.jsonl. At 1.5 and 2.5 the engine
+       repairs the most slips, 1,178 of 1,233, and keeps all 800 semicolons typed on purpose.
+       At 0.5 it changes two of those 800, and at 4.5 it repairs 1,164 slips. */
+    params.semicolon_for_apostrophe = 2.5f;
     params.pair_weight = 0.6f;
     params.unknown_word = -13.0f;
     params.unknown_letter = -1.2f;
@@ -368,6 +375,7 @@ duo_params duo_pinyin_params(void) {
     params.beam = 32;
     params.apostrophe_readings = 0;
     params.letter_for_comma = BIG;
+    params.semicolon_for_apostrophe = BIG;
     params.last_letter_as_comma = 0;
     return params;
 }
@@ -399,6 +407,7 @@ int duo_params_set(duo_params *params, const char *name, float value) {
     FIELD(digit_before_word)
     FIELD(digit_after_word)
     FIELD(letter_for_comma)
+    FIELD(semicolon_for_apostrophe)
     FIELD(pair_weight)
     FIELD(unknown_word)
     FIELD(unknown_letter)
@@ -486,6 +495,8 @@ static int symbol_is_beside(char symbol, char letter) {
 static float substitution_cost(const duo_params *params, char typed, char intended) {
     if (typed == intended) return 0.0f;
     if (typed == ' ') return is_above_space(intended) ? params->space_for_letter : BIG;
+    /* The semicolon key sits right beside the apostrophe key. */
+    if (typed == ';' && intended == '\'') return params->semicolon_for_apostrophe;
     if (typed == '\'' || intended == '\'') return BIG;
     /* A symbol or digit key stands only for a letter beside it, never for a letter farther away. */
     if (!is_letter(typed) && symbol_neighbors(typed) != NULL) {
@@ -553,6 +564,15 @@ static int follows_symbol_as_same_letter(const walk_t *walk, int index, int dept
         if (walk->letters[depth - back] != typed) return 0;
     }
     return 1;
+}
+
+/* Whether the typed byte at `index` is a semicolon right after a letter, as in "don;t". Such
+   a semicolon stands only for the apostrophe key beside it. A letter key beside it is no
+   reading there: "hour;and" would read as "hour land". The byte before the walk's first byte
+   belongs to the same typed text. */
+static int semicolon_after_letter(const walk_t *walk, int index) {
+    if (walk->typed[index] != ';' || walk->start + index == 0) return 0;
+    return is_letter(walk->typed[index - 1]);
 }
 
 static float insertion_cost(const walk_t *walk, int index) {
@@ -631,6 +651,7 @@ static void walk_node(walk_t *walk, uint32_t node_index, int depth) {
                 if (consumed >= 1) {
                     /* The typed byte stands for this letter: a match, or a wrong key. */
                     float cost = above[b] + substitution_cost(params, walk->typed[consumed - 1], letter);
+                    if (letter != '\'' && walk->has_symbol && semicolon_after_letter(walk, consumed - 1)) cost = BIG;
                     if (cost < best) best = cost;
                     /* The typed byte is extra. */
                     if (b >= 1 && !(walk->has_symbol && follows_symbol_as_same_letter(walk, consumed - 1, depth, letter))) {
@@ -1396,8 +1417,9 @@ static int decode(
 
 /* English input: letters, apostrophes and single spaces, with a letter, an apostrophe or a
    symbol key at both ends. A word may hold one symbol or digit key that sits beside a letter
-   key, when the word has two or more letters: a digit or "[" at any place, or another such key
-   in front of the word. Any other text is outside the engine's input, so it stays as typed. */
+   key, when the word has two or more letters: a digit or "[" at any place, a ";" between two
+   letters, or another such key in front of the word. Any other text is outside the engine's
+   input, so it stays as typed. */
 static int english_input_length(const char *typed) {
     size_t length = strlen(typed);
     if (length == 0 || length > DUO_MAX_TYPED) return 0;
@@ -1413,7 +1435,9 @@ static int english_input_length(const char *typed) {
             letters++;
         } else if (character != '\'') {
             int in_front = index == 0 || typed[index - 1] == ' ';
-            int allowed = is_digit(character) || character == '[' || (in_front && symbol_neighbors(character) != NULL);
+            int between_letters = index > 0 && is_letter(typed[index - 1]) && is_letter(typed[index + 1]);
+            int allowed = is_digit(character) || character == '[' || (character == ';' && between_letters)
+                || (in_front && symbol_neighbors(character) != NULL);
             if (!allowed || ++symbols > 1) return 0;
         }
     }

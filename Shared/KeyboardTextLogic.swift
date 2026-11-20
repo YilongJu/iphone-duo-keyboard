@@ -348,6 +348,10 @@ enum KeyboardTextLogic {
     /// The word may hold one symbol or digit key that sits beside a letter key, because that
     /// key can be a slip for the letter: a digit or "[" at any place, or one of "-", ";", ","
     /// and "." in front of the word. Such a word has two letters or more.
+    /// A semicolon between two letters also belongs to the word, as in "don;t": the semicolon
+    /// key sits right beside the apostrophe key, and a finger that aims at the apostrophe can
+    /// land on it. The semicolon key ended the word before it, so the keyboard may have corrected
+    /// that part already, as "did" for "didn" in "did;t".
     /// The function returns nil for text that is probably not plain prose: a word with a capital
     /// after its first character, a word with any other digit or symbol in it, and a word that
     /// follows a character such as "@", "/" or "." with no space between.
@@ -356,6 +360,15 @@ enum KeyboardTextLogic {
         while start > before.startIndex {
             let previous = before.index(before: start)
             let character = before[previous]
+            if character == ";" {
+                guard start < before.endIndex, before[start].isASCII, before[start].isLetter,
+                    previous > before.startIndex
+                else { break }
+                let left = before[before.index(before: previous)]
+                guard left.isASCII, left.isLetter else { break }
+                start = previous
+                continue
+            }
             guard character.isASCII, character.isLetter || character == "'" || symbolsInsideWords.contains(character)
             else { break }
             start = previous

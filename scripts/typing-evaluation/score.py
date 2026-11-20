@@ -22,6 +22,9 @@ The script reports each category, then groups of categories:
 - `comma_slips`, `period_slips` and `clean_comma_neighbors` (English, the files
   english-comma-slip.*.jsonl): a letter key in place of the comma key or the period key right
   after a word, and real words that end in a letter beside the comma key.
+- `semicolon_slips` and `clean_semicolons` (English, the files english-semicolon.*.jsonl): a
+  semicolon key in place of the apostrophe key beside it, and a semicolon typed on purpose
+  between two words.
 - Every other category is reported alone.
 
 A slip case can name its clean twin (`twin`): the same text typed without the slip. For those
@@ -41,6 +44,8 @@ GROUPS = {
         "comma_slips": ["comma_slip_wide", "comma_slip_compact"],
         "period_slips": ["period_slip_wide", "period_slip_compact"],
         "clean_comma_neighbors": ["clean_comma_neighbor_word"],
+        "semicolon_slips": ["semicolon_for_apostrophe"],
+        "clean_semicolons": ["clean_semicolon_then_space", "clean_semicolon_without_space"],
     },
     "pinyin": {
         "finger_slips": ["substitution_adjacent", "deletion", "double_letter", "extra_adjacent", "transposition", "two_errors"],

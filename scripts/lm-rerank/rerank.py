@@ -279,6 +279,12 @@ class Setting:
 
 APOSTROPHE_PROMPTS = ("same", "stock", "reading")
 
+# The rule of the keyboard, `KeyboardLanguageModel.rule` of Shared/KeyboardLanguageModel.swift.
+KEYBOARD_RULE = Setting(
+    weight=1.5, margin_from_typed=1, margin_to_typed=4, margin_other=2, space_after=1,
+    margin_apostrophe=0.5, apostrophe_scope="next", apostrophe_score="slips", apostrophe_prompt="stock",
+    margin_to_typed_unknown=12)
+
 
 def engine_choice(readings: list[dict], text_before: str, typed: str | None = None) -> str:
     return next(r for r in readings if r["chosen"])["text"]
@@ -390,7 +396,13 @@ def correctable_word(before: str) -> str | None:
     start = len(before)
     while start > 0:
         character = before[start - 1]
-        if character.isascii() and (character.isalpha() or character == "'" or character in SYMBOLS_INSIDE_WORDS):
+        if character == ";":
+            # A semicolon between two letters belongs to the word, as in "don;t".
+            if not (start < len(before) and before[start].isascii() and before[start].isalpha()
+                    and start >= 2 and before[start - 2].isascii() and before[start - 2].isalpha()):
+                break
+            start -= 1
+        elif character.isascii() and (character.isalpha() or character == "'" or character in SYMBOLS_INSIDE_WORDS):
             start -= 1
         else:
             break
@@ -620,9 +632,12 @@ def type_case(case: dict, engine: Engine, chooser, capitals: "PreferredCapitals 
     start = case["context"] + " " if case["context"] else ""
     document = start
     recent: RecentWord | None = None
+    # `wordBeforeSemicolon` of the keyboard: the word that a semicolon key ended.
+    semicolon_word: RecentWord | None = None
     for character in case["typed"] + " ":
         if character in TERMINATORS:
             earlier, recent = recent, None
+            before_semicolon, semicolon_word = semicolon_word, None
             before = document
             word = correctable_word(before)
             if word is None:
@@ -645,21 +660,28 @@ def type_case(case: dict, engine: Engine, chooser, capitals: "PreferredCapitals 
                         readings = capitals.keeping_new_words(readings, typed_span.lower())
                     return chooser(readings, text_before, typed_span.lower())
 
-                typed_span, shown_span = word, word
+                # `typedForm` of the keyboard: the keys of a word with a semicolon in it, whose
+                # first part the keyboard corrected when the semicolon key ended it.
+                typed_word = word
+                if before_semicolon is not None and ";" in word:
+                    head, _, rest = word.partition(";")
+                    if head == before_semicolon.shown and before.endswith(before_semicolon.context + rest):
+                        typed_word = before_semicolon.typed + ";" + rest
+                typed_span, shown_span = typed_word, word
                 follows_comma = False
                 if (earlier is not None and not earlier.reads_comma and before.endswith(earlier.context + word)
                         and correctable_word(before[:len(before) - (len(word) + 1)]) == earlier.shown):
-                    typed_span = earlier.typed + " " + word
+                    typed_span = earlier.typed + " " + typed_word
                     shown_span = earlier.shown + " " + word
                 elif earlier is not None and earlier.reads_comma and before.endswith(earlier.context + word):
-                    typed_span = earlier.typed + " " + word
+                    typed_span = earlier.typed + " " + typed_word
                     shown_span = earlier.shown + " " + word
                     follows_comma = True
                 reading = read(typed_span, shown_span)
                 # After a comma read from a letter, the reading of the two words together counts
                 # only when it keeps every typed letter and moves or takes out a space.
                 if follows_comma and not (reading is not None and moves_only_spaces(reading, typed_span.lower())):
-                    typed_span, shown_span = word, word
+                    typed_span, shown_span = typed_word, word
                     reading = read(typed_span, shown_span)
                 typed_words = [w for w in typed_span.split(" ") if w]
                 text_before = before[:len(before) - len(shown_span)]
@@ -682,10 +704,13 @@ def type_case(case: dict, engine: Engine, chooser, capitals: "PreferredCapitals 
                 final_words = [w for w in final.split(" ") if w]
                 if final != shown_span:
                     document = text_before + final
+                same_count = len(final_words) == len(typed_words)
                 if character == " " and final_words:
-                    same_count = len(final_words) == len(typed_words)
-                    recent = RecentWord(typed=word if same_count else final_words[-1], shown=final_words[-1],
+                    recent = RecentWord(typed=typed_word if same_count else final_words[-1], shown=final_words[-1],
                                         context=(document + " ")[-RECENT_CONTEXT_LENGTH:], reads_comma=comma)
+                if character == ";" and final_words:
+                    semicolon_word = RecentWord(typed=typed_word if same_count else final_words[-1], shown=final_words[-1],
+                                                context=(document + ";")[-RECENT_CONTEXT_LENGTH:], reads_comma=False)
         document += character
     return document[len(start):].strip()
 
