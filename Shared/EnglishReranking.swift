@@ -13,6 +13,10 @@ struct EnglishReading: Equatable {
     let asTyped: Bool
     /// True for the reading that the engine chooses by itself.
     let chosen: Bool
+    /// True when every typed word of the span is a word of the lexicon or its supplement
+    /// (`duo_english_words_known`). Every reading of one span holds the same value. A typed
+    /// span with an unknown word, as "thst", gives false.
+    var typedWordsKnown = true
 }
 
 /// The language model's two numbers for one candidate text, as natural logarithms.
@@ -125,6 +129,11 @@ struct RerankRule: Equatable {
     let marginFromTyped: Double
     /// The same, when the other reading is the text as typed.
     let marginToTyped: Double
+    /// The margin for a move back to the text as typed when a typed word is unknown to the
+    /// lexicon and its supplement, as "thst". Nil uses `marginToTyped` for every typed text.
+    /// The model reads the typed span in its prompt, and it rates an unknown typed word too
+    /// high, so "thst" came back in place of "that".
+    let marginToTypedUnknown: Double?
     /// The same, for a move from one correction to another.
     let marginOther: Double
     /// True adds the probability of a space after the reading to its model score.
@@ -169,10 +178,11 @@ struct RerankRule: Equatable {
     }
 
     init(weight: Double, marginFromTyped: Double, marginToTyped: Double, marginOther: Double, usesSpaceAfter: Bool,
-         apostrophe: ApostropheStep? = nil) {
+         apostrophe: ApostropheStep? = nil, marginToTypedUnknown: Double? = nil) {
         self.weight = weight
         self.marginFromTyped = marginFromTyped
         self.marginToTyped = marginToTyped
+        self.marginToTypedUnknown = marginToTypedUnknown
         self.marginOther = marginOther
         self.usesSpaceAfter = usesSpaceAfter
         self.apostrophe = apostrophe
@@ -214,8 +224,14 @@ struct RerankRule: Equatable {
         }
         var choice = chosen
         if best != chosen {
-            let margin = readings[chosen].asTyped
-                ? marginFromTyped : (readings[best].asTyped ? marginToTyped : marginOther)
+            let margin: Double
+            if readings[chosen].asTyped {
+                margin = marginFromTyped
+            } else if readings[best].asTyped {
+                margin = readings[best].typedWordsKnown ? marginToTyped : (marginToTypedUnknown ?? marginToTyped)
+            } else {
+                margin = marginOther
+            }
             if combinedScores[best] - combinedScores[chosen] >= margin { choice = best }
         }
         // With weight 0 the harness does not ask the model, and the step needs the model.

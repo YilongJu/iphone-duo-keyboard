@@ -1,0 +1,247 @@
+[
+  {
+    "rule": "engine alone",
+    "dev_right": 6075,
+    "dev_groups": {
+      "clean": {
+        "right": 957,
+        "cases": 973,
+        "accuracy": 0.9835560123329907
+      },
+      "letter_slips": {
+        "right": 1943,
+        "cases": 2100,
+        "accuracy": 0.9252380952380952
+      },
+      "space_slips": {
+        "right": 1299,
+        "cases": 1500,
+        "accuracy": 0.866
+      },
+      "symbol_slips": {
+        "right": 1132,
+        "cases": 1197,
+        "accuracy": 0.9456975772765246
+      },
+      "clean_symbols": {
+        "right": 427,
+        "cases": 429,
+        "accuracy": 0.9953379953379954
+      }
+    },
+    "slip_words_right": 1048,
+    "slip_words": 1134,
+    "sentences_right": 22,
+    "sentences": 22
+  },
+  {
+    "rule": "margin_to_typed 4, margin_to_typed_unknown None",
+    "dev_right": 6538,
+    "dev_groups": {
+      "clean": {
+        "right": 957,
+        "cases": 973,
+        "accuracy": 0.9835560123329907
+      },
+      "letter_slips": {
+        "right": 2052,
+        "cases": 2100,
+        "accuracy": 0.9771428571428571
+      },
+      "space_slips": {
+        "right": 1387,
+        "cases": 1500,
+        "accuracy": 0.9246666666666666
+      },
+      "symbol_slips": {
+        "right": 1164,
+        "cases": 1197,
+        "accuracy": 0.9724310776942355
+      },
+      "clean_symbols": {
+        "right": 429,
+        "cases": 429,
+        "accuracy": 1.0
+      }
+    },
+    "slip_words_right": 966,
+    "slip_words": 1134,
+    "sentences_right": 18,
+    "sentences": 22
+  },
+  {
+    "rule": "margin_to_typed 4, margin_to_typed_unknown 8",
+    "dev_right": 6543,
+    "dev_groups": {
+      "clean": {
+        "right": 955,
+        "cases": 973,
+        "accuracy": 0.9815005138746146
+      },
+      "letter_slips": {
+        "right": 2053,
+        "cases": 2100,
+        "accuracy": 0.9776190476190476
+      },
+      "space_slips": {
+        "right": 1391,
+        "cases": 1500,
+        "accuracy": 0.9273333333333333
+      },
+      "symbol_slips": {
+        "right": 1166,
+        "cases": 1197,
+        "accuracy": 0.9741019214703425
+      },
+      "clean_symbols": {
+        "right": 429,
+        "cases": 429,
+        "accuracy": 1.0
+      }
+    },
+    "slip_words_right": 1011,
+    "slip_words": 1134,
+    "sentences_right": 21,
+    "sentences": 22
+  },
+  {
+    "rule": "margin_to_typed 4, margin_to_typed_unknown 10",
+    "dev_right": 6540,
+    "dev_groups": {
+      "clean": {
+        "right": 953,
+        "cases": 973,
+        "accuracy": 0.9794450154162384
+      },
+      "letter_slips": {
+        "right": 2053,
+        "cases": 2100,
+        "accuracy": 0.9776190476190476
+      },
+      "space_slips": {
+        "right": 1390,
+        "cases": 1500,
+        "accuracy": 0.9266666666666666
+      },
+      "symbol_slips": {
+        "right": 1166,
+        "cases": 1197,
+        "accuracy": 0.9741019214703425
+      },
+      "clean_symbols": {
+        "right": 429,
+        "cases": 429,
+        "accuracy": 1.0
+      }
+    },
+    "slip_words_right": 1017,
+    "slip_words": 1134,
+    "sentences_right": 21,
+    "sentences": 22
+  },
+  {
+    "rule": "margin_to_typed 4, margin_to_typed_unknown 12",
+    "dev_right": 6540,
+    "dev_groups": {
+      "clean": {
+        "right": 953,
+        "cases": 973,
+        "accuracy": 0.9794450154162384
+      },
+      "letter_slips": {
+        "right": 2053,
+        "cases": 2100,
+        "accuracy": 0.9776190476190476
+      },
+      "space_slips": {
+        "right": 1390,
+        "cases": 1500,
+        "accuracy": 0.9266666666666666
+      },
+      "symbol_slips": {
+        "right": 1166,
+        "cases": 1197,
+        "accuracy": 0.9741019214703425
+      },
+      "clean_symbols": {
+        "right": 429,
+        "cases": 429,
+        "accuracy": 1.0
+      }
+    },
+    "slip_words_right": 1021,
+    "slip_words": 1134,
+    "sentences_right": 22,
+    "sentences": 22
+  },
+  {
+    "rule": "margin_to_typed 4, margin_to_typed_unknown 16",
+    "dev_right": 6535,
+    "dev_groups": {
+      "clean": {
+        "right": 951,
+        "cases": 973,
+        "accuracy": 0.9773895169578622
+      },
+      "letter_slips": {
+        "right": 2053,
+        "cases": 2100,
+        "accuracy": 0.9776190476190476
+      },
+      "space_slips": {
+        "right": 1387,
+        "cases": 1500,
+        "accuracy": 0.9246666666666666
+      },
+      "symbol_slips": {
+        "right": 1166,
+        "cases": 1197,
+        "accuracy": 0.9741019214703425
+      },
+      "clean_symbols": {
+        "right": 429,
+        "cases": 429,
+        "accuracy": 1.0
+      }
+    },
+    "slip_words_right": 1023,
+    "slip_words": 1134,
+    "sentences_right": 22,
+    "sentences": 22
+  },
+  {
+    "rule": "margin_to_typed 4, margin_to_typed_unknown 99",
+    "dev_right": 6529,
+    "dev_groups": {
+      "clean": {
+        "right": 948,
+        "cases": 973,
+        "accuracy": 0.9743062692702981
+      },
+      "letter_slips": {
+        "right": 2053,
+        "cases": 2100,
+        "accuracy": 0.9776190476190476
+      },
+      "space_slips": {
+        "right": 1384,
+        "cases": 1500,
+        "accuracy": 0.9226666666666666
+      },
+      "symbol_slips": {
+        "right": 1166,
+        "cases": 1197,
+        "accuracy": 0.9741019214703425
+      },
+      "clean_symbols": {
+        "right": 429,
+        "cases": 429,
+        "accuracy": 1.0
+      }
+    },
+    "slip_words_right": 1023,
+    "slip_words": 1134,
+    "sentences_right": 22,
+    "sentences": 22
+  }
+]

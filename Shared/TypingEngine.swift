@@ -156,13 +156,15 @@ final class EnglishTypingEngine {
             duo_english_readings(&tables, &callParams, previousWord, typed, pointer.baseAddress, Int32(limit))
         }
         guard count > 0 else { return nil }
+        let wordsKnown = duo_english_words_known(&tables, &callParams, typed) == 1
         let readings = (0..<Int(count)).map { index in
             EnglishReading(
                 text: withUnsafePointer(to: &buffer[index].text) { pointer in
                     pointer.withMemoryRebound(to: CChar.self, capacity: Int(DUO_TEXT_SIZE)) { String(cString: $0) }
                 },
                 score: Double(buffer[index].score), slipCost: Double(buffer[index].slip_cost),
-                asTyped: buffer[index].as_typed == 1, chosen: buffer[index].chosen == 1)
+                asTyped: buffer[index].as_typed == 1, chosen: buffer[index].chosen == 1,
+                typedWordsKnown: wordsKnown)
         }
         // Engine/duo_engine.h promises both marks. A list without them is a fault of the engine.
         precondition(readings.filter { $0.chosen }.count == 1, "readings of \(typed) need one chosen reading")

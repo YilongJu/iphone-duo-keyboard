@@ -231,6 +231,13 @@ int duo_english_readings(
     const duo_lexicon *lexicon, const duo_params *params,
     const char *previous_word, const char *typed, duo_reading *readings, int capacity);
 
+/* Returns 1 when every word of typed English text is a word of the lexicon or of its
+   supplement. A known word with a symbol or digit key beside it counts as known. Returns 0
+   when a word is unknown, as "thst", and for text outside the input rules of
+   duo_correct_english. A caller that ranks the readings itself uses the answer to decide
+   whether the text as typed may replace a correction. */
+int duo_english_words_known(const duo_lexicon *lexicon, const duo_params *params, const char *typed);
+
 /* The most typed letters that duo_predict_english reads. */
 #define DUO_MAX_TYPED_LETTERS 32
 /* Size of a predicted word's text buffer, in bytes. */

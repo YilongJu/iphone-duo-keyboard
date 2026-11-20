@@ -83,6 +83,11 @@ int shim_correct(const char *previous_word, const char *typed, char *out, int ou
     return 1;
 }
 
+/* duo_english_words_known: 1 when every typed word is a word of the lexicon or its supplement. */
+int shim_words_known(const char *typed) {
+    return duo_english_words_known(&lexicon, &params, typed);
+}
+
 /* duo_english_readings. Writes one line per reading into `out`:
    text <TAB> score <TAB> slip cost <TAB> as typed (0 or 1) <TAB> chosen (0 or 1).
    Returns the count of readings, 0 for input outside the engine, or -1 when `out` is too small. */

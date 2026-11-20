@@ -171,6 +171,17 @@ final class TypingEngineTests: XCTestCase {
         XCTAssertTrue(readings.contains { $0.text == "\u{4F60}" })
     }
 
+    func testTheReadingsSayWhetherEveryTypedWordIsKnown() throws {
+        // "thst" is not a word of the lexicon, and the engine reads it as "that".
+        let slip = try XCTUnwrap(Self.english.readings(previousWord: "", typed: "thst", limit: 8))
+        XCTAssertEqual(slip.first { $0.chosen }?.text, "that")
+        XCTAssertTrue(slip.allSatisfy { !$0.typedWordsKnown })
+        let twoWords = try XCTUnwrap(Self.english.readings(previousWord: "", typed: "thst is", limit: 8))
+        XCTAssertTrue(twoWords.allSatisfy { !$0.typedWordsKnown })
+        let known = try XCTUnwrap(Self.english.readings(previousWord: "", typed: "that is", limit: 8))
+        XCTAssertTrue(known.allSatisfy { $0.typedWordsKnown })
+    }
+
     func testPinyinKeepsTextItCannotRead() {
         XCTAssertTrue(Self.pinyin.candidates(for: "ni'hao", limit: 5).isEmpty)
         XCTAssertTrue(Self.pinyin.candidates(for: "", limit: 5).isEmpty)

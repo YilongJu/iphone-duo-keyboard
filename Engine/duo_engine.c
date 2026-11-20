@@ -1675,6 +1675,15 @@ static void add_apostrophe_readings(
     }
 }
 
+int duo_english_words_known(const duo_lexicon *lexicon, const duo_params *params, const char *typed) {
+    if (lexicon == NULL || params == NULL || typed == NULL) return 0;
+    int length = english_input_length(typed);
+    if (length == 0) return 0;
+    int all_known;
+    score_as_typed(lexicon, params, typed, length, NO_WORD, &all_known);
+    return all_known;
+}
+
 int duo_english_readings(
     const duo_lexicon *lexicon, const duo_params *params,
     const char *previous_word, const char *typed, duo_reading *readings, int capacity) {

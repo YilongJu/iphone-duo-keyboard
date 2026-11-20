@@ -77,6 +77,7 @@ class Engine:
         self.library.shim_readings.argtypes = [ctypes.c_char_p, ctypes.c_char_p, ctypes.c_int, ctypes.c_char_p, ctypes.c_int]
         self.library.shim_correct.argtypes = [ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p, ctypes.c_int]
         self.library.shim_set.argtypes = [ctypes.c_char_p, ctypes.c_float]
+        self.library.shim_words_known.argtypes = [ctypes.c_char_p]
         if self.library.shim_open(str(lexicon).encode()) != 1:
             raise SystemExit(f"{lexicon} is not a valid lexicon file")
         self.use_supplement = None
@@ -116,6 +117,11 @@ class Engine:
             if self.library.shim_correct(previous_word.encode(), typed.encode(), self.buffer, len(self.buffer)) != 1:
                 raise SystemExit(f"duo_correct_english refused {typed!r} that duo_english_readings read")
             correct = self.buffer.value.decode()
+            # Whether every typed word is a word of the lexicon or its supplement
+            # (duo_english_words_known). The rule reads it for a move back to the text as typed.
+            words_known = self.library.shim_words_known(typed.encode()) == 1
+            for reading in result:
+                reading["words_known"] = words_known
             if next(r["text"] for r in result if r["chosen"]) != correct:
                 raise SystemExit(f"chosen reading of {typed!r} differs from duo_correct_english: {correct!r}")
         self.cache[key] = result
@@ -266,6 +272,9 @@ class Setting:
     # the typed span. "reading": the typed format with each reading's own text in place of the
     # typed span, so both forms of the word read as typed.
     apostrophe_prompt: str = "same"
+    # The margin for a move back to the text as typed when a typed word is in neither the lexicon
+    # nor its supplement, as "thst". None uses margin_to_typed for every typed text.
+    margin_to_typed_unknown: float | None = None
 
 
 APOSTROPHE_PROMPTS = ("same", "stock", "reading")
@@ -315,6 +324,8 @@ def choose(readings: list[dict], context: str, setting: Setting, model, typed: s
             margin = setting.margin_from_typed
         elif best["as_typed"]:
             margin = setting.margin_to_typed
+            if setting.margin_to_typed_unknown is not None and not best["words_known"]:
+                margin = setting.margin_to_typed_unknown
         else:
             margin = setting.margin_other
         choice = best if combined(best) - combined(chosen) >= margin else chosen

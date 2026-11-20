@@ -289,9 +289,14 @@ final class KeyboardLanguageModel: CandidateScoring, LanguageModelLoading, NextT
     /// The apostrophe step has the scope and score of `RerankRule.distilgpt2WithApostrophes`
     /// (docs/apostrophe-words-design.md). It reads the stock prompt, at the lead 0.5 of
     /// candidate.json.
+    ///
+    /// One margin is not from candidate.json: a move back to typed text with a word that the
+    /// lexicon and its supplement do not hold needs a lead of 12. With the lead 4 the model
+    /// brought "thst" back in place of "that" (scripts/a-slip-check/README.md).
     nonisolated static let rule = RerankRule(
         weight: 1.5, marginFromTyped: 1, marginToTyped: 4, marginOther: 2, usesSpaceAfter: true,
-        apostrophe: RerankRule.ApostropheStep(scope: .firstWordOfSpan, score: .modelLessSlipCost, margin: 0.5, prompt: .stock))
+        apostrophe: RerankRule.ApostropheStep(scope: .firstWordOfSpan, score: .modelLessSlipCost, margin: 0.5, prompt: .stock),
+        marginToTypedUnknown: 12)
 
     /// The reuse of the model's cache between requests, picked by the rule of
     /// docs/kv-reuse-design.md: the anchored window with two slots (docs/kv-reuse-results.md).

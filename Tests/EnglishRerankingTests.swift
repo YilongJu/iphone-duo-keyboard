@@ -54,11 +54,32 @@ final class RerankRuleTests: XCTestCase {
 
     func testTheTunedSettingsAreThoseOfTheHarness() {
         XCTAssertEqual(rule, RerankRule(weight: 1.0, marginFromTyped: 24, marginToTyped: 0, marginOther: 2, usesSpaceAfter: true))
-        // The setting and the lead of scripts/lm-domain/candidate.json.
+        // The setting and the lead of scripts/lm-domain/candidate.json, and the margin for typed
+        // text with an unknown word of scripts/a-slip-check/README.md.
         XCTAssertEqual(KeyboardLanguageModel.rule,
                        RerankRule(weight: 1.5, marginFromTyped: 1, marginToTyped: 4, marginOther: 2, usesSpaceAfter: true,
                                   apostrophe: RerankRule.ApostropheStep(
-                                      scope: .firstWordOfSpan, score: .modelLessSlipCost, margin: 0.5, prompt: .stock)))
+                                      scope: .firstWordOfSpan, score: .modelLessSlipCost, margin: 0.5, prompt: .stock),
+                                  marginToTypedUnknown: 12))
+    }
+
+    func testTypedTextWithAnUnknownWordNeedsItsOwnLeadToComeBack() {
+        let rule = RerankRule(
+            weight: 1.0, marginFromTyped: 1, marginToTyped: 4, marginOther: 2, usesSpaceAfter: false,
+            marginToTypedUnknown: 12)
+        func readings(typedWordsKnown: Bool) -> [EnglishReading] {
+            [EnglishReading(text: "that", score: -10, slipCost: 3, asTyped: false, chosen: true, typedWordsKnown: typedWordsKnown),
+             EnglishReading(text: "thst", score: -10, slipCost: 0, asTyped: true, chosen: false, typedWordsKnown: typedWordsKnown)]
+        }
+        // The text as typed leads by 8. With an unknown typed word the correction stays.
+        XCTAssertEqual(rule.choose(readings(typedWordsKnown: false), model(-10, -2)), 0)
+        // A lead of 12 brings the text as typed back.
+        XCTAssertEqual(rule.choose(readings(typedWordsKnown: false), model(-14, -2)), 1)
+        // Typed words that are all known need the lead 4.
+        XCTAssertEqual(rule.choose(readings(typedWordsKnown: true), model(-10, -2)), 1)
+        // A rule without the margin for unknown words uses the lead 4 for every typed text.
+        let single = RerankRule(weight: 1.0, marginFromTyped: 1, marginToTyped: 4, marginOther: 2, usesSpaceAfter: false)
+        XCTAssertEqual(single.choose(readings(typedWordsKnown: false), model(-10, -2)), 1)
     }
 
     func testTheStockStepDecidesWithTheScoresOfItsOwnPrompt() {
