@@ -4,6 +4,30 @@ This file lists what changed in each TestFlight build, the newest build first. E
 the build number, the commit, and the upload time in UTC. An entry says what a person notices
 on the phone first, and then what changed behind it.
 
+## Build 71
+
+Commit `90eacd8`, uploaded 2026-11-20 09:28 UTC.
+
+**What you notice**
+
+- "thst" and "whst" become "that" and "what" also when you go on typing. Build 70 fixed the
+  word at the space, and it sometimes put "thst" back at the space after the next word.
+- More words with "s" typed for "a" get their correction, such as "ssid" for "said" and "ssme"
+  for "same".
+- A correctly typed word that the keyboard does not know is changed a little more often. A
+  delete right after the change brings the word back, and the keyboard then keeps it.
+
+**Behind it**
+
+- The typing engine read "thst" as "that" before. The language model reads the typed letters,
+  and it rated the typed text too high. The typed text replaced the correction at a lead of 4.
+- Typed text with a word outside the lexicon now needs a lead of 12 to replace a correction.
+  Typed text of known words still needs a lead of 4.
+- A measurement on the PC chose the lead 12 (`scripts/a-slip-check/README.md`). All 22 test
+  sentences are right, where 18 were right. Of 1,134 words with "s" for "a", 1,021 are right,
+  where 966 were right. Of 973 clean dev cases, 953 are right, where 957 were right.
+- The engine alone gets 1,048 of the 1,134 words right, so the model step still breaks some.
+
 ## Build 70
 
 Commit `0f9fcf3`, uploaded 2026-11-20 04:47 UTC.
