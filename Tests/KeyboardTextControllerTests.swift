@@ -1001,7 +1001,7 @@ final class KeyboardTextControllerTests: XCTestCase {
     func testTextWithASymbolThatIsNotProseDoesNotGoToTheChecker() {
         // More than one symbol or digit, one letter only, a capital after a digit, a symbol key
         // that is not beside a letter, and a word inside an address.
-        for text in ["abc123", "x86", "[a", "4k", "[;ike", "2Hat", "#teh", "te_h", "name@[lease", "www.[lease", "a;ike"] {
+        for text in ["abc123", "x86", "[a", "4k", "[;ike", "2Hat", "#teh", "te_h", "name@[lease", "www.[lease", "a,ike"] {
             // The field already holds the text, and the space asks for a correction of its end.
             makeController(before: text)
             spellChecker.corrections = ["[lease": "please", ";ike": "like", "teh": "the"]
@@ -1052,7 +1052,9 @@ final class KeyboardTextControllerTests: XCTestCase {
         XCTAssertNil(KeyboardTextLogic.correctableWord(before: "say ;"))
         XCTAssertNil(KeyboardTextLogic.correctableWord(before: "24"))
         // A punctuation key counts as a slip only in front of a word, after a space.
-        XCTAssertNil(KeyboardTextLogic.correctableWord(before: "a;ike"))
+        // A comma after a letter ends the word. A semicolon between two letters does not (SemicolonSlipTests).
+        XCTAssertNil(KeyboardTextLogic.correctableWord(before: "a,ike"))
+        XCTAssertEqual(KeyboardTextLogic.correctableWord(before: "a;ike"), "a;ike")
         XCTAssertNil(KeyboardTextLogic.correctableWord(before: "e.g"))
         XCTAssertNil(KeyboardTextLogic.correctableWord(before: "well-known"))
         XCTAssertNil(KeyboardTextLogic.correctableWord(before: "ike;"))
