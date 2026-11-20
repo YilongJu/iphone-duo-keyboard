@@ -40,6 +40,28 @@ final class PinyinLettersInTheFieldTests: XCTestCase {
         XCTAssertEqual(document.markedText, "xi'an")
     }
 
+    func testALetterTypedWithShiftKeepsItsCapital() {
+        // The field shows the capitals, and the candidates read the letters without them.
+        makeController()
+        type("NiHao")
+        XCTAssertEqual(document.markedText, "NiHao")
+        XCTAssertEqual(controller.pinyinBuffer, "NiHao")
+        type(" ")
+        XCTAssertEqual(document.text, "\u{4F60}\u{597D}")
+        // The return key leaves the letters with their capitals.
+        makeController()
+        type("NIHAO\n")
+        XCTAssertEqual(document.text, "NIHAO")
+        XCTAssertEqual(document.markedText, "")
+        // A candidate that covers the first letters leaves the other letters as typed.
+        makeController()
+        type("WoNiHao")
+        let candidates = PinyinEngine(dictionaryText: testDictionary).candidates(for: "wonihao")
+        controller.keyboardView(keyboardView, didSelectCandidateAt: candidates.firstIndex { $0.word == "\u{6211}" }!)
+        XCTAssertEqual(document.text, "\u{6211}NiHao")
+        XCTAssertEqual(document.markedText, "NiHao")
+    }
+
     func testTheLettersShowAtTheCursorInsideAText() {
         makeController(before: "ab", after: "cd")
         type("ni")

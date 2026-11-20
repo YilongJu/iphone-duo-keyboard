@@ -1031,7 +1031,7 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
     // MARK: Chinese
 
     private func refreshCandidates() {
-        pinyinCandidates = pinyinBuffer.isEmpty ? [] : pinyinEngine.candidates(for: pinyinBuffer)
+        pinyinCandidates = pinyinBuffer.isEmpty ? [] : pinyinEngine.candidates(for: pinyinBuffer.lowercased())
         showRow()
     }
 
@@ -1247,10 +1247,12 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
             }
             return true
         }
-        if text.count == 1, let letter = text.lowercased().first, letter.isASCII, letter.isLetter {
+        if text.count == 1, let letter = text.first, letter.isASCII, letter.isLetter {
             // The typing engine reads up to 120 letters, and a clause of 20 characters takes
             // about 60, so 80 letters cover a long clause.
             guard pinyinBuffer.count < 80 else { return true }
+            // A letter typed with shift or caps lock keeps its capital in the field. The
+            // candidates read the letters without their capitals.
             pinyinBuffer.append(letter)
             refreshCandidates()
             return true
