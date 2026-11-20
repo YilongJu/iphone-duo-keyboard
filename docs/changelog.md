@@ -4,6 +4,38 @@ This file lists what changed in each TestFlight build, the newest build first. E
 the build number, the commit, and the upload time in UTC. An entry says what a person notices
 on the phone first, and then what changed behind it.
 
+## Build 73
+
+Commit `f043a6b`, uploaded 2026-11-20 17:23 UTC.
+
+**What you notice**
+
+- The Pinyin letters that you type show in the text field, underlined, while you type them.
+  A picked candidate takes their place. The return key and the newline key leave them as
+  plain letters.
+- A candidate that covers the first letters only leaves the other letters in the field,
+  underlined, for the next pick.
+- A tap at another place of the field ends the word. The letters stay as plain text.
+- Chinese knows about 30,000 more names of singers, actors and athletes. "yaoxiaotang" gives
+  姚晓棠, and "gaorui" gives 高睿 as the second candidate, after 高锐.
+- Letters right after an emoji, without a space, are a word of their own. They get their
+  predicted words, their emoji and their correction, as the letters after a space do.
+
+**Behind it**
+
+- The letters are marked text, the system's way to show text that a keyboard still composes.
+  The keyboards azooKey and Hamster show their letters the same way.
+- An app whose field does not take marked text can show the letters in another way. No such
+  app is known yet, and no app has been tried.
+- The names come from Wikidata: the people with an article in the Chinese Wikipedia and an
+  occupation such as singer, actor or athlete, 40,064 names of 2 to 4 Chinese characters
+  ([pinyin-modern-words.md](pinyin-modern-words.md)). A name that sounds like a more likely
+  word follows that word.
+- A word that you ask for goes into `scripts/pinyin-dictionary/requested-words.tsv` and then
+  into the lexicon.
+- The lexicon file is 92 MB. GitHub refuses a file of 100 MB, so the room for more words is
+  small.
+
 ## Build 72
 
 Commit `c20cb62`, uploaded 2026-11-20 12:37 UTC.
