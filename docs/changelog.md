@@ -4,6 +4,22 @@ This file lists what changed in each TestFlight build, the newest build first. E
 the build number, the commit, and the upload time in UTC. An entry says what a person notices
 on the phone first, and then what changed behind it.
 
+## Build 74
+
+Commit `cba11ef`, uploaded 2026-11-20 18:43 UTC.
+
+**What you notice**
+
+- Shift and caps lock work in Chinese mode. A Pinyin letter typed with one of them shows as
+  a capital in the field.
+- The candidates stay the same: "NiHao" still offers 你好.
+- The return key and the newline key leave the letters with their capitals, as "NiHao".
+
+**Behind it**
+
+- The keyboard kept every Pinyin letter in lower case. The letters now keep their case, and
+  the typing engine reads them without their capitals.
+
 ## Build 73
 
 Commit `f043a6b`, uploaded 2026-11-20 17:23 UTC.
