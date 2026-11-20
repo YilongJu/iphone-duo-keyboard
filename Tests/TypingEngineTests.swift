@@ -201,6 +201,14 @@ final class TypingEngineTests: XCTestCase {
         XCTAssertEqual(Self.pinyin.candidates(for: "huobishi", limit: 1).first?.text, "\u{8D27}\u{5E01}\u{662F}")
     }
 
+    func testPinyinOffersTheNamesOfPerformers() {
+        // Names from Wikidata's performers and athletes (scripts/pinyin-dictionary/wikidata-people.tsv).
+        XCTAssertEqual(Self.pinyin.candidates(for: "yaoxiaotang", limit: 1).first?.text, "\u{59DA}\u{6653}\u{68E0}")
+        // A name that sounds like a word of the model follows that word.
+        let readings = Self.pinyin.candidates(for: "gaorui", limit: 4)
+        XCTAssertTrue(readings.contains { $0.text == "\u{9AD8}\u{777F}" && $0.consumedLetters == 6 }, "\(readings)")
+    }
+
     func testFirstLettersOfferANameOfTheLastYears() {
         XCTAssertEqual(bundledEngine().candidates(for: "tlp").first?.word, "\u{7279}\u{6717}\u{666E}")
     }

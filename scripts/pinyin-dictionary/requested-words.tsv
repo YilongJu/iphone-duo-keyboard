@@ -1,0 +1,5 @@
+# Words that the keyboard's user asked for, for scripts/pinyin-dictionary/modern_words.py.
+# Each word joins the Pinyin lexicon. Columns: the word, and its Pinyin with an apostrophe
+# between the syllables.
+姚晓棠	yao'xiao'tang
+高睿	gao'rui

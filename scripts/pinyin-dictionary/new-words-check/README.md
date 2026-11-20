@@ -6,7 +6,7 @@ describes the change that this check measures.
 
 | File | Content |
 | --- | --- |
-| `terms.tsv` | 497 names and terms that came into wide use from 2015 to 2025, in 11 groups. |
+| `terms.tsv` | 500 names and terms that came into wide use from 2015 to 2025, in 12 groups. |
 | `check_terms.py` | The check. It prints the counts per group and writes one line per term. |
 | `results-before.tsv` | The result with the lexicon of build 71. |
 | `results.tsv` | The result with the lexicon of this commit. |
@@ -14,9 +14,9 @@ describes the change that this check measures.
 | Lexicon | First reading | Among the first 5 | Offered at all |
 | --- | --- | --- | --- |
 | Build 71 | 330 | 374 | 376 |
-| This commit | 408 | 462 | 468 |
+| This commit | 410 | 465 | 471 |
 
-The lexicon of this commit offers 92 more of the 497 terms.
+The lexicon of this commit offers 95 more of the 500 terms.
 
 The terms come from memory, among them the yearly lists of ten vogue words of the magazine
 Yaowen Jiaozi. No term was checked against a source. The script derives the Pinyin of a term

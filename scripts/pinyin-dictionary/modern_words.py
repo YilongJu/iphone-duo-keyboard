@@ -22,6 +22,15 @@ model's probability. The words that both hold are put in groups by weight, and t
 through the middle probability of each group whose middle lies well above the floor. Below
 that, most words of a group sit at the floor, and the floor hides their real order.
 
+Three more lists give candidates, each with the weight NAME_WEIGHT:
+- scripts/pinyin-dictionary/wikidata-people.tsv: the performers and athletes that Wikidata
+  lists with an article in the Chinese Wikipedia (scripts/pinyin-dictionary/fetch_wikidata_people.py,
+  data under CC0 1.0). The Wanxiang lists of people hold about 36,000 names, and many singers,
+  actors and athletes are not among them.
+- scripts/pinyin-dictionary/requested-words.tsv: the words that the keyboard's user asked for.
+- The Pinyin of a name comes from the title list of the Chinese Wikipedia. A surname with a
+  reading of its own, as the first character of the name "Shan Yichun", also gets that reading.
+
 Wanxiang lists phrases as well as words, such as "when the currency". A phrase that joined the
 lexicon as one word would take the place of the reading that the model builds from its own
 words. So the script types the Pinyin of every candidate into the engine and reads the text and
@@ -33,8 +42,8 @@ the log probability of the engine's first reading. A candidate joins the lexicon
    A candidate of the everyday list must also hold no function character, such as a pronoun or
    a particle, and at most one numeral: such a candidate is a piece of a sentence.
 2. A known word behind a more likely reading. The engine gives another text, and the candidate
-   is a name of the Wanxiang lists of people and places, a title of the Chinese Wikipedia or a
-   term of its list of web slang (the lists of https://github.com/felixonmars/fcitx5-pinyin-zhwiki,
+   is a name of the lists of people and places, a requested word, a title of the Chinese
+   Wikipedia or a term of its list of web slang (the lists of https://github.com/felixonmars/fcitx5-pinyin-zhwiki,
    from text under CC BY-SA 4.0). The candidate's probability then stays just under that of
    the engine's reading, so the candidate shows as a later candidate for the same letters.
 
@@ -48,7 +57,8 @@ engine tool in build/engine/duo_cli (see .github/workflows/pinyin-lexicon.yml):
         Types every candidate into the engine with that lexicon, which takes about half an hour
         on 30 processor threads. Writes build/pinyin-modern/readings.tsv and
         scripts/pinyin-dictionary/pinyin-updates.tsv.gz, the file that the lexicon build reads.
-        With --reuse the step reads readings.tsv again and types no candidate.
+        With --reuse the step takes the readings of readings.tsv and types only the candidates
+        that the file does not hold.
     python3 scripts/typing-engine/build_pinyin_lexicon_from_libime.py build/libime-data 1250000 3000000 \
         --updates scripts/pinyin-dictionary/pinyin-updates.tsv.gz
 """
@@ -74,6 +84,8 @@ WORK = ROOT / "build" / "pinyin-modern"
 SOURCES = WORK / "sources"
 HASHES_FILE = HERE / "source-hashes.json"
 UPDATES = HERE / "pinyin-updates.tsv.gz"
+PEOPLE = HERE / "wikidata-people.tsv"
+REQUESTED = HERE / "requested-words.tsv"
 
 WANXIANG_COMMIT = "e52c2958464d23fe2675f7c6770d921926b5d245"
 WANXIANG_URL = "https://raw.githubusercontent.com/amzxyz/rime-wanxiang/{commit}/dicts/{name}.dict.yaml"
@@ -82,6 +94,21 @@ ZHWIKI_URL = "https://github.com/felixonmars/fcitx5-pinyin-zhwiki/releases/downl
 # performers and athletes, and places.
 LISTS = ("jichu", "mingren", "yiren", "diming")
 EVERYDAY_LIST = "jichu"
+# The lists without weights: the people of Wikidata, and the words that the user asked for.
+PEOPLE_LIST = "people"
+REQUESTED_LIST = "requested"
+# The weight of a word of those two lists. A name that Wanxiang does not hold is a rare word.
+NAME_WEIGHT = 10.0
+# Surnames whose reading differs from the usual reading of the character or characters. The
+# title list of the Chinese Wikipedia often gives the usual reading. A name with such a surname
+# joins the lexicon under both readings, because people type both.
+SURNAME_READINGS = {
+    "单": "shan", "曾": "zeng", "解": "xie", "仇": "qiu", "朴": "piao", "区": "ou", "查": "zha", "翟": "zhai",
+    "乐": "yue", "覃": "qin", "盖": "ge", "种": "chong", "缪": "miao", "谌": "chen", "召": "shao", "隗": "wei",
+    "句": "gou", "繁": "po", "员": "yun", "秘": "bi", "折": "she", "牟": "mou", "宿": "su", "柏": "bai",
+    "薄": "bo", "重": "chong", "祭": "zhai", "蔚": "yu", "藏": "zang", "盛": "sheng", "殷": "yin", "都": "du",
+    "尉迟": "yu chi", "万俟": "mo qi", "长孙": "zhang sun", "澹台": "tan tai", "单于": "chan yu",
+}
 # The lists of the Chinese Wikipedia: every article title, and the terms of its list of web slang.
 TITLE_LISTS = ("zhwiki-20261018", "web-slang-20261018")
 # The lowest weight of a candidate, by list. The list of places gives its villages the weight
@@ -162,15 +189,33 @@ def read_wanxiang(name: str) -> tuple[dict[tuple[str, str], float], int]:
     return entries, odd
 
 
-def read_titles() -> set[str]:
-    """The titles and web slang terms of the Chinese Wikipedia that are words of Chinese characters."""
-    titles = set()
+def read_titles() -> dict[str, str]:
+    """The titles and web slang terms of the Chinese Wikipedia that are words of Chinese
+    characters, each with its Pinyin as syllables with a space between them."""
+    titles = {}
     for name in TITLE_LISTS:
         for line in body_lines(fetch(name, ZHWIKI_URL.format(name=name))):
-            title = line.split("\t")[0]
-            if WORD.fullmatch(title):
-                titles.add(title)
+            fields = line.split("\t")
+            if len(fields) >= 2 and WORD.fullmatch(fields[0]):
+                titles.setdefault(fields[0], fields[1])
     return titles
+
+
+def read_names(path: Path) -> list[list[str]]:
+    """The lines of a list in the repository, each cut at its tabs. A line with "#" is a note."""
+    return [line.split("\t") for line in path.read_text(encoding="utf-8").splitlines() if line and not line.startswith("#")]
+
+
+def name_spellings(name: str, spelled: str) -> list[str]:
+    """The spellings of a person's name: the given one, and one with the surname's own reading."""
+    spellings = [spelled]
+    parts = spelled.split(" ")
+    for surname, reading in SURNAME_READINGS.items():
+        if name.startswith(surname) and len(name) > len(surname):
+            other = " ".join(reading.split(" ") + parts[len(surname):])
+            if other not in spellings:
+                spellings.append(other)
+    return spellings
 
 
 def read_model_words() -> dict[str, float]:
@@ -300,6 +345,29 @@ def prepare(floor_words: str):
             else:
                 seen.add((word, spelled))
                 candidates.append((word, "'".join(parts), fitted(value), value, name))
+    # The names without a weight follow the Wanxiang candidates, so the order of those stays.
+    titles = read_titles()
+    listed = {word for word, *_ in candidates}
+    named = [(fields[0], titles.get(fields[0]), PEOPLE_LIST) for fields in read_names(PEOPLE)]
+    for fields in read_names(REQUESTED):
+        if len(fields) != 2:
+            raise SystemExit(f"{REQUESTED.name}: a line holds a word, a tab and its Pinyin: {fields!r}")
+        named.append((fields[0], fields[1].replace("'", " "), REQUESTED_LIST))
+    for word, spelled, name in named:
+        if word in lexicon_words or word in listed:
+            skipped["a name that the lexicon or Wanxiang holds"] += 1
+        elif not WORD.fullmatch(word):
+            skipped["not 2 to 8 Chinese characters"] += 1
+        elif spelled is None:
+            skipped["a name without Pinyin in the title list"] += 1
+        else:
+            for one in name_spellings(word, spelled):
+                parts = one.split(" ")
+                if len(parts) != len(word) or any(part not in syllables for part in parts):
+                    skipped["Pinyin that the libime dictionary does not use"] += 1
+                elif (word, one) not in seen:
+                    seen.add((word, one))
+                    candidates.append((word, "'".join(parts), fitted(NAME_WEIGHT), NAME_WEIGHT, name))
     (WORK / "candidates.tsv").write_text(
         "".join(f"{word}\t{spelled}\t{value:.7f}\t{raw:g}\t{name}\n" for word, spelled, value, raw, name in candidates),
         encoding="utf-8")
@@ -331,16 +399,15 @@ def read_candidates() -> list[tuple[str, str, float, float, str]]:
 def engine_readings(candidates, cli: Path, lexicon: Path, jobs: int, reuse: bool) -> list[tuple[str, float]]:
     """The engine's first reading of each candidate's Pinyin: its text and its natural-log probability."""
     path = WORK / "readings.tsv"
+    known: dict[tuple[str, str], tuple[str, float]] = {}
     if reuse:
-        readings = []
         for line in path.read_text(encoding="utf-8").splitlines():
-            text, score = line.split("\t")
-            readings.append((text, float(score)))
-        if len(readings) != len(candidates):
-            raise SystemExit(f"{path.name} holds {len(readings)} readings for {len(candidates)} candidates. Run without --reuse.")
-        return readings
-    items = [(index, spelled.replace("'", "")) for index, (_, spelled, *_rest) in enumerate(candidates)]
-    size = max(1, math.ceil(len(items) / (jobs * 8)))
+            word, spelled, text, score = line.split("\t")
+            known[(word, spelled)] = (text, float(score))
+    items = [(index, spelled.replace("'", "")) for index, (word, spelled, *_rest) in enumerate(candidates)
+             if (word, spelled) not in known]
+    print(f"the engine types {len(items)} of {len(candidates)} candidates", flush=True)
+    size = max(1, math.ceil(len(items) / (jobs * 8))) if items else 1
     chunks = [(str(cli), str(lexicon), items[start:start + size]) for start in range(0, len(items), size)]
     answers: dict[int, tuple[str, float]] = {}
     with concurrent.futures.ThreadPoolExecutor(max_workers=jobs) as pool:
@@ -348,8 +415,12 @@ def engine_readings(candidates, cli: Path, lexicon: Path, jobs: int, reuse: bool
             answers.update(part)
     if len(answers) != len(items):
         raise SystemExit(f"the engine answered {len(answers)} of {len(items)} candidates")
-    readings = [answers[index] for index in range(len(items))]
-    path.write_text("".join(f"{text}\t{score:.4f}\n" for text, score in readings), encoding="utf-8")
+    readings = [answers[index] if index in answers else known[(word, spelled)]
+                for index, (word, spelled, *_rest) in enumerate(candidates)]
+    path.write_text(
+        "".join(f"{word}\t{spelled}\t{text}\t{score:.4f}\n"
+                for (word, spelled, *_rest), (text, score) in zip(candidates, readings)),
+        encoding="utf-8")
     return readings
 
 

@@ -12,6 +12,8 @@ row between Select All and Cut, and [prediction-strip.md](prediction-strip.md) d
 - **English:** when the word right before the cursor is in the table, its emoji take the first
   places of the prediction strip. The word is the word the person is typing, or the word
   before one space. The predicted words follow the emoji. The emoji take no row of their own.
+  - An emoji in the text is no word. The letters right after an emoji, without a space, are a
+    word of their own: they get their emoji, their predicted words and their correction.
   - The keys of the top row keep their place and their size when emoji come and go.
   - A tap on an emoji types that emoji. The emoji takes touches over the full height of the
     row and up to the keyboard's upper edge. Every other touch on the row reaches its key, and

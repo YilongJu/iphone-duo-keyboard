@@ -19,7 +19,7 @@ lexicon-pinyin.bin
   from scripts/pinyin-dictionary/pinyin-updates.tsv.gz.
 
   scripts/pinyin-dictionary/pinyin-updates.tsv.gz gives 21,482 words of the libime model a
-  higher probability and adds 469,402 words that the model lacks.
+  higher probability and adds 499,019 spellings of words that the model lacks.
   scripts/pinyin-dictionary/modern_words.py makes it from these sources:
 
   - The word lists jichu, mingren, yiren and diming of the Wanxiang project,
@@ -33,6 +33,13 @@ lexicon-pinyin.bin
     Commons Attribution-ShareAlike 4.0 license (https://creativecommons.org/licenses/by-sa/4.0/).
     The script uses them only to decide whether a Wanxiang word is a known term. The update
     file holds no title that Wanxiang does not hold.
+
+  - scripts/pinyin-dictionary/wikidata-people.tsv: the names of performers and athletes with an
+    article in the Chinese Wikipedia, from Wikidata (https://www.wikidata.org), whose data is
+    under CC0 1.0 (https://creativecommons.org/publicdomain/zero/1.0/). The Pinyin of such a
+    name comes from the title list named above.
+  - scripts/pinyin-dictionary/requested-words.tsv: words that the user of the keyboard asked
+    for, from no text.
 
   lexicon-pinyin.bin carries the attribution to the Wanxiang project that its license asks for.
 
