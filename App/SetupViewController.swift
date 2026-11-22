@@ -77,6 +77,13 @@ final class SetupViewController: UIViewController, UITextViewDelegate {
         })
         stack.addArrangedSubview(settingsButton)
 
+        // The page "What's new" shows docs/changelog.md, which ships in the app.
+        var changelogConfiguration = UIButton.Configuration.bordered()
+        changelogConfiguration.title = "What's new"
+        stack.addArrangedSubview(UIButton(configuration: changelogConfiguration, primaryAction: UIAction { [weak self] _ in
+            self?.present(UINavigationController(rootViewController: ChangelogViewController()), animated: true)
+        }))
+
         stack.addArrangedSubview(makeLabel("Field with the system-selected keyboard", style: .headline))
         configure(systemField, identifier: "systemField")
         stack.addArrangedSubview(systemField)

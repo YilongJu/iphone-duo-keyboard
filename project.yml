@@ -18,6 +18,9 @@ targets:
     sources:
       - App
       - Shared
+      # The changelog, for the page "What's new" of the app.
+      - path: docs/changelog.md
+        buildPhase: resources
       # The C typing engine. duo_cli.c is the command-line driver for the evaluation.
       # The engine is compiled with -O2 in every configuration, because a debug build of the
       # search is several times slower and the unit tests run thousands of typing cases.

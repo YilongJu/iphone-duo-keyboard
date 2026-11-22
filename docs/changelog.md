@@ -4,6 +4,22 @@ This file lists what changed in each TestFlight build, the newest build first. E
 the build number, the commit, and the upload time in UTC. An entry says what a person notices
 on the phone first, and then what changed behind it.
 
+The app shows this file on its page "What's new". An entry is written before its build, so the
+build holds its own entry. The line with the commit and the upload time follows after the upload.
+
+## Build 75
+
+**What you notice**
+
+- The Duo Keyboard app has a page "What's new". The button is below "Open Settings".
+- The page lists what changed in each build, the newest build first, and marks the build that
+  is installed.
+
+**Behind it**
+
+- The page shows the file `docs/changelog.md`, which now ships in the app.
+- An entry is written before its build from now on, so each build shows its own entry.
+
 ## Build 74
 
 Commit `cba11ef`, uploaded 2026-11-20 18:43 UTC.
