@@ -23,10 +23,17 @@ The script exits with an error and lists every broken rule. The rules:
    The strip is a place for the emoji and the predicted words, and no key. A wide first row
    names the strip as its split point, because the strip crosses the empty middle of the split
    layout.
-10. The first row of every layer holds exactly one typing speed, right before the prediction
-    strip, and no other row holds one. The typing speed is a place for a number, and no key.
+10. The first row of every layer holds exactly one typing speed, and no other row holds one.
+    The typing speed is a place for a number, and no key.
 11. Every layer of the wide layout has exactly one newline key. The return key of the wide
     layout does the field's action, so the newline key is the key for a line break.
+12. The first row of every layer holds exactly one Backward key ("undo") and exactly one Redo
+    key ("redo"), and no other row holds one. The typing speed, the Backward key, the Redo key
+    and the prediction strip stand in this order, each right after the one before. The Redo key
+    is hidden while the keyboard has no step to redo, and the strip then takes its width, so the
+    Redo key must stand right beside the strip.
+13. Select All, the Backward key, the Redo key, Cut, Copy and Paste of one first row have the
+    same width.
 """
 import json
 import string
@@ -41,6 +48,11 @@ LAYER_KEYS = {"letters", "symbols", "more"}
 STRIP = "predictionStrip"
 # The function name of the typing speed's place in the first row.
 SPEED = "typingSpeed"
+# The function names of the Backward key and the Redo key in the first row.
+UNDO = "undo"
+REDO = "redo"
+# The keys of the first row that have one width (rule 13).
+SMALL_KEYS = ("selectAll", UNDO, REDO, "cut", "copy", "paste")
 # The layer keys each layer must hold, with the count of each.
 EXPECTED_LAYER_KEYS = {
     "letters": {"symbols": 1},
@@ -107,6 +119,8 @@ def check(layout):
                         problems.append(f"{where} row {row_index}: the prediction strip sits outside the first row")
                     if function == SPEED and row_index != 0:
                         problems.append(f"{where} row {row_index}: the typing speed sits outside the first row")
+                    if function in (UNDO, REDO) and row_index != 0:
+                        problems.append(f"{where} row {row_index}: the '{function}' key sits outside the first row")
                     if main is not None:
                         main_characters.append(main)
                     reachable.update(typed)
@@ -119,8 +133,21 @@ def check(layout):
                     speeds = [index for index, key in enumerate(row["keys"]) if key_parts(key)[0] == SPEED]
                     if len(speeds) != 1:
                         problems.append(f"{where} row 0: {len(speeds)} typing speeds, expected 1")
-                    elif len(strips) == 1 and speeds[0] != strips[0] - 1:
-                        problems.append(f"{where} row 0: the typing speed does not sit right before the prediction strip")
+                    names = [key_parts(key)[0] for key in row["keys"]]
+                    for name in (UNDO, REDO):
+                        if names.count(name) != 1:
+                            problems.append(f"{where} row 0: {names.count(name)} '{name}' keys, expected 1")
+                    order = [SPEED, UNDO, REDO, STRIP]
+                    if all(names.count(name) == 1 for name in order):
+                        start = names.index(SPEED)
+                        if names[start:start + len(order)] != order:
+                            problems.append(
+                                f"{where} row 0: the typing speed, the Backward key, the Redo key and the "
+                                "prediction strip do not stand in this order, each right after the one before")
+                    widths = {name: key_parts(key)[3] for key in row["keys"] for name in [key_parts(key)[0]] if name in SMALL_KEYS}
+                    if len({round(width, 6) for width in widths.values()}) > 1:
+                        shown = ", ".join(f"{name} {width:g}" for name, width in widths.items())
+                        problems.append(f"{where} row 0: the small keys differ in width: {shown}")
                 if style_name == "wide":
                     split = row.get("split")
                     if not isinstance(split, int) or not 0 < split < len(row["keys"]):

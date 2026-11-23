@@ -558,6 +558,9 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
         metered.onChange = { [weak self] characters in
             self?.countTyping(characters)
         }
+        metered.beforeEdit = { [weak self] edit in
+            self?.noteEdit(edit)
+        }
         keyboardView.delegate = self
         // A tap on the typed Pinyin letters types them as plain letters.
         keyboardView.onSelectComposition = { [weak self] in
@@ -566,6 +569,310 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
             self.commitPinyinLetters()
             self.endTypingAction()
         }
+    }
+
+    // MARK: Edit history
+
+    /// The steps that the Backward key takes back and that the Redo key makes again.
+    ///
+    /// iOS gives a keyboard no call for the undo of the app, so the keyboard keeps the steps of
+    /// its own edits (`EditHistory`). One action of the person is one step: a key press, a tap
+    /// on a word or on a candidate, a paste. The typed characters of one word join into one
+    /// step, and so do the deletes of the delete key in a row.
+    ///
+    /// The keyboard edits only at the cursor. So the history holds only while the cursor stays
+    /// where the last step left it. A move of the cursor and a change of the text by the app or
+    /// by the person's touch empty the history.
+    private(set) var history = EditHistory() {
+        didSet {
+            keyboardView.canUndo = history.canUndo
+            keyboardView.showsRedo = history.canRedo
+        }
+    }
+
+    /// The edits of the action of the person that runs now.
+    private struct OpenStep {
+        /// The text before the cursor at the start of the action, without the marked Pinyin
+        /// letters, less the characters that the action took out of it.
+        var kept: String
+        /// The text that the person selected in the app. The first edit of the action takes it out.
+        var selection: String?
+        let hadSelection: Bool
+        var removed = ""
+        var added = ""
+        /// The Pinyin letters and the state of the quote keys at the start of the action.
+        var letters: String
+        var quotes: EditStep.Quotes
+        /// True when the action took out text that the keyboard could not read. The Backward
+        /// key cannot bring such text back, so the history ends there.
+        var lost = false
+        /// The text that the key of the action types by itself, before any change that the
+        /// keyboard makes on its own, such as a correction. `typedCount` counts the keys.
+        var typed: String?
+        var typedCount = 0
+        var isDelete = false
+        /// True when the action put new text in the place of all the text of select all.
+        var replacesAll = false
+        /// The words as the person typed them, when the action corrected them.
+        var keeps: [String] = []
+    }
+
+    private var openStep: OpenStep?
+    /// The count of the actions that run now, one inside the other.
+    private var openHistoryActions = 0
+    /// True while the Backward key or the Redo key edits the document. Such edits are no new step.
+    private var appliesHistory = false
+
+    /// The place of the cursor right after the newest change of the history: the end of the text
+    /// before the cursor, and the text field.
+    private struct HistoryPlace {
+        let context: String
+        let document: UUID
+    }
+
+    private var historyPlace: HistoryPlace?
+    /// The most characters that `HistoryPlace.context` holds.
+    private static let historyContextLength = 48
+
+    private var quoteState: EditStep.Quotes {
+        EditStep.Quotes(doubleIsOpen: doubleQuoteIsOpen, singleIsOpen: singleQuoteIsOpen)
+    }
+
+    /// The text before the cursor without the Pinyin letters that the field shows as marked text.
+    private func committedTextBeforeCursor() -> String {
+        let before = document.textBeforeCursor
+        guard !markedPinyin.isEmpty, before.hasSuffix(markedPinyin) else { return before }
+        return String(before.dropLast(markedPinyin.count))
+    }
+
+    /// Starts the step of an action of the person.
+    private func beginHistoryAction() {
+        openHistoryActions += 1
+        guard openHistoryActions == 1 else { return }
+        forgetStaleHistory()
+        let selection = document.selectedText
+        openStep = OpenStep(
+            kept: committedTextBeforeCursor(), selection: selection, hadSelection: selection != nil,
+            letters: pinyinBuffer, quotes: quoteState)
+    }
+
+    /// Ends the step of an action of the person, and puts the step into the history.
+    private func endHistoryAction() {
+        openHistoryActions -= 1
+        guard openHistoryActions == 0, let open = openStep else { return }
+        openStep = nil
+        record(open)
+    }
+
+    /// Follows one edit of the document, right before the edit happens.
+    private func noteEdit(_ edit: DocumentEdit) {
+        guard !appliesHistory else { return }
+        guard var open = openStep else {
+            // An edit outside an action of the person: a line of a test's report, the letters
+            // that the keyboard commits when it leaves, a move of the cursor. The steps before
+            // it no longer end at the cursor.
+            clearHistory()
+            return
+        }
+        switch edit {
+        case .insert(let text):
+            if let selection = open.selection {
+                open.removed = selection + open.removed
+                open.selection = nil
+            }
+            open.added += text
+        case .deleteBackward:
+            if let selection = open.selection {
+                // A delete takes the selected text out as a whole.
+                open.removed = selection + open.removed
+                open.selection = nil
+            } else if !open.added.isEmpty {
+                open.added.removeLast()
+            } else if let last = open.kept.popLast() {
+                open.removed = String(last) + open.removed
+            } else {
+                open.lost = true
+            }
+        case .moveCursor(let offset):
+            // The steps so far end at the cursor's old place, so the history starts again at
+            // the new place. A delete after the move, as of the forward delete key, is the first
+            // step there, and it takes out the text that the cursor passed.
+            clearHistory()
+            let before: String? = open.lost || open.selection != nil ? nil : open.kept + open.added
+            open = OpenStep(
+                kept: before.flatMap { Self.text($0, after: document.textAfterCursor, movedBy: offset) } ?? "",
+                selection: nil, hadSelection: open.hadSelection, letters: pinyinBuffer, quotes: quoteState)
+        case .unmark:
+            // The marked letters stay in the field as plain text that no step put there.
+            open.lost = true
+        }
+        openStep = open
+    }
+
+    /// The text before the cursor after a move of the cursor by `offset` UTF-16 units, or nil
+    /// when the texts `before` and `after` of the old place do not show the passed characters.
+    private static func text(_ before: String, after: String, movedBy offset: Int) -> String? {
+        var left = abs(offset)
+        var passed = 0
+        for character in offset > 0 ? Array(after) : Array(before.reversed()) {
+            guard left > 0 else { break }
+            left -= String(character).utf16.count
+            passed += 1
+        }
+        guard left == 0 else { return nil }
+        return offset > 0 ? before + after.prefix(passed) : String(before.dropLast(passed))
+    }
+
+    /// Notes the text that the key of the open action types by itself.
+    private func noteTyped(_ text: String) {
+        openStep?.typed = text
+        openStep?.typedCount += 1
+    }
+
+    /// Puts the edits of a finished action into the history.
+    ///
+    /// A key that types its character is a typing step. When the keyboard also changed the text
+    /// by itself, as a correction or a space removal does, the change is a step of its own after
+    /// the typing step. The Backward key then takes only the change back, and the field holds
+    /// the text as the keys typed it.
+    private func record(_ open: OpenStep) {
+        guard !open.lost else {
+            clearHistory()
+            return
+        }
+        let quotes = quoteState
+        var whole = EditStep(
+            removed: open.removed, added: open.added, lettersBefore: open.letters, lettersAfter: pinyinBuffer,
+            quotesBefore: open.quotes, quotesAfter: quotes
+        ).trimmed()
+        guard !whole.isEmpty else { return }
+        // The field shows the text that the action put in, or the end of it when the app hands
+        // out only a part of its text. Any other text means that the field did not take the
+        // edits as the keyboard made them.
+        let before = committedTextBeforeCursor()
+        guard open.added.isEmpty || before.hasSuffix(open.added) || open.added.hasSuffix(before) else {
+            clearHistory()
+            return
+        }
+        if open.isDelete {
+            whole.run = .deleting
+            history.record(whole)
+        } else if let typed = open.typed, open.typedCount == 1, !open.replacesAll, !open.hadSelection {
+            if open.letters.isEmpty, pinyinBuffer.isEmpty {
+                history.record(EditStep(
+                    removed: "", added: typed, quotesBefore: open.quotes, quotesAfter: quotes,
+                    run: EditStep.typing(typed)))
+                let change = EditStep(
+                    removed: open.removed + typed, added: open.added, quotesBefore: quotes, quotesAfter: quotes,
+                    keeps: open.keeps
+                ).trimmed()
+                if !change.isEmpty { history.record(change) }
+            } else {
+                // A Pinyin letter changes only the letters that wait. A key that picks a
+                // candidate, as the space bar does, is a step of its own.
+                if open.removed.isEmpty, open.added.isEmpty { whole.run = EditStep.typing(typed) }
+                history.record(whole)
+            }
+        } else {
+            history.record(whole)
+        }
+        markHistoryPlace()
+    }
+
+    /// Stores the place of the cursor as the place where the history holds.
+    private func markHistoryPlace() {
+        historyPlace = HistoryPlace(
+            context: String(committedTextBeforeCursor().suffix(Self.historyContextLength)),
+            document: document.documentIdentifier)
+    }
+
+    /// True while the cursor sits where the newest change of the history left it, in the same
+    /// text field. A context shorter than its limit is all the text before the cursor, so the
+    /// field must then hold exactly that text there.
+    private func historyHoldsHere() -> Bool {
+        guard let place = historyPlace, place.document == document.documentIdentifier else { return false }
+        let before = committedTextBeforeCursor()
+        return before.hasSuffix(place.context)
+            && (place.context.count == Self.historyContextLength || before.count == place.context.count)
+    }
+
+    /// Empties the history when the cursor moved or the text changed since its newest change.
+    private func forgetStaleHistory() {
+        if !history.isEmpty, !historyHoldsHere() { clearHistory() }
+    }
+
+    private func clearHistory() {
+        if !history.isEmpty { history.clear() }
+        historyPlace = nil
+    }
+
+    /// Takes the newest step of the history back (`back` true), or makes the step again that the
+    /// Backward key took back last. The keyboard edits the field only when the text before the
+    /// cursor ends with the text that the step takes out.
+    private func stepThroughHistory(back: Bool) {
+        // The edits of this action are no new step.
+        openStep = nil
+        guard document.selectedText == nil else {
+            // A delete would take the selected text out in place of the text of the step.
+            showNotice("Clear the selection first")
+            return
+        }
+        forgetStaleHistory()
+        guard let step = back ? history.undoSteps.last : history.redoSteps.last else {
+            showNotice(back ? "Nothing to undo" : "Nothing to redo")
+            return
+        }
+        let takenOut = back ? step.added : step.removed
+        let putIn = back ? step.removed : step.added
+        let lettersNow = back ? step.lettersAfter : step.lettersBefore
+        let lettersThen = back ? step.lettersBefore : step.lettersAfter
+        guard pinyinBuffer == lettersNow, committedTextBeforeCursor().hasSuffix(takenOut) else {
+            clearHistory()
+            showNotice(back ? "Nothing to undo" : "Nothing to redo")
+            return
+        }
+        appliesHistory = true
+        setAllText(nil)
+        sessionPicks = []
+        if !takenOut.isEmpty || !putIn.isEmpty {
+            // The marked letters stand after the text of the step, so they leave the field first.
+            if !markedPinyin.isEmpty {
+                markedPinyin = ""
+                document.setMarkedText("")
+            }
+            // Text that leaves the field leaves the typing speed, as with a delete. Text that
+            // comes back was not typed now, so it does not count.
+            deleteBackward(count: takenOut.count)
+            if !putIn.isEmpty {
+                withoutTypingCount { document.insertText(putIn) }
+            }
+        }
+        let quotes = back ? step.quotesBefore : step.quotesAfter
+        doubleQuoteIsOpen = quotes.doubleIsOpen
+        singleQuoteIsOpen = quotes.singleIsOpen
+        // Letters that wait for a candidate need Chinese mode, the mode that typed them.
+        if !lettersThen.isEmpty, !chineseMode { setChineseMode(true) }
+        pinyinBuffer = lettersThen
+        refreshCandidates()
+        appliesHistory = false
+        if back {
+            history.stepBack()
+            // The person took a correction back, so the keyboard keeps the words as typed.
+            for word in step.keeps { spellChecker.learn(word) }
+        } else {
+            history.stepForward()
+        }
+        markHistoryPlace()
+    }
+
+    private func setChineseMode(_ on: Bool) {
+        chineseMode = on
+        keyboardView.chineseActive = on
+        refreshCaption()
+        if remembersLanguage {
+            UserDefaults.standard.set(on, forKey: Self.languageKey)
+        }
+        if !on { languageModelLoader?.loadInBackground() }
     }
 
     // MARK: Typing speed
@@ -588,6 +895,7 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
     /// Starts an action of the person. `typing` is true for a key or a tap that writes text,
     /// also when its letters wait outside the document, as Pinyin letters do.
     private func beginTypingAction(typing: Bool) {
+        beginHistoryAction()
         openTypingActions += 1
         if typing { actionIsTyping = true }
     }
@@ -596,6 +904,7 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
     private func endTypingAction() {
         openTypingActions -= 1
         if openTypingActions == 0 { countTypingAction() }
+        endHistoryAction()
     }
 
     /// Counts characters that went into the document, or out of it for a negative count. An
@@ -669,6 +978,9 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
         if let context = keptSpaceContext, !cursorSitsRightAfter(context) {
             keptSpaceContext = nil
         }
+        // A field can report its change in the middle of an action of the keyboard. The history
+        // is checked only between two actions.
+        if openHistoryActions == 0, !appliesHistory { forgetStaleHistory() }
         updateAutoShift()
     }
 
@@ -754,6 +1066,7 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
     /// goes through the normal typing path.
     /// The caller passes a snapshot that `confirmedAllText()` just returned.
     private func replaceAllText(_ snapshot: AllText, typed: String? = nil, rawInsert: String? = nil) {
+        openStep?.replacesAll = true
         setAllText(nil)
         previousInsertWasSpace = false
         recentWord = nil
@@ -785,8 +1098,12 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
         let sameDocument = document.documentIdentifier == replacement.documentIdentifier
         if sameDocument, document.selectedText == nil, document.textBeforeCursor.hasSuffix(after) {
             pending = nil
+            // The delete and the new text are one step of the edit history.
+            beginHistoryAction()
+            openStep?.replacesAll = true
             deleteBackward(count: after.count + replacement.snapshot.before.count)
             finishReplacement(typed: replacement.typed, rawInsert: replacement.rawInsert)
+            endHistoryAction()
         } else if sameDocument, replacement.attempts < 5 {
             // The document reports a cursor move with a delay, so the check runs again.
             replacement.attempts += 1
@@ -810,6 +1127,7 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
         setAllText(nil)
         clearSpaceRemoval()
         commitPinyinLetters()
+        clearHistory()
     }
 
     // MARK: Proofreading of a sentence
@@ -1242,6 +1560,7 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
         if text == "'", !pinyinBuffer.isEmpty {
             // An apostrophe between Pinyin letters forces a syllable break, as in "xi'an".
             if !pinyinBuffer.hasSuffix("'") {
+                noteTyped(text)
                 pinyinBuffer.append("'")
                 refreshCandidates()
             }
@@ -1253,6 +1572,7 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
             guard pinyinBuffer.count < 80 else { return true }
             // A letter typed with shift or caps lock keeps its capital in the field. The
             // candidates read the letters without their capitals.
+            noteTyped(text)
             pinyinBuffer.append(letter)
             refreshCandidates()
             return true
@@ -1322,6 +1642,7 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
     /// rule of `KeyboardTextLogic.removesSpaceAfterOpeningQuote`. With `keepsSpace` the text
     /// goes in as typed, because the person just brought the space back.
     private func insertWithSpaceRemoval(_ text: String, keepsSpace: Bool) {
+        noteTyped(text)
         // A typed character replaces a selection of the app, so the delete of the space would
         // delete the selected text.
         guard !keepsSpace, document.selectedText == nil else {
@@ -1423,6 +1744,7 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
         let now = ProcessInfo.processInfo.systemUptime
         if text == " ", !chineseMode, previousInsertWasSpace, now - lastSpaceTime < 1.5,
             KeyboardTextLogic.shouldReplaceDoubleSpace(before: document.textBeforeCursor) {
+            noteTyped(text)
             document.deleteBackward()
             document.insertText(". ")
             previousInsertWasSpace = false
@@ -1470,6 +1792,7 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
                     deleteBackward(count: cased.count)
                     document.insertText(form)
                     lastCorrection = Correction(original: cased, corrected: form, terminator: terminator)
+                    openStep?.keeps = [cased]
                     showNotice("\(cased) \u{2192} \(form)")
                 }
             }
@@ -1534,6 +1857,7 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
             deleteBackward(count: shownSpan.count)
             document.insertText(final)
             lastCorrection = Correction(original: shownSpan, corrected: final, terminator: terminator)
+            openStep?.keeps = shownSpan.split(separator: " ").map(String.init)
             showNotice("\(shownSpan) \u{2192} \(final)")
         }
         // After a correction that joined or split words, the last shown word counts as typed
@@ -1726,6 +2050,7 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
         clearProofreadSuggestion()
         defer { proofreadAfterAPause() }
         guard pending == nil else { return }
+        openStep?.isDelete = true
         keptSpaceContext = nil
         if !pinyinBuffer.isEmpty {
             pinyinBuffer.removeLast()
@@ -1772,17 +2097,19 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
         lastCorrection = nil
         recentWord = nil
         clearSpaceRemoval()
+        if command == .undo || command == .redo {
+            // The Pinyin letters that wait are part of a step, so they stay as they are.
+            stepThroughHistory(back: command == .undo)
+            updateAutoShift()
+            return
+        }
         commitPinyinLetters()
         switch command {
         case .toggleLanguage:
             setAllText(nil)
-            chineseMode.toggle()
-            keyboardView.chineseActive = chineseMode
-            refreshCaption()
-            if remembersLanguage {
-                UserDefaults.standard.set(chineseMode, forKey: Self.languageKey)
-            }
-            if !chineseMode { languageModelLoader?.loadInBackground() }
+            setChineseMode(!chineseMode)
+        case .undo, .redo:
+            break
         case .selectAll:
             if allText != nil {
                 setAllText(nil)

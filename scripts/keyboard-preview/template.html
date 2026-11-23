@@ -107,11 +107,15 @@ const PRESETS = [
 const FN_LABEL = {
   backspace: "⌫", forwardDelete: "⌦", shift: "⇧", capsLock: "⇪", tab: "⇥", globe: "🌐", dismiss: "⌨↓",
   left: "←", right: "→", up: "↑", down: "↓", home: "Home", end: "End", selectAll: "\u2B1A",
-  cut: "✂", copy: "⧉", paste: "📋", symbols: ".?123", letters: "ABC", more: "#+=", language: "\u4E2D", space: "", return: "⏎", newline: "↵",
+  cut: "✂", copy: "⧉", paste: "📋", undo: "↶", redo: "↷", symbols: ".?123", letters: "ABC", more: "#+=", language: "\u4E2D", space: "", return: "⏎", newline: "↵",
 };
 const state = {
   width: 669, compactHeight: false, pad: false, landscape: false, shift: "off", autoShift: false,
   text: "", cursor: 0, allSelected: false, notice: null, noticeTimer: null,
+  // The steps of the Backward key and of the Redo key: the text and the cursor before each
+  // change. The page keeps one step for each key press. The phone joins the letters of one
+  // word into one step.
+  past: [], future: [],
 };
 
 function normalize(key, layer) {
@@ -170,6 +174,13 @@ function splitRow(row, keys) {
   }
   return left.concat(keys.slice(row.split + 1));
 }
+// The Redo key shows only while the page holds a step to redo. While the key is hidden, the
+// prediction strip of its row takes its width too.
+function withoutHiddenRedo(keys) {
+  const redo = keys.find(k => k.type === "fn" && k.name === "redo");
+  if (!redo || state.future.length > 0) return keys;
+  return keys.filter(k => k !== redo).map(k => (k.type === "strip" ? { ...k, w: k.w + redo.w } : k));
+}
 function rowHeightNow() {
   if (state.compactHeight) return M.landscapePhoneRowHeight;
   if (styleName() !== "compact") {
@@ -193,7 +204,7 @@ function render() {
   for (const layer of LAYERS) {
     const rows = SPEC[specName()][layer.name].map(r => {
       const keys = r.keys.map(k => normalize(k, layer.name));
-      return { height: r.height, keys: style === "split" ? splitRow(r, keys) : keys };
+      return { height: r.height, keys: withoutHiddenRedo(style === "split" ? splitRow(r, keys) : keys) };
     });
     const heading = document.createElement("h2");
     heading.textContent = layer.title + " ";
@@ -433,6 +444,8 @@ function autoShift() {
 }
 function act(key, alt, keepLayerView) {
   let layerToFlash = null;
+  const before = { text: state.text, cursor: state.cursor };
+  const steps = key.type === "fn" && (key.name === "undo" || key.name === "redo");
   if (key.type === "slide" && alt) {
     // A slide types the slide character in every shift state.
     insert(key.alt);
@@ -484,11 +497,25 @@ function act(key, alt, keepLayerView) {
         else notice("Select text first");
         break;
       case "paste": notice("Paste"); break;
+      case "undo": case "redo": {
+        const from = key.name === "undo" ? state.past : state.future;
+        const to = key.name === "undo" ? state.future : state.past;
+        if (from.length === 0) { notice(key.name === "undo" ? "Nothing to undo" : "Nothing to redo"); break; }
+        to.push(before);
+        ({ text: state.text, cursor: state.cursor } = from.pop());
+        state.allSelected = false;
+        autoShift(); break;
+      }
       case "language": notice("Pinyin runs on the phone only"); break;
       case "symbols": case "letters": case "more": layerToFlash = key.name; break;
       case "globe": notice("Next keyboard"); break;
       case "dismiss": notice("Hide keyboard"); break;
     }
+  }
+  // A change of the text is a new step, and it empties the steps of the Redo key.
+  if (!steps && state.text !== before.text) {
+    state.past.push(before);
+    state.future = [];
   }
   render();
   if (layerToFlash && !keepLayerView) flash(layerToFlash);

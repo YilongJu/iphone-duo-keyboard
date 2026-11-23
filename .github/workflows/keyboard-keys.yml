@@ -40,6 +40,9 @@ on:
       - 'Tests/SemicolonSlipTests.swift'
       - 'Tests/PinyinLettersInTheFieldTests.swift'
       - 'Tests/ChangelogTests.swift'
+      - 'Tests/EditHistoryTests.swift'
+      - 'Shared/EditHistory.swift'
+      - 'Shared/TypingSpeed.swift'
       - 'App/Changelog.swift'
       - 'docs/changelog.md'
       - 'Shared/EnglishReranking.swift'
@@ -97,7 +100,7 @@ jobs:
               Tests/TypingSpeedTests.swift Tests/WideBottomRowsTests.swift \
               Tests/LanguageModelScorerTests.swift Tests/EnglishRerankingTests.swift \
               Tests/SemicolonSlipTests.swift Tests/PinyinLettersInTheFieldTests.swift \
-              Tests/ChangelogTests.swift | awk '{ print $3 }' | tr -d ':'); do
+              Tests/ChangelogTests.swift Tests/EditHistoryTests.swift | awk '{ print $3 }' | tr -d ':'); do
             only+=("-only-testing:DuoKeyboardTests/$class")
           done
           test "${#only[@]}" -ge 5

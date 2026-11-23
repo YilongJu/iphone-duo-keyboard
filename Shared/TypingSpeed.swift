@@ -67,10 +67,14 @@ struct TypingSpeedMeter {
 }
 
 /// A document that passes every call on to another document and reports each change of the
-/// text: the count of characters that went in, or a negative count for a deletion.
+/// text: the count of characters that went in, or a negative count for a deletion. Before each
+/// call that changes the text or the cursor, the document also names the call, so the edit
+/// history can read the text that the call takes out.
 final class MeteredDocument: KeyboardDocument {
     private let base: KeyboardDocument
     var onChange: (Int) -> Void = { _ in }
+    /// Called right before the call goes on to the other document.
+    var beforeEdit: (DocumentEdit) -> Void = { _ in }
 
     init(base: KeyboardDocument) {
         self.base = base
@@ -85,16 +89,19 @@ final class MeteredDocument: KeyboardDocument {
     var allowsAutocorrection: Bool { base.allowsAutocorrection }
 
     func insertText(_ text: String) {
+        beforeEdit(.insert(text))
         base.insertText(text)
         onChange(text.count)
     }
 
     func deleteBackward() {
+        beforeEdit(.deleteBackward)
         base.deleteBackward()
         onChange(-1)
     }
 
     func moveCursor(byUTF16Offset offset: Int) {
+        beforeEdit(.moveCursor(offset))
         base.moveCursor(byUTF16Offset: offset)
     }
 
@@ -104,6 +111,7 @@ final class MeteredDocument: KeyboardDocument {
     }
 
     func unmarkText() {
+        beforeEdit(.unmark)
         base.unmarkText()
     }
 }

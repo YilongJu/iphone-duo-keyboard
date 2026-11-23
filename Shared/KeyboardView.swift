@@ -225,6 +225,31 @@ final class KeyboardView: UIView {
         didSet { if oldValue != selectAllActive { refreshLabels() } }
     }
 
+    /// True while the edit history holds a step that the Backward key can take back. Without
+    /// one the Backward key draws its symbol in gray.
+    var canUndo = false {
+        didSet {
+            guard oldValue != canUndo else { return }
+            for keyView in rows.joined() where keyView.key.kind == .undo {
+                keyView.apply(display(for: .undo))
+            }
+        }
+    }
+
+    /// True while the edit history holds a step that the Redo key can make again. Only then
+    /// does the Redo key show. While the key is hidden, the prediction strip has its width too
+    /// (`KeyboardLayout.drawnWeights`). The keys stay as they are, so a finger that is down on
+    /// another key keeps its key.
+    var showsRedo = false {
+        didSet {
+            guard oldValue != showsRedo else { return }
+            for keyView in rows.joined() where keyView.key.kind == .redo {
+                keyView.isHidden = !showsRedo
+            }
+            setNeedsLayout()
+        }
+    }
+
     /// True while shift is on because of automatic capitalization. Automatic shift makes the
     /// next letter upper case and leaves number and punctuation keys on their base character.
     private(set) var shiftIsAutomatic = false
@@ -403,8 +428,9 @@ final class KeyboardView: UIView {
         rows = layout.rows.map { row in
             row.map { key in
                 let keyView = KeyView(key: key)
-                // The empty middle and the place of the prediction strip are no keys.
-                keyView.isHidden = key.kind == .gap || key.kind.isPlace
+                // The empty middle and the place of the prediction strip are no keys. The Redo
+                // key shows only while the edit history holds a step to make again.
+                keyView.isHidden = key.kind == .gap || key.kind.isPlace || (key.kind == .redo && !showsRedo)
                 addSubview(keyView)
                 return keyView
             }
@@ -488,6 +514,10 @@ final class KeyboardView: UIView {
             return KeyDisplay(symbolName: "doc.on.doc")
         case .paste:
             return KeyDisplay(symbolName: "doc.on.clipboard")
+        case .undo:
+            return KeyDisplay(symbolName: "arrow.uturn.backward", dimmed: !canUndo)
+        case .redo:
+            return KeyDisplay(symbolName: "arrow.uturn.forward")
         case .switchLayer(let target):
             let title: String
             switch target {
@@ -563,8 +593,8 @@ final class KeyboardView: UIView {
             let y = metrics.rowEdges[rowIndex]
             let height = metrics.rowEdges[rowIndex + 1] - y
             var cells: [CGRect] = []
-            for keyView in row {
-                let width = keyView.key.weight * unit
+            for weight in KeyboardLayout.drawnWeights(of: row.map { $0.key }, showsRedo: showsRedo) {
+                let width = weight * unit
                 cells.append(CGRect(x: x, y: y, width: width, height: height))
                 x += width
             }
@@ -575,7 +605,10 @@ final class KeyboardView: UIView {
             }
             for (keyView, cell) in zip(row, cells) {
                 keyView.hitFrame = cell
-                keyView.frame = cell.insetBy(dx: spec.gapX, dy: gapY)
+                // The hidden Redo key has a cell without a width, and an inset of such a cell
+                // is no frame.
+                keyView.frame = cell.width > 2 * spec.gapX
+                    ? cell.insetBy(dx: spec.gapX, dy: gapY) : CGRect(origin: cell.origin, size: .zero)
                 if keyView.key.kind == .predictionStrip {
                     stripCell = cell
                 }
@@ -625,7 +658,9 @@ final class KeyboardView: UIView {
         // The same holds for a touch beside the row whose nearest cell is such a place, as a
         // touch in the corner beside the empty place of the bottom row.
         // A touch in the empty middle of the split layout goes to the nearest real key.
-        let nearest = row.filter { $0.key.kind != .gap }.min { distance($0) < distance($1) }
+        // The hidden Redo key takes no touch.
+        let nearest = row.filter { $0.key.kind != .gap && !($0.key.kind == .redo && !showsRedo) }
+            .min { distance($0) < distance($1) }
         if let nearest, nearest.key.kind.isPlace { return nil }
         return nearest
     }
@@ -936,6 +971,10 @@ final class KeyboardView: UIView {
             delegate?.keyboardView(self, edit: .copy)
         case .paste:
             delegate?.keyboardView(self, edit: .paste)
+        case .undo:
+            delegate?.keyboardView(self, edit: .undo)
+        case .redo:
+            delegate?.keyboardView(self, edit: .redo)
         case .dismiss:
             delegate?.keyboardViewDismiss(self)
         case .switchLayer(let target):

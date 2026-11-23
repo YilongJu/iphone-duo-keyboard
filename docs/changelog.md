@@ -7,6 +7,37 @@ on the phone first, and then what changed behind it.
 The app shows this file on its page "What's new". An entry is written before its build, so the
 build holds its own entry. The line with the commit and the upload time follows after the upload.
 
+## Build 76
+
+**What you notice**
+
+- The top row has a Backward key, right of the typing speed. One press takes your last action
+  back: the last typed word, the last deletes, a correction, a tapped word or emoji, a picked
+  Chinese candidate, a paste, or a key that replaced all the text after Select All.
+- A Redo key shows right of the Backward key after you used the Backward key. One press makes
+  the action again. The Redo key hides when the list of actions to make again is empty.
+- New typing or a delete empties that list, so the Redo key hides again.
+- The Backward key takes a correction back and keeps the space: "the " becomes "teh " again.
+- In Chinese mode, the Backward key after a picked candidate brings the Pinyin letters and
+  their candidates back.
+- Select All of the open phone has the width of Cut, Copy and Paste.
+- The symbol of the Backward key is gray while the keyboard has no action to take back.
+- A move of the cursor, a change of the text by the app, and another text field end the list
+  of actions. The Backward key then shows "Nothing to undo" on the space bar.
+- On the closed phone, the prediction strip is 0.75 key units narrower: 5.25 of 10, before 6.
+
+**Behind it**
+
+- iOS gives a keyboard no call for the undo of the app, so the keyboard keeps its own steps
+  ([edit-history.md](edit-history.md)). The keyboard edits the field only when the text before
+  the cursor still ends with the text that the step takes out.
+- The typed characters of one word are one step, with the spaces and marks after the word.
+  The deletes in a row are one step.
+- While the Redo key is hidden, the prediction strip has the width of the Redo key too. On the
+  open phone the strip keeps its 8.9 key units, and has 8.13 while the Redo key shows.
+- The layout check has two new rules: the order of the typing speed, the Backward key, the
+  Redo key and the strip, and one width for the small keys of the top row.
+
 ## Build 75
 
 Commit `a8f8a02`, uploaded 2026-11-22 07:53 UTC.

@@ -59,7 +59,7 @@ enum KeyboardTextLogic {
             let nextEnd = tail.firstIndex(where: { $0.isNewline }) ?? tail.endIndex
             let nextLength = tail[..<nextEnd].utf16.count
             return rest + 1 + min(column, nextLength)
-        case .cut, .copy, .paste, .selectAll, .deleteForward, .toggleLanguage:
+        case .cut, .copy, .paste, .selectAll, .deleteForward, .toggleLanguage, .undo, .redo:
             return 0
         }
     }

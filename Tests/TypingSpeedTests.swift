@@ -160,13 +160,13 @@ final class TypingSpeedTests: XCTestCase {
 
     // MARK: Place
 
-    func testTheTypingSpeedLiesBetweenSelectAllAndTheStripAtEveryWidth() throws {
+    func testTheTypingSpeedLiesBetweenSelectAllAndTheBackwardKeyAtEveryWidth() throws {
         for width in widths() {
             makeKeyboard(width: width)
             let speed = keyboardView.typingSpeedView
             XCTAssertFalse(speed.isHidden, "\(width)")
             XCTAssertEqual(speed.frame.minX, try keyView(.selectAll).hitFrame.maxX, accuracy: 0.5, "\(width)")
-            XCTAssertEqual(speed.frame.maxX, keyboardView.predictionStrip.frame.minX, accuracy: 0.5, "\(width)")
+            XCTAssertEqual(speed.frame.maxX, try keyView(.undo).hitFrame.minX, accuracy: 0.5, "\(width)")
             // The place of the typing speed in the row draws no key.
             XCTAssertTrue(try keyView(.typingSpeed).isHidden, "\(width)")
             // The number and the unit stay at the height of the keys of the row.
@@ -186,12 +186,12 @@ final class TypingSpeedTests: XCTestCase {
         XCTAssertGreaterThan(keyboardView.typingSpeedView.frame.width, selectAll)
     }
 
-    func testSelectAllOfTheOpenPhoneIsTwiceAsWideAsCutAndTheTypingSpeed() throws {
+    func testSelectAllOfTheOpenPhoneHasTheWidthOfCutAndOfTheTypingSpeed() throws {
         try XCTSkipUnless(KeyboardDevice.current == .phone)
         for width in Self.widths where width > 466 {
             makeKeyboard(width: width)
             let cut = try keyView(.cut).hitFrame.width
-            XCTAssertEqual(try keyView(.selectAll).hitFrame.width, 2 * cut, accuracy: 1, "\(width)")
+            XCTAssertEqual(try keyView(.selectAll).hitFrame.width, cut, accuracy: 0.5, "\(width)")
             XCTAssertEqual(keyboardView.typingSpeedView.frame.width, cut, accuracy: 0.5, "\(width)")
         }
     }

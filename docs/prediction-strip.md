@@ -1,26 +1,29 @@
 # Prediction strip
 
-The prediction strip is the part of the top row of keys between the typing speed and Cut. It shows
+The prediction strip is the part of the top row of keys between the Backward key and Cut. It shows
 the emoji of the word before the cursor, and then the predicted words. A predicted word is a
 word that starts with the letters the person is typing, or a word that often follows the word
 before the cursor. A tap on a predicted word types the word and a space.
 
 ## The top row
 
-The top row holds the keys Select All, Cut, Copy and Paste, the typing speed and the
-prediction strip, in all three layers. Select All and the typing speed are at the left, and Cut,
-Copy and Paste are at the right. `Shared/keyboard-layout.json` names the two places that are no
-keys as `typingSpeed` and `predictionStrip`.
+The top row holds, from left to right: Select All, the typing speed, the Backward key, the Redo
+key, the prediction strip, Cut, Copy and Paste. All three layers hold the same row.
+`Shared/keyboard-layout.json` names the two places that are no keys as `typingSpeed` and
+`predictionStrip`, and the two keys of the edit history as `undo` and `redo`.
+[edit-history.md](edit-history.md) describes the Backward key and the Redo key.
 
-| Layout | Select All | Typing speed | Prediction strip | Cut, Copy, Paste, each |
+| Layout | Typing speed | Small key, each | Prediction strip, Redo key hidden | Prediction strip, Redo key shown |
 | --- | --- | --- | --- | --- |
-| Compact, 10 key units | 0.75 | 1 | 6 | 0.75 |
-| Wide, 13.5 key units | two thirds of 2.3 | one third of 2.3 | 8.9 | one third of 2.3 |
-| Split, 19.5 key units | two thirds of 2.3 | one third of 2.3 | 14.9 | one third of 2.3 |
+| Compact, 10 key units | 1 | 0.75 | 5.25 | 4.5 |
+| Wide, 13.5 key units | one third of 2.3 | one third of 2.3 | 8.9 | 8.13 |
+| Split, 19.5 key units | one third of 2.3 | one third of 2.3 | 14.9 | 14.13 |
 
-In the wide and the split layout, Select All is twice as wide as Cut, so the number of the
-typing speed sits close to the key. One key unit is the width of one letter key. In the split
-layout the strip crosses the empty middle, so the top row has no empty middle of its own.
+The small keys are Select All, the Backward key, the Redo key, Cut, Copy and Paste. They have
+one width in each layout. The Redo key shows only while the edit history holds a step to make
+again. While the Redo key is hidden, the strip has the width of the Redo key too. One key unit
+is the width of one letter key. In the split layout the strip crosses the empty middle, so the
+top row has no empty middle of its own.
 
 The row has no Home key and no End key. A held space bar moves the cursor in every layout.
 

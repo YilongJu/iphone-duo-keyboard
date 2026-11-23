@@ -55,6 +55,10 @@ enum EditCommand {
     case lineEnd
     case lineUp
     case lineDown
+    /// Takes the newest step of the edit history back (`EditHistory`). The Backward key sends it.
+    case undo
+    /// Makes the step again that the Backward key took back last. The Redo key sends it.
+    case redo
 }
 
 enum KeyKind: Equatable {
@@ -89,6 +93,11 @@ enum KeyKind: Equatable {
     case cut
     case copy
     case paste
+    /// The Backward key: it takes the newest step of the edit history back (`EditHistory`).
+    case undo
+    /// The Redo key: it makes the step again that the Backward key took back last. The key
+    /// shows only while the edit history holds such a step (`KeyboardView.showsRedo`).
+    case redo
     /// The empty middle of the split layout. The view does not draw this key.
     case gap
     /// The place of the prediction strip in the top row: the emoji of the word before the cursor
@@ -171,6 +180,8 @@ enum KeyKind: Equatable {
         case "cut": return .cut
         case "copy": return .copy
         case "paste": return .paste
+        case "undo": return .undo
+        case "redo": return .redo
         case "predictionStrip": return .predictionStrip
         case "typingSpeed": return .typingSpeed
         case "empty": return .empty
@@ -384,6 +395,22 @@ struct KeyboardLayout {
             keys += [Key(.gap, gap), middle]
         }
         return keys + row.keys[(split + 1)...]
+    }
+
+    /// The widths of a row's keys as the keyboard draws them, in key units. The Redo key shows
+    /// only while the edit history holds a step to make again. While the key is hidden, it has
+    /// no width, and the prediction strip of its row has the width of the Redo key too.
+    static func drawnWeights(of row: [Key], showsRedo: Bool) -> [CGFloat] {
+        guard !showsRedo, let redo = row.first(where: { $0.kind == .redo }),
+            row.contains(where: { $0.kind == .predictionStrip })
+        else { return row.map(\.weight) }
+        return row.map { key in
+            switch key.kind {
+            case .redo: return 0
+            case .predictionStrip: return key.weight + redo.weight
+            default: return key.weight
+            }
+        }
     }
 
     /// Sum of the row heights of a style, in letter rows.

@@ -19,10 +19,16 @@ struct KeyDisplay {
     /// The return key of a field whose return key does an action, such as search or send, in
     /// place of a line break. The key is blue with a white symbol.
     var performsAction = false
+    /// A key that has no effect now, such as the Backward key of an empty edit history. The
+    /// key draws its symbol in gray.
+    var dimmed = false
 }
 
 enum KeyColors {
     static let text = UIColor.label
+
+    /// The symbol of a key that has no effect now.
+    static let dimmedText = UIColor.tertiaryLabel
 
     /// The return key that does the field's action. The system blue adapts to light mode and
     /// dark mode.
@@ -229,6 +235,8 @@ final class KeyView: UIView {
 
     /// The name of the SF Symbol the key shows now, or nil. The unit tests read this value.
     private(set) var shownSymbolName: String?
+    /// True while the key draws its symbol in gray, because the key has no effect now.
+    private(set) var isDimmed = false
     /// The name of the bundle image that the key shows, or nil. The unit tests read this value.
     private(set) var shownImageName: String?
 
@@ -258,7 +266,8 @@ final class KeyView: UIView {
         primaryLabel.font = .systemFont(ofSize: display.primaryFontSize)
         // The color goes before the text, because styled text brings its own colors and a color
         // set after the styled text would replace them.
-        let contentColor = display.performsAction ? KeyColors.actionText : KeyColors.text
+        let contentColor = display.performsAction
+            ? KeyColors.actionText : (display.dimmed ? KeyColors.dimmedText : KeyColors.text)
         primaryLabel.textColor = contentColor
         iconView.tintColor = contentColor
         if let styled = display.styledPrimary {
@@ -286,6 +295,7 @@ final class KeyView: UIView {
         }
         shownImageName = display.imageName
         shownSymbolName = display.symbolName
+        isDimmed = display.dimmed
         emphasized = display.emphasized
         performsAction = display.performsAction
         updateBackground()
