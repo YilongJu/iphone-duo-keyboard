@@ -857,8 +857,10 @@ final class KeyboardTextController: NSObject, KeyboardViewDelegate {
         appliesHistory = false
         if back {
             history.stepBack()
-            // The person took a correction back, so the keyboard keeps the words as typed.
+            // The person took a correction back, so the keyboard keeps the words as typed, as
+            // after a delete right after a correction.
             for word in step.keeps { spellChecker.learn(word) }
+            if !step.keeps.isEmpty { showNotice("Kept \(step.keeps.joined(separator: " "))") }
         } else {
             history.stepForward()
         }

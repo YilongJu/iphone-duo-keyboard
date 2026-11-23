@@ -282,6 +282,7 @@ final class BackwardKeyTests: XCTestCase {
         XCTAssertEqual(document.text, "teh ")
         // The person took the correction back, so the keyboard keeps the word as typed.
         XCTAssertEqual(spellChecker.learned, ["teh"])
+        XCTAssertEqual(keyboardView.spaceCaption, "Kept teh")
         backward()
         XCTAssertEqual(document.text, "")
         redo()
