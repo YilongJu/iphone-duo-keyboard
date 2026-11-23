@@ -9,6 +9,8 @@ build holds its own entry. The line with the commit and the upload time follows 
 
 ## Build 76
 
+Commit `ece47f2`, uploaded 2026-11-23 09:33 UTC.
+
 **What you notice**
 
 - The top row has a Backward key, right of the typing speed. One press takes your last action
